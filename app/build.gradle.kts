@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
-val rememberApplicationId = "dev.bikram.remember"
+val rememberApplicationId = "three.haddad.smartnotas"
 val rememberCompileSdk = 37
 val rememberCompileSdkMinor = 2
 val rememberMinSdk = 31

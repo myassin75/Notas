@@ -1,0 +1,66 @@
+package three.haddad.smartnotas.reminders
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import dagger.hilt.android.AndroidEntryPoint
+import three.haddad.smartnotas.data.NoteRepository
+import three.haddad.smartnotas.data.QuickCapturePrefs
+import three.haddad.smartnotas.di.ApplicationScope
+import three.haddad.smartnotas.quickcapture.QuickCaptureNotifier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class BootReceiver : BroadcastReceiver() {
+    @Inject lateinit var reminderScheduler: ReminderScheduler
+
+    @Inject lateinit var noteRepository: NoteRepository
+
+    @Inject lateinit var quickCapturePrefs: QuickCapturePrefs
+
+    @ApplicationScope @Inject
+    lateinit var applicationScope: CoroutineScope
+
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
+        val action = intent.action
+        if (
+            action != Intent.ACTION_BOOT_COMPLETED &&
+            action != Intent.ACTION_MY_PACKAGE_REPLACED &&
+            action != Intent.ACTION_TIME_CHANGED &&
+            action != Intent.ACTION_TIMEZONE_CHANGED
+        ) {
+            return
+        }
+        val pendingResult = goAsync()
+        applicationScope.launch {
+            try {
+                val reminderNotes = noteRepository.activeReminderNotes()
+                reminderNotes.forEach { noteWithItems ->
+                    reminderScheduler.scheduleOrShow(
+                        note = noteWithItems.note,
+                        items = noteWithItems.items,
+                        silentDueNotification = true,
+                    )
+                }
+                noteRepository.refreshReminderSummaryNotification()
+                // Alarms do not survive a reboot, and a backwards clock change can leave the
+                // pending repeat far out; reconciling re-books it within one interval.
+                noteRepository.refreshCriticalReminderRepeat()
+                // Re-post the quick-capture notification if the user has it enabled. The
+                // notification is cleared by the OS on reboot, and the flow-based observer
+                // may not fire quickly enough before the broadcast's pending-result window
+                // closes, so we read the snapshot and post synchronously here.
+                if (quickCapturePrefs.snapshot().enabled) {
+                    QuickCaptureNotifier.show(context)
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+}

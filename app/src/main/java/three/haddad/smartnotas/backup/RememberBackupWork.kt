@@ -1,0 +1,42 @@
+package three.haddad.smartnotas.backup
+
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import three.haddad.smartnotas.data.BackupPreferencesState
+import java.util.concurrent.TimeUnit
+
+object RememberBackupWork {
+    private const val UNIQUE_NAME = "remember_scheduled_notes_backup"
+
+    fun updateSchedule(
+        context: Context,
+        prefs: BackupPreferencesState,
+    ) {
+        val workManager = WorkManager.getInstance(context)
+        val backupDestinations =
+            listOf(
+                prefs.exportFolderUri,
+                prefs.cloudExportFolderUri,
+            ).filter { it.isNotBlank() }
+        if (prefs.scheduledExportEnabled && backupDestinations.isNotEmpty()) {
+            val request =
+                PeriodicWorkRequestBuilder<ScheduledNotesBackupWorker>(1, TimeUnit.DAYS)
+                    .setConstraints(
+                        Constraints
+                            .Builder()
+                            .setRequiresBatteryNotLow(true)
+                            .build(),
+                    ).build()
+            workManager.enqueueUniquePeriodicWork(
+                UNIQUE_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                request,
+            )
+        } else {
+            workManager.cancelUniqueWork(UNIQUE_NAME)
+        }
+    }
+}
