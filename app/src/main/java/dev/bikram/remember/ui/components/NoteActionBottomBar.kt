@@ -1,0 +1,731 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
+package dev.bikram.remember.ui.components
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import dev.bikram.remember.R
+import dev.bikram.remember.ui.common.RememberMaterialRoundedSymbol
+import dev.bikram.remember.ui.common.isSmallLandscape
+import dev.bikram.remember.ui.feedback.LocalHapticEnabled
+import dev.bikram.remember.ui.feedback.performLongPressHaptic
+import dev.bikram.remember.ui.theme.reducedMotionAwareSpec
+
+/**
+ * Note/list action state. Exactly one of [archived]/[trashed] is expected to be true; when both
+ * are false the note is in the normal "active" shelf.
+ */
+enum class NoteShelfState { ACTIVE, ARCHIVED, TRASHED }
+
+/**
+ * Action buttons for the Edit Note / Edit List screens, rendered as a full-width bottom bar
+ * anchored to the navigation inset. The button set swaps based on [shelfState]:
+ *
+ *   ACTIVE   -> Edit/Done, Pin, Star, Notification, Mark done, Archive, Trash
+ *   ARCHIVED -> Unarchive, Trash
+ *   TRASHED  -> Restore, Delete forever
+ *
+ * Each action is an icon stacked above its label. [visible] gates the slide-in/slide-out
+ * animation. Callers flip it to false when the IME is up (the rich-text toolbar takes over)
+ * or when the content has been scrolled away from the top.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun NoteActionBottomBar(
+    shelfState: NoteShelfState,
+    existing: Boolean,
+    isEditMode: Boolean,
+    starred: Boolean,
+    pinned: Boolean,
+    completed: Boolean,
+    visible: Boolean,
+    onToggleEdit: () -> Unit,
+    onToggleStar: () -> Unit,
+    onTogglePin: () -> Unit,
+    onToggleCompleted: () -> Unit,
+    onArchive: () -> Unit,
+    onNotification: () -> Unit,
+    onUnarchive: () -> Unit,
+    onTrash: () -> Unit,
+    onRestore: () -> Unit,
+    onDeleteForever: () -> Unit,
+    modifier: Modifier = Modifier,
+    showEditAction: Boolean = true,
+) {
+    val spatialSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>())
+    val fadeInSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
+    val fadeOutSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(animationSpec = spatialSpec, initialOffsetY = { it }) + fadeIn(animationSpec = fadeInSpec),
+        exit = slideOutVertically(animationSpec = spatialSpec, targetOffsetY = { it }) + fadeOut(animationSpec = fadeOutSpec),
+        modifier = modifier,
+    ) {
+        NoteActionBottomBarContent(
+            shelfState = shelfState,
+            existing = existing,
+            isEditMode = isEditMode,
+            starred = starred,
+            pinned = pinned,
+            completed = completed,
+            onToggleEdit = onToggleEdit,
+            onToggleStar = onToggleStar,
+            onTogglePin = onTogglePin,
+            onToggleCompleted = onToggleCompleted,
+            onArchive = onArchive,
+            onNotification = onNotification,
+            onUnarchive = onUnarchive,
+            onTrash = onTrash,
+            onRestore = onRestore,
+            onDeleteForever = onDeleteForever,
+            showEditAction = showEditAction,
+        )
+    }
+}
+
+/**
+ * Static content of the action bottom bar (no visibility animation wrapping).
+ *
+ * Extracted from [NoteActionBottomBar] so callers that want to drive the show/hide
+ * transition themselves (e.g. a parent [androidx.compose.animation.AnimatedContent]
+ * that swaps this bar with a format toolbar) can mount the content directly without
+ * fighting a nested `AnimatedVisibility`. The original [NoteActionBottomBar] keeps
+ * its `AnimatedVisibility` wrapper for callers that just want a scroll-hide bar.
+ */
+@Composable
+fun NoteActionBottomBarContent(
+    shelfState: NoteShelfState,
+    existing: Boolean,
+    isEditMode: Boolean,
+    starred: Boolean,
+    pinned: Boolean,
+    completed: Boolean,
+    onToggleEdit: () -> Unit,
+    onToggleStar: () -> Unit,
+    onTogglePin: () -> Unit,
+    onToggleCompleted: () -> Unit,
+    onArchive: () -> Unit,
+    onNotification: () -> Unit,
+    onUnarchive: () -> Unit,
+    onTrash: () -> Unit,
+    onRestore: () -> Unit,
+    onDeleteForever: () -> Unit,
+    modifier: Modifier = Modifier,
+    showEditAction: Boolean = true,
+) {
+    val compact = isSmallLandscape()
+    val actionRow: @Composable () -> Unit = {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .then(if (compact) Modifier.height(36.dp) else Modifier.windowInsetsPadding(WindowInsets.navigationBars))
+                    .padding(
+                        start = if (compact) 4.dp else 8.dp,
+                        top = if (compact) 0.dp else 8.dp,
+                        end = if (compact) 4.dp else 8.dp,
+                        bottom = if (compact) 4.dp else 8.dp,
+                    ),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // The ACTIVE set is the widest one, and it grew past what five fixed 72.dp columns
+            // could hold once Pin joined it (6 x 72 = 432.dp overflows a 360.dp-wide phone).
+            // Past five items we share the width instead, the way the TRASHED branch already
+            // does, so the row shrinks to fit rather than clipping its last action.
+            val activeActionCount = (if (showEditAction) 1 else 0) + 1 + (if (existing) 5 else 0)
+            val activeActionModifier =
+                if (compact || activeActionCount > 5) Modifier.weight(1f) else Modifier.width(72.dp)
+            when (shelfState) {
+                NoteShelfState.ACTIVE -> {
+                    if (showEditAction) {
+                        EditActionItem(
+                            isEditMode = isEditMode,
+                            onClick = onToggleEdit,
+                            compact = compact,
+                            modifier = activeActionModifier,
+                        )
+                    }
+                    // Pin sits next to Star on purpose: showing the two toggles side by side
+                    // with distinct icons and labels teaches the difference between "favorite"
+                    // and "keep at the top", instead of hiding it. Pin leads, matching the
+                    // action order used by the swipe settings.
+                    //
+                    // Split across two `existing` checks because Pin needs a saved row to write
+                    // to, while Star is part of the draft and works on a brand-new note. A new
+                    // note therefore shows Star alone here.
+                    if (existing) {
+                        PinActionItem(
+                            pinned = pinned,
+                            onClick = onTogglePin,
+                            compact = compact,
+                            modifier = activeActionModifier,
+                        )
+                    }
+                    StarActionItem(
+                        starred = starred,
+                        onClick = onToggleStar,
+                        compact = compact,
+                        modifier = activeActionModifier,
+                    )
+                    if (existing) {
+                        ActionItem(
+                            icon = "notifications",
+                            label = stringResource(R.string.edit_bottom_bar_notification),
+                            onClick = onNotification,
+                            modifier = activeActionModifier,
+                            compact = compact,
+                        )
+                        // Mark done / not done. Filled check_circle when completed,
+                        // outlined when active, so the toggle state reads at a glance.
+                        // Label flips to match: "Mark done" vs "Mark not done".
+                        DoneActionItem(
+                            completed = completed,
+                            onClick = onToggleCompleted,
+                            compact = compact,
+                            modifier = activeActionModifier,
+                        )
+                        ActionItem(
+                            icon = "archive",
+                            label = stringResource(R.string.edit_bottom_bar_archive),
+                            onClick = onArchive,
+                            modifier = activeActionModifier,
+                            compact = compact,
+                        )
+                        ActionItem(
+                            icon = "delete_outline",
+                            label = stringResource(R.string.edit_bottom_bar_trash),
+                            onClick = onTrash,
+                            modifier = activeActionModifier,
+                            compact = compact,
+                        )
+                    }
+                }
+                NoteShelfState.ARCHIVED -> {
+                    val archivedActionModifier = if (compact) Modifier.weight(1f) else Modifier.width(72.dp)
+                    ActionItem(
+                        icon = "unarchive",
+                        label = stringResource(R.string.edit_bottom_bar_unarchive),
+                        onClick = onUnarchive,
+                        modifier = archivedActionModifier,
+                        compact = compact,
+                    )
+                    ActionItem(
+                        icon = "delete_outline",
+                        label = stringResource(R.string.edit_bottom_bar_trash),
+                        onClick = onTrash,
+                        modifier = archivedActionModifier,
+                        compact = compact,
+                    )
+                }
+                NoteShelfState.TRASHED -> {
+                    ActionItem(
+                        icon = "restore_from_trash",
+                        label = stringResource(R.string.edit_bottom_bar_restore),
+                        onClick = onRestore,
+                        modifier = Modifier.weight(1f),
+                        compact = compact,
+                    )
+                    ActionItem(
+                        icon = "archive",
+                        label = stringResource(R.string.edit_bottom_bar_archive),
+                        onClick = onArchive,
+                        modifier = Modifier.weight(1f),
+                        compact = compact,
+                    )
+                    ActionItem(
+                        icon = "delete_forever",
+                        label = stringResource(R.string.edit_bottom_bar_delete_forever),
+                        onClick = onDeleteForever,
+                        modifier = Modifier.weight(1f),
+                        compact = compact,
+                    )
+                }
+            }
+        }
+    }
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = 3.dp,
+    ) {
+        if (compact) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                actionRow()
+                Spacer(Modifier.height(12.dp))
+            }
+        } else {
+            actionRow()
+        }
+    }
+}
+
+/**
+ * Standard action item: icon above label, tappable column with rounded-rect ripple.
+ * Width is fixed by default; callers can pass weighted modifiers when a smaller action
+ * set should share the whole bar.
+ */
+@Composable
+private fun ActionItem(
+    icon: String,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    iconTint: Color = MaterialTheme.colorScheme.onSurface,
+    iconScale: Float = 1f,
+    compact: Boolean = false,
+) {
+    val clickableModifier =
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(onClick = onClick)
+    if (compact) {
+        Row(
+            modifier = clickableModifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RememberMaterialRoundedSymbol(
+                name = icon,
+                size = 19.dp,
+                tint = iconTint,
+                weight = FontWeight.Medium,
+                modifier = Modifier.scale(iconScale),
+            )
+            Spacer(Modifier.width(3.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        return
+    }
+    Column(
+        modifier = clickableModifier.padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        RememberMaterialRoundedSymbol(
+            name = icon,
+            size = 24.dp,
+            tint = iconTint,
+            weight = FontWeight.Medium,
+            modifier = Modifier.scale(iconScale),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            // Ellipsis rather than a hard clip, matching the Star / Pin / Done items. Without
+            // it an over-long label is cut mid-word, which reads as a broken row rather than a
+            // truncated word.
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * Edit/Done toggle: animates the icon + label between the two states with a shared motion spec,
+ * with save haptics only when leaving edit mode.
+ */
+@Composable
+private fun EditActionItem(
+    isEditMode: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+) {
+    val effectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
+    val hapticEnabled = LocalHapticEnabled.current
+    val view = LocalView.current
+    val clickableModifier =
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(
+                onClick = {
+                    if (isEditMode) {
+                        if (hapticEnabled) view.performLongPressHaptic()
+                    }
+                    onClick()
+                },
+            )
+    val iconContent: @Composable () -> Unit = {
+        androidx.compose.animation.AnimatedContent(
+            targetState = isEditMode,
+            label = "bottomBarEditIcon",
+            transitionSpec = {
+                androidx.compose.animation.scaleIn(animationSpec = effectsSpec) togetherWith
+                    androidx.compose.animation.scaleOut(animationSpec = effectsSpec)
+            },
+        ) { editing ->
+            RememberMaterialRoundedSymbol(
+                name = if (editing) "done" else "edit",
+                size = if (compact) 19.dp else 24.dp,
+                tint = MaterialTheme.colorScheme.onSurface,
+                weight = FontWeight.Medium,
+            )
+        }
+    }
+    val labelContent: @Composable () -> Unit = {
+        androidx.compose.animation.AnimatedContent(
+            targetState = isEditMode,
+            label = "bottomBarEditLabel",
+            transitionSpec = {
+                androidx.compose.animation.fadeIn(animationSpec = effectsSpec) togetherWith
+                    androidx.compose.animation.fadeOut(animationSpec = effectsSpec)
+            },
+        ) { editing ->
+            Text(
+                text =
+                    stringResource(
+                        if (editing) R.string.edit_bottom_bar_done else R.string.edit_bottom_bar_edit,
+                    ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+    if (compact) {
+        Row(
+            modifier = clickableModifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            iconContent()
+            Spacer(Modifier.width(3.dp))
+            labelContent()
+        }
+    } else {
+        Column(
+            modifier = clickableModifier.padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            iconContent()
+            Spacer(Modifier.height(4.dp))
+            labelContent()
+        }
+    }
+}
+
+/**
+ * Mark done / not done. Toggle pulses on activate (scale bump + primary tint), and
+ * the FILL=1 vs FILL=0 variant of `check_circle` flips with completion state so the
+ * affordance reads visually as well as via label. Recurrence is handled at the call
+ * site - the VM routes the click through repository.markCompleted, which in turn
+ * advances rather than completes a recurring note.
+ */
+@Composable
+private fun DoneActionItem(
+    completed: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+) {
+    val effectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
+    val colorEffectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Color>())
+    val hapticEnabled = LocalHapticEnabled.current
+    val view = LocalView.current
+    var pulsing by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pulsing) 1.35f else 1f,
+        animationSpec = effectsSpec,
+        finishedListener = { if (pulsing) pulsing = false },
+        label = "bottomBarDoneScale",
+    )
+    val activeTint = MaterialTheme.colorScheme.primary
+    val inactiveTint = MaterialTheme.colorScheme.onSurface
+    val tint by animateColorAsState(
+        targetValue = if (pulsing || completed) activeTint else inactiveTint,
+        animationSpec = colorEffectsSpec,
+        label = "bottomBarDoneColor",
+    )
+    val clickableModifier =
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(
+                onClick = {
+                    if (!completed) {
+                        if (hapticEnabled) view.performLongPressHaptic()
+                        pulsing = true
+                    }
+                    onClick()
+                },
+            )
+    val iconContent: @Composable () -> Unit = {
+        RememberMaterialRoundedSymbol(
+            name = "check_circle",
+            filled = completed,
+            size = if (compact) 19.dp else 24.dp,
+            tint = tint,
+            weight = FontWeight.Medium,
+            modifier = Modifier.scale(scale),
+        )
+    }
+    val labelContent: @Composable () -> Unit = {
+        Text(
+            text =
+                stringResource(
+                    if (completed) {
+                        R.string.edit_bottom_bar_mark_not_done
+                    } else {
+                        R.string.edit_bottom_bar_mark_done
+                    },
+                ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    if (compact) {
+        Row(
+            modifier = clickableModifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            iconContent()
+            Spacer(Modifier.width(3.dp))
+            labelContent()
+        }
+    } else {
+        Column(
+            modifier = clickableModifier.padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            iconContent()
+            Spacer(Modifier.height(4.dp))
+            labelContent()
+        }
+    }
+}
+
+/**
+ * Pin toggle: same pulse choreography as [StarActionItem] and [DoneActionItem], but tinted with
+ * the theme's tertiary colour and using the `push_pin` FILL toggle. Deliberately NOT yellow and
+ * not star-shaped - pin (placement on Home) and star (favorite + widget) are different features
+ * and must not be mistaken for each other.
+ */
+@Composable
+private fun PinActionItem(
+    pinned: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+) {
+    val effectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
+    val colorEffectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Color>())
+    val hapticEnabled = LocalHapticEnabled.current
+    val view = LocalView.current
+    var pulsing by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pulsing) 1.35f else 1f,
+        animationSpec = effectsSpec,
+        finishedListener = { if (pulsing) pulsing = false },
+        label = "bottomBarPinScale",
+    )
+    val activeTint = MaterialTheme.colorScheme.tertiary
+    val tint by animateColorAsState(
+        targetValue = if (pulsing || pinned) activeTint else MaterialTheme.colorScheme.onSurface,
+        animationSpec = colorEffectsSpec,
+        label = "bottomBarPinColor",
+    )
+    val clickableModifier =
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(
+                onClick = {
+                    if (!pinned) {
+                        if (hapticEnabled) view.performLongPressHaptic()
+                        pulsing = true
+                    }
+                    onClick()
+                },
+            )
+    val iconContent: @Composable () -> Unit = {
+        // Fill swap alongside the tint change, so the state reads without relying on colour.
+        // Upright, unlike the tilted badge in GroupHeader: in a row of upright toolbar glyphs a
+        // rotated pin reads as crooked rather than as deliberate.
+        RememberMaterialRoundedSymbol(
+            name = "push_pin",
+            filled = pinned,
+            size = if (compact) 19.dp else 24.dp,
+            tint = tint,
+            weight = FontWeight.Medium,
+            modifier = Modifier.scale(scale),
+        )
+    }
+    val labelContent: @Composable () -> Unit = {
+        Text(
+            text =
+                stringResource(
+                    if (pinned) R.string.edit_bottom_bar_unpin else R.string.edit_bottom_bar_pin,
+                ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    if (compact) {
+        Row(
+            modifier = clickableModifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            iconContent()
+            Spacer(Modifier.width(3.dp))
+            labelContent()
+        }
+    } else {
+        Column(
+            modifier = clickableModifier.padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            iconContent()
+            Spacer(Modifier.height(4.dp))
+            labelContent()
+        }
+    }
+}
+
+/**
+ * Star toggle: pulses on activate (scale bump + yellow tint). When starred, stays yellow.
+ */
+@Composable
+private fun StarActionItem(
+    starred: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+) {
+    val effectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
+    val colorEffectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Color>())
+    val hapticEnabled = LocalHapticEnabled.current
+    val view = LocalView.current
+    var starPulsing by remember { mutableStateOf(false) }
+    val starScale by animateFloatAsState(
+        targetValue = if (starPulsing) 1.35f else 1f,
+        animationSpec = effectsSpec,
+        finishedListener = { if (starPulsing) starPulsing = false },
+        label = "bottomBarStarScale",
+    )
+    val starColor by animateColorAsState(
+        targetValue = if (starPulsing || starred) Color(0xFFF9A825) else MaterialTheme.colorScheme.onSurface,
+        animationSpec = colorEffectsSpec,
+        label = "bottomBarStarColor",
+    )
+    val clickableModifier =
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(
+                onClick = {
+                    if (!starred) {
+                        if (hapticEnabled) view.performLongPressHaptic()
+                        starPulsing = true
+                    }
+                    onClick()
+                },
+            )
+    val iconContent: @Composable () -> Unit = {
+        // Shape + color together, so the starred state reads clearly even for users who
+        // can't distinguish the yellow tint (color-blindness, high-contrast themes, grayscale).
+        // We swap the underlying FILL-instanced font family via `filled = starred` rather
+        // than switching the ligature name, because in our instanced subset font both
+        // "starred" and "star_border" resolve to the same FILL=1 glyph.
+        RememberMaterialRoundedSymbol(
+            name = "star",
+            filled = starred,
+            size = if (compact) 19.dp else 24.dp,
+            tint = starColor,
+            weight = FontWeight.Medium,
+            opticalCenterYOffset = 1.5.dp,
+            modifier = Modifier.scale(starScale),
+        )
+    }
+    val labelContent: @Composable () -> Unit = {
+        Text(
+            text = stringResource(R.string.edit_bottom_bar_star),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    if (compact) {
+        Row(
+            modifier = clickableModifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            iconContent()
+            Spacer(Modifier.width(3.dp))
+            labelContent()
+        }
+    } else {
+        Column(
+            modifier = clickableModifier.padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            iconContent()
+            Spacer(Modifier.height(4.dp))
+            labelContent()
+        }
+    }
+}

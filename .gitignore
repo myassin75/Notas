@@ -1,0 +1,28 @@
+.claude/
+.gradle/
+.kotlin/
+.idea/
+build/
+localdocs/
+*.lnk
+app/src/main/assets/HELP.md
+
+# Fastlane generated output (store metadata lives in fastlane/metadata and is committed)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
+
+font_subset/cache/
+font_subset/*.ttf
+font_subset/*.json
+font_subset/*.txt
+
+# Machine-local Android SDK path (never commit)
+local.properties
+
+# CI-generated signing files if reproduced locally (do not commit)
+keystore.properties
+*-release.keystore
+
+# Copied from docs/HELP.md at build time
+app/src/main/assets/HELP.md

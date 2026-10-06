@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.2.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.2.1)" variant="all" version="9.2.1">
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-hdpi`: ic_action_amazon.png, ic_action_android.png, ic_action_dropbox.png, ic_action_facebook.png, ic_action_foursquare.png... (67 more)">
+        <location
+            file="src/main/res/drawable-hdpi"/>
+    </issue>
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-mdpi`: ic_action_amazon.png, ic_action_android.png, ic_action_dropbox.png, ic_action_facebook.png, ic_action_foursquare.png... (67 more)">
+        <location
+            file="src/main/res/drawable-mdpi"/>
+    </issue>
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-xhdpi`: ic_action_amazon.png, ic_action_android.png, ic_action_dropbox.png, ic_action_facebook.png, ic_action_foursquare.png... (67 more)">
+        <location
+            file="src/main/res/drawable-xhdpi"/>
+    </issue>
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-xxhdpi`: ic_action_amazon.png, ic_action_android.png, ic_action_dropbox.png, ic_action_facebook.png, ic_action_foursquare.png... (67 more)">
+        <location
+            file="src/main/res/drawable-xxhdpi"/>
+    </issue>
+
+</issues>

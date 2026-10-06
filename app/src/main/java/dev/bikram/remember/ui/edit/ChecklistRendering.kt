@@ -1,0 +1,978 @@
+package dev.bikram.remember.ui.edit
+
+import android.annotation.SuppressLint
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import dev.bikram.remember.R
+import dev.bikram.remember.domain.checklist.EditableItem
+import dev.bikram.remember.ui.common.RememberMaterialRoundedSymbol
+import dev.bikram.remember.ui.common.markdownChecklistCheckboxSize
+import dev.bikram.remember.ui.common.rememberLocalTextFieldValueState
+import dev.bikram.remember.ui.components.RememberDropdownMenuItem
+import dev.bikram.remember.ui.components.RememberIconButton
+import dev.bikram.remember.ui.feedback.LocalHapticEnabled
+import dev.bikram.remember.ui.feedback.appClickable
+import dev.bikram.remember.ui.feedback.appCombinedClickable
+import dev.bikram.remember.ui.feedback.performLongPressHaptic
+import dev.bikram.remember.ui.feedback.performSwipeThresholdHaptic
+import dev.bikram.remember.ui.theme.reducedMotionAwareSpec
+import kotlin.math.roundToInt
+
+/**
+ * A synthetic, non-persisted header that stands in for the real parent row when a child has been
+ * separated from its parent by a toggle. Lives in the UI layer only -- [realParentLocalId] points
+ * at the actual parent's [EditableItem.localId] so tapping a child's toggle does not also mutate
+ * the ghost. [parentChecked] is the persisted state of the real parent, used to render the ghost
+ * with the correct strikethrough/checkbox visual.
+ */
+internal data class GhostParentHeader(
+    val realParentLocalId: Long,
+    val text: String,
+    val parentChecked: Boolean,
+)
+
+/**
+ * Fully-computed display state for the completed section. A plain list would lose ghost-parent
+ * grouping, so we emit a flat list of entries the Composable can render 1:1.
+ */
+internal sealed interface CompletedEntry {
+    val sortKey: Double
+
+    data class Ghost(
+        val header: GhostParentHeader,
+        override val sortKey: Double,
+    ) : CompletedEntry
+
+    data class Row(
+        val item: EditableItem,
+        override val sortKey: Double,
+    ) : CompletedEntry
+}
+
+/**
+ * Mirror of [CompletedEntry] for the active section. Used when an unchecked child's real parent
+ * is still in the completed section -- we synthesise a ghost header above the orphan child so the
+ * context stays visible while the parent remains struck through in the other half of the screen.
+ */
+internal sealed interface ActiveEntry {
+    val sortKey: Double
+
+    data class Ghost(
+        val header: GhostParentHeader,
+        override val sortKey: Double,
+    ) : ActiveEntry
+
+    data class Row(
+        val item: EditableItem,
+        override val sortKey: Double,
+    ) : ActiveEntry
+}
+
+@Composable
+@SuppressLint("ModifierParameter")
+internal fun ChecklistRow(
+    item: EditableItem,
+    isEditMode: Boolean,
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+    detailsFocusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+    initialTitleSelection: Int? = null,
+    initialDetailsSelection: Int? = null,
+    onTitleFocusOffsetConsumed: () -> Unit = {},
+    onDetailsFocusOffsetConsumed: () -> Unit = {},
+    isDragging: Boolean = false,
+    dragHandleModifier: Modifier = Modifier,
+    /**
+     * Whether to render the leading drag-handle gutter. Defaults to true so the active section
+     * keeps reorder affordance; the completed section sets this to false because checked items
+     * are not reorderable (matches Google Keep, which also freezes the checked-items order).
+     */
+    showDragHandle: Boolean = true,
+    onTextChange: (String) -> Unit,
+    onDetailsChange: (String) -> Unit = {},
+    onToggle: () -> Unit,
+    onCheckAll: (() -> Unit)? = null,
+    onUncheckAll: (() -> Unit)? = null,
+    onRemove: () -> Unit,
+    onNext: () -> Unit = {},
+    onTextTap: ((Int) -> Unit)? = null,
+    onDetailsTap: ((Int) -> Unit)? = null,
+    /**
+     * Horizontal drag callback. `+1` means the user dragged right past the indent threshold
+     * (request to nest under the previous top-level sibling). `-1` means the user dragged left
+     * (request to promote back to depth 0). `null` disables the gesture entirely -- used in the
+     * completed section where hierarchy is frozen.
+     */
+    onIndentChange: ((Int) -> Unit)? = null,
+    hasChildren: Boolean = false,
+    childrenExpanded: Boolean = true,
+    onToggleChildren: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    val scale by androidx.compose.animation.core
+        .animateFloatAsState(if (isDragging) 1.02f else 1f)
+    val alpha by androidx.compose.animation.core
+        .animateFloatAsState(if (isDragging) 0.8f else 1f)
+    // Depth indent. 28.dp per level matches the thumb/toggle gutter so child toggles line up with
+    // the parent's text, not their own toggle.
+    val depthIndent = (item.depth.coerceIn(0, 1) * 28).dp
+    // Animate the indent so reparenting slides visibly instead of snapping.
+    val animatedIndent by androidx.compose.animation.core
+        .animateDpAsState(depthIndent, label = "checklistDepthIndent")
+    val checkboxSize =
+        markdownChecklistCheckboxSize(
+            style = MaterialTheme.typography.bodyLarge,
+            density = LocalDensity.current,
+        )
+    val checkedMutedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    val checkboxTint =
+        if (item.checked) {
+            checkedMutedColor
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+    val hapticEnabled = LocalHapticEnabled.current
+    val view = LocalView.current
+    var detailsExpanded by rememberSaveable(item.localId) { mutableStateOf(false) }
+    var showCheckboxMenu by remember { mutableStateOf(false) }
+
+    // A one-line title lines up with the checkbox because both line boxes are centered in the same
+    // row: the title's line box gets equal slack above and below inside the checkbox gutter.
+    // When the title wraps, the row grows and centering would drop the checkbox to the
+    // middle of the paragraph, so the gutter is pinned to the top and the title gets that same
+    // slack back as top padding - which keeps the checkbox exactly where it sits on a one-liner.
+    var titleFirstLineHeightPx by remember(item.localId) { mutableIntStateOf(0) }
+    var titleWrapped by remember(item.localId) { mutableStateOf(false) }
+    val titleTopSlack =
+        if (titleWrapped && titleFirstLineHeightPx > 0) {
+            with(LocalDensity.current) {
+                ((CHECKLIST_GUTTER_HEIGHT - titleFirstLineHeightPx.toDp()) / 2).coerceAtLeast(0.dp)
+            }
+        } else {
+            0.dp
+        }
+
+    var titleFieldValue by remember(item.localId) {
+        mutableStateOf(TextFieldValue(text = item.text, selection = TextRange(item.text.length)))
+    }
+    var detailsFieldValue by remember(item.localId) {
+        mutableStateOf(TextFieldValue(text = item.details, selection = TextRange(item.details.length)))
+    }
+    val titleTextFieldState =
+        rememberLocalTextFieldValueState(
+            value = titleFieldValue,
+            onValueChange = { newValue ->
+                val oldText = titleFieldValue.text
+                titleFieldValue = newValue
+                if (newValue.text != oldText) {
+                    onTextChange(newValue.text)
+                }
+            },
+        )
+    val detailsTextFieldState =
+        rememberLocalTextFieldValueState(
+            value = detailsFieldValue,
+            onValueChange = { newValue ->
+                val oldText = detailsFieldValue.text
+                detailsFieldValue = newValue
+                if (newValue.text != oldText) {
+                    onDetailsChange(newValue.text)
+                }
+            },
+        )
+
+    LaunchedEffect(item.text) {
+        if (item.text != titleFieldValue.text) {
+            val selection = titleFieldValue.selection
+            titleFieldValue =
+                TextFieldValue(
+                    text = item.text,
+                    selection =
+                        TextRange(
+                            start = selection.start.coerceIn(0, item.text.length),
+                            end = selection.end.coerceIn(0, item.text.length),
+                        ),
+                )
+        }
+    }
+
+    LaunchedEffect(item.details) {
+        if (item.details != detailsFieldValue.text) {
+            val selection = detailsFieldValue.selection
+            detailsFieldValue =
+                TextFieldValue(
+                    text = item.details,
+                    selection =
+                        TextRange(
+                            start = selection.start.coerceIn(0, item.details.length),
+                            end = selection.end.coerceIn(0, item.details.length),
+                        ),
+                )
+        }
+    }
+
+    LaunchedEffect(isEditMode, initialTitleSelection) {
+        if (isEditMode && initialTitleSelection != null) {
+            val clamped = initialTitleSelection.coerceIn(0, item.text.length)
+            titleFieldValue = titleFieldValue.copy(selection = TextRange(clamped))
+            onTitleFocusOffsetConsumed()
+        }
+    }
+
+    LaunchedEffect(isEditMode, initialDetailsSelection) {
+        if (isEditMode && initialDetailsSelection != null) {
+            val clamped = initialDetailsSelection.coerceIn(0, item.details.length)
+            detailsFieldValue = detailsFieldValue.copy(selection = TextRange(clamped))
+            onDetailsFocusOffsetConsumed()
+        }
+    }
+
+    val detailLineCount = item.details.lineSequence().count { it.isNotBlank() }
+    val detailsCanExpand = detailLineCount > 1
+    val showDetailsAffordance = isEditMode || detailsCanExpand
+    val detailPreview =
+        item.details
+            .lineSequence()
+            .firstOrNull { it.isNotBlank() }
+            ?.trim()
+            .orEmpty()
+    val detailsToggleLabel = stringResource(R.string.edit_list_item_details_placeholder)
+
+    LaunchedEffect(isDragging) {
+        if (isDragging && hapticEnabled) {
+            view.performLongPressHaptic()
+        }
+    }
+
+    // RTL awareness for the gesture surfaces below.
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+
+    // Drag-to-indent gesture: accumulates horizontal movement during a single drag and fires the
+    // callback once when a threshold (48.dp ~= fingertip width) is crossed. We only fire once per
+    // drag to avoid flickering between depth 0 and 1.
+    //
+    // In RTL layouts the visual indent direction is mirrored: swiping LEFT should nest (the child
+    // sits visually to the left of its parent in RTL), and swiping RIGHT should promote. We keep
+    // the accumulator in raw pointer deltas and flip the sign when comparing to the threshold so
+    // the +1 / -1 contract with the caller stays identical regardless of layout direction.
+    val indentThresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 48.dp.toPx() }
+    val indentModifier =
+        if (isEditMode && onIndentChange != null) {
+            Modifier.pointerInput(item.localId, item.depth, isRtl) {
+                var accumulated = 0f
+                var fired = false
+                detectHorizontalDragGestures(
+                    onDragStart = {
+                        accumulated = 0f
+                        fired = false
+                    },
+                    onDragEnd = {
+                        accumulated = 0f
+                        fired = false
+                    },
+                    onDragCancel = {
+                        accumulated = 0f
+                        fired = false
+                    },
+                    onHorizontalDrag = { _, delta ->
+                        if (fired) return@detectHorizontalDragGestures
+                        accumulated += delta
+                        // Effective "toward-nest" drag distance. In LTR that means rightward (positive
+                        // delta); in RTL that means leftward (negative delta) -- flip the sign so the
+                        // same comparison works in both layouts.
+                        val effective = if (isRtl) -accumulated else accumulated
+                        when {
+                            effective > indentThresholdPx -> {
+                                // Crossing the indent threshold is a commit, so it uses the same
+                                // confirm-strength haptic as a swipe threshold, not the long-press one.
+                                if (hapticEnabled) view.performSwipeThresholdHaptic()
+                                onIndentChange(+1)
+                                fired = true
+                            }
+                            effective < -indentThresholdPx -> {
+                                if (hapticEnabled) view.performSwipeThresholdHaptic()
+                                onIndentChange(-1)
+                                fired = true
+                            }
+                        }
+                    },
+                )
+            }
+        } else {
+            Modifier
+        }
+
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(start = animatedIndent)
+                .then(indentModifier)
+                .scale(scale)
+                .alpha(alpha),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isEditMode && showDragHandle) {
+                // The drag handle is a vertical-only gesture surface: only `dragHandleModifier`
+                // (the library's `draggableHandle()`) is applied here. We deliberately do NOT also
+                // attach the horizontal indentModifier to this Box because detectHorizontalDragGestures
+                // and draggableHandle() live on independent pointer-input blocks and both observe
+                // the same pointer stream. During a long vertical reorder drag the user's finger
+                // tends to drift horizontally by small amounts; that drift can accumulate past the
+                // indent threshold and silently reparent the item, which then breaks the parent
+                // cascade in `toggleChecked` (a child's parentLocalId no longer matches the tapped
+                // parent, or the parent itself ends up at depth 1 and the `target.depth == 0`
+                // cascade branch is skipped). The row body retains the horizontal indent gesture,
+                // so users can still swipe the text area left or right to change depth.
+                val cdReorder = stringResource(R.string.cd_reorder_drag_handle)
+                // Same gutter as the checkbox it replaces in edit mode, so the title sits at the
+                // same x in both modes instead of jumping sideways when edit mode is toggled.
+                Box(
+                    modifier =
+                        dragHandleModifier
+                            .size(width = CHECKLIST_GUTTER_WIDTH, height = CHECKLIST_GUTTER_HEIGHT)
+                            .semantics { contentDescription = cdReorder },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "drag_indicator",
+                        size = 20.dp,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        weight = FontWeight.Medium,
+                    )
+                }
+            }
+            if (!isEditMode) {
+                val hasLongPressAction = onCheckAll != null || onUncheckAll != null
+                Box(modifier = if (titleWrapped) Modifier.align(Alignment.Top) else Modifier) {
+                    Box(
+                        modifier =
+                            if (hasLongPressAction) {
+                                Modifier
+                                    .size(width = CHECKLIST_GUTTER_WIDTH, height = CHECKLIST_GUTTER_HEIGHT)
+                                    .appCombinedClickable(
+                                        onClick = onToggle,
+                                        // appCombinedClickable fires the long-press haptic itself.
+                                        onLongClick = { showCheckboxMenu = true },
+                                        role = Role.Checkbox,
+                                    )
+                            } else {
+                                Modifier
+                                    .size(width = CHECKLIST_GUTTER_WIDTH, height = CHECKLIST_GUTTER_HEIGHT)
+                                    .appClickable(
+                                        onClick = onToggle,
+                                        role = Role.Checkbox,
+                                    )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = if (item.checked) "check_box" else "check_box_outline_blank",
+                            size = checkboxSize,
+                            tint = checkboxTint,
+                            weight = FontWeight.Medium,
+                        )
+                    }
+
+                    if (hasLongPressAction) {
+                        DropdownMenu(
+                            expanded = showCheckboxMenu,
+                            onDismissRequest = { showCheckboxMenu = false },
+                            shape = RoundedCornerShape(16.dp),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ) {
+                            RememberDropdownMenuItem(
+                                text = { Text(stringResource(R.string.checklist_action_check_all)) },
+                                leadingIcon = {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "done_all",
+                                        size = 20.dp,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                onClick = {
+                                    showCheckboxMenu = false
+                                    onCheckAll?.invoke()
+                                },
+                            )
+                            RememberDropdownMenuItem(
+                                text = { Text(stringResource(R.string.checklist_action_uncheck_all)) },
+                                leadingIcon = {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "remove_done",
+                                        size = 20.dp,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                                onClick = {
+                                    showCheckboxMenu = false
+                                    onUncheckAll?.invoke()
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+            if (isEditMode) {
+                BasicTextField(
+                    state = titleTextFieldState,
+                    lineLimits = TextFieldLineLimits.Default,
+                    textStyle =
+                        MaterialTheme.typography.bodyLarge.copy(
+                            color =
+                                if (item.checked) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            textDecoration = if (item.checked) TextDecoration.LineThrough else TextDecoration.None,
+                        ),
+                    keyboardOptions =
+                        androidx.compose.foundation.text.KeyboardOptions(
+                            capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                        ),
+                    onKeyboardAction = { onNext() },
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    onTextLayout = { getResult ->
+                        getResult()?.let { layout ->
+                            titleWrapped = layout.lineCount > 1
+                            titleFirstLineHeightPx = (layout.getLineBottom(0) - layout.getLineTop(0)).roundToInt()
+                        }
+                    },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
+                    decorator = { innerTextField ->
+                        if (item.text.isEmpty()) {
+                            Text(
+                                stringResource(R.string.edit_list_new_item_placeholder),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                            )
+                        }
+                        innerTextField()
+                    },
+                )
+                if (hasChildren && onToggleChildren != null) {
+                    ChecklistChildrenExpandButton(
+                        expanded = childrenExpanded,
+                        onClick = onToggleChildren,
+                        muted = item.checked,
+                    )
+                }
+                if (showDetailsAffordance) {
+                    RememberIconButton(
+                        onClick = { detailsExpanded = !detailsExpanded },
+                        tooltipLabel = detailsToggleLabel,
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = if (detailsExpanded) "expand_less" else "notes",
+                            size = 22.dp,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            weight = FontWeight.Medium,
+                        )
+                    }
+                }
+                // Last element in the row, so the button's own inset reads as a gap against the
+                // editor's trailing edge - keep it just wide enough for the glyph.
+                RememberIconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.size(CHECKLIST_ROW_TRAILING_BUTTON_SIZE),
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "close",
+                        size = 24.dp,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        weight = FontWeight.Medium,
+                    )
+                }
+            } else {
+                var titleLayout by remember(item.text) { mutableStateOf<TextLayoutResult?>(null) }
+                Text(
+                    text = item.text.ifEmpty { stringResource(R.string.edit_list_new_item_placeholder) },
+                    style =
+                        MaterialTheme.typography.bodyLarge.copy(
+                            color =
+                                if (item.checked) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                } else if (item.text.isEmpty()) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            textDecoration = if (item.checked) TextDecoration.LineThrough else TextDecoration.None,
+                        ),
+                    onTextLayout = { layout ->
+                        titleLayout = layout
+                        titleWrapped = layout.lineCount > 1
+                        titleFirstLineHeightPx = (layout.getLineBottom(0) - layout.getLineTop(0)).roundToInt()
+                    },
+                    modifier =
+                        if (onTextTap != null) {
+                            Modifier
+                                .weight(1f)
+                                .align(if (titleWrapped) Alignment.Top else Alignment.CenterVertically)
+                                .padding(top = titleTopSlack)
+                                .pointerInput(onTextTap, titleLayout) {
+                                    detectTapGestures { tapOffset ->
+                                        val offset =
+                                            if (item.text.isEmpty()) {
+                                                0
+                                            } else {
+                                                titleLayout?.getOffsetForPosition(tapOffset) ?: item.text.length
+                                            }
+                                        onTextTap(offset)
+                                    }
+                                }
+                        } else {
+                            Modifier
+                                .weight(1f)
+                                .align(if (titleWrapped) Alignment.Top else Alignment.CenterVertically)
+                                .padding(top = titleTopSlack)
+                        },
+                )
+                if (hasChildren && onToggleChildren != null) {
+                    ChecklistChildrenExpandButton(
+                        expanded = childrenExpanded,
+                        onClick = onToggleChildren,
+                        muted = item.checked,
+                    )
+                }
+                if (showDetailsAffordance) {
+                    RememberIconButton(
+                        onClick = { detailsExpanded = !detailsExpanded },
+                        tooltipLabel = detailsToggleLabel,
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = if (detailsExpanded) "expand_less" else "expand_more",
+                            size = 22.dp,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            weight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (detailsExpanded || (!isEditMode && detailPreview.isNotBlank())) {
+            // Line the details up with the title: the leading gutter is the drag handle in edit
+            // mode and the checkbox everywhere else, and both are CHECKLIST_GUTTER_WIDTH wide.
+            val detailsStartPadding =
+                if (isEditMode && !showDragHandle) 0.dp else CHECKLIST_GUTTER_WIDTH
+            if (isEditMode) {
+                BasicTextField(
+                    state = detailsTextFieldState,
+                    lineLimits = TextFieldLineLimits.Default,
+                    textStyle =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            color =
+                                if (item.checked) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                        ),
+                    keyboardOptions =
+                        androidx.compose.foundation.text.KeyboardOptions(
+                            capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Default,
+                        ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = detailsStartPadding, end = 48.dp, bottom = 8.dp)
+                            .then(if (detailsFocusRequester != null) Modifier.focusRequester(detailsFocusRequester) else Modifier),
+                    decorator = { innerTextField ->
+                        if (item.details.isEmpty()) {
+                            Text(
+                                stringResource(R.string.edit_list_item_details_placeholder),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                            )
+                        }
+                        innerTextField()
+                    },
+                )
+            } else {
+                var detailsLayout by remember(item.details) { mutableStateOf<TextLayoutResult?>(null) }
+                val detailsModifier =
+                    if (onDetailsTap != null) {
+                        Modifier.pointerInput(onDetailsTap, detailsLayout) {
+                            detectTapGestures { tapOffset ->
+                                val offset =
+                                    if (item.details.isEmpty()) {
+                                        0
+                                    } else {
+                                        detailsLayout?.getOffsetForPosition(tapOffset) ?: item.details.length
+                                    }
+                                detailsExpanded = true
+                                onDetailsTap(offset)
+                            }
+                        }
+                    } else if (detailsCanExpand) {
+                        Modifier.appClickable { detailsExpanded = !detailsExpanded }
+                    } else {
+                        Modifier
+                    }
+                Text(
+                    text = if (detailsExpanded) item.details else detailPreview,
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            color =
+                                if (item.checked) {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                        ),
+                    maxLines = if (detailsExpanded) Int.MAX_VALUE else 1,
+                    overflow = if (detailsExpanded) TextOverflow.Clip else TextOverflow.Ellipsis,
+                    onTextLayout = { detailsLayout = it },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = detailsStartPadding, end = 48.dp, bottom = 8.dp)
+                            .then(detailsModifier),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Gutter that holds the checkbox and doubles as its touch target. The width only has to clear the
+ * glyph plus a small inset - keeping it square would push the checkbox (and with it the title) well
+ * away from the row's leading edge. The height stays a full tap target and is what the title's
+ * first line is centered against.
+ */
+private val CHECKLIST_GUTTER_WIDTH = 32.dp
+private val CHECKLIST_GUTTER_HEIGHT = 40.dp
+
+/** Trailing remove button; sized to its 24dp glyph plus a 4dp inset. */
+private val CHECKLIST_ROW_TRAILING_BUTTON_SIZE = 32.dp
+
+/**
+ * Read-only header that stands in for the real parent when the parent lives in the opposite
+ * section from its child. Styled to match a regular checklist row (checkbox gutter + text) but
+ * at reduced opacity so it reads as context rather than an interactive row. The ghost uses a
+ * disabled-looking checkbox that never toggles and a strikethrough when the ghost represents a
+ * checked parent (appearing in the active section).
+ */
+@Composable
+internal fun GhostParentHeaderRow(
+    header: GhostParentHeader,
+    isParentChecked: Boolean,
+    /**
+     * True when the section rendering this ghost draws a 40dp drag-handle gutter before each row
+     * (currently: only the active section in edit mode). The ghost mirrors that gutter so its
+     * checkbox lines up with real rows below it. Completed rows never show a drag handle (we
+     * match Google Keep: checked items cannot be reordered), so completed ghosts set this to
+     * false and sit flush at depth 0.
+     */
+    showDragHandleGutter: Boolean,
+    childrenExpanded: Boolean,
+    onToggleChildren: () -> Unit,
+    modifier: Modifier = Modifier,
+    showCheckbox: Boolean = true,
+) {
+    val checkboxSize =
+        markdownChecklistCheckboxSize(
+            style = MaterialTheme.typography.bodyLarge,
+            density = LocalDensity.current,
+        )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .alpha(0.45f),
+        ) {
+            if (showDragHandleGutter) {
+                Spacer(Modifier.width(CHECKLIST_GUTTER_WIDTH))
+            }
+            if (showCheckbox) {
+                // Static checkbox icon (no click behaviour). Using the Box + icon avoids the ripple and
+                // minSize guarantees of RememberIconButton so the ghost can't steal taps meant for a
+                // child below it.
+                Box(
+                    modifier =
+                        Modifier
+                            .size(width = CHECKLIST_GUTTER_WIDTH, height = CHECKLIST_GUTTER_HEIGHT),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = if (isParentChecked) "check_box" else "check_box_outline_blank",
+                        size = checkboxSize,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        weight = FontWeight.Medium,
+                    )
+                }
+            }
+            Text(
+                text = header.text.ifEmpty { stringResource(R.string.edit_list_new_item_placeholder) },
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textDecoration = if (isParentChecked) TextDecoration.LineThrough else TextDecoration.None,
+                    ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        // Keep the expand chevron at full strength so it matches real parent rows in this section.
+        // The ghost body stays faded; only the checkbox and title inherit the reduced opacity.
+        ChecklistChildrenExpandButton(
+            expanded = childrenExpanded,
+            onClick = onToggleChildren,
+            muted = true,
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun ChecklistChildrenExpandButton(
+    expanded: Boolean,
+    onClick: () -> Unit,
+    muted: Boolean = false,
+) {
+    val chevronTint =
+        if (muted) {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+    val rotation by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (expanded) 90f else 0f,
+        animationSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<Float>()),
+        label = "checklist_children_chevron_rotation",
+    )
+    val tooltipLabel =
+        stringResource(
+            if (expanded) {
+                R.string.cd_checklist_collapse_children
+            } else {
+                R.string.cd_checklist_expand_children
+            },
+        )
+    RememberIconButton(
+        onClick = onClick,
+        tooltipLabel = tooltipLabel,
+    ) {
+        RememberMaterialRoundedSymbol(
+            name = "chevron_right",
+            autoMirror = true,
+            modifier = Modifier.graphicsLayer { rotationZ = rotation },
+            size = 22.dp,
+            tint = chevronTint,
+            weight = FontWeight.Medium,
+        )
+    }
+}
+
+internal fun filterVisibleActiveEntries(
+    entries: List<ActiveEntry>,
+    collapsedParentIds: Set<Long>,
+    draggingParentLocalId: Long?,
+): List<ActiveEntry> =
+    entries.filter { entry ->
+        isActiveEntryVisible(entry, collapsedParentIds, draggingParentLocalId)
+    }
+
+internal fun filterVisibleCompletedEntries(
+    entries: List<CompletedEntry>,
+    collapsedParentIds: Set<Long>,
+    draggingParentLocalId: Long?,
+): List<CompletedEntry> =
+    entries.filter { entry ->
+        isCompletedEntryVisible(entry, collapsedParentIds, draggingParentLocalId)
+    }
+
+internal fun isActiveEntryVisible(
+    entry: ActiveEntry,
+    collapsedParentIds: Set<Long>,
+    draggingParentLocalId: Long?,
+): Boolean {
+    when (entry) {
+        is ActiveEntry.Ghost -> {
+            val parentId = entry.header.realParentLocalId
+            // Ghost headers stay visible when collapsed so the section keeps an expand anchor.
+            if (draggingParentLocalId != null && parentId == draggingParentLocalId) {
+                return false
+            }
+        }
+        is ActiveEntry.Row -> {
+            entry.item.parentLocalId?.let { parentId ->
+                if (parentId in collapsedParentIds) {
+                    return false
+                }
+                if (draggingParentLocalId != null && parentId == draggingParentLocalId) {
+                    return false
+                }
+            }
+        }
+    }
+    return true
+}
+
+internal fun isCompletedEntryVisible(
+    entry: CompletedEntry,
+    collapsedParentIds: Set<Long>,
+    draggingParentLocalId: Long?,
+): Boolean {
+    when (entry) {
+        is CompletedEntry.Ghost -> {
+            // Ghost headers stay visible when collapsed so the section keeps an expand anchor.
+        }
+        is CompletedEntry.Row -> {
+            entry.item.parentLocalId?.let { parentId ->
+                if (parentId in collapsedParentIds) {
+                    return false
+                }
+                if (draggingParentLocalId != null && parentId == draggingParentLocalId) {
+                    return false
+                }
+            }
+        }
+    }
+    return true
+}
+
+/**
+ * Walks the sorted list of checked items and returns a flat display list that interleaves
+ * [CompletedEntry.Ghost] headers in front of any checked child whose real parent is still in the
+ * active section. Ghost headers collapse consecutive children of the same active parent into a
+ * single header (we don't repeat the ghost on every child). The synthesised ghost carries
+ * `parentChecked = false` because the real parent lives in the active half.
+ */
+internal fun buildCompletedEntries(
+    completedItems: List<EditableItem>,
+    activeParents: Map<Long, EditableItem>,
+    checkedParents: Map<Long, EditableItem>,
+): List<CompletedEntry> {
+    val out = mutableListOf<CompletedEntry>()
+    var lastGhostParentId: Long? = null
+    for (item in completedItems) {
+        val parentId = item.parentLocalId
+        val needsGhost =
+            parentId != null &&
+                parentId !in checkedParents &&
+                parentId in activeParents
+        if (needsGhost && parentId != lastGhostParentId) {
+            val parent = activeParents[parentId]
+            if (parent != null) {
+                out +=
+                    CompletedEntry.Ghost(
+                        header =
+                            GhostParentHeader(
+                                realParentLocalId = parent.localId,
+                                text = parent.text,
+                                parentChecked = false,
+                            ),
+                        sortKey = item.sortOrder,
+                    )
+                lastGhostParentId = parentId
+            }
+        } else if (!needsGhost) {
+            lastGhostParentId = null
+        }
+        out += CompletedEntry.Row(item = item, sortKey = item.sortOrder)
+    }
+    return out
+}
+
+/**
+ * Mirror of [buildCompletedEntries] for the active half. When a child is unchecked but its real
+ * parent is still in the completed section, we synthesise a ghost parent row above that child so
+ * the visual grouping survives. The ghost uses `parentChecked = true` so the header renders with
+ * the strikethrough/checked visual that matches the parent's persisted state.
+ */
+internal fun buildActiveEntries(
+    activeItems: List<EditableItem>,
+    activeParents: Map<Long, EditableItem>,
+    checkedParents: Map<Long, EditableItem>,
+): List<ActiveEntry> {
+    val out = mutableListOf<ActiveEntry>()
+    var lastGhostParentId: Long? = null
+    for (item in activeItems) {
+        val parentId = item.parentLocalId
+        val needsGhost =
+            parentId != null &&
+                parentId !in activeParents &&
+                parentId in checkedParents
+        if (needsGhost && parentId != lastGhostParentId) {
+            val parent = checkedParents[parentId]
+            if (parent != null) {
+                out +=
+                    ActiveEntry.Ghost(
+                        header =
+                            GhostParentHeader(
+                                realParentLocalId = parent.localId,
+                                text = parent.text,
+                                parentChecked = true,
+                            ),
+                        sortKey = item.sortOrder,
+                    )
+                lastGhostParentId = parentId
+            }
+        } else if (!needsGhost) {
+            lastGhostParentId = null
+        }
+        out += ActiveEntry.Row(item = item, sortKey = item.sortOrder)
+    }
+    return out
+}
