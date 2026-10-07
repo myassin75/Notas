@@ -10,6 +10,8 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -129,11 +131,29 @@ fun OnboardingPermissionsScreen(
         }
     }
 
-    val scheme = MaterialTheme.colorScheme
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.Transparent,
-    ) {
+    val isDark = isSystemInDarkTheme()
+    val baseScheme = MaterialTheme.colorScheme
+    val scheme = if (isDark) baseScheme else baseScheme.copy(
+        background = Color(0xFFF8F7FC),
+        surface = Color(0xFFFFFFFF),
+        onSurface = Color(0xFF383743),
+        onSurfaceVariant = Color(0xFF8A879B),
+        outlineVariant = Color(0xFFE3DFEA),
+        primary = Color(0xFFA64FA8),
+        onPrimary = Color(0xFFFFFFFF),
+        primaryContainer = Color(0xFFF1E5F4),
+        onPrimaryContainer = Color(0xFFA64FA8),
+        secondaryContainer = Color(0xFFF1E5F4),
+        onSecondaryContainer = Color(0xFFA64FA8),
+        surfaceContainerHighest = Color(0xFFF1EFF5),
+        surfaceContainer = Color(0xFFFFFFFF),
+        surfaceContainerHigh = Color(0xFFFFFFFF)
+    )
+    MaterialTheme(colorScheme = scheme) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = scheme.background,
+        ) {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -290,7 +310,7 @@ fun OnboardingPermissionsScreen(
                                     },
                                 )
 
-                                val bottomCtaShape = MaterialTheme.shapes.extraExtraLarge
+                                val bottomCtaShape = RoundedCornerShape(28.dp)
                                 val bottomCtaPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
                                 if (notificationsGranted) {
                                     RememberButton(
@@ -316,15 +336,26 @@ fun OnboardingPermissionsScreen(
                                     RememberTextButton(
                                         onClick = onContinue,
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = ButtonDefaults.textButtonColors(contentColor = scheme.onSurfaceVariant),
+                                        colors = ButtonDefaults.textButtonColors(contentColor = scheme.onSurface),
                                         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
                                     ) {
-                                        Text(
-                                            text = stringResource(R.string.onboarding_permissions_skip_for_now),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            textAlign = TextAlign.Center,
-                                        )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(
+                                                text = stringResource(R.string.onboarding_permissions_skip_for_now),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            RememberMaterialRoundedSymbol(
+                                                name = "arrow_forward",
+                                                autoMirror = true,
+                                                tint = scheme.onSurface,
+                                                size = 18.dp
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -427,7 +458,7 @@ fun OnboardingPermissionsScreen(
                             }
                         }
 
-                        val bottomCtaShape = MaterialTheme.shapes.extraExtraLarge
+                        val bottomCtaShape = RoundedCornerShape(28.dp)
                         val bottomCtaPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
                         Column(
                             modifier =
@@ -488,18 +519,26 @@ fun OnboardingPermissionsScreen(
                                 RememberTextButton(
                                     onClick = onContinue,
                                     modifier = Modifier.fillMaxWidth(),
-                                    colors =
-                                        ButtonDefaults.textButtonColors(
-                                            contentColor = scheme.onSurfaceVariant,
-                                        ),
+                                    colors = ButtonDefaults.textButtonColors(contentColor = scheme.onSurface),
                                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
                                 ) {
-                                    Text(
-                                        text = stringResource(R.string.onboarding_permissions_skip_for_now),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        textAlign = TextAlign.Center,
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.onboarding_permissions_skip_for_now),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Medium,
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        RememberMaterialRoundedSymbol(
+                                            name = "arrow_forward",
+                                            autoMirror = true,
+                                            tint = scheme.onSurface,
+                                            size = 18.dp
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -507,6 +546,7 @@ fun OnboardingPermissionsScreen(
                 }
             }
         }
+    }
     }
 }
 
@@ -782,7 +822,7 @@ private fun PermissionStatusCard(
     val actionFadeInSpec = reducedMotionAwareSpec(motionScheme.defaultEffectsSpec<Float>())
     val actionFadeOutSpec = reducedMotionAwareSpec(motionScheme.fastEffectsSpec<Float>())
     val cardPadding = if (compact) (if (primaryAction) 12.dp else 10.dp) else (if (primaryAction) 16.dp else 10.dp)
-    val cardShape = if (compact) MaterialTheme.shapes.large else (if (primaryAction) MaterialTheme.shapes.largeIncreased else MaterialTheme.shapes.large)
+    val cardShape = RoundedCornerShape(28.dp)
     val iconSize = if (compact) (if (primaryAction) 46.dp else 40.dp) else (if (primaryAction) 54.dp else 44.dp)
     val bodyStartPadding = iconSize + 10.dp
     val topBodySpacing = if (compact) (if (primaryAction) 8.dp else 6.dp) else (if (primaryAction) 12.dp else 7.dp)
@@ -847,6 +887,7 @@ private fun PermissionStatusCard(
                     iconName = iconName,
                     iconSize = iconSize,
                     pulseScale = iconPulseScale,
+                    primaryAction = primaryAction
                 )
                 Text(
                     text = title,
@@ -895,12 +936,12 @@ private fun PermissionStatusCard(
                             onClick = onAction,
                             enabled = currentActionEnabled,
                             modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraExtraLarge,
+                            shape = RoundedCornerShape(28.dp),
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = actionVerticalPadding),
                             colors =
                                 ButtonDefaults.buttonColors(
-                                    containerColor = scheme.primaryContainer,
-                                    contentColor = scheme.onPrimaryContainer,
+                                    containerColor = scheme.primary,
+                                    contentColor = scheme.onPrimary,
                                 ),
                         ) {
                             Text(
@@ -915,7 +956,7 @@ private fun PermissionStatusCard(
                             onClick = onAction,
                             enabled = currentActionEnabled,
                             modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraExtraLarge,
+                            shape = RoundedCornerShape(28.dp),
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = actionVerticalPadding),
                             // Tonal rather than neutral: surfaceContainerHighest is one tonal
                             // step from the card it sits on, so the button all but disappears.
@@ -945,10 +986,13 @@ private fun PermissionIconBadge(
     iconName: String,
     iconSize: Dp,
     pulseScale: Float,
+    primaryAction: Boolean = true,
 ) {
     val scheme = MaterialTheme.colorScheme
     val containerColor = if (granted) scheme.primary else scheme.primaryContainer
-    val iconColor = if (granted) scheme.onPrimary else scheme.onPrimaryContainer
+    val iconColor = if (granted) scheme.onPrimary else {
+        if (primaryAction) scheme.onPrimaryContainer else scheme.onSurfaceVariant
+    }
     Surface(
         modifier =
             Modifier
