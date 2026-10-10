@@ -21,7 +21,7 @@ import three.haddad.smartnotas.data.OnboardingPrefs
 import three.haddad.smartnotas.data.QuickCapturePrefs
 import three.haddad.smartnotas.data.RememberDatabase
 import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.TagRepository
+import three.haddad.smartnotas.data.ShoulderRepository
 import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.UpdatePrefs
 import three.haddad.smartnotas.data.ViewOptionsPrefs
@@ -100,13 +100,11 @@ object RememberModule {
 
     @Provides
     @Singleton
-    fun provideTagRepository(
+    fun provideShoulderRepository(
         database: RememberDatabase,
-    ): TagRepository =
-        TagRepository(
-            tagDao = database.tagDao(),
-            noteDao = database.noteDao(),
-            database = database,
+    ): ShoulderRepository =
+        ShoulderRepository(
+            shoulderDao = database.shoulderDao(),
         )
 
     @Provides
@@ -114,18 +112,18 @@ object RememberModule {
     fun provideNoteRepository(
         database: RememberDatabase,
         reminderScheduler: ReminderScheduler,
-        tagRepository: TagRepository,
+        shoulderRepository: ShoulderRepository,
         appMediaStorage: AppMediaStorage,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         @DefaultDispatcher defaultDispatcher: CoroutineDispatcher,
     ): NoteRepository =
         NoteRepository(
             noteDao = database.noteDao(),
+            database = database,
             itemDao = database.checklistItemDao(),
             attachmentDao = database.attachmentDao(),
             scheduler = reminderScheduler,
-            tagRepository = tagRepository,
-            database = database,
+            shoulderRepository = shoulderRepository,
             appMediaStorage = appMediaStorage,
             ioDispatcher = ioDispatcher,
             defaultDispatcher = defaultDispatcher,
@@ -283,7 +281,7 @@ class AppStartupWarmup(
         // happening, so the first fullscreen Home frame is less likely to render before Room
         // has produced the active notes list.
         applicationScope.launch(ioDispatcher) {
-            noteRepository.alignStoredTagSpellings()
+            
             noteRepository.observeActive().first()
         }
     }

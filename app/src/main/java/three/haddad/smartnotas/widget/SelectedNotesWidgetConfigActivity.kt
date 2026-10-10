@@ -52,12 +52,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.TagRepository
 import three.haddad.smartnotas.data.ThemePrefs
+import three.haddad.smartnotas.data.ShoulderRepository
 import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.RememberTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -66,10 +67,10 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
     lateinit var themePrefs: ThemePrefs
 
     @Inject
-    lateinit var tagRepository: TagRepository
+    lateinit var notesWidgetUpdater: NotesWidgetUpdater
 
     @Inject
-    lateinit var notesWidgetUpdater: NotesWidgetUpdater
+    lateinit var shoulderRepository: ShoulderRepository
 
     private var targetAppWidgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
     private var configState by mutableStateOf(SelectedNotesWidgetConfig())
@@ -90,17 +91,21 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
 
         setContent {
             val themeState by themePrefs.state.collectAsStateWithLifecycle(initialValue = ThemeState())
-            val availableTags by tagRepository
-                .observeActiveTagSuggestions()
-                .collectAsStateWithLifecycle(initialValue = emptyList())
+            
+            // Map the Flow<List<ShoulderEntity>> to Flow<List<String>> to match the UI expectation
+            val availableShoulders by remember {
+                shoulderRepository.getAllShoulders().map { list ->
+                    list.map { it.name }
+                }
+            }.collectAsStateWithLifecycle(initialValue = emptyList())
 
             RememberTheme(themeState = themeState) {
                 SelectedNotesConfigContent(
                     currentConfig = configState,
-                    availableTags = availableTags,
-                    onSelectOption = { filterType, tag ->
-                        configState = SelectedNotesWidgetConfig(filterType = filterType, tag = tag)
-                        handleOptionSelected(filterType, tag)
+                    availableShoulders = availableShoulders,
+                    onSelectOption = { filterType, shoulder ->
+                        configState = SelectedNotesWidgetConfig(filterType = filterType, shoulder = shoulder)
+                        handleOptionSelected(filterType, shoulder)
                     },
                     onCancel = { finish() },
                 )
@@ -141,8 +146,8 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
                     runCatching {
                         SelectedNotesFilterType.valueOf(glanceFilterType)
                     }.getOrDefault(SelectedNotesFilterType.ALL)
-                val tag = prefs[KEY_SELECTED_NOTES_TAG].orEmpty()
-                configState = SelectedNotesWidgetConfig(filterType = filterType, tag = tag)
+                val shoulder = prefs[KEY_SELECTED_NOTES_SHOULDER].orEmpty()
+                configState = SelectedNotesWidgetConfig(filterType = filterType, shoulder = shoulder)
             }
         }
     }
@@ -160,9 +165,9 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
 
     private fun handleOptionSelected(
         filterType: SelectedNotesFilterType,
-        tag: String = "",
+        shoulder: String = "",
     ) {
-        val config = SelectedNotesWidgetConfig(filterType = filterType, tag = tag)
+        val config = SelectedNotesWidgetConfig(filterType = filterType, shoulder = shoulder)
         SelectedNotesWidgetConfigStore.saveConfig(this, targetAppWidgetId, config)
 
         val glanceId = glanceIdFor(targetAppWidgetId)
@@ -171,7 +176,7 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
                 runCatching {
                     updateAppWidgetState(this@SelectedNotesWidgetConfigActivity, glanceId) { prefs ->
                         prefs[KEY_SELECTED_NOTES_FILTER_TYPE] = filterType.name
-                        prefs[KEY_SELECTED_NOTES_TAG] = tag
+                        prefs[KEY_SELECTED_NOTES_SHOULDER] = shoulder
                     }
                     SelectedWidget().update(this@SelectedNotesWidgetConfigActivity, glanceId)
                 }
@@ -195,7 +200,7 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
 @Composable
 private fun SelectedNotesConfigContent(
     currentConfig: SelectedNotesWidgetConfig,
-    availableTags: List<String>,
+    availableShoulders: List<String>,
     onSelectOption: (SelectedNotesFilterType, String) -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -248,8 +253,8 @@ private fun SelectedNotesConfigContent(
                 ConfigSelectionRow(
                     label = stringResource(R.string.widget_config_category_starred),
                     iconName = "star",
-                    selected = currentConfig.filterType == SelectedNotesFilterType.STARRED,
-                    onClick = { onSelectOption(SelectedNotesFilterType.STARRED, "") },
+                    selected = currentConfig.filterType == SelectedNotesFilterType.SHOULDER,
+                    onClick = { onSelectOption(SelectedNotesFilterType.SHOULDER, "") },
                 )
             }
             item {
@@ -260,25 +265,25 @@ private fun SelectedNotesConfigContent(
                     onClick = { onSelectOption(SelectedNotesFilterType.PINNED, "") },
                 )
             }
-            if (availableTags.isNotEmpty()) {
+            if (availableShoulders.isNotEmpty()) {
                 item {
                     Text(
-                        text = stringResource(R.string.widget_config_section_tags),
+                        text = stringResource(R.string.widget_config_section_shoulders),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp, start = 4.dp),
                     )
                 }
-                items(availableTags) { tag ->
-                    val isTagSelected =
-                        currentConfig.filterType == SelectedNotesFilterType.TAG &&
-                            currentConfig.tag.equals(tag, ignoreCase = true)
+                items(availableShoulders) { shoulder ->
+                    val isShoulderSelected =
+                        currentConfig.filterType == SelectedNotesFilterType.SHOULDER &&
+                            currentConfig.shoulder.equals(shoulder, ignoreCase = true)
                     ConfigSelectionRow(
-                        label = tag,
+                        label = shoulder,
                         iconName = "label",
-                        selected = isTagSelected,
-                        onClick = { onSelectOption(SelectedNotesFilterType.TAG, tag) },
+                        selected = isShoulderSelected,
+                        onClick = { onSelectOption(SelectedNotesFilterType.SHOULDER, shoulder) },
                     )
                 }
             }

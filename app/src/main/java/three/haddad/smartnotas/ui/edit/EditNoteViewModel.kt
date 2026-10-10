@@ -70,7 +70,6 @@ class EditNoteViewModel
             loadedId = newId
             syncHasPersistedRow()
             startExternalFieldMirror(newId)
-            if (starred.value) repository.setStarred(newId, true)
             return newId
         }
 
@@ -79,14 +78,12 @@ class EditNoteViewModel
             val t = title.value
             val b = _body.value
             val opts = currentOptions()
-            val starred = starred.value
             if (id == null) {
-                return t.isNotBlank() || b.isNotBlank() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.tags.isNotEmpty() || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null
+                return t.isNotBlank() || b.isNotBlank() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null
             } else {
                 val old = originalNote ?: return true
                 if (t != old.title) return true
                 if (b != old.body) return true
-                if (starred != old.starred) return true
                 if (opts.reminderAt != old.reminderAt) return true
                 if (opts.importance != old.importance) return true
                 if (opts.visibility != old.visibility) return true
@@ -95,7 +92,6 @@ class EditNoteViewModel
                 if (opts.locked != old.locked) return true
                 if (opts.iconKey != old.iconKey) return true
                 if (opts.actions != old.actions) return true
-                if (opts.tags != old.tags) return true
                 if (opts.recurrence != old.recurrence) return true
                 if (opts.reminders != old.getActiveReminders()) return true
                 return false
@@ -125,7 +121,6 @@ class EditNoteViewModel
                     syncHasPersistedRow()
                     startExternalFieldMirror(newId)
                     if (titleValue.isBlank()) setTitle(finalTitle)
-                    if (starred.value) repository.setStarred(newId, true)
                     persistence.clearDirtyIfUnchanged(epochAtWrite)
 
                     val savedNote = repository.get(newId)?.note
@@ -144,9 +139,6 @@ class EditNoteViewModel
                     repository.updateNote(id, finalTitle, bodyValue, 0, currentOptions())
                     if (titleValue.isBlank()) setTitle(finalTitle)
                     val cur = repository.get(id)?.note
-                    if (cur != null && cur.starred != starred.value) {
-                        repository.setStarred(id, starred.value)
-                    }
                     persistence.clearDirtyIfUnchanged(epochAtWrite)
 
                     val savedNote = repository.get(id)?.note
@@ -172,12 +164,10 @@ class EditNoteViewModel
                                         locked = old.locked,
                                         iconKey = old.iconKey,
                                         actions = old.actions,
-                                        tags = old.tags,
                                         recurrence = old.recurrence,
                                         reminders = old.getActiveReminders(),
                                     ),
                             )
-                            repository.setStarred(id, old.starred)
                         }
                     } else {
                         return@withLock null

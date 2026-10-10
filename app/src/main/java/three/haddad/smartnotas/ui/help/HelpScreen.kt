@@ -26,13 +26,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -61,6 +65,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -70,6 +75,8 @@ import three.haddad.smartnotas.ui.common.MarkdownText
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
 import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
+import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.settings.SettingsSectionCard
 import three.haddad.smartnotas.ui.components.settings.GroupPosition
 import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 import three.haddad.smartnotas.ui.feedback.appClickable
@@ -192,55 +199,63 @@ fun HelpScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = Color.Transparent,
+        containerColor = SettingsDesignTokens.ScreenBg,
         topBar = {
             LargeTopAppBar(
                 colors = transparentLargeTopAppBarColors(),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    Box(
-                        modifier =
-                            Modifier
-                                .padding(start = 4.dp)
-                                .size(40.dp)
-                                .clip(MaterialTheme.shapes.extraExtraLarge)
-                                .appClickable(onClick = onBack),
-                        contentAlignment = Alignment.Center,
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .clickable(onClick = onBack),
                     ) {
-                        RememberMaterialRoundedSymbol(
-                            name = "arrow_back",
-                            autoMirror = true,
-                            size = 24.dp,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            weight = FontWeight.Medium,
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            RememberMaterialRoundedSymbol(
+                                name = "arrow_back",
+                                autoMirror = true,
+                                size = 20.dp,
+                                tint = SettingsDesignTokens.TextPrimary,
+                                weight = FontWeight.Normal,
+                                filled = false,
+                            )
+                        }
                     }
                 },
-                title = { Text(stringResource(R.string.help_title)) },
+                title = { Text(stringResource(R.string.help_title), color = SettingsDesignTokens.TextPrimary, fontWeight = FontWeight.Bold) },
                 actions = {
                     val expandCollapseLabel =
                         stringResource(
                             if (allExpanded) R.string.help_collapse_all_cd else R.string.help_expand_all_cd,
                         )
-                    RememberFilledTonalIconButton(
-                        onClick = {
-                            if (allExpanded) {
-                                helpVm.collapseAll(allSubsectionKeys)
-                            } else {
-                                helpVm.expandAll(allSubsectionKeys)
-                            }
-                        },
-                        modifier =
-                            Modifier
-                                .size(rememberResponsiveActionButtonSize())
-                                .semantics { contentDescription = expandCollapseLabel },
-                        tooltipLabel = expandCollapseLabel,
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(end = 12.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                if (allExpanded) {
+                                    helpVm.collapseAll(allSubsectionKeys)
+                                } else {
+                                    helpVm.expandAll(allSubsectionKeys)
+                                }
+                            },
                     ) {
-                        RememberMaterialRoundedSymbol(
-                            name = if (allExpanded) "unfold_less" else "unfold_more",
-                            size = 22.dp,
-                            weight = FontWeight.Medium,
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            RememberMaterialRoundedSymbol(
+                                name = if (allExpanded) "unfold_less" else "unfold_more",
+                                size = 20.dp,
+                                tint = SettingsDesignTokens.TextPrimary,
+                                weight = FontWeight.Normal,
+                                filled = false,
+                            )
+                        }
                     }
                 },
             )
@@ -256,44 +271,63 @@ fun HelpScreen(
                     top = innerPadding.calculateTopPadding() + 8.dp,
                     bottom = innerPadding.calculateBottomPadding() + 24.dp,
                 ),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item(key = "search") {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = helpVm::setSearchQuery,
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    placeholder = { Text(stringResource(R.string.help_search_placeholder)) },
-                    leadingIcon = {
-                        RememberMaterialRoundedSymbol(
-                            name = "search",
-                            size = 20.dp,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            weight = FontWeight.Normal,
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .size(32.dp)
-                                        .clip(MaterialTheme.shapes.extraExtraLarge)
-                                        .appClickable { helpVm.setSearchQuery("") },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "close",
-                                    size = 18.dp,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    weight = FontWeight.Normal,
-                                )
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = helpVm::setSearchQuery,
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                stringResource(R.string.help_search_placeholder),
+                                color = SettingsDesignTokens.TextSecondary,
+                            )
+                        },
+                        leadingIcon = {
+                            RememberMaterialRoundedSymbol(
+                                name = "search",
+                                size = 20.dp,
+                                tint = SettingsDesignTokens.PrimaryPurple,
+                                weight = FontWeight.Normal,
+                                filled = false,
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotBlank()) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .appClickable { helpVm.setSearchQuery("") },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "close",
+                                        size = 18.dp,
+                                        tint = SettingsDesignTokens.TextSecondary,
+                                        weight = FontWeight.Normal,
+                                        filled = false,
+                                    )
+                                }
                             }
-                        }
-                    },
-                    singleLine = true,
-                    shape = MaterialTheme.shapes.extraExtraLarge,
-                )
+                        },
+                        singleLine = true,
+                        shape = CircleShape,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                        ),
+                    )
+                }
             }
 
             if (filteredSections.isEmpty()) {
@@ -301,7 +335,7 @@ fun HelpScreen(
                     Text(
                         text = stringResource(R.string.help_no_results),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = SettingsDesignTokens.TextSecondary,
                         modifier = Modifier.padding(top = 16.dp, start = 4.dp),
                     )
                 }
@@ -311,30 +345,23 @@ fun HelpScreen(
                 item(key = "label_${section.title}") {
                     Text(
                         text = section.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 20.dp, bottom = 6.dp, start = 4.dp),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = SettingsDesignTokens.PrimaryPurple,
+                        ),
+                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp, start = 4.dp),
                     )
                 }
                 itemsIndexed(
                     items = section.subsections,
                     key = { _, sub -> "sub_${section.title}_${sub.title}" },
                 ) { index, subsection ->
-                    val isFirst = index == 0
-                    val isLast = index == section.subsections.lastIndex
-                    val groupPosition =
-                        when {
-                            isFirst && isLast -> GroupPosition.ONLY
-                            isFirst -> GroupPosition.FIRST
-                            isLast -> GroupPosition.LAST
-                            else -> GroupPosition.MIDDLE
-                        }
                     val key = "${section.title}/${subsection.title}"
                     val isExpanded = key in expandedKeys
                     val actions = helpSubsectionActions[subsection.title] ?: emptyList()
                     HelpSubsectionCard(
                         subsection = subsection,
-                        groupPosition = groupPosition,
                         isExpanded = isExpanded,
                         onToggle = { helpVm.setExpanded(key, !isExpanded) },
                         actions = actions,
@@ -350,7 +377,6 @@ fun HelpScreen(
 @Composable
 private fun HelpSubsectionCard(
     subsection: HelpSubsection,
-    groupPosition: GroupPosition,
     isExpanded: Boolean,
     onToggle: () -> Unit,
     actions: List<HelpAction>,
@@ -358,9 +384,6 @@ private fun HelpSubsectionCard(
 ) {
     val spatialSpec =
         reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec<androidx.compose.ui.unit.IntSize>())
-    val dpSpatialSpec =
-        reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.Dp>())
-    val colorSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Color>())
     val fadeInSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
     val fadeOutSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
 
@@ -369,22 +392,13 @@ private fun HelpSubsectionCard(
         animationSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec()),
         label = "help_chevron_rotation",
     )
-    val chevronContainerSize by animateDpAsState(
-        targetValue = if (!isExpanded) 32.dp else 20.dp,
-        animationSpec = dpSpatialSpec,
-        label = "help_chevron_container_size",
-    )
-    val chevronContainerColor by animateColorAsState(
-        targetValue = if (!isExpanded) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
-        animationSpec = colorSpec,
-        label = "help_chevron_container_color",
-    )
 
     val contentDescriptionExpand = stringResource(R.string.section_expand_cd, subsection.title)
     val contentDescriptionCollapse = stringResource(R.string.section_collapse_cd, subsection.title)
-    val interactionSource = remember { MutableInteractionSource() }
 
-    GroupedListItem(position = groupPosition) {
+    SettingsSectionCard(
+        modifier = Modifier.padding(vertical = 2.dp),
+    ) {
         Column {
             Row(
                 modifier =
@@ -393,10 +407,7 @@ private fun HelpSubsectionCard(
                         .semantics {
                             contentDescription =
                                 if (!isExpanded) contentDescriptionExpand else contentDescriptionCollapse
-                        }.clickable(
-                            interactionSource = interactionSource,
-                            indication = LocalIndication.current,
-                        ) {
+                        }.clickable {
                             onToggle()
                         }.padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -404,8 +415,11 @@ private fun HelpSubsectionCard(
             ) {
                 Text(
                     text = subsection.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp,
+                        color = SettingsDesignTokens.TextPrimary,
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -413,17 +427,18 @@ private fun HelpSubsectionCard(
                 Box(
                     modifier =
                         Modifier
-                            .size(chevronContainerSize)
-                            .clip(MaterialTheme.shapes.extraExtraLarge)
-                            .background(chevronContainerColor),
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(SettingsDesignTokens.SoftLavender),
                     contentAlignment = Alignment.Center,
                 ) {
                     RememberMaterialRoundedSymbol(
                         name = "chevron_right",
                         autoMirror = true,
                         size = 18.dp,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        weight = FontWeight.Medium,
+                        tint = SettingsDesignTokens.PrimaryPurple,
+                        weight = FontWeight.Normal,
+                        filled = false,
                         modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
                     )
                 }
@@ -451,11 +466,13 @@ private fun HelpSubsectionCard(
                         ),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    HorizontalDivider(color = SettingsDesignTokens.DividerColor, thickness = 1.dp)
                     MarkdownText(
                         markdown = subsection.body,
                         style =
                             MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = SettingsDesignTokens.TextSecondary,
+                                fontSize = 14.sp,
                             ),
                     )
                     if (actions.isNotEmpty()) {
@@ -464,14 +481,26 @@ private fun HelpSubsectionCard(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             actions.forEach { action ->
-                                FilledTonalButton(
-                                    onClick = {
-                                        when (action) {
-                                            is HelpAction.OpenAppSection -> onOpenAppSection(action.sectionKey)
-                                        }
-                                    },
+                                Surface(
+                                    shape = CircleShape,
+                                    color = SettingsDesignTokens.SoftLavender,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .clickable {
+                                            when (action) {
+                                                is HelpAction.OpenAppSection -> onOpenAppSection(action.sectionKey)
+                                            }
+                                        },
                                 ) {
-                                    Text(stringResource(action.labelRes))
+                                    Text(
+                                        text = stringResource(action.labelRes),
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Medium,
+                                            color = SettingsDesignTokens.PrimaryPurple,
+                                            fontSize = 13.sp,
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                    )
                                 }
                             }
                         }

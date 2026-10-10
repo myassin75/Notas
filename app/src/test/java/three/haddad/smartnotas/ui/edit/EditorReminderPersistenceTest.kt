@@ -122,7 +122,6 @@ class EditorReminderPersistenceTest(
                 title = "Reminder",
                 body = "",
                 colorIndex = 0,
-                starred = false,
                 trashed = false,
                 createdAt = 1L,
                 updatedAt = 1L,

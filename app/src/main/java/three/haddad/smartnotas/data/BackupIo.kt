@@ -230,22 +230,11 @@ class BackupIo(
 
     private suspend fun snapshotNotes(): NotesSnapshot {
         val all = repository.snapshotAllNotes()
-        val tagColors =
-            repository.tagRepository
-                ?.observeTagColorMap()
-                ?.first()
-                ?: emptyMap()
-        val root =
+                val root =
             JSONObject().apply {
                 put("version", SCHEMA_VERSION)
                 put("exportedAt", System.currentTimeMillis())
-                put(
-                    "tagColors",
-                    JSONObject().apply {
-                        tagColors.forEach { (tagName, colorHex) -> put(tagName, colorHex) }
-                    },
-                )
-                put(
+                                put(
                     "notes",
                     JSONArray().apply {
                         all.forEach { put(encodeNoteForBackup(it)) }
@@ -891,22 +880,13 @@ class BackupIo(
             }
             added++
         }
-        importTagColors(root.optJSONObject("tagColors"))
-        return NoteImportResult(
+                return NoteImportResult(
             noteCount = added,
             noteIds = insertedNoteIds,
         )
     }
 
-    private suspend fun importTagColors(tagColorsJson: JSONObject?) {
-        if (tagColorsJson == null) return
-        val tagRepository = repository.tagRepository ?: return
-        tagColorsJson.keys().forEach { tagName ->
-            val colorHex = tagColorsJson.optString(tagName, "")
-            tagRepository.setTagColor(tagName, colorHex)
-        }
-    }
-
+    
     private fun copyRelToAppFiles(
         relative: String,
         extractDir: File,

@@ -112,7 +112,18 @@ const val MAX_REMINDERS_PER_NOTE = 3
 
 fun List<NoteReminder>.limitedToReminderSlots(): List<NoteReminder> = take(MAX_REMINDERS_PER_NOTE)
 
-@Entity(tableName = "notes")
+@Entity(
+    tableName = "notes",
+    foreignKeys = [
+        ForeignKey(
+            entity = ShoulderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["shoulderId"],
+            onDelete = ForeignKey.SET_NULL,
+        ),
+    ],
+    indices = [Index("shoulderId")],
+)
 data class NoteEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val kind: NoteKind,
@@ -124,7 +135,6 @@ data class NoteEntity(
     /** Denormalized action titles and details for FTS search. */
     val actionsText: String = "",
     val colorIndex: Int,
-    val starred: Boolean,
     val trashed: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
@@ -137,9 +147,9 @@ data class NoteEntity(
     val locked: Boolean = false,
     val iconKey: String? = null,
     val actions: List<NoteAction> = emptyList(),
-    val tags: List<String> = emptyList(),
     val recurrence: RecurrenceRule? = null,
     val reminders: List<NoteReminder> = emptyList(),
+    val shoulderId: Long? = null,
     /**
      * Distinct from [trashed]: archived notes are hidden from Home but remain searchable
      * and never auto-deleted. State-changing actions keep archive and trash mutually
@@ -220,48 +230,9 @@ fun NoteEntity.withSyncedPrimaryReminder(): NoteEntity {
 data class NoteFtsEntity(
     val title: String,
     val body: String,
-    val tags: String,
     val checklistText: String,
     val attachmentText: String,
     val actionsText: String,
-)
-
-@Entity(
-    tableName = "tags",
-    indices = [Index(value = ["normalizedName"], unique = true)],
-)
-data class TagEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String,
-    val normalizedName: String,
-    val colorHex: String? = null,
-    val createdAt: Long,
-    val updatedAt: Long,
-)
-
-@Entity(
-    tableName = "note_tags",
-    primaryKeys = ["noteId", "tagId"],
-    foreignKeys = [
-        ForeignKey(
-            entity = NoteEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["noteId"],
-            onDelete = ForeignKey.CASCADE,
-        ),
-        ForeignKey(
-            entity = TagEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["tagId"],
-            onDelete = ForeignKey.CASCADE,
-        ),
-    ],
-    indices = [Index("noteId"), Index("tagId")],
-)
-data class NoteTagCrossRef(
-    val noteId: Long,
-    val tagId: Long,
-    val sortOrder: Int,
 )
 
 @Entity(

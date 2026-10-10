@@ -59,7 +59,6 @@ data class HomeState(
     val filter: NotesFilter = NotesFilter(),
     val items: PersistentList<HomeListItem> = persistentListOf(),
     val totalActive: Int = 0,
-    val availableTags: PersistentList<String> = persistentListOf(),
     val viewOptions: ViewOptions = ViewOptions(),
     /** Ids of notes currently selected in bulk-action mode. Empty when not in selection mode. */
     val selectedIds: PersistentSet<Long> = persistentSetOf(),
@@ -73,7 +72,6 @@ data class HomeState(
      * True when at least one selected note is not starred. Same enablement rule as
      * [canPinSelected] for the bulk Star button.
      */
-    val canStarSelected: Boolean = false,
     /**
      * Archived notes that match the current search query + facet filters. Only non-empty while
      * [NotesFilter.text] is non-blank; drives the collapsible "Archive (N)" section on Home.

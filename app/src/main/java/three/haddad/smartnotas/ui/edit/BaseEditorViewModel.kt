@@ -16,11 +16,8 @@ import three.haddad.smartnotas.data.NoteReminder
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.RememberReservedTags
 import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.data.normalizeTagName
 import three.haddad.smartnotas.data.pinned
-import three.haddad.smartnotas.data.tagNamesUsingStoredSpellings
 import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
 import three.haddad.smartnotas.ui.common.HeroFraming
 import three.haddad.smartnotas.ui.nav.Routes
@@ -62,8 +59,6 @@ abstract class BaseEditorViewModel(
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
-    private val _starred = MutableStateFlow(false)
-    val starred: StateFlow<Boolean> = _starred.asStateFlow()
 
     /**
      * Snapshot of the underlying note's [three.haddad.smartnotas.data.NoteEntity.completedAt] as a
@@ -116,24 +111,6 @@ abstract class BaseEditorViewModel(
 
     private val _actions = MutableStateFlow<List<NoteAction>>(emptyList())
     val actions: StateFlow<List<NoteAction>> = _actions.asStateFlow()
-
-    private val _tags = MutableStateFlow<List<String>>(emptyList())
-    val tags: StateFlow<List<String>> = _tags.asStateFlow()
-    val activeTagSuggestions: StateFlow<List<String>> =
-        repository
-            .observeStoredTagNames()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    init {
-        viewModelScope.launch {
-            activeTagSuggestions.collect { storedNames ->
-                val alignedTags = tagNamesUsingStoredSpellings(_tags.value, storedNames)
-                if (alignedTags != _tags.value) {
-                    _tags.value = alignedTags
-                }
-            }
-        }
-    }
 
     private val _attachments = MutableStateFlow<List<NoteAttachmentEntity>>(emptyList())
     val attachments: StateFlow<List<NoteAttachmentEntity>> = _attachments.asStateFlow()
@@ -197,7 +174,6 @@ abstract class BaseEditorViewModel(
 
     protected var loadedId: Long? = noteId
     protected var originalNote: three.haddad.smartnotas.data.NoteEntity? = null
-    private var starredEditedLocally = false
     private var remindersEditedLocally = false
     private var visibilityEditedLocally = false
     private var importanceEditedLocally = false
@@ -233,7 +209,6 @@ abstract class BaseEditorViewModel(
 
     protected fun acceptPersistedSnapshot(note: three.haddad.smartnotas.data.NoteEntity?) {
         originalNote = note
-        starredEditedLocally = false
         remindersEditedLocally = note != null && _reminders.value != note.getActiveReminders()
     }
 
@@ -244,7 +219,6 @@ abstract class BaseEditorViewModel(
     protected fun applyLoadedCommon(existing: NoteWithItems) {
         val n = existing.note
         _title.value = n.title
-        _starred.value = n.starred || n.tags.contains(RememberReservedTags.STARRED)
         val activeRems = n.getActiveReminders()
         _reminders.value = activeRems
         val soonest = activeRems.minByOrNull { it.reminderAt }
@@ -257,11 +231,6 @@ abstract class BaseEditorViewModel(
         _pictureHeroFraming.value = n.pictureHeroFraming
         _iconKey.value = n.iconKey
         _actions.value = n.actions
-        _tags.value =
-            tagNamesUsingStoredSpellings(
-                n.tags.filterNot { it == RememberReservedTags.STARRED },
-                activeTagSuggestions.value,
-            )
         _attachments.value = existing.attachments
         _archived.value = n.archived
         _trashed.value = n.trashed
@@ -296,10 +265,6 @@ abstract class BaseEditorViewModel(
                     _reminderAt.value = soonest?.reminderAt
                     _recurrence.value = soonest?.recurrence?.sanitized()
                 }
-                val externallyStarred = n.starred || n.tags.contains(RememberReservedTags.STARRED)
-                if (!starredEditedLocally && _starred.value != externallyStarred) {
-                    _starred.value = externallyStarred
-                }
                 if (_archived.value != n.archived) _archived.value = n.archived
                 if (_trashed.value != n.trashed) _trashed.value = n.trashed
                 val isCompleted = n.completedAt != null
@@ -309,7 +274,6 @@ abstract class BaseEditorViewModel(
                 if (_updatedAt.value != n.updatedAt) _updatedAt.value = n.updatedAt
                 originalNote =
                     originalNote?.copy(
-                        starred = n.starred,
                         archived = n.archived,
                         trashed = n.trashed,
                         completedAt = n.completedAt,
@@ -327,12 +291,6 @@ abstract class BaseEditorViewModel(
     fun setTitle(value: String) {
         if (_title.value == value) return
         _title.value = value
-        markDirty()
-    }
-
-    fun toggleStar() {
-        _starred.value = !_starred.value
-        starredEditedLocally = true
         markDirty()
     }
 
@@ -423,74 +381,6 @@ abstract class BaseEditorViewModel(
         markDirty()
     }
 
-    fun setTags(value: List<String>) {
-        val cleaned = tagNamesUsingStoredSpellings(value, activeTagSuggestions.value)
-        if (_tags.value == cleaned) return
-        _tags.value = cleaned
-        markDirty()
-    }
-
-    fun addTag(
-        value: String,
-        colorHex: String,
-    ) {
-        val cleaned = value.trim()
-        if (cleaned.isBlank() || cleaned == RememberReservedTags.STARRED) return
-        if (RememberReservedTags.isSuggestionReserved(cleaned)) return
-        val storedName =
-            activeTagSuggestions.value.firstOrNull { storedTag ->
-                normalizeTagName(storedTag) == normalizeTagName(cleaned)
-            }
-        val spelling = storedName ?: cleaned
-        if (_tags.value.any { tag -> normalizeTagName(tag) == normalizeTagName(spelling) }) return
-        _tags.value = _tags.value + spelling
-        markDirty()
-        if (storedName != null) return
-        viewModelScope.launch {
-            repository.tagRepository?.setTagColor(spelling, colorHex)
-        }
-    }
-
-    fun saveTagsWithColors(
-        tags: List<String>,
-        newColors: Map<String, String>,
-    ) {
-        setTags(tags)
-        if (newColors.isNotEmpty()) {
-            viewModelScope.launch {
-                newColors.forEach { (name, hex) ->
-                    repository.tagRepository?.setTagColor(name, hex)
-                }
-            }
-        }
-    }
-
-    fun editExistingTag(
-        oldName: String,
-        newName: String,
-        colorHex: String?,
-        resetColor: Boolean,
-    ) {
-        viewModelScope.launch {
-            val result =
-                repository.tagRepository?.editTag(
-                    oldName = oldName,
-                    newName = newName,
-                    colorHex = colorHex,
-                    resetColor = resetColor,
-                ) ?: return@launch
-            val updatedTags =
-                _tags.value
-                    .map { tagName ->
-                        if (tagName.equals(result.oldName, ignoreCase = true)) result.newName else tagName
-                    }.distinctBy { tagName -> normalizeTagName(tagName) }
-            if (_tags.value != updatedTags) {
-                _tags.value = updatedTags
-                markDirty()
-            }
-        }
-    }
-
     fun addAttachment(
         uri: Uri,
         name: String,
@@ -532,15 +422,6 @@ abstract class BaseEditorViewModel(
         }
     }
 
-    protected fun tagsForPersistence(): List<String> {
-        val base = _tags.value.filterNot { it == RememberReservedTags.STARRED }
-        return if (_starred.value) {
-            (base + RememberReservedTags.STARRED).distinct()
-        } else {
-            base
-        }
-    }
-
     protected fun currentOptions() =
         NoteOptions(
             reminderAt = _reminderAt.value,
@@ -551,7 +432,6 @@ abstract class BaseEditorViewModel(
             locked = _locked.value,
             iconKey = _iconKey.value,
             actions = _actions.value,
-            tags = tagsForPersistence(),
             recurrence = _recurrence.value,
             reminders = _reminders.value,
         )

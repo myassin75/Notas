@@ -33,7 +33,6 @@ import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberCheckbox
 import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
 import three.haddad.smartnotas.ui.components.RememberInputChip
-import three.haddad.smartnotas.ui.components.tagColor
 import kotlinx.collections.immutable.toPersistentSet
 
 private val ActiveChipHeight = 32.dp
@@ -45,7 +44,6 @@ internal fun ActiveFilterChips(
     modifier: Modifier = Modifier,
     viewOptions: ViewOptions = ViewOptions(),
     onViewOptionsChange: ((ViewOptions) -> Unit)? = null,
-    availableTags: List<String> = emptyList(),
     scrollState: ScrollState = rememberScrollState(),
     expandedDropdown: ActiveFilterDropdown? = null,
     onExpandedDropdownChange: (ActiveFilterDropdown?) -> Unit = {},
@@ -121,50 +119,11 @@ internal fun ActiveFilterChips(
                 )
             }
         }
-        val tagLabel =
-            when (filter.tags.size) {
-                0 -> stringResource(R.string.filter_dropdown_tags)
-                1 -> stringResource(R.string.filter_dropdown_tags_one, filter.tags.first())
-                else -> stringResource(R.string.filter_dropdown_tags_count, filter.tags.size)
-            }
-        FilterDropdownChip(
-            label = tagLabel,
-            selected = filter.tags.isNotEmpty(),
-            enabled = availableTags.isNotEmpty(),
-            expanded = expandedDropdown == ActiveFilterDropdown.TAGS,
-            onExpandedChange = { expanded ->
-                onExpandedDropdownChange(if (expanded) ActiveFilterDropdown.TAGS else null)
-            },
-            avatar =
-                filter.tags.singleOrNull()?.let { selectedTag ->
-                    {
-                        TagColorAvatar(tag = selectedTag)
-                    }
-                },
-        ) {
-            availableTags.forEach { tag ->
-                val checked = filter.tags.any { selectedTag -> selectedTag.equals(tag, ignoreCase = true) }
-                CheckableMenuItem(
-                    label = tag,
-                    checked = checked,
-                    onClick = {
-                        val nextTags = filter.tags.toMutableSet()
-                        if (checked) {
-                            nextTags.removeIf { selectedTag -> selectedTag.equals(tag, ignoreCase = true) }
-                        } else {
-                            nextTags.add(tag)
-                        }
-                        onChange(filter.copy(tags = nextTags.toPersistentSet()))
-                    },
-                )
-            }
-        }
         val otherFilterCount =
             listOf(
                 filter.hasReminder,
                 filter.hasPicture,
                 filter.hasAttachment,
-                filter.starred,
                 filter.pinned,
             ).count { active -> active == true }
         FilterDropdownChip(
@@ -194,11 +153,6 @@ internal fun ActiveFilterChips(
                 label = stringResource(R.string.filter_has_attachment),
                 checked = filter.hasAttachment == true,
                 onClick = { onChange(filter.copy(hasAttachment = if (filter.hasAttachment == true) null else true)) },
-            )
-            CheckableMenuItem(
-                label = stringResource(R.string.filter_starred),
-                checked = filter.starred == true,
-                onClick = { onChange(filter.copy(starred = if (filter.starred == true) null else true)) },
             )
             CheckableMenuItem(
                 label = stringResource(R.string.filter_pinned),
@@ -277,20 +231,6 @@ private fun FilterDropdownChip(
     }
 }
 
-@Composable
-private fun TagColorAvatar(tag: String) {
-    Box(
-        modifier = Modifier.padding(start = 4.dp),
-    ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(12.dp)
-                    .clip(CircleShape)
-                    .background(tagColor(tag)),
-        )
-    }
-}
 
 @Composable
 private fun CheckableMenuItem(
@@ -386,7 +326,7 @@ private fun groupOptions(): List<Pair<GroupBy, String>> =
     listOf(
         GroupBy.NONE to stringResource(R.string.view_options_group_none),
         GroupBy.DATE to stringResource(R.string.view_options_group_date),
-        GroupBy.TAG to stringResource(R.string.view_options_group_tags),
+        GroupBy.SHOULDER to stringResource(R.string.view_options_group_shoulders),
         GroupBy.TYPE to stringResource(R.string.view_options_group_type),
     )
 
@@ -403,6 +343,6 @@ private fun groupLabel(groupBy: GroupBy): String =
     when (groupBy) {
         GroupBy.DATE -> stringResource(R.string.view_options_group_date)
         GroupBy.NONE -> stringResource(R.string.view_options_group_none)
-        GroupBy.TAG -> stringResource(R.string.view_options_group_tags)
+        GroupBy.SHOULDER -> stringResource(R.string.view_options_group_shoulders)
         GroupBy.TYPE -> stringResource(R.string.view_options_group_type)
     }

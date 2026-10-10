@@ -741,35 +741,30 @@ internal fun UpdateCheckScheduleDropdown(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.settings_update_check_frequency),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
+    Box(modifier = modifier) {
+        SettingsRowItem(
+            title = stringResource(R.string.settings_update_check_frequency),
+            onClick = { expanded = true },
+            trailingContent = {
+                SettingsValuePill(
+                    text = updateScheduleSummaryBeforeColon(selected),
+                    onClick = { expanded = true },
+                )
+            },
         )
-        RememberOutlinedButton(onClick = { expanded = true }) {
-            Text(updateScheduleSummaryBeforeColon(selected))
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            ) {
-                UpdateCheckSchedule.entries.forEach { option ->
-                    RememberDropdownMenuItem(
-                        text = { Text(updateScheduleLabel(option)) },
-                        onClick = {
-                            onSelect(option)
-                            expanded = false
-                        },
-                    )
-                }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        ) {
+            UpdateCheckSchedule.entries.forEach { option ->
+                RememberDropdownMenuItem(
+                    text = { Text(updateScheduleLabel(option)) },
+                    onClick = {
+                        onSelect(option)
+                        expanded = false
+                    },
+                )
             }
         }
     }
@@ -781,37 +776,16 @@ internal fun UpdateSettingsToggleItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .appClickable { onCheckedChange(!checked) }
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(Modifier.width(16.dp))
-        RememberSwitch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            thumbContent =
-                if (checked) {
-                    {
-                        RememberMaterialRoundedSymbol(
-                            name = "check",
-                            size = SwitchDefaults.IconSize,
-                            weight = FontWeight.Bold,
-                        )
-                    }
-                } else {
-                    null
-                },
-        )
-    }
+    SettingsRowItem(
+        title = title,
+        onClick = { onCheckedChange(!checked) },
+        trailingContent = {
+            SettingsCustomSwitch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+            )
+        },
+    )
 }
 
 /** The check-for-updates row is last unless the ObtainX row follows it. */
@@ -829,27 +803,24 @@ internal fun CheckForUpdatesRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ListItem(
-        leadingContent = {
+    SettingsRowItem(
+        materialSymbolName = "verified",
+        title = if (availableUpdate != null) {
+            stringResource(R.string.settings_update_available_button, availableUpdate.versionName)
+        } else {
+            stringResource(R.string.settings_check_for_updates)
+        },
+        titleColor = SettingsDesignTokens.PrimaryPurple,
+        subtitle = "Current version: ${BuildConfig.VERSION_NAME}",
+        onClick = onClick,
+        trailingContent = {
             RememberMaterialRoundedSymbol(
-                name = "new_releases",
-                tint = MaterialTheme.colorScheme.primary,
+                name = "chevron_right",
+                size = 20.dp,
+                tint = SettingsDesignTokens.TextSecondary,
             )
         },
-        modifier = modifier.appClickable(onClick = onClick),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    ) {
-        Text(
-            text =
-                if (availableUpdate != null) {
-                    stringResource(R.string.settings_update_available_button, availableUpdate.versionName)
-                } else {
-                    stringResource(R.string.settings_check_for_updates)
-                },
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
+    )
 }
 
 /**

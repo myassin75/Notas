@@ -6,7 +6,7 @@ enum class SortKey { LAST_MODIFIED, CREATED, REMINDER, ALPHABETICAL }
 
 enum class SortDir { ASC, DESC }
 
-enum class GroupBy { DATE, NONE, TAG, TYPE }
+enum class GroupBy { DATE, NONE, SHOULDER, TYPE }
 
 enum class NoteLayoutMode { LIST, MOSAIC }
 

@@ -39,11 +39,8 @@ import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 internal fun HomeSelectionActionBar(
     visible: Boolean,
     onClearSelection: () -> Unit,
-    onTagSelected: () -> Unit,
     onPinSelected: () -> Unit,
     pinEnabled: Boolean,
-    onStarSelected: () -> Unit,
-    starEnabled: Boolean,
     onMarkDoneSelected: () -> Unit,
     onArchiveSelected: () -> Unit,
     onTrashSelected: () -> Unit,
@@ -82,15 +79,11 @@ internal fun HomeSelectionActionBar(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                val tagLabel = stringResource(R.string.home_bulk_tag)
                 val contentDescriptionTag = stringResource(R.string.home_bulk_tag_cd)
-                val tagInteractionSource = remember { MutableInteractionSource() }
                 val pinLabel = stringResource(R.string.edit_bottom_bar_pin)
                 val contentDescriptionPin = stringResource(R.string.home_bulk_pin_cd)
                 val pinInteractionSource = remember { MutableInteractionSource() }
-                val starLabel = stringResource(R.string.edit_bottom_bar_star)
                 val contentDescriptionStar = stringResource(R.string.home_bulk_star_cd)
-                val starInteractionSource = remember { MutableInteractionSource() }
                 val markDoneLabel = stringResource(R.string.edit_bottom_bar_mark_done)
                 val contentDescriptionMarkDone = stringResource(R.string.home_bulk_mark_done_cd)
                 val markDoneInteractionSource = remember { MutableInteractionSource() }
@@ -141,31 +134,6 @@ internal fun HomeSelectionActionBar(
                     customItem(
                         buttonGroupContent = {
                             RememberFilledTonalIconButton(
-                                onClick = onTagSelected,
-                                modifier = Modifier.size(actionButtonSize).animateWidth(tagInteractionSource),
-                                interactionSource = tagInteractionSource,
-                                tooltipLabel = tagLabel,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "label",
-                                    weight = FontWeight.Medium,
-                                    modifier = Modifier.semantics { contentDescription = contentDescriptionTag },
-                                )
-                            }
-                        },
-                        menuContent = { menuState ->
-                            RememberDropdownMenuItem(
-                                text = { Text(tagLabel) },
-                                onClick = {
-                                    onTagSelected()
-                                    menuState.dismiss()
-                                },
-                            )
-                        },
-                    )
-                    customItem(
-                        buttonGroupContent = {
-                            RememberFilledTonalIconButton(
                                 onClick = onPinSelected,
                                 enabled = pinEnabled,
                                 modifier = Modifier.size(actionButtonSize).animateWidth(pinInteractionSource),
@@ -185,33 +153,6 @@ internal fun HomeSelectionActionBar(
                                 enabled = pinEnabled,
                                 onClick = {
                                     onPinSelected()
-                                    menuState.dismiss()
-                                },
-                            )
-                        },
-                    )
-                    customItem(
-                        buttonGroupContent = {
-                            RememberFilledTonalIconButton(
-                                onClick = onStarSelected,
-                                enabled = starEnabled,
-                                modifier = Modifier.size(actionButtonSize).animateWidth(starInteractionSource),
-                                interactionSource = starInteractionSource,
-                                tooltipLabel = starLabel,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "star",
-                                    weight = FontWeight.Medium,
-                                    modifier = Modifier.semantics { contentDescription = contentDescriptionStar },
-                                )
-                            }
-                        },
-                        menuContent = { menuState ->
-                            RememberDropdownMenuItem(
-                                text = { Text(starLabel) },
-                                enabled = starEnabled,
-                                onClick = {
-                                    onStarSelected()
                                     menuState.dismiss()
                                 },
                             )

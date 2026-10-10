@@ -40,7 +40,6 @@ class ReminderReceiverDeliveryTest {
             title = "Reminder",
             body = "",
             colorIndex = 0,
-            starred = false,
             trashed = false,
             createdAt = 0L,
             updatedAt = 0L,

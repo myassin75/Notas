@@ -36,10 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.ui.common.NoteAdaptiveTheme
 import three.haddad.smartnotas.ui.common.NotePageBackground
-import three.haddad.smartnotas.ui.common.rememberImageDerivedColorScheme
-import three.haddad.smartnotas.ui.common.rememberImageDerivedColors
 import three.haddad.smartnotas.ui.common.rememberNotificationsAllowed
 import three.haddad.smartnotas.ui.components.NoteActionBottomBarContent
 import three.haddad.smartnotas.ui.components.NoteShelfState
@@ -67,7 +64,6 @@ fun EditNoteRoute(
     val missingNote by vm.missingNote.collectAsStateWithLifecycle()
     val hasPersistedRow by vm.hasPersistedRow.collectAsStateWithLifecycle()
     val currentNoteId by vm.currentNoteId.collectAsStateWithLifecycle()
-    val activeTagSuggestions by vm.activeTagSuggestions.collectAsStateWithLifecycle()
     LaunchedEffect(currentNoteId) {
         currentNoteId?.let(onPersistedNoteIdChanged)
     }
@@ -93,7 +89,6 @@ fun EditNoteRoute(
                 editorNoteKey = noteId ?: 0L,
                 existing = noteId != null,
                 persistedForToolbar = hasPersistedRow,
-                activeTagSuggestions = activeTagSuggestions,
                 forceEdit = forceEdit,
                 showNavigateBack = showNavigateBack,
                 allowInitialTitleFocus = allowInitialTitleFocus,
@@ -120,7 +115,6 @@ fun EditNoteScreen(
     editorNoteKey: Long,
     existing: Boolean,
     persistedForToolbar: Boolean,
-    activeTagSuggestions: List<String>,
     forceEdit: Boolean = false,
     showNavigateBack: Boolean = true,
     allowInitialTitleFocus: Boolean = true,
@@ -156,7 +150,6 @@ fun EditNoteScreen(
     var reminderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var iconPickerOpen by rememberSaveable { mutableStateOf(false) }
     var actionsPickerOpen by rememberSaveable { mutableStateOf(false) }
-    var tagsPickerOpen by rememberSaveable { mutableStateOf(false) }
     var attachmentsPickerOpen by rememberSaveable { mutableStateOf(false) }
     var notificationPermissionSheetOpen by rememberSaveable { mutableStateOf(false) }
     var deleteForeverConfirmOpen by rememberSaveable { mutableStateOf(false) }
@@ -189,7 +182,6 @@ fun EditNoteScreen(
 
     val archived by vm.archived.collectAsStateWithLifecycle()
     val trashed by vm.trashed.collectAsStateWithLifecycle()
-    val starred by vm.starred.collectAsStateWithLifecycle()
     val pinned by vm.pinned.collectAsStateWithLifecycle()
     val completed by vm.completed.collectAsStateWithLifecycle()
     val attachments by vm.attachments.collectAsStateWithLifecycle()
@@ -352,22 +344,17 @@ fun EditNoteScreen(
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val iconKey by vm.iconKey.collectAsStateWithLifecycle()
     val actions by vm.actions.collectAsStateWithLifecycle()
-    val tags by vm.tags.collectAsStateWithLifecycle()
     val saveAndExitEditMode: () -> Unit = {
         isEditMode = false
         editorActions.saveAndShowToast()
     }
 
     val adaptiveNoteThemes = LocalAdaptiveNoteThemes.current
-    val imageDerivedColors =
-        rememberImageDerivedColors(
-            imageUri = if (adaptiveNoteThemes) pictureUri else null,
-            cacheRevision = pictureRevision,
-        )
-    val imageResolution = rememberImageDerivedColorScheme(imageDerivedColors)
-    NoteAdaptiveTheme(imageResolution) {
+    val imageDerivedColors = null
+    val imageResolution: Any? = null
+    
         Box(Modifier.fillMaxSize()) {
-            if (imageResolution != null) NotePageBackground(colorScheme = imageResolution.backgroundScheme)
+            
             Scaffold(
                 // This nested scroll hides/shows the bottom action bar with a source filter so
                 // overscroll spring-back doesn't flash it back in.
@@ -469,7 +456,6 @@ fun EditNoteScreen(
                                 shelfState = shelfState,
                                 existing = persistedForToolbar,
                                 isEditMode = isEditMode,
-                                starred = starred,
                                 pinned = pinned,
                                 completed = completed,
                                 onToggleEdit = {
@@ -479,7 +465,6 @@ fun EditNoteScreen(
                                     // side-effect to run here.
                                     if (!isEditMode) isEditMode = true else saveAndExitEditMode()
                                 },
-                                onToggleStar = { vm.toggleStar() },
                                 onTogglePin = {
                                     appScope.launch { vm.togglePinned() }
                                 },
@@ -522,7 +507,6 @@ fun EditNoteScreen(
                         pictureViewer = uri to revision
                     },
                     onOpenActions = { actionsPickerOpen = true },
-                    onOpenTags = { tagsPickerOpen = true },
                     onOpenAttachments = {
                         if (attachments.isEmpty()) {
                             launchAttachmentPicker()
@@ -556,7 +540,6 @@ fun EditNoteScreen(
                 reminderPickerOpen = reminderPickerOpen,
                 iconPickerOpen = iconPickerOpen,
                 actionsPickerOpen = actionsPickerOpen,
-                tagsPickerOpen = tagsPickerOpen,
                 attachmentsPickerOpen = attachmentsPickerOpen,
                 notificationPermissionSheetOpen = notificationPermissionSheetOpen,
                 deleteForeverConfirmOpen = deleteForeverConfirmOpen,
@@ -565,18 +548,14 @@ fun EditNoteScreen(
                 pictureViewer = pictureViewer,
                 currentPictureHeroFraming = pictureHeroFraming,
                 readOnly = readOnly,
-                activeTagSuggestions = activeTagSuggestions,
                 attachments = attachments,
                 currentReminders = reminders,
                 currentIconKey = iconKey,
                 currentActions = actions,
-                currentTags = tags,
                 heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
                 onReminderChange = vm::setReminders,
                 onIconKeyChange = vm::setIconKey,
                 onActionsChange = vm::setActions,
-                onTagsWithColorsChange = vm::saveTagsWithColors,
-                onEditExistingTag = vm::editExistingTag,
                 onAddAttachment = vm::addAttachment,
                 onRemoveAttachment = vm::removeAttachment,
                 onHeroCommitted = vm::setHeroWithFraming,
@@ -585,7 +564,6 @@ fun EditNoteScreen(
                 onDismissReminder = { reminderPickerOpen = false },
                 onDismissIcon = { iconPickerOpen = false },
                 onDismissActions = { actionsPickerOpen = false },
-                onDismissTags = { tagsPickerOpen = false },
                 onDismissAttachments = { attachmentsPickerOpen = false },
                 onDismissNotificationPermission = { notificationPermissionSheetOpen = false },
                 onDismissPendingHero = { pendingHeroSession = null },
@@ -594,4 +572,3 @@ fun EditNoteScreen(
             )
         }
     }
-}

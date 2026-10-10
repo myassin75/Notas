@@ -71,10 +71,9 @@ class Converters {
         ChecklistItemEntity::class,
         NoteAttachmentEntity::class,
         NoteFtsEntity::class,
-        TagEntity::class,
-        NoteTagCrossRef::class,
+        ShoulderEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -85,13 +84,13 @@ abstract class RememberDatabase : RoomDatabase() {
 
     abstract fun attachmentDao(): AttachmentDao
 
-    abstract fun tagDao(): TagDao
+    abstract fun shoulderDao(): ShoulderDao
 
     companion object {
         fun build(context: Context): RememberDatabase =
             Room
                 .databaseBuilder(context, RememberDatabase::class.java, "remember.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .fallbackToDestructiveMigration(false)
                 .build()
 
@@ -149,8 +148,8 @@ abstract class RememberDatabase : RoomDatabase() {
                         }
                     dropNotesFtsSyncTriggers(db)
                     db.execSQL("DROP TABLE IF EXISTS notes_fts")
-                    createNotesFtsTable(db)
-                    createNotesFtsSyncTriggers(db)
+                    createNotesFtsTableLegacy(db)
+                    createNotesFtsSyncTriggersLegacy(db)
                     db.execSQL(
                         """
                         INSERT INTO notes_fts(docid, title, body, tags, checklistText, attachmentText, actionsText)
@@ -181,6 +180,102 @@ abstract class RememberDatabase : RoomDatabase() {
                 }
             }
 
+        internal val MIGRATION_5_6 =
+            object : Migration(5, 6) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // Create shoulders table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `shoulders` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                            `name` TEXT NOT NULL, 
+                            `normalizedName` TEXT NOT NULL, 
+                            `colorHex` TEXT, 
+                            `createdAt` INTEGER NOT NULL, 
+                            `updatedAt` INTEGER NOT NULL
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_shoulders_normalizedName` ON `shoulders` (`normalizedName`)")
+
+                    // Create new notes table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `notes_new` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                            `kind` TEXT NOT NULL, 
+                            `title` TEXT NOT NULL, 
+                            `body` TEXT NOT NULL, 
+                            `checklistText` TEXT NOT NULL, 
+                            `attachmentText` TEXT NOT NULL, 
+                            `actionsText` TEXT NOT NULL, 
+                            `colorIndex` INTEGER NOT NULL, 
+                            `trashed` INTEGER NOT NULL, 
+                            `createdAt` INTEGER NOT NULL, 
+                            `updatedAt` INTEGER NOT NULL, 
+                            `reminderAt` INTEGER, 
+                            `importance` TEXT NOT NULL, 
+                            `visibility` TEXT NOT NULL, 
+                            `pictureUri` TEXT, 
+                            `pictureHeroFraming` TEXT, 
+                            `locked` INTEGER NOT NULL, 
+                            `iconKey` TEXT, 
+                            `actions` TEXT NOT NULL, 
+                            `recurrence` TEXT, 
+                            `reminders` TEXT NOT NULL, 
+                            `shoulderId` INTEGER, 
+                            `archived` INTEGER NOT NULL, 
+                            `trashedAt` INTEGER, 
+                            `completedAt` INTEGER, 
+                            `pinnedAt` INTEGER, 
+                            FOREIGN KEY(`shoulderId`) REFERENCES `shoulders`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL
+                        )
+                        """.trimIndent()
+                    )
+                    
+                    // Add index for shoulderId
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_notes_shoulderId` ON `notes_new` (`shoulderId`)")
+
+                    // Copy data from old notes to new notes
+                    db.execSQL(
+                        """
+                        INSERT INTO `notes_new` (
+                            `id`, `kind`, `title`, `body`, `checklistText`, `attachmentText`, `actionsText`, 
+                            `colorIndex`, `trashed`, `createdAt`, `updatedAt`, `reminderAt`, `importance`, 
+                            `visibility`, `pictureUri`, `pictureHeroFraming`, `locked`, `iconKey`, `actions`, 
+                            `recurrence`, `reminders`, `archived`, `trashedAt`, `completedAt`, `pinnedAt`
+                        )
+                        SELECT 
+                            `id`, `kind`, `title`, `body`, `checklistText`, `attachmentText`, `actionsText`, 
+                            `colorIndex`, `trashed`, `createdAt`, `updatedAt`, `reminderAt`, `importance`, 
+                            `visibility`, `pictureUri`, `pictureHeroFraming`, `locked`, `iconKey`, `actions`, 
+                            `recurrence`, `reminders`, `archived`, `trashedAt`, `completedAt`, `pinnedAt`
+                        FROM `notes`
+                        """.trimIndent()
+                    )
+
+                    // Drop old table and rename new one
+                    db.execSQL("DROP TABLE `notes`")
+                    db.execSQL("ALTER TABLE `notes_new` RENAME TO `notes`")
+
+                    // Drop tag related tables
+                    db.execSQL("DROP TABLE IF EXISTS `tags`")
+                    db.execSQL("DROP TABLE IF EXISTS `note_tags`")
+                    
+                    // Recreate notes_fts
+                    dropNotesFtsSyncTriggers(db)
+                    db.execSQL("DROP TABLE IF EXISTS notes_fts")
+                    createNotesFtsTable(db)
+                    createNotesFtsSyncTriggers(db)
+                    db.execSQL(
+                        """
+                        INSERT INTO notes_fts(docid, title, body, checklistText, attachmentText, actionsText)
+                        SELECT rowid, title, body, checklistText, attachmentText, actionsText FROM notes
+                        """.trimIndent(),
+                    )
+                }
+            }
+
         private fun dropNotesFtsSyncTriggers(db: SupportSQLiteDatabase) {
             db.execSQL("DROP TRIGGER IF EXISTS room_fts_content_sync_notes_fts_BEFORE_UPDATE")
             db.execSQL("DROP TRIGGER IF EXISTS room_fts_content_sync_notes_fts_BEFORE_DELETE")
@@ -188,7 +283,7 @@ abstract class RememberDatabase : RoomDatabase() {
             db.execSQL("DROP TRIGGER IF EXISTS room_fts_content_sync_notes_fts_AFTER_INSERT")
         }
 
-        private fun createNotesFtsTable(db: SupportSQLiteDatabase) {
+        private fun createNotesFtsTableLegacy(db: SupportSQLiteDatabase) {
             db.execSQL(
                 """
                 CREATE VIRTUAL TABLE IF NOT EXISTS `notes_fts` USING FTS4(
@@ -205,7 +300,7 @@ abstract class RememberDatabase : RoomDatabase() {
             )
         }
 
-        private fun createNotesFtsSyncTriggers(db: SupportSQLiteDatabase) {
+        private fun createNotesFtsSyncTriggersLegacy(db: SupportSQLiteDatabase) {
             db.execSQL(
                 """
                 CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_notes_fts_BEFORE_UPDATE
@@ -241,6 +336,63 @@ abstract class RememberDatabase : RoomDatabase() {
                 BEGIN
                     INSERT INTO notes_fts(docid, title, body, tags, checklistText, attachmentText, actionsText)
                     VALUES (NEW.rowid, NEW.title, NEW.body, NEW.tags, NEW.checklistText, NEW.attachmentText, NEW.actionsText);
+                END
+                """.trimIndent(),
+            )
+        }
+
+        private fun createNotesFtsTable(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE VIRTUAL TABLE IF NOT EXISTS `notes_fts` USING FTS4(
+                    `title` TEXT NOT NULL,
+                    `body` TEXT NOT NULL,
+                    `checklistText` TEXT NOT NULL,
+                    `attachmentText` TEXT NOT NULL,
+                    `actionsText` TEXT NOT NULL,
+                    tokenize=unicode61 `remove_diacritics=2`,
+                    content=`notes`
+                )
+                """.trimIndent(),
+            )
+        }
+
+        private fun createNotesFtsSyncTriggers(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_notes_fts_BEFORE_UPDATE
+                BEFORE UPDATE ON notes
+                BEGIN
+                    DELETE FROM notes_fts WHERE docid=OLD.rowid;
+                END
+                """.trimIndent(),
+            )
+            db.execSQL(
+                """
+                CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_notes_fts_BEFORE_DELETE
+                BEFORE DELETE ON notes
+                BEGIN
+                    DELETE FROM notes_fts WHERE docid=OLD.rowid;
+                END
+                """.trimIndent(),
+            )
+            db.execSQL(
+                """
+                CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_notes_fts_AFTER_UPDATE
+                AFTER UPDATE ON notes
+                BEGIN
+                    INSERT INTO notes_fts(docid, title, body, checklistText, attachmentText, actionsText)
+                    VALUES (NEW.rowid, NEW.title, NEW.body, NEW.checklistText, NEW.attachmentText, NEW.actionsText);
+                END
+                """.trimIndent(),
+            )
+            db.execSQL(
+                """
+                CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_notes_fts_AFTER_INSERT
+                AFTER INSERT ON notes
+                BEGIN
+                    INSERT INTO notes_fts(docid, title, body, checklistText, attachmentText, actionsText)
+                    VALUES (NEW.rowid, NEW.title, NEW.body, NEW.checklistText, NEW.attachmentText, NEW.actionsText);
                 END
                 """.trimIndent(),
             )

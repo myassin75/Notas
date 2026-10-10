@@ -1,12 +1,6 @@
 package three.haddad.smartnotas.ui.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,13 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.DefaultNotePreferencesState
 import three.haddad.smartnotas.data.DefaultNotePrefs
@@ -30,24 +19,12 @@ import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
 import three.haddad.smartnotas.data.labelRes
 import three.haddad.smartnotas.domain.formatTimeOfDay
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberOutlinedButton
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
-import three.haddad.smartnotas.ui.feedback.appClickable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.Visibility as NoteVisibility
 
-/**
- * Defaults for newly created notes and lists.
- *
- * Remember-only domain section. FilePipe has no analogous "new item defaults" surface; do not
- * force-match a Defaults section into FilePipe settings.
- */
 @Composable
 internal fun DefaultsSection(
     defaultsState: DefaultNotePreferencesState,
@@ -58,15 +35,25 @@ internal fun DefaultsSection(
     var visibilityExpanded by remember { mutableStateOf(false) }
     var importanceExpanded by remember { mutableStateOf(false) }
 
-    GroupedListColumn {
-        GroupedListItem(position = GroupPosition.FIRST) {
-            DefaultsDropdownRow(
+    SettingsSectionCard {
+        // Row 1: Default visibility
+        Box {
+            SettingsRowItem(
                 materialSymbolName = "visibility",
                 title = stringResource(R.string.settings_defaults_visibility_title),
                 subtitle = stringResource(R.string.settings_defaults_visibility_desc),
-                selectedLabel = stringResource(defaultsState.defaultVisibility.labelRes()),
+                onClick = { visibilityExpanded = true },
+                trailingContent = {
+                    SettingsValuePill(
+                        text = stringResource(defaultsState.defaultVisibility.labelRes()),
+                        onClick = { visibilityExpanded = true },
+                    )
+                },
+            )
+            DropdownMenu(
                 expanded = visibilityExpanded,
-                onExpandedChange = { expanded -> visibilityExpanded = expanded },
+                onDismissRequest = { visibilityExpanded = false },
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             ) {
                 NoteVisibility.entries.forEach { option ->
                     RememberDropdownMenuItem(
@@ -79,14 +66,26 @@ internal fun DefaultsSection(
                 }
             }
         }
-        GroupedListItem(position = GroupPosition.MIDDLE) {
-            DefaultsDropdownRow(
+        SettingsDivider()
+
+        // Row 2: Default importance
+        Box {
+            SettingsRowItem(
                 materialSymbolName = "priority_high",
                 title = stringResource(R.string.settings_defaults_importance_title),
                 subtitle = stringResource(R.string.settings_defaults_importance_desc),
-                selectedLabel = stringResource(defaultsState.defaultImportance.labelRes()),
+                onClick = { importanceExpanded = true },
+                trailingContent = {
+                    SettingsValuePill(
+                        text = stringResource(defaultsState.defaultImportance.labelRes()),
+                        onClick = { importanceExpanded = true },
+                    )
+                },
+            )
+            DropdownMenu(
                 expanded = importanceExpanded,
-                onExpandedChange = { expanded -> importanceExpanded = expanded },
+                onDismissRequest = { importanceExpanded = false },
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             ) {
                 Importance.entries.forEach { option ->
                     RememberDropdownMenuItem(
@@ -99,20 +98,37 @@ internal fun DefaultsSection(
                 }
             }
         }
-        GroupedListItem(position = GroupPosition.MIDDLE) {
-            DefaultsReminderTimeRow(
-                minutesOfDay = defaultsState.defaultReminderMinutesOfDay,
-                onOpenPicker = { timePickerOpen = true },
+        SettingsDivider()
+
+        // Row 3: Default reminder time
+        val context = LocalContext.current
+        val reminderTimeSummary =
+            formatTimeOfDay(
+                context,
+                DefaultNotePrefs.hourFromMinutesOfDay(defaultsState.defaultReminderMinutesOfDay),
+                DefaultNotePrefs.minuteFromMinutesOfDay(defaultsState.defaultReminderMinutesOfDay),
             )
-        }
-        GroupedListItem(position = GroupPosition.LAST) {
-            DefaultsRecurrenceRow(
-                recurrence = defaultsState.defaultRecurrence,
-                onSelect = { rule ->
-                    scope.launch { defaultNotePrefs.setDefaultRecurrence(rule) }
-                },
-            )
-        }
+        SettingsRowItem(
+            materialSymbolName = "alarm",
+            title = stringResource(R.string.settings_defaults_reminder_time_title),
+            subtitle = stringResource(R.string.settings_defaults_reminder_time_desc),
+            onClick = { timePickerOpen = true },
+            trailingContent = {
+                SettingsValuePill(
+                    text = reminderTimeSummary,
+                    onClick = { timePickerOpen = true },
+                )
+            },
+        )
+        SettingsDivider()
+
+        // Row 4: Default recurrence
+        DefaultsRecurrenceRow(
+            recurrence = defaultsState.defaultRecurrence,
+            onSelect = { rule ->
+                scope.launch { defaultNotePrefs.setDefaultRecurrence(rule) }
+            },
+        )
     }
 
     if (timePickerOpen) {
@@ -134,167 +150,43 @@ internal fun DefaultsSection(
 }
 
 @Composable
-private fun DefaultsDropdownRow(
-    materialSymbolName: String,
-    title: String,
-    subtitle: String,
-    selectedLabel: String,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    content: @Composable () -> Unit,
-) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .appClickable { onExpandedChange(true) }
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RememberMaterialRoundedSymbol(
-            name = materialSymbolName,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            weight = FontWeight.Medium,
-        )
-        Spacer(Modifier.width(16.dp))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.width(8.dp))
-        RememberOutlinedButton(onClick = { onExpandedChange(true) }) {
-            Text(selectedLabel)
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { onExpandedChange(false) },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            ) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-private fun DefaultsReminderTimeRow(
-    minutesOfDay: Int,
-    onOpenPicker: () -> Unit,
-) {
-    val context = LocalContext.current
-    val summary =
-        formatTimeOfDay(
-            context,
-            DefaultNotePrefs.hourFromMinutesOfDay(minutesOfDay),
-            DefaultNotePrefs.minuteFromMinutesOfDay(minutesOfDay),
-        )
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .appClickable(onClick = onOpenPicker)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RememberMaterialRoundedSymbol(
-            name = "alarm",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            weight = FontWeight.Medium,
-        )
-        Spacer(Modifier.width(16.dp))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                stringResource(R.string.settings_defaults_reminder_time_title),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                stringResource(R.string.settings_defaults_reminder_time_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.width(8.dp))
-        RememberOutlinedButton(onClick = onOpenPicker) {
-            Text(summary)
-        }
-    }
-}
-
-@Composable
 private fun DefaultsRecurrenceRow(
     recurrence: RecurrenceRule?,
     onSelect: (RecurrenceRule) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedPreset = DefaultRecurrencePreset.fromRule(recurrence)
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RememberMaterialRoundedSymbol(
-            name = "event_repeat",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            weight = FontWeight.Medium,
+    Box {
+        SettingsRowItem(
+            materialSymbolName = "event_repeat",
+            title = stringResource(R.string.settings_defaults_recurrence_title),
+            subtitle = stringResource(R.string.settings_defaults_recurrence_desc),
+            onClick = { expanded = true },
+            trailingContent = {
+                SettingsValuePill(
+                    text = stringResource(selectedPreset.labelRes),
+                    onClick = { expanded = true },
+                )
+            },
         )
-        Spacer(Modifier.width(16.dp))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         ) {
-            Text(
-                stringResource(R.string.settings_defaults_recurrence_title),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                stringResource(R.string.settings_defaults_recurrence_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.width(8.dp))
-        RememberOutlinedButton(onClick = { expanded = true }) {
-            Text(stringResource(selectedPreset.labelRes))
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            ) {
-                DefaultRecurrencePreset.entries.forEach { preset ->
-                    RememberDropdownMenuItem(
-                        text = { Text(stringResource(preset.labelRes)) },
-                        onClick = {
-                            onSelect(preset.toRule())
-                            expanded = false
-                        },
-                    )
-                }
+            DefaultRecurrencePreset.entries.forEach { preset ->
+                RememberDropdownMenuItem(
+                    text = { Text(stringResource(preset.labelRes)) },
+                    onClick = {
+                        onSelect(preset.toRule())
+                        expanded = false
+                    },
+                )
             }
         }
     }
 }
 
-/**
- * There is deliberately no "None" option: the default never switches repeat on, it only decides
- * which unit the repeat controls open on, so "no unit" would have nothing to mean.
- */
 private enum class DefaultRecurrencePreset(
     val labelRes: Int,
 ) {

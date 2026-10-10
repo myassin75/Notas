@@ -85,7 +85,6 @@ fun SwipeableRememberNoteCard(
     val swipeStart = interaction.swipeStartToEnd
     val swipeEnd = interaction.swipeEndToStart
     val noteCompleted = model.completed
-    val noteStarred = model.starred
     val notePinned = model.pinned
     val revealKey = note.note.id
     val noteCardShape = MaterialTheme.shapes.medium
@@ -103,7 +102,7 @@ fun SwipeableRememberNoteCard(
                     .map { action ->
                         action.revealTile(
                             noteCompleted = noteCompleted,
-                            noteStarred = noteStarred,
+                            
                             notePinned = notePinned,
                             onClick = { onSwipeAction(note, action) },
                         )
@@ -118,7 +117,7 @@ fun SwipeableRememberNoteCard(
                     .map { action ->
                         action.revealTile(
                             noteCompleted = noteCompleted,
-                            noteStarred = noteStarred,
+                            
                             notePinned = notePinned,
                             onClick = { onSwipeAction(note, action) },
                         )
@@ -159,7 +158,6 @@ fun SwipeableRememberNoteCard(
             val action = if (fromStart) swipeStart else swipeEnd
             val actionIconFilled =
                 when (action) {
-                    NoteSwipeAction.TOGGLE_STAR -> noteStarred
                     NoteSwipeAction.TOGGLE_PIN -> notePinned
                     NoteSwipeAction.MARK_DONE -> noteCompleted
                     else -> false
@@ -199,13 +197,13 @@ fun SwipeableRememberNoteCard(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = action.labelString(noteCompleted, noteStarred, notePinned),
+                            text = action.labelString(noteCompleted, notePinned),
                             style = MaterialTheme.typography.labelMedium,
                             color = tint,
                         )
                     } else {
                         Text(
-                            text = action.labelString(noteCompleted, noteStarred, notePinned),
+                            text = action.labelString(noteCompleted, notePinned),
                             style = MaterialTheme.typography.labelMedium,
                             color = tint,
                         )
@@ -241,7 +239,7 @@ fun SwipeableRememberNoteCard(
 @Composable
 private fun NoteSwipeAction.labelString(
     noteCompleted: Boolean = false,
-    noteStarred: Boolean = false,
+    
     notePinned: Boolean = false,
 ): String =
     stringResource(
@@ -249,9 +247,6 @@ private fun NoteSwipeAction.labelString(
             NoteSwipeAction.EDIT -> R.string.swipe_action_open
             NoteSwipeAction.TRASH -> R.string.edit_bottom_bar_trash
             NoteSwipeAction.DUPLICATE -> R.string.swipe_action_duplicate
-            NoteSwipeAction.TOGGLE_STAR -> {
-                if (noteStarred) R.string.swipe_action_unstar else R.string.swipe_action_toggle_star
-            }
             NoteSwipeAction.TOGGLE_PIN -> {
                 if (notePinned) R.string.swipe_action_unpin else R.string.swipe_action_pin
             }
@@ -268,7 +263,7 @@ private fun NoteSwipeAction.labelString(
 @Composable
 private fun NoteSwipeAction.revealTile(
     noteCompleted: Boolean,
-    noteStarred: Boolean,
+    
     notePinned: Boolean,
     onClick: () -> Unit,
 ): SwipeRevealTile {
@@ -277,9 +272,6 @@ private fun NoteSwipeAction.revealTile(
             NoteSwipeAction.EDIT -> R.string.swipe_action_open
             NoteSwipeAction.TRASH -> R.string.edit_bottom_bar_trash
             NoteSwipeAction.DUPLICATE -> R.string.swipe_action_duplicate
-            NoteSwipeAction.TOGGLE_STAR -> {
-                if (noteStarred) R.string.swipe_action_unstar else R.string.swipe_action_toggle_star
-            }
             NoteSwipeAction.TOGGLE_PIN -> {
                 if (notePinned) R.string.swipe_action_unpin else R.string.swipe_action_pin
             }
@@ -300,7 +292,6 @@ private fun NoteSwipeAction.revealTile(
         contentColor = semanticSwipeIconTint(),
         filled =
             when (this) {
-                NoteSwipeAction.TOGGLE_STAR -> noteStarred
                 NoteSwipeAction.TOGGLE_PIN -> notePinned
                 NoteSwipeAction.MARK_DONE -> noteCompleted
                 else -> false

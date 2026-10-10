@@ -29,7 +29,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Daily task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = originalReminderAt,
                         updatedAt = originalReminderAt,
@@ -76,7 +75,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Daily task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = reminderAt,
                         updatedAt = reminderAt,
@@ -113,7 +111,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Hourly task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = reminderAt,
                         updatedAt = reminderAt,
@@ -150,7 +147,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "One shot task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = reminderAt,
                         updatedAt = reminderAt,
@@ -183,7 +179,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Done task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = completedAt,
                         updatedAt = completedAt,
@@ -229,7 +224,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Done list",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = completedAt,
                         updatedAt = completedAt,
@@ -281,7 +275,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Done task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = completedAt,
                         updatedAt = completedAt,
@@ -376,7 +369,6 @@ class NoteRepositoryRecurrenceTest {
                         title = "Daily task",
                         body = "",
                         colorIndex = 0,
-                        starred = false,
                         trashed = false,
                         createdAt = originalReminderAt,
                         updatedAt = originalReminderAt,
@@ -562,7 +554,6 @@ class NoteRepositoryRecurrenceTest {
             title = "Task",
             body = "",
             colorIndex = 0,
-            starred = false,
             trashed = false,
             createdAt = 0L,
             updatedAt = 0L,
@@ -599,17 +590,7 @@ class NoteRepositoryRecurrenceTest {
             }
         }
 
-        override suspend fun activeStarred(): List<NoteWithItems> =
-            if (
-                !stored.note.trashed &&
-                !stored.note.archived &&
-                stored.note.starred &&
-                stored.note.completedAt == null
-            ) {
-                listOf(stored)
-            } else {
-                emptyList()
-            }
+
 
         override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
@@ -626,16 +607,9 @@ class NoteRepositoryRecurrenceTest {
             stored = stored.copy(note = note)
         }
 
-        override suspend fun setStarred(
-            id: Long,
-            starred: Boolean,
-            updatedAt: Long,
-        ) = Unit
 
-        override suspend fun updateTagCache(
-            id: Long,
-            tags: List<String>,
-        ) = Unit
+
+
 
         override suspend fun setTrashed(
             id: Long,
@@ -653,9 +627,7 @@ class NoteRepositoryRecurrenceTest {
 
         override suspend fun allNoteIds(): List<Long> = listOf(stored.note.id)
 
-        override suspend fun noteTagCaches(): List<NoteTagCacheRow> = emptyList()
 
-        override suspend fun noteTagLinks(): List<NoteTagLink> = emptyList()
 
         override suspend fun countPictureUri(uri: String): Int = 0
 

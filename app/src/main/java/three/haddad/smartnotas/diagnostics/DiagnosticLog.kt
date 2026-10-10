@@ -228,20 +228,6 @@ object DiagnosticLog {
 
         // Theme / appearance.
         appendLine(context.getString(R.string.diagnostics_theme_mode_format, snapshot.theme.themeMode.toString()))
-        appendLine(context.getString(R.string.diagnostics_color_source_format, snapshot.theme.colorSource.toString()))
-        appendLine(context.getString(R.string.diagnostics_palette_style_format, snapshot.theme.paletteStyle.toString()))
-        appendLine(context.getString(R.string.diagnostics_saved_custom_seeds_format, snapshot.theme.customSeeds.size))
-        appendLine(
-            context.getString(
-                R.string.diagnostics_active_custom_seed_format,
-                snapshot.theme.activeCustomSeed
-                    .isNotBlank()
-                    .toString(),
-            ),
-        )
-        appendLine(context.getString(R.string.diagnostics_gradient_background_format, snapshot.theme.useGradient.toString()))
-        appendLine(context.getString(R.string.diagnostics_surface_shading_format, snapshot.theme.shadingIntensity.toString()))
-        appendLine(context.getString(R.string.diagnostics_ui_scale_format, snapshot.theme.uiScale.toString()))
         appendLine(context.getString(R.string.diagnostics_blur_bars_format, snapshot.theme.blurBars.toString()))
 
         // Notes UI.

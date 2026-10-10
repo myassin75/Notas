@@ -3,7 +3,6 @@ package three.haddad.smartnotas.ui.components
 import androidx.compose.runtime.Immutable
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.RememberReservedTags
 import three.haddad.smartnotas.data.getActiveReminders
 import three.haddad.smartnotas.data.pinned
 import three.haddad.smartnotas.ui.edit.NoteIcon
@@ -17,7 +16,6 @@ data class NoteCardUiModel(
     val kind: NoteKind,
     val title: String,
     val body: String,
-    val starred: Boolean,
     /**
      * Pinned to the top of Home. Separate from [starred] on purpose: starred is a favorite
      * (filter chip + its own widget), pinned is placement only. The two cues must stay
@@ -34,7 +32,6 @@ data class NoteCardUiModel(
     val remindersCount: Int,
     val recurring: Boolean,
     val hasAttachment: Boolean,
-    val visibleTags: PersistentList<String>,
     val checklistPreviewItems: PersistentList<NoteCardChecklistItemUiModel>,
     val checklistHiddenItemCount: Int,
 )
@@ -58,7 +55,6 @@ fun NoteWithItems.toNoteCardUiModel(
         kind = note.kind,
         title = note.title,
         body = note.body,
-        starred = note.starred || note.tags.contains(RememberReservedTags.STARRED),
         pinned = note.pinned,
         completed = note.completedAt != null,
         icon = resolveNoteIcon(note.iconKey, note.kind),
@@ -69,7 +65,6 @@ fun NoteWithItems.toNoteCardUiModel(
         remindersCount = note.getActiveReminders().size,
         recurring = note.recurrence != null,
         hasAttachment = attachments.isNotEmpty(),
-        visibleTags = RememberReservedTags.userVisibleTags(note.tags).toPersistentList(),
         checklistPreviewItems =
             orderedChecklistItems
                 .take(checklistPreviewLimit)

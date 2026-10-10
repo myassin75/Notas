@@ -86,7 +86,6 @@ import three.haddad.smartnotas.ui.components.RememberButton
 import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
 import three.haddad.smartnotas.ui.components.RememberTextButton
 import three.haddad.smartnotas.ui.components.RememberUnsavedChangesDialog
-import three.haddad.smartnotas.ui.components.TagChipFilled
 import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.feedback.appCombinedClickable
 import three.haddad.smartnotas.ui.help.HELP_FOCUS_IMPORTANCE
@@ -98,7 +97,6 @@ import java.util.Date
 import three.haddad.smartnotas.data.Visibility as NoteVisibility
 
 private val OPTION_CELL_HEIGHT = 56.dp
-private const val TAG_PILLS_MAX_LINES = 2
 private const val STARRED_WATERMARK_ALPHA = 0.28f
 
 @Composable
@@ -108,7 +106,6 @@ fun OptionsPanel(
     visibility: NoteVisibility,
     pictureUri: String?,
     actions: List<NoteAction>,
-    tags: List<String>,
     attachments: List<NoteAttachmentEntity>,
     onOpenReminder: () -> Unit,
     onSetImportance: (Importance) -> Unit,
@@ -116,7 +113,6 @@ fun OptionsPanel(
     onOpenPicture: () -> Unit,
     onBrowsePictureWithApp: () -> Unit,
     onOpenActions: () -> Unit,
-    onOpenTags: () -> Unit,
     onOpenAttachments: () -> Unit,
     modifier: Modifier = Modifier,
     reminderPermissionMissing: Boolean = false,
@@ -217,18 +213,6 @@ fun OptionsPanel(
             Column(
                 modifier = Modifier.padding(vertical = 6.dp),
             ) {
-                OptionRow(
-                    symbolName = "label",
-                    title = stringResource(R.string.options_tags),
-                    summary = if (tags.isEmpty()) stringResource(R.string.common_none) else "",
-                    onClick = onOpenTags,
-                    summaryContent =
-                        if (tags.isEmpty()) {
-                            null
-                        } else {
-                            { TagPillsRow(tags = tags) }
-                        },
-                )
                 Column(
                     modifier =
                         Modifier
@@ -835,137 +819,6 @@ fun MediaStorageChip(
     }
 }
 
-@Composable
-private fun TagPillsRow(tags: List<String>) {
-    val horizontalSpacing = 6.dp
-    val verticalSpacing = 6.dp
-
-    SubcomposeLayout(modifier = Modifier.fillMaxWidth()) { constraints ->
-        val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
-        val horizontalSpacingPx = horizontalSpacing.roundToPx()
-        val verticalSpacingPx = verticalSpacing.roundToPx()
-        val tagPlaceables =
-            subcompose("tags") {
-                tags.forEach { tag ->
-                    TagChipFilled(tag = tag, compact = true)
-                }
-            }.map { measurable ->
-                measurable.measure(looseConstraints)
-            }
-        val unboundedLineWidth =
-            tagPlaceables.sumOf { placeable -> placeable.width } +
-                horizontalSpacingPx * (tagPlaceables.size - 1).coerceAtLeast(0)
-        val maxLineWidth =
-            if (constraints.hasBoundedWidth) {
-                constraints.maxWidth
-            } else {
-                unboundedLineWidth
-            }
-
-        fun buildPlacements(placeables: List<Placeable>): List<TagChipPlacement> {
-            var currentLine = 1
-            var cursorLeft = 0
-            var cursorTop = 0
-            var currentLineHeight = 0
-            val placements = mutableListOf<TagChipPlacement>()
-
-            placeables.forEach { placeable ->
-                val spacingBeforeItem = if (cursorLeft == 0) 0 else horizontalSpacingPx
-                val itemRight = cursorLeft + spacingBeforeItem + placeable.width
-                val shouldWrap = cursorLeft > 0 && itemRight > maxLineWidth
-
-                if (shouldWrap) {
-                    currentLine += 1
-                    if (currentLine > TAG_PILLS_MAX_LINES) {
-                        return placements
-                    }
-                    cursorLeft = 0
-                    cursorTop += currentLineHeight + verticalSpacingPx
-                    currentLineHeight = 0
-                }
-
-                val itemLeft = if (cursorLeft == 0) 0 else cursorLeft + horizontalSpacingPx
-                placements +=
-                    TagChipPlacement(
-                        placeable = placeable,
-                        left = itemLeft,
-                        top = cursorTop,
-                    )
-                cursorLeft = itemLeft + placeable.width
-                currentLineHeight = maxOf(currentLineHeight, placeable.height)
-            }
-
-            return placements
-        }
-
-        var selectedPlacements: List<TagChipPlacement> = emptyList()
-        for (visibleTagCount in tagPlaceables.size downTo 0) {
-            val hiddenCount = tags.size - visibleTagCount
-            val overflowPlaceable =
-                if (hiddenCount > 0) {
-                    subcompose("overflow:$hiddenCount") {
-                        MoreTagsChip(count = hiddenCount)
-                    }.first().measure(looseConstraints)
-                } else {
-                    null
-                }
-            val candidatePlaceables =
-                if (overflowPlaceable == null) {
-                    tagPlaceables
-                } else {
-                    tagPlaceables.take(visibleTagCount) + overflowPlaceable
-                }
-            val candidatePlacements = buildPlacements(candidatePlaceables)
-
-            if (candidatePlacements.size == candidatePlaceables.size) {
-                selectedPlacements = candidatePlacements
-                break
-            }
-        }
-
-        val layoutWidth = maxLineWidth.coerceIn(constraints.minWidth, constraints.maxWidth)
-        val layoutHeight =
-            (
-                selectedPlacements.maxOfOrNull { placement ->
-                    placement.top + placement.placeable.height
-                } ?: 0
-            ).coerceIn(constraints.minHeight, constraints.maxHeight)
-
-        layout(layoutWidth, layoutHeight) {
-            selectedPlacements.forEach { placement ->
-                placement.placeable.placeRelative(placement.left, placement.top)
-            }
-        }
-    }
-}
-
-private data class TagChipPlacement(
-    val placeable: Placeable,
-    val left: Int,
-    val top: Int,
-)
-
-@Composable
-private fun MoreTagsChip(count: Int) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        border =
-            BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
-            ),
-    ) {
-        Text(
-            text = pluralStringResource(R.plurals.options_tags_more_count, count, count),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-        )
-    }
-}
 
 private data class ChoiceOption<T>(
     val value: T,

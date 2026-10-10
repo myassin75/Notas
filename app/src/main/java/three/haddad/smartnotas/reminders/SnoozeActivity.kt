@@ -52,7 +52,7 @@ import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.ReminderPreferencesState
 import three.haddad.smartnotas.data.ReminderPrefs
 import three.haddad.smartnotas.data.SnoozeType
-import three.haddad.smartnotas.data.TagRepository
+import three.haddad.smartnotas.data.ShoulderRepository
 import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.di.ApplicationScope
@@ -65,7 +65,6 @@ import three.haddad.smartnotas.ui.components.RememberTextButton
 import three.haddad.smartnotas.ui.edit.CalendarPickerDialog
 import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
 import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.tags.LocalTagColors
 import three.haddad.smartnotas.ui.theme.RememberTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -85,7 +84,7 @@ import android.graphics.Color as AndroidColor
 class SnoozeActivity : ComponentActivity() {
     @Inject lateinit var noteRepository: NoteRepository
 
-    @Inject lateinit var tagRepository: TagRepository
+    @Inject lateinit var shoulderRepository: ShoulderRepository
 
     @Inject lateinit var themePrefs: ThemePrefs
 
@@ -122,17 +121,13 @@ class SnoozeActivity : ComponentActivity() {
             val themeState by themePrefs.state.collectAsStateWithLifecycle(
                 initialValue = ThemeState(),
             )
-            val tagColorFlow = remember(tagRepository) { tagRepository.observeTagColorMap() }
-            val tagColors by tagColorFlow.collectAsStateWithLifecycle(
-                initialValue = emptyMap(),
-            )
             val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
                 initialValue = InteractionState(),
             )
             val reminderState by reminderPrefs.state.collectAsStateWithLifecycle(
                 initialValue = ReminderPreferencesState(),
             )
-            CompositionLocalProvider(LocalTagColors provides tagColors) {
+            
                 RememberTheme(
                     themeState = themeState,
                     paintBackground = false,
@@ -152,8 +147,7 @@ class SnoozeActivity : ComponentActivity() {
                             snoozeType = reminderState.snoozeType,
                             onSnooze = { timeMillis -> snoozeAndFinish(noteId, timeMillis) },
                             onDismiss = { finish() },
-                        )
-                    }
+                    )
                 }
             }
         }

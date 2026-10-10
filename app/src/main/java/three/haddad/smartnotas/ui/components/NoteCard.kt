@@ -59,7 +59,7 @@ import three.haddad.smartnotas.ui.common.HeroFramedImage
 import three.haddad.smartnotas.ui.common.HeroFraming
 import three.haddad.smartnotas.ui.common.MarkdownText
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.rememberImageDerivedColors
+
 import three.haddad.smartnotas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
 import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
 import three.haddad.smartnotas.ui.edit.NoteIcon
@@ -116,34 +116,22 @@ fun NoteCard(
     reminderNotificationsAllowed: Boolean = true,
 ) {
     val cardColors = elevatedCardColors()
-    val visibleTags = model.visibleTags
-    val hasTagStrip = visibleTags.isNotEmpty()
     val heroEnabled = LocalHeroOnCards.current
     val showNoteContent = LocalShowNoteContentOnCards.current
     val heroPictureUri = model.pictureUri?.takeIf { heroEnabled }
     val showHero = heroPictureUri != null
     val surface = MaterialTheme.colorScheme.surface
-    val heroImageColors =
-        rememberImageDerivedColors(
-            imageUri = heroPictureUri,
-            cacheRevision = model.pictureCacheRevision,
-        )
-    val cardContentColor = heroImageColors?.onImageColor ?: cardColors.contentColor
-    val heroScrimColor = if (showHero) heroImageColors?.imageScrimColor ?: Color.Black else surface
+    
+    val cardContentColor = cardColors.contentColor
+    val heroScrimColor = if (showHero) Color.Black else surface
     val cardShape = MaterialTheme.shapes.medium
-    val starredIconDescription = stringResource(R.string.notecard_starred_cd)
     val pinnedIconDescription = stringResource(R.string.notecard_pinned_cd)
 
     // Pre-resolve every fragment of the merged TalkBack announcement so the body of
-    // [remember] below can stay context-free. The five child icon contentDescriptions
-    // (starred, picture, attachment, reminder, recurring) further down the tree stay
-    // in place; with [Modifier.semantics(mergeDescendants = true)] + an explicit parent
-    // contentDescription the parent's string is what TalkBack reads, so the children
-    // become harmless ornaments instead of getting announced one-by-one.
+    // [remember] below can stay context-free.
     val cdNotePrefix = stringResource(R.string.notecard_cd_note, model.title)
     val cdListPrefix = stringResource(R.string.notecard_cd_list, model.title)
     val cdSeparator = stringResource(R.string.notecard_cd_separator)
-    val cdTagsTemplate = stringResource(R.string.notecard_cd_tags)
     val cdSelected = stringResource(R.string.notecard_cd_selected)
     val cdCompleted = stringResource(R.string.notecard_cd_completed)
     val cdReminderForAnnouncement = stringResource(R.string.notecard_reminder_cd)
@@ -156,13 +144,11 @@ fun NoteCard(
             model.title,
             model.body,
             model.completed,
-            model.starred,
             model.pinned,
             model.reminderAt,
             model.recurring,
             model.pictureUri,
             model.hasAttachment,
-            model.visibleTags,
             selected,
             showNoteContent,
         ) {
@@ -179,12 +165,8 @@ fun NoteCard(
                             ?: model.body
                     add(firstLine.trim().take(120))
                 }
-                if (model.visibleTags.isNotEmpty()) {
-                    add(cdTagsTemplate.format(model.visibleTags.joinToString(", ")))
-                }
                 if (model.reminderAt != null) add(cdReminderForAnnouncement)
                 if (model.recurring) add(cdRecurringForAnnouncement)
-                if (model.starred) add(starredIconDescription)
                 if (model.pinned) add(pinnedIconDescription)
                 if (model.pictureUri != null) add(cdPictureForAnnouncement)
                 if (model.hasAttachment) add(cdAttachmentForAnnouncement)
@@ -262,12 +244,6 @@ fun NoteCard(
         } else {
             Modifier
         }
-    val starredBorder =
-        if (model.starred && !selected && !activeInDetailPane) {
-            Modifier.border(BorderStroke(1.dp, Color(0xFFF9A825).copy(alpha = 0.70f)), cardShape)
-        } else {
-            Modifier
-        }
     val clickableModifier =
         if (onLongClick != null) {
             Modifier.appCombinedClickable(
@@ -290,7 +266,7 @@ fun NoteCard(
                     renderEffect = completedRenderEffect
                 }.then(sharedModifier)
                 .clip(cardShape)
-                .then(starredBorder)
+                
                 .then(activePaneBorder)
                 .then(selectionBorder)
                 .then(clickableModifier)
@@ -311,9 +287,6 @@ fun NoteCard(
                         alpha = completedCardAlpha
                     },
         ) {
-            if (model.starred && !showHero) {
-                StarredRadiantWash(Modifier.matchParentSize())
-            }
             if (showHero) {
                 HeroBackground(
                     uri = heroPictureUri,
@@ -335,35 +308,7 @@ fun NoteCard(
             // declares mergeDescendants and contentDescription includes "Starred".
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
-            if (model.starred) {
-                RememberMaterialRoundedSymbol(
-                    name = "star",
-                    filled = true,
-                    size = 96.dp,
-                    tint = Color(0xFFF9A825),
-                    weight = FontWeight.Bold,
-                    modifier =
-                        Modifier
-                            .matchParentSize()
-                            .wrapContentSize(align = Alignment.TopEnd, unbounded = true)
-                            .graphicsLayer {
-                                rotationZ = -15f
-                                alpha = 0.28f
-                            },
-                )
-            }
-            Row(
-                modifier =
-                    if (hasTagStrip && !showHero) {
-                        Modifier.height(intrinsicSize = androidx.compose.foundation.layout.IntrinsicSize.Min)
-                    } else {
-                        Modifier
-                    },
-            ) {
-                if (hasTagStrip && !showHero) {
-                    TagAccentCardStrip(tags = visibleTags)
-                }
-                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -501,13 +446,11 @@ fun NoteCard(
                     }
                     MetadataRow(
                         model = model,
-                        visibleTags = visibleTags,
                         reminderNotificationsAllowed = reminderNotificationsAllowed,
                         contentColor = cardContentColor,
                         showPictureIndicator = !showHero,
                     )
                 }
-            }
             // Selection badge: shape morph + bloom. [selectionProgress] is hoisted to
             // the top of NoteCard (alongside [completedProgress]) so the same value
             // drives both the rendering here and the [doneBadgeProgress] computation
@@ -543,104 +486,27 @@ fun NoteCard(
     }
 }
 
-@Composable
-private fun BoxScope.StarredRadiantWash(modifier: Modifier = Modifier) {
-    Box(
-        modifier =
-            modifier.drawWithCache {
-                val starCenter = Offset(size.width - 54.dp.toPx(), 50.dp.toPx())
-                val brush =
-                    Brush.radialGradient(
-                        colorStops =
-                            arrayOf(
-                                0.00f to Color(0xFFF9A825).copy(alpha = 0.20f),
-                                0.34f to Color(0xFFF9A825).copy(alpha = 0.10f),
-                                0.72f to Color(0xFFF9A825).copy(alpha = 0.035f),
-                                1.00f to Color.Transparent,
-                            ),
-                        center = starCenter,
-                        radius = maxOf(size.width, size.height) * 0.95f,
-                    )
-                onDrawBehind {
-                    drawRect(brush)
-                }
-            },
-    )
-}
-
-@Composable
-private fun BoxScope.HeroBackground(
-    uri: String,
-    framing: HeroFraming?,
-    cacheRevision: Long,
-    scrimTop: Color,
-    scrimBottom: Color,
-    shape: Shape,
-) {
-    // Cover and scrim stay inside the card's shared container, beneath its text.
-    Box(
-        modifier =
-            Modifier
-                .matchParentSize()
-                .clip(shape),
-    ) {
-        HeroFramedImage(
-            imageUri = uri,
-            framing = framing,
-            cacheRevision = cacheRevision,
-            imageAlpha = 1f,
-            modifier = Modifier.matchParentSize(),
-        )
-        Box(
-            modifier =
-                Modifier
-                    .matchParentSize()
-                    .background(Brush.verticalGradient(colors = listOf(scrimTop, scrimBottom))),
-        )
-    }
-}
 
 @Composable
 private fun MetadataRow(
     model: NoteCardUiModel,
-    visibleTags: List<String>,
     reminderNotificationsAllowed: Boolean,
     contentColor: Color,
     showPictureIndicator: Boolean,
 ) {
-    val tags = visibleTags.take(3)
-    val extraTags = (visibleTags.size - tags.size).coerceAtLeast(0)
     val reminderAt = model.reminderAt
     val isRecurring = model.recurring
     val hasPicture = showPictureIndicator && model.pictureUri != null
     val hasAttachment = model.hasAttachment
-    val anyMetadata = tags.isNotEmpty() || reminderAt != null || hasPicture || hasAttachment
+    val anyMetadata = reminderAt != null || hasPicture || hasAttachment
     if (!anyMetadata) return
 
     Spacer(Modifier.height(10.dp))
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            tags.forEach { tag -> TagMini(tag) }
-            if (extraTags > 0) {
-                Text(
-                    text = stringResource(R.string.notecard_extra_tags, extraTags),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = contentColor,
-                    modifier = Modifier.alpha(0.7f),
-                )
-            }
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
             if (hasPicture) {
                 val cdPicture = stringResource(R.string.notecard_picture_cd)
                 RememberMaterialRoundedSymbol(
@@ -718,7 +584,6 @@ private fun MetadataRow(
                 )
             }
         }
-    }
 }
 
 /**
@@ -734,11 +599,6 @@ private fun formatShortReminderDate(epochMillis: Long): String {
     val pattern = if (kotlin.math.abs(epochMillis - now) > twelveMonthsMs) "MMM yyyy" else "MMM d"
     val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
     return Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).format(formatter)
-}
-
-@Composable
-private fun TagMini(label: String) {
-    TagChipFilled(tag = label, compact = true)
 }
 
 @Composable
@@ -809,3 +669,35 @@ private fun ChecklistPreview(
         }
     }
 }
+@Composable
+private fun BoxScope.HeroBackground(
+    uri: String,
+    framing: HeroFraming?,
+    cacheRevision: Long,
+    scrimTop: Color,
+    scrimBottom: Color,
+    shape: Shape,
+) {
+    // Cover and scrim stay inside the card's shared container, beneath its text.
+    Box(
+        modifier =
+            Modifier
+                .matchParentSize()
+                .clip(shape),
+    ) {
+        HeroFramedImage(
+            imageUri = uri,
+            framing = framing,
+            cacheRevision = cacheRevision,
+            imageAlpha = 1f,
+            modifier = Modifier.matchParentSize(),
+        )
+        Box(
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .background(Brush.verticalGradient(colors = listOf(scrimTop, scrimBottom))),
+        )
+    }
+}
+

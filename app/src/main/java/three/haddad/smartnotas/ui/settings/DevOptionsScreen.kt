@@ -86,7 +86,6 @@ import three.haddad.smartnotas.data.NoteAction
 import three.haddad.smartnotas.data.NoteOptions
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.PersistableChecklistItem
-import three.haddad.smartnotas.data.RememberReservedTags
 import three.haddad.smartnotas.di.DevOptionsDependenciesEntryPoint
 import three.haddad.smartnotas.diagnostics.DiagnosticLog
 import three.haddad.smartnotas.reminders.ReminderReceiver
@@ -227,7 +226,7 @@ fun DevOptionsRoute(
         remember(noteRepository) {
             noteRepository
                 .observeActive()
-                .map { notes -> notes.any { RememberReservedTags.MOCK in it.note.tags } }
+                .map { notes -> notes.any { it.note.title.contains("MOCK") } }
         }
     val hasMockNotes by hasMockNotesFlow.collectAsStateWithLifecycle(initialValue = false)
 
@@ -1138,7 +1137,7 @@ private fun fireNotifWithNote(
                 title = title,
                 body = context.getString(R.string.dev_options_test_notif_body),
                 colorIndex = 0,
-                options = NoteOptions(importance = importance, tags = listOf(RememberReservedTags.MOCK)),
+                options = NoteOptions(importance = importance, ),
             )
         val noteWithItems = noteRepository.get(noteId) ?: return@launch
         ReminderReceiver.showNotification(context, noteWithItems.note, noteWithItems.items, keepUntilDone = false)
@@ -1158,7 +1157,7 @@ private fun fireNotifBigText(
                 items =
                     demoGroceriesChecklistItems()
                         .map { item -> item.text.trimEnd() },
-                options = NoteOptions(tags = listOf(RememberReservedTags.MOCK)),
+                options = NoteOptions(),
             )
         val noteWithItems = noteRepository.get(noteId) ?: return@launch
         ReminderReceiver.showNotification(context, noteWithItems.note, noteWithItems.items, keepUntilDone = false)
@@ -1177,7 +1176,7 @@ private fun fireNotifBigPicture(
                 title = context.getString(R.string.dev_options_test_notif_big_picture_title),
                 body = context.getString(R.string.dev_options_test_notif_big_picture_body),
                 colorIndex = 2,
-                options = NoteOptions(pictureUri = heroUri, tags = listOf(RememberReservedTags.MOCK)),
+                options = NoteOptions(pictureUri = heroUri, ),
             )
         val noteWithItems = noteRepository.get(noteId) ?: return@launch
         ReminderReceiver.showNotification(context, noteWithItems.note, noteWithItems.items, keepUntilDone = false)
@@ -1203,7 +1202,6 @@ private fun fireNotifOverdue(
                     NoteOptions(
                         importance = Importance.HIGH,
                         reminderAt = System.currentTimeMillis() - 60_000L,
-                        tags = listOf(RememberReservedTags.MOCK),
                     ),
             )
         val noteWithItems = noteRepository.get(noteId) ?: return@launch
@@ -1245,8 +1243,7 @@ private suspend fun createMockNotes(
     noteRepository: NoteRepository,
 ): Int {
     val now = System.currentTimeMillis()
-    val mockTag = RememberReservedTags.MOCK
-
+    
     val markdownHeroUri = copyDemoMarkdownHeroUri(context)
     noteRepository.createNote(
         title = "Demo: Markdown",
@@ -1254,7 +1251,7 @@ private suspend fun createMockNotes(
         colorIndex = 0,
         options =
             NoteOptions(
-                tags = listOf(mockTag),
+                
                 pictureUri = markdownHeroUri,
                 pictureHeroFraming = markdownHeroUri?.let { DEMO_MARKDOWN_HERO_FRAMING },
                 iconKey = "symbol_filled:data_object",
@@ -1268,7 +1265,7 @@ private suspend fun createMockNotes(
             items = emptyList(),
             options =
                 NoteOptions(
-                    tags = listOf(mockTag),
+                    
                     reminderAt = now + 5 * 24 * 3_600_000L,
                     iconKey = "symbol_filled:grocery",
                     actions =
@@ -1288,7 +1285,7 @@ private suspend fun createMockNotes(
         items = demoGroceriesChecklistItems(),
         options =
             NoteOptions(
-                tags = listOf(mockTag),
+                
                 reminderAt = now + 5 * 24 * 3_600_000L,
                 iconKey = "symbol_filled:grocery",
                 actions =
@@ -1320,7 +1317,7 @@ private suspend fun deleteMockNotes(noteRepository: NoteRepository) {
             noteRepository.observeTrashed().first()
     val mockIds =
         allNotes
-            .filter { RememberReservedTags.MOCK in it.note.tags }
+            .filter { it.note.title.contains("MOCK") }
             .map { it.note.id }
             .toSet()
     if (mockIds.isNotEmpty()) {

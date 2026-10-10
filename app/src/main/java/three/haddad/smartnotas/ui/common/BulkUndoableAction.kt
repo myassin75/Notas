@@ -63,9 +63,6 @@ sealed interface BulkUndoableAction {
      * @param ids only the rows this action actually starred. Already-starred rows in the
      *     selection are excluded by the caller so undo unstars exactly what it starred.
      */
-    data class Starred(
-        override val ids: Set<Long>,
-    ) : BulkUndoableAction
 
     data class Restored(
         override val ids: Set<Long>,
@@ -101,7 +98,6 @@ fun bulkActionSnackbarMessage(
             is BulkUndoableAction.Trashed -> R.plurals.bulk_action_trashed
             is BulkUndoableAction.MarkedDone -> R.plurals.bulk_action_marked_done
             is BulkUndoableAction.Pinned -> R.plurals.bulk_action_pinned
-            is BulkUndoableAction.Starred -> R.plurals.bulk_action_starred
             is BulkUndoableAction.Restored -> R.plurals.bulk_action_restored
             is BulkUndoableAction.Unarchived -> R.plurals.bulk_action_unarchived
             is BulkUndoableAction.ArchivedFromTrash -> R.plurals.bulk_action_archived_from_trash

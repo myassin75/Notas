@@ -8,16 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-data class NoteTagCacheRow(
-    val id: Long,
-    val tags: List<String>,
-)
 
-data class NoteTagLink(
-    val noteId: Long,
-    val name: String,
-    val sortOrder: Int,
-)
 
 data class NoteWithItems(
     @androidx.room.Embedded val note: NoteEntity,
@@ -25,6 +16,8 @@ data class NoteWithItems(
     val items: List<ChecklistItemEntity>,
     @androidx.room.Relation(parentColumn = "id", entityColumn = "noteId")
     val attachments: List<NoteAttachmentEntity> = emptyList(),
+    @androidx.room.Relation(parentColumn = "shoulderId", entityColumn = "id")
+    val shoulder: ShoulderEntity? = null,
 )
 
 @Dao
@@ -71,19 +64,6 @@ interface NoteDao {
         """,
     )
     suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems>
-
-    @Transaction
-    @Query(
-        """
-        SELECT * FROM notes
-        WHERE trashed = 0
-          AND archived = 0
-          AND starred = 1
-          AND completedAt IS NULL
-        ORDER BY updatedAt DESC
-        """,
-    )
-    suspend fun activeStarred(): List<NoteWithItems>
 
     /**
      * Full-text search over active notes (no trashed, no archived). Uses an inner join against
@@ -143,19 +123,6 @@ interface NoteDao {
     @Update
     suspend fun update(note: NoteEntity)
 
-    @Query("UPDATE notes SET starred = :starred, updatedAt = :updatedAt WHERE id = :id")
-    suspend fun setStarred(
-        id: Long,
-        starred: Boolean,
-        updatedAt: Long,
-    )
-
-    @Query("UPDATE notes SET tags = :tags WHERE id = :id")
-    suspend fun updateTagCache(
-        id: Long,
-        tags: List<String>,
-    )
-
     @Query(
         "UPDATE notes " +
             "SET trashed = :trashed, " +
@@ -193,19 +160,6 @@ interface NoteDao {
 
     @Query("SELECT id FROM notes")
     suspend fun allNoteIds(): List<Long>
-
-    @Query("SELECT id, tags FROM notes ORDER BY id ASC")
-    suspend fun noteTagCaches(): List<NoteTagCacheRow>
-
-    @Query(
-        """
-        SELECT note_tags.noteId AS noteId, tags.name AS name, note_tags.sortOrder AS sortOrder
-        FROM note_tags
-        INNER JOIN tags ON tags.id = note_tags.tagId
-        ORDER BY note_tags.noteId ASC, note_tags.sortOrder ASC, tags.normalizedName ASC
-        """,
-    )
-    suspend fun noteTagLinks(): List<NoteTagLink>
 
     @Query("SELECT COUNT(*) FROM notes WHERE pictureUri = :uri")
     suspend fun countPictureUri(uri: String): Int
@@ -274,50 +228,4 @@ interface AttachmentDao {
     suspend fun deleteForNote(noteId: Long)
 }
 
-@Dao
-interface TagDao {
-    @Query("SELECT * FROM tags ORDER BY normalizedName ASC")
-    fun observeAllTags(): Flow<List<TagEntity>>
 
-    @Query("SELECT * FROM tags")
-    suspend fun allTags(): List<TagEntity>
-
-    @Query(
-        """
-        SELECT DISTINCT tags.* FROM tags
-        INNER JOIN note_tags ON tags.id = note_tags.tagId
-        INNER JOIN notes ON notes.id = note_tags.noteId
-        WHERE notes.trashed = 0 AND notes.archived = 0
-        ORDER BY tags.normalizedName ASC
-        """,
-    )
-    fun observeActiveTags(): Flow<List<TagEntity>>
-
-    @Query(
-        """
-        SELECT tags.* FROM tags
-        INNER JOIN note_tags ON tags.id = note_tags.tagId
-        WHERE note_tags.noteId = :noteId
-        ORDER BY note_tags.sortOrder ASC, tags.normalizedName ASC
-        """,
-    )
-    suspend fun tagsForNote(noteId: Long): List<TagEntity>
-
-    @Query("SELECT * FROM tags WHERE normalizedName = :normalizedName LIMIT 1")
-    suspend fun getByNormalizedName(normalizedName: String): TagEntity?
-
-    @Query("SELECT noteId FROM note_tags WHERE tagId = :tagId")
-    suspend fun noteIdsForTag(tagId: Long): List<Long>
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertTag(tag: TagEntity): Long
-
-    @Update
-    suspend fun updateTag(tag: TagEntity)
-
-    @Query("DELETE FROM note_tags WHERE noteId = :noteId")
-    suspend fun deleteAssignmentsForNote(noteId: Long)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAssignments(assignments: List<NoteTagCrossRef>)
-}

@@ -66,7 +66,6 @@ import three.haddad.smartnotas.MainActivity
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.RememberReservedTags
 import three.haddad.smartnotas.data.ViewOptions
 import three.haddad.smartnotas.data.Visibility
 import three.haddad.smartnotas.data.pinned
@@ -207,14 +206,14 @@ class SelectedWidget : GlanceAppWidget() {
                 val viewOptions by viewOptionsFlow.collectAsState(initial = initialViewOptions)
 
                 val glanceFilterType = currentState(KEY_SELECTED_NOTES_FILTER_TYPE)
-                val glanceTag = currentState(KEY_SELECTED_NOTES_TAG)
+                val glanceShoulder = currentState(KEY_SELECTED_NOTES_SHOULDER)
                 val config =
                     if (glanceFilterType != null) {
                         val filterType =
                             runCatching {
                                 SelectedNotesFilterType.valueOf(glanceFilterType)
                             }.getOrDefault(SelectedNotesFilterType.ALL)
-                        SelectedNotesWidgetConfig(filterType = filterType, tag = glanceTag.orEmpty())
+                        SelectedNotesWidgetConfig(filterType = filterType, shoulder = glanceShoulder.orEmpty())
                     } else {
                         SelectedNotesWidgetConfigStore.loadConfig(context, appWidgetId)
                     }
@@ -666,21 +665,14 @@ private fun SelectedNotesEmptyState(
     val watermark =
         when (config.filterType) {
             SelectedNotesFilterType.ALL -> context.getString(R.string.widget_empty_all_watermark)
-            SelectedNotesFilterType.STARRED -> context.getString(R.string.widget_empty_starred_watermark)
+            SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_empty_starred_watermark)
             SelectedNotesFilterType.PINNED -> context.getString(R.string.widget_empty_pinned_watermark)
-            SelectedNotesFilterType.TAG -> context.getString(R.string.widget_empty_tag_watermark)
         }
     val message =
         when (config.filterType) {
             SelectedNotesFilterType.ALL -> context.getString(R.string.widget_empty_all)
-            SelectedNotesFilterType.STARRED -> context.getString(R.string.widget_empty_starred)
+            SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_empty_starred)
             SelectedNotesFilterType.PINNED -> context.getString(R.string.widget_empty_pinned)
-            SelectedNotesFilterType.TAG ->
-                if (config.tag.isNotBlank()) {
-                    context.getString(R.string.widget_empty_tag)
-                } else {
-                    context.getString(R.string.widget_empty_all)
-                }
         }
     val emptyClickAction =
         if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
@@ -925,9 +917,8 @@ private fun selectedNotesHeaderTitle(
 ): String =
     when (config.filterType) {
         SelectedNotesFilterType.ALL -> context.getString(R.string.widget_filter_all_notes)
-        SelectedNotesFilterType.STARRED -> context.getString(R.string.widget_filter_starred)
+        SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_filter_starred)
         SelectedNotesFilterType.PINNED -> context.getString(R.string.widget_filter_pinned)
-        SelectedNotesFilterType.TAG -> config.tag.ifBlank { context.getString(R.string.widget_selected_label) }
     }
 
 internal fun selectedNotesWidgetItems(
@@ -943,16 +934,8 @@ internal fun selectedNotesWidgetItems(
     val filtered =
         when (config.filterType) {
             SelectedNotesFilterType.ALL -> uncompletedActive
-            SelectedNotesFilterType.STARRED ->
-                uncompletedActive.filter { it.note.starred || it.note.tags.contains(RememberReservedTags.STARRED) }
-            SelectedNotesFilterType.PINNED ->
-                uncompletedActive.filter { it.note.pinned }
-            SelectedNotesFilterType.TAG ->
-                uncompletedActive.filter { noteWithItems ->
-                    RememberReservedTags
-                        .userVisibleTags(noteWithItems.note.tags)
-                        .any { tagName -> tagName.equals(config.tag, ignoreCase = true) }
-                }
+            SelectedNotesFilterType.SHOULDER -> uncompletedActive.filter { it.note.shoulderId != null }
+            SelectedNotesFilterType.PINNED -> uncompletedActive.filter { it.note.pinned }
         }
     return sortNotes(filtered, viewOptions)
 }

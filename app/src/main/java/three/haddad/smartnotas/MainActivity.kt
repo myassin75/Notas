@@ -41,7 +41,7 @@ import three.haddad.smartnotas.data.NotesUiPrefs
 import three.haddad.smartnotas.data.NotesUiState
 import three.haddad.smartnotas.data.OnboardingPrefs
 import three.haddad.smartnotas.data.OnboardingState
-import three.haddad.smartnotas.data.TagRepository
+import three.haddad.smartnotas.data.ShoulderRepository
 import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.data.UpdatePreferencesState
@@ -57,7 +57,6 @@ import three.haddad.smartnotas.ui.lock.AppLockSession
 import three.haddad.smartnotas.ui.lock.LockScreen
 import three.haddad.smartnotas.ui.nav.RememberNavGraph
 import three.haddad.smartnotas.ui.settings.RememberUpdateViewModel
-import three.haddad.smartnotas.ui.tags.LocalTagColors
 import three.haddad.smartnotas.ui.theme.RememberTheme
 import three.haddad.smartnotas.update.AppReviewLauncher
 import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
@@ -73,7 +72,7 @@ import javax.inject.Inject
 class MainActivity : FragmentActivity() {
     @Inject lateinit var noteRepository: NoteRepository
 
-    @Inject lateinit var tagRepository: TagRepository
+    @Inject lateinit var shoulderRepository: ShoulderRepository
 
     @Inject lateinit var themePrefs: ThemePrefs
 
@@ -123,7 +122,6 @@ class MainActivity : FragmentActivity() {
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         handleIntent(intent)
-        applicationScope.launch { themePrefs.migrateLegacyColorSourceIfNeeded() }
         applicationScope.launch { notesUiPrefs.migrateFromThemePrefsIfNeeded() }
         applicationScope.launch { themePrefs.migrateLegacyBlackThemeIfNeeded() }
         applicationScope.launch { openSettingsUpdatesIfAppWasUpdated() }
@@ -144,15 +142,10 @@ class MainActivity : FragmentActivity() {
                     navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
                 )
             }
-            val tagColorFlow = remember(tagRepository) { tagRepository.observeTagColorMap() }
-            val tagColors by tagColorFlow.collectAsStateWithLifecycle(
-                initialValue = emptyMap(),
-            )
-            val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
+                        val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
                 initialValue = InteractionState(),
             )
             CompositionLocalProvider(
-                LocalTagColors provides tagColors,
                 LocalSystemWindowAdaptiveInfo provides systemWindowAdaptiveInfo,
                 LocalSystemPaneScaffoldDirective provides systemPaneScaffoldDirective,
             ) {

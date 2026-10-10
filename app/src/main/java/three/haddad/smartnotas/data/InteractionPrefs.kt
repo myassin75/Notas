@@ -39,7 +39,7 @@ enum class SwipeGestureMode {
  * defaults when nothing is stored.
  */
 val DEFAULT_SWIPE_START_TO_END_REVEAL_ACTIONS: PersistentList<NoteSwipeAction?> =
-    persistentListOf(NoteSwipeAction.TOGGLE_PIN, NoteSwipeAction.TOGGLE_STAR, NoteSwipeAction.DUPLICATE)
+    persistentListOf(NoteSwipeAction.TOGGLE_PIN, NoteSwipeAction.DUPLICATE)
 
 val DEFAULT_SWIPE_END_TO_START_REVEAL_ACTIONS: PersistentList<NoteSwipeAction?> =
     persistentListOf(NoteSwipeAction.MARK_DONE, NoteSwipeAction.ARCHIVE, NoteSwipeAction.TRASH)

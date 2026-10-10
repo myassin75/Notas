@@ -166,17 +166,17 @@ quick note -> Quick capture notification
 capture shortcut -> Quick capture notification
 
 # --- Tags / organization ---
-organize -> Tags, stars, pins, archive, and trash
-label -> Tags, stars, pins, archive, and trash
-category -> Tags, stars, pins, archive, and trash
-folder -> Tags, stars, pins, archive, and trash
+organize -> Shoulders, pins, archive, and trash
+label -> Shoulders, pins, archive, and trash
+category -> Shoulders, pins, archive, and trash
+folder -> Shoulders, pins, archive, and trash
 find note -> Search | Finding archived or trashed notes
 deleted note -> Finding archived or trashed notes
 archived note -> Finding archived or trashed notes
 note disappeared -> Finding archived or trashed notes
 note missing -> Finding archived or trashed notes | Search
-trash -> Tags, stars, pins, archive, and trash
-archive -> Tags, stars, pins, archive, and trash
+trash -> Shoulders, pins, archive, and trash
+archive -> Shoulders, pins, archive, and trash
 recover note -> Finding archived or trashed notes
 restore note -> Finding archived or trashed notes
 

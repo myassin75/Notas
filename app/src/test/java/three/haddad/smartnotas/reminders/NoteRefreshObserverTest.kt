@@ -72,8 +72,6 @@ class NoteRefreshObserverTest {
                     note =
                         reminder.note.copy(
                             pinnedAt = 2_000L,
-                            starred = true,
-                            tags = listOf("Renamed tag"),
                             body = "Edited body",
                             updatedAt = 2_000L,
                         ),
@@ -293,7 +291,6 @@ class NoteRefreshObserverTest {
                     title = "Note $id",
                     body = "",
                     colorIndex = 0,
-                    starred = false,
                     trashed = false,
                     createdAt = 0L,
                     updatedAt = 0L,

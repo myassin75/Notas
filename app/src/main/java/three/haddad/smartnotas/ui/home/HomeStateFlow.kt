@@ -23,7 +23,6 @@ internal fun homeStateFlow(
     selectedIds: Flow<Set<Long>>,
     archivedSearchSource: Flow<List<NoteWithItems>>,
     trashedSearchSource: Flow<List<NoteWithItems>>,
-    availableTagNames: Flow<List<String>>,
     computationDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ): Flow<HomeState> {
     // The tag menu comes from the tags table, so two casings of one tag cannot become two rows.
@@ -31,11 +30,6 @@ internal fun homeStateFlow(
         allActiveNotes
             .map { notes -> notes.size }
             .distinctUntilChanged()
-            .flowOn(computationDispatcher)
-    val canonicalTags =
-        availableTagNames
-            .distinctUntilChanged()
-            .map { tagNames -> tagNames.toPersistentList() }
             .flowOn(computationDispatcher)
 
     // Prepare list content and its selection lookup once per content change. Selection
@@ -83,23 +77,18 @@ internal fun homeStateFlow(
             )
         }.flowOn(computationDispatcher)
 
-    return combine(content, activeCount, canonicalTags, selectedIds) { prepared, totalActive, tagNames, selected ->
+    return combine(content, activeCount, selectedIds) { prepared, totalActive, selected ->
         val prunedSelection = selected.filter { it in prepared.cardsById }.toPersistentSet()
         var canPinSelected = false
-        var canStarSelected = false
         for (noteId in prunedSelection) {
             val card = prepared.cardsById.getValue(noteId)
             if (!card.pinned) canPinSelected = true
-            if (!card.starred) canStarSelected = true
-            if (canPinSelected && canStarSelected) break
         }
         prepared.state.copy(
             totalActive = totalActive,
-            availableTags = tagNames,
             selectedIds = prunedSelection,
             inSelectionMode = prunedSelection.isNotEmpty(),
             canPinSelected = canPinSelected,
-            canStarSelected = canStarSelected,
         )
     }
 }

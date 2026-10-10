@@ -394,7 +394,6 @@ class HistoryViewModel
                     // Not produced by History (pin / star are Home actions), but the exhaustive
                     // mapping keeps the inverse correct if that ever changes.
                     is BulkUndoableAction.Pinned -> repository.setPinned(action.ids, false)
-                    is BulkUndoableAction.Starred -> repository.setStarred(action.ids, false)
                     is BulkUndoableAction.Unarchived -> repository.archiveNotes(action.ids)
                     is BulkUndoableAction.ArchivedFromTrash -> repository.moveToTrash(action.ids)
                     is BulkUndoableAction.MovedArchiveToTrash -> repository.archiveNotes(action.ids)

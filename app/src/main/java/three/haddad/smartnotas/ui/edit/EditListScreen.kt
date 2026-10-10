@@ -70,11 +70,8 @@ import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteReminder
 import three.haddad.smartnotas.domain.checklist.EditableItem
-import three.haddad.smartnotas.ui.common.NoteAdaptiveTheme
 import three.haddad.smartnotas.ui.common.NotePageBackground
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.rememberImageDerivedColorScheme
-import three.haddad.smartnotas.ui.common.rememberImageDerivedColors
 import three.haddad.smartnotas.ui.common.rememberNotificationsAllowed
 import three.haddad.smartnotas.ui.components.NoteActionBottomBarContent
 import three.haddad.smartnotas.ui.components.NoteShelfState
@@ -166,7 +163,6 @@ fun EditListRoute(
     val missingNote by vm.missingNote.collectAsStateWithLifecycle()
     val hasPersistedRow by vm.hasPersistedRow.collectAsStateWithLifecycle()
     val currentNoteId by vm.currentNoteId.collectAsStateWithLifecycle()
-    val activeTagSuggestions by vm.activeTagSuggestions.collectAsStateWithLifecycle()
     LaunchedEffect(currentNoteId) {
         currentNoteId?.let(onPersistedNoteIdChanged)
     }
@@ -228,7 +224,6 @@ fun EditListRoute(
                 appScope = appScope,
                 existing = noteId != null,
                 persistedForToolbar = hasPersistedRow,
-                activeTagSuggestions = activeTagSuggestions,
                 forceEdit = forceEdit,
                 showNavigateBack = showNavigateBack,
                 allowInitialTitleFocus = allowInitialTitleFocus,
@@ -254,7 +249,6 @@ fun EditListScreen(
     appScope: CoroutineScope,
     existing: Boolean,
     persistedForToolbar: Boolean,
-    activeTagSuggestions: List<String>,
     forceEdit: Boolean = false,
     showNavigateBack: Boolean = true,
     allowInitialTitleFocus: Boolean = true,
@@ -263,7 +257,6 @@ fun EditListScreen(
     onNavigateUp: () -> Unit = onBack,
 ) {
     val title by vm.title.collectAsStateWithLifecycle()
-    val starred by vm.starred.collectAsStateWithLifecycle()
     val pinned by vm.pinned.collectAsStateWithLifecycle()
     val completed by vm.completed.collectAsStateWithLifecycle()
     val items by vm.items.collectAsStateWithLifecycle()
@@ -275,7 +268,6 @@ fun EditListScreen(
     val pictureHeroFraming by vm.pictureHeroFraming.collectAsStateWithLifecycle()
     val iconKey by vm.iconKey.collectAsStateWithLifecycle()
     val actions by vm.actions.collectAsStateWithLifecycle()
-    val tags by vm.tags.collectAsStateWithLifecycle()
     val attachments by vm.attachments.collectAsStateWithLifecycle()
     val archived by vm.archived.collectAsStateWithLifecycle()
     val trashed by vm.trashed.collectAsStateWithLifecycle()
@@ -286,7 +278,6 @@ fun EditListScreen(
     var reminderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var iconPickerOpen by rememberSaveable { mutableStateOf(false) }
     var actionsPickerOpen by rememberSaveable { mutableStateOf(false) }
-    var tagsPickerOpen by rememberSaveable { mutableStateOf(false) }
     var attachmentsPickerOpen by rememberSaveable { mutableStateOf(false) }
     var notificationPermissionSheetOpen by rememberSaveable { mutableStateOf(false) }
     var deleteForeverConfirmOpen by rememberSaveable { mutableStateOf(false) }
@@ -515,17 +506,13 @@ fun EditListScreen(
     }
 
     val adaptiveNoteThemes = LocalAdaptiveNoteThemes.current
-    val imageDerivedColors =
-        rememberImageDerivedColors(
-            imageUri = if (adaptiveNoteThemes) pictureUri else null,
-            cacheRevision = pictureRevision,
-        )
-    val imageResolution = rememberImageDerivedColorScheme(imageDerivedColors)
+    val imageDerivedColors = null
+    val imageResolution: Any? = null
     var showChecked by rememberSaveable { mutableStateOf(true) }
 
-    NoteAdaptiveTheme(imageResolution) {
+    
         Box(Modifier.fillMaxSize()) {
-            if (imageResolution != null) NotePageBackground(colorScheme = imageResolution.backgroundScheme)
+            
             Scaffold(
                 modifier =
                     Modifier
@@ -569,13 +556,11 @@ fun EditListScreen(
                                 shelfState = shelfState,
                                 existing = persistedForToolbar,
                                 isEditMode = isEditMode,
-                                starred = starred,
                                 pinned = pinned,
                                 completed = completed,
                                 onToggleEdit = {
                                     if (!isEditMode) isEditMode = true else saveAndExitEditMode()
                                 },
-                                onToggleStar = { vm.toggleStar() },
                                 onTogglePin = {
                                     appScope.launch { vm.togglePinned() }
                                 },
@@ -1017,11 +1002,9 @@ fun EditListScreen(
                             visibility = visibility,
                             pictureUri = pictureUri,
                             actions = actions,
-                            tags = tags,
                             attachments = attachments,
                             notificationsAllowed = notificationsAllowed,
                             readOnly = readOnly,
-                            starred = starred,
                             createdAt = createdAt,
                             updatedAt = updatedAt,
                             onOpenReminder = { reminderPickerOpen = true },
@@ -1030,7 +1013,6 @@ fun EditListScreen(
                             onOpenPicture = heroImagePicker.pickWithPhotoPicker,
                             onBrowsePictureWithApp = heroImagePicker.browseWithApp,
                             onOpenActions = { actionsPickerOpen = true },
-                            onOpenTags = { tagsPickerOpen = true },
                             onOpenAttachmentsSheet = { attachmentsPickerOpen = true },
                             onPickAttachment = launchAttachmentPicker,
                         )
@@ -1043,7 +1025,6 @@ fun EditListScreen(
                 reminderPickerOpen = reminderPickerOpen,
                 iconPickerOpen = iconPickerOpen,
                 actionsPickerOpen = actionsPickerOpen,
-                tagsPickerOpen = tagsPickerOpen,
                 attachmentsPickerOpen = attachmentsPickerOpen,
                 notificationPermissionSheetOpen = notificationPermissionSheetOpen,
                 deleteForeverConfirmOpen = deleteForeverConfirmOpen,
@@ -1052,18 +1033,14 @@ fun EditListScreen(
                 pictureViewer = pictureViewer,
                 currentPictureHeroFraming = pictureHeroFraming,
                 readOnly = readOnly,
-                activeTagSuggestions = activeTagSuggestions,
                 attachments = attachments,
                 currentReminders = reminders,
                 currentIconKey = iconKey,
                 currentActions = actions,
-                currentTags = tags,
                 heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
                 onReminderChange = vm::setReminders,
                 onIconKeyChange = vm::setIconKey,
                 onActionsChange = vm::setActions,
-                onTagsWithColorsChange = vm::saveTagsWithColors,
-                onEditExistingTag = vm::editExistingTag,
                 onAddAttachment = vm::addAttachment,
                 onRemoveAttachment = vm::removeAttachment,
                 onHeroCommitted = vm::setHeroWithFraming,
@@ -1072,7 +1049,6 @@ fun EditListScreen(
                 onDismissReminder = { reminderPickerOpen = false },
                 onDismissIcon = { iconPickerOpen = false },
                 onDismissActions = { actionsPickerOpen = false },
-                onDismissTags = { tagsPickerOpen = false },
                 onDismissAttachments = { attachmentsPickerOpen = false },
                 onDismissNotificationPermission = { notificationPermissionSheetOpen = false },
                 onDismissPendingHero = { pendingHeroSession = null },
@@ -1081,4 +1057,3 @@ fun EditListScreen(
             )
         }
     }
-}

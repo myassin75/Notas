@@ -15,7 +15,7 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
         put("title", note.title)
         put("body", note.body)
         put("colorIndex", note.colorIndex)
-        put("starred", note.starred)
+        note.shoulderId?.let { put("shoulderId", it) }
         put("trashed", note.trashed)
         put("archived", note.archived)
         note.trashedAt?.let { put("trashedAt", it) }
@@ -46,7 +46,6 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
                 }
             },
         )
-        put("tags", JSONArray().apply { note.tags.forEach { put(it) } })
         RecurrenceRule.toJson(note.recurrence)?.let { put("recurrence", it) }
         put(
             "reminders",
@@ -112,7 +111,7 @@ internal fun decodeNoteEntity(o: JSONObject): NoteEntity {
         title = o.optString("title", ""),
         body = o.optString("body", ""),
         colorIndex = o.optInt("colorIndex", 0),
-        starred = o.optBoolean("starred", false),
+        shoulderId = o.optLongOrNull("shoulderId"),
         trashed = o.optBoolean("trashed", false),
         archived = o.optBoolean("archived", false),
         trashedAt = o.optLongOrNull("trashedAt"),
@@ -132,7 +131,6 @@ internal fun decodeNoteEntity(o: JSONObject): NoteEntity {
         locked = o.optBoolean("locked", false),
         iconKey = o.optStringOrNull("iconKey"),
         actions = o.optJSONArray("actions")?.let { decodeActions(it) } ?: emptyList(),
-        tags = o.optJSONArray("tags")?.let { decodeStringArray(it) } ?: emptyList(),
         recurrence = o.optStringOrNull("recurrence")?.let { RecurrenceRule.fromJson(it) },
         reminders = o.optJSONArray("reminders")?.let { decodeReminders(it) } ?: emptyList(),
     )

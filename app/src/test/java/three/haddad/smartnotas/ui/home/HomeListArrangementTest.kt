@@ -39,13 +39,13 @@ class HomeListArrangementTest {
             arrangeItems(
                 notes =
                     listOf(
-                        note(id = 1L, pinned = true, tags = listOf("work", "personal")),
-                        note(id = 2L, tags = listOf("work")),
+                        note(id = 1L, pinned = true),
+                        note(id = 2L),
                     ),
-                opts = ViewOptions(groupBy = GroupBy.TAG),
+                opts = ViewOptions(groupBy = GroupBy.TYPE),
             )
 
-        // GroupBy.TAG is the one mode that legitimately repeats a note across sections, so it
+        // GroupBy.TYPE is the one mode that legitimately repeats a note across sections, so it
         // is the strongest check that extraction (rather than duplication) happened.
         assertEquals(1, noteRows(items).count { it.card.id == 1L })
         assertEquals(listOf(1L), noteIdsIn(items, PINNED_SECTION_KEY))
@@ -93,7 +93,7 @@ class HomeListArrangementTest {
         GroupBy.entries.forEach { groupBy ->
             val items =
                 arrangeItems(
-                    notes = listOf(note(id = 1L, pinned = true, tags = listOf("work")), note(id = 2L)),
+                    notes = listOf(note(id = 1L, pinned = true), note(id = 2L)),
                     opts = ViewOptions(groupBy = groupBy),
                 )
 
@@ -284,30 +284,14 @@ class HomeListArrangementTest {
         assertEquals(3, distinctBadges.size)
     }
 
-    @Test
-    fun tag_grouping_uses_one_section_for_spellings_of_the_same_tag() {
-        val items =
-            arrangeItems(
-                notes =
-                    listOf(
-                        note(id = 1L, tags = listOf("Errands")),
-                        note(id = 2L, tags = listOf("errands")),
-                    ),
-                opts = ViewOptions(groupBy = GroupBy.TAG),
-            )
-        val headers = items.filterIsInstance<HomeListItem.Header>()
 
-        assertEquals(listOf("Errands"), headers.map { header -> header.label })
-        assertEquals(listOf(1L, 2L), noteRows(items).map { row -> row.card.id })
-        assertEquals(setOf("TAG_errands"), noteRows(items).map { row -> row.groupKey }.toSet())
-    }
 
     @Test
     fun ordinary_grouping_sections_get_no_badge() {
         val items =
             arrangeItems(
-                notes = listOf(note(id = 1L, tags = listOf("work"))),
-                opts = ViewOptions(groupBy = GroupBy.TAG),
+                notes = listOf(note(id = 1L)),
+                opts = ViewOptions(groupBy = GroupBy.TYPE),
             )
 
         val headers = items.filterIsInstance<HomeListItem.Header>()
@@ -371,8 +355,7 @@ class HomeListArrangementTest {
         completedAt: Long? = null,
         reminderAt: Long? = null,
         createdAt: Long = 0L,
-        tags: List<String> = emptyList(),
-    ): NoteWithItems {
+            ): NoteWithItems {
         return NoteWithItems(
             note =
                 NoteEntity(
@@ -381,12 +364,11 @@ class HomeListArrangementTest {
                     title = title,
                     body = "",
                     colorIndex = 0,
-                    starred = false,
                     trashed = false,
                     createdAt = createdAt,
                     updatedAt = createdAt,
                     reminderAt = reminderAt,
-                    tags = tags,
+                    
                     completedAt = completedAt,
                     pinnedAt = if (pinned) 1_000L else null,
                 ),

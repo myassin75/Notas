@@ -15,7 +15,7 @@ internal class NoteContentWriter(
     private val checklistWriter: NoteChecklistWriter,
     private val mediaMaintenance: NoteMediaMaintenance,
     private val reminderCoordinator: NoteReminderCoordinator,
-    private val tagRepository: TagRepository?,
+    private val shoulderRepository: ShoulderRepository?,
     private val scheduler: ReminderScheduler?,
     private val clock: () -> Long,
     private val database: RememberDatabase?,
@@ -34,7 +34,6 @@ internal class NoteContentWriter(
                 title = title,
                 body = body,
                 colorIndex = colorIndex,
-                starred = false,
                 trashed = false,
                 createdAt = now,
                 updatedAt = now,
@@ -47,13 +46,12 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                tags = options.tags,
+                
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
         val noteId = noteDao.insert(noteEntity)
-        tagRepository?.replaceTagsForNote(noteId, options.tags)
         if (noteEntity.reminderAt != null) {
             val createdNote = noteDao.get(noteId)?.note
             if (createdNote != null) {
@@ -79,7 +77,6 @@ internal class NoteContentWriter(
                 body = "",
                 checklistText = checklistSearchText(validItems),
                 colorIndex = colorIndex,
-                starred = false,
                 trashed = false,
                 createdAt = now,
                 updatedAt = now,
@@ -92,13 +89,12 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                tags = options.tags,
+                
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
         val id = noteDao.insert(noteEntity)
-        tagRepository?.replaceTagsForNote(id, options.tags)
         if (validItems.isNotEmpty()) {
             itemDao.insertAll(
                 validItems.mapIndexed { index, text ->
@@ -144,7 +140,6 @@ internal class NoteContentWriter(
                             .flatMap { item -> listOf(item.text, item.details) },
                     ),
                 colorIndex = colorIndex,
-                starred = false,
                 trashed = false,
                 createdAt = now,
                 updatedAt = now,
@@ -157,13 +152,12 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                tags = options.tags,
+                
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
         val id = noteDao.insert(noteEntity)
-        tagRepository?.replaceTagsForNote(id, options.tags)
         checklistWriter.insertHierarchy(noteId = id, items = validItems)
         if (noteEntity.reminderAt != null) {
             val createdNoteWithItems = noteDao.get(id)
@@ -199,7 +193,7 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                tags = options.tags,
+                
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
                 completedAt =
@@ -211,7 +205,6 @@ internal class NoteContentWriter(
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
         noteDao.update(noteEntity)
-        tagRepository?.replaceTagsForNote(id, options.tags)
         reminderCoordinator.rescheduleReminder(id, noteEntity.reminderAt)
         reminderCoordinator.refreshNotificationIfActive(id)
         if (oldPictureUri != null && oldPictureUri != options.pictureUri) {
@@ -252,7 +245,7 @@ internal class NoteContentWriter(
                         iconKey = options.iconKey,
                         actions = options.actions,
                         actionsText = actionsSearchText(options.actions),
-                        tags = options.tags,
+                        
                         recurrence = options.recurrence?.sanitized(),
                         reminders = resolvedReminders,
                         completedAt =
@@ -277,8 +270,7 @@ internal class NoteContentWriter(
             } else {
                 applyUpdates()
             }
-        if (didUpdate) tagRepository?.replaceTagsForNote(id, options.tags)
-        if (didUpdate) {
+        if (didUpdate) if (didUpdate) {
             val noteEntity = noteDao.get(id)?.note
             reminderCoordinator.rescheduleReminder(id, noteEntity?.reminderAt)
         }

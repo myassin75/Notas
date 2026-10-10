@@ -7,6 +7,8 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.DEFAULT_SWIPE_END_TO_START_REVEAL_ACTIONS
@@ -117,73 +120,59 @@ internal fun SwipeGestureSettingsPanel(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SwipeGestureModeSegmentedControl(
     current: SwipeGestureMode,
     onSelect: (SwipeGestureMode) -> Unit,
 ) {
-    val entries =
-        remember {
-            listOf(
-                SwipeGestureMode.REVEAL_ACTIONS,
-                SwipeGestureMode.EXECUTE_ONE,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(CircleShape)
+            .background(Color(0xFFF5F4F9))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        val revealSelected = current == SwipeGestureMode.REVEAL_ACTIONS
+        val executeSelected = current == SwipeGestureMode.EXECUTE_ONE
+
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(CircleShape)
+                .background(if (revealSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
+                .clickable { onSelect(SwipeGestureMode.REVEAL_ACTIONS) }
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.settings_swipe_reveal_title),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = if (revealSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
+                    fontWeight = if (revealSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 14.sp,
+                ),
             )
         }
-    val colors =
-        ToggleButtonDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-    val labels = entries.map { mode -> swipeGestureModeTitle(mode) }
-    val shapes =
-        entries.mapIndexed { index, _ ->
-            when (index) {
-                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                entries.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-            }
-        }
-    ButtonGroup(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        overflowIndicator = { menuState ->
-            ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
-        },
-    ) {
-        entries.forEachIndexed { index, mode ->
-            val label = labels[index]
-            customItem(
-                buttonGroupContent = {
-                    RememberToggleButton(
-                        checked = current == mode,
-                        onCheckedChange = { checked -> if (checked) onSelect(mode) },
-                        modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                        shapes = shapes[index],
-                        colors = colors,
-                    ) {
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.labelMedium,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                },
-                menuContent = { menuState ->
-                    RememberDropdownMenuItem(
-                        text = { Text(label) },
-                        onClick = {
-                            onSelect(mode)
-                            menuState.dismiss()
-                        },
-                    )
-                },
+
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(CircleShape)
+                .background(if (executeSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
+                .clickable { onSelect(SwipeGestureMode.EXECUTE_ONE) }
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.settings_swipe_execute_title),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = if (executeSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
+                    fontWeight = if (executeSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 14.sp,
+                ),
             )
         }
     }
@@ -753,7 +742,6 @@ private fun SwipeHintText(text: String) {
 private val SwipeActionDisplayOrder: List<NoteSwipeAction> =
     listOf(
         NoteSwipeAction.TOGGLE_PIN,
-        NoteSwipeAction.TOGGLE_STAR,
         NoteSwipeAction.DUPLICATE,
         NoteSwipeAction.MARK_DONE,
         NoteSwipeAction.ARCHIVE,
@@ -812,7 +800,6 @@ internal fun noteSwipeActionLabel(action: NoteSwipeAction): String =
             NoteSwipeAction.EDIT -> R.string.swipe_action_open
             NoteSwipeAction.TRASH -> R.string.edit_bottom_bar_trash
             NoteSwipeAction.DUPLICATE -> R.string.swipe_action_duplicate
-            NoteSwipeAction.TOGGLE_STAR -> R.string.swipe_action_toggle_star
             NoteSwipeAction.TOGGLE_PIN -> R.string.swipe_action_pin
             NoteSwipeAction.ARCHIVE -> R.string.edit_bottom_bar_archive
             NoteSwipeAction.MARK_DONE -> R.string.swipe_action_mark_done

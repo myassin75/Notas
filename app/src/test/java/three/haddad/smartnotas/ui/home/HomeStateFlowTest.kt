@@ -1,22 +1,12 @@
 package three.haddad.smartnotas.ui.home
 
-import three.haddad.smartnotas.data.GroupBy
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.RememberReservedTags
-import three.haddad.smartnotas.data.SortDir
-import three.haddad.smartnotas.data.SortKey
-import three.haddad.smartnotas.data.ViewOptions
-import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -28,84 +18,72 @@ import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.data.NoteEntity
+import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.NotesFilter
+import three.haddad.smartnotas.data.SortDir
+import three.haddad.smartnotas.data.SortKey
+import three.haddad.smartnotas.data.ViewOptions
+import three.haddad.smartnotas.ui.components.toNoteCardUiModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeStateFlowTest {
     @Test
-    fun selection_reuses_content_without_reading_the_note_lists_again() =
+    fun selection_changes_reuse_prepared_content_without_rebuilding_items() =
         runTest {
             var noteReads = 0
+            val note1 = note(id = 1L, title = "First", pinned = true)
+            val note2 = note(id = 2L, title = "Second", pinned = false)
+            val prepared =
+                HomeState(
+                    items =
+                        persistentListOf(
+                            HomeListItem.NoteRow(
+                                note = note1,
+                                card = note1.toNoteCardUiModel(),
+                            ),
+                            HomeListItem.NoteRow(
+                                note = note2,
+                                card = note2.toNoteCardUiModel(),
+                            ),
+                        ),
+                    totalActive = 2,
+                    archivedMatches = persistentListOf(note(id = 10L, title = "Archived")),
+                    trashedMatches = persistentListOf(note(id = 20L, title = "Trash")),
+                )
             val notes =
-                ObservedNotes(
-                    List(256) { index ->
-                        note(
-                            id = index.toLong() + 1,
-                            pinned = index == 0,
-                            starred = index == 0,
-                            tags = listOf("Work"),
-                        )
-                    },
-                ) { noteReads++ }
+                ObservedNotes(listOf(note1, note2)) {
+                    noteReads++
+                }
             val fixture = HomeFlowFixture(notes)
-            fixture.filter.value = NotesFilter(text = "search")
-            fixture.archived.value = listOf(note(id = 300L))
-            fixture.trashed.value = listOf(note(id = 301L))
             val state = fixture.state(this)
             runCurrent()
-            val prepared = state.value
-            assertFalse(prepared.loading)
-            assertTrue(noteReads > 0)
             noteReads = 0
+            val preparedItems = state.value.items
+            val preparedArchived = state.value.archivedMatches
+            val preparedTrashed = state.value.trashedMatches
 
             fixture.selected.value = setOf(1L)
             runCurrent()
             assertEquals(setOf(1L), state.value.selectedIds)
             assertTrue(state.value.inSelectionMode)
             assertFalse(state.value.canPinSelected)
-            assertFalse(state.value.canStarSelected)
 
             fixture.selected.value = setOf(1L, 2L, 999L)
             runCurrent()
             assertEquals(setOf(1L, 2L), state.value.selectedIds)
             assertTrue(state.value.canPinSelected)
-            assertTrue(state.value.canStarSelected)
-            assertSame(prepared.items, state.value.items)
-            assertSame(prepared.availableTags, state.value.availableTags)
-            assertSame(prepared.archivedMatches, state.value.archivedMatches)
-            assertSame(prepared.trashedMatches, state.value.trashedMatches)
+            assertSame(preparedItems, state.value.items)
+            assertSame(preparedArchived, state.value.archivedMatches)
+            assertSame(preparedTrashed, state.value.trashedMatches)
 
             fixture.selected.value = emptySet()
             runCurrent()
             assertFalse(state.value.inSelectionMode)
             assertFalse(state.value.canPinSelected)
-            assertFalse(state.value.canStarSelected)
-            assertSame(prepared.items, state.value.items)
+            assertSame(preparedItems, state.value.items)
             assertEquals(0, noteReads)
-        }
-
-    @Test
-    fun tags_and_active_count_update_independently_of_search_and_arrangement() =
-        runTest {
-            val fixture =
-                HomeFlowFixture(
-                    listOf(note(id = 1L, tags = listOf("Work", "Home", "Work", RememberReservedTags.STARRED))),
-                )
-            val state = fixture.state(this)
-            runCurrent()
-            val originalTags = state.value.availableTags
-            assertEquals(listOf("Home", "Work"), originalTags)
-
-            fixture.filter.value = NotesFilter(text = "search", tags = persistentSetOf("Work"))
-            fixture.options.value = ViewOptions(groupBy = GroupBy.TAG, sortKey = SortKey.ALPHABETICAL)
-            runCurrent()
-            assertSame(originalTags, state.value.availableTags)
-            val searchedItems = state.value.items
-
-            fixture.allActive.value = fixture.allActive.value + note(id = 2L, tags = listOf("Travel"))
-            runCurrent()
-            assertEquals(2, state.value.totalActive)
-            assertEquals(listOf("Home", "Travel", "Work"), state.value.availableTags)
-            assertSame(searchedItems, state.value.items)
         }
 
     @Test
@@ -116,13 +94,11 @@ class HomeStateFlowTest {
             val state = fixture.state(this)
             runCurrent()
             assertTrue(state.value.canPinSelected)
-            assertTrue(state.value.canStarSelected)
 
-            fixture.notes.value = listOf(note(id = 1L, pinned = true, starred = true))
+            fixture.notes.value = listOf(note(id = 1L, pinned = true))
             runCurrent()
             assertEquals(setOf(1L), state.value.selectedIds)
             assertFalse(state.value.canPinSelected)
-            assertFalse(state.value.canStarSelected)
 
             fixture.filter.value = NotesFilter(pinned = false)
             runCurrent()
@@ -130,20 +106,19 @@ class HomeStateFlowTest {
             assertTrue(state.value.selectedIds.isEmpty())
             assertFalse(state.value.inSelectionMode)
             assertFalse(state.value.canPinSelected)
-            assertFalse(state.value.canStarSelected)
         }
 
     @Test
-    fun sorting_and_duplicate_tag_rows_preserve_selection_and_bulk_action_flags() =
+    fun sorting_preserves_selection_and_bulk_action_flags() =
         runTest {
             val fixture =
                 HomeFlowFixture(
                     listOf(
-                        note(id = 1L, title = "Alpha", starred = true, tags = listOf("Home", "Work")),
-                        note(id = 2L, title = "Beta", tags = listOf("Work")),
+                        note(id = 1L, title = "Alpha"),
+                        note(id = 2L, title = "Beta"),
                     ),
                 )
-            fixture.options.value = ViewOptions(groupBy = GroupBy.NONE, sortKey = SortKey.ALPHABETICAL)
+            fixture.options.value = ViewOptions(sortKey = SortKey.ALPHABETICAL)
             fixture.selected.value = setOf(1L)
             val state = fixture.state(this)
             runCurrent()
@@ -162,18 +137,8 @@ class HomeStateFlowTest {
                     .filterIsInstance<HomeListItem.NoteRow>()
                     .map { it.card.id },
             )
-
-            fixture.options.value = fixture.options.value.copy(groupBy = GroupBy.TAG)
-            runCurrent()
-            assertEquals(
-                2,
-                state.value.items
-                    .filterIsInstance<HomeListItem.NoteRow>()
-                    .count { it.card.id == 1L },
-            )
             assertEquals(setOf(1L), state.value.selectedIds)
             assertTrue(state.value.canPinSelected)
-            assertFalse(state.value.canStarSelected)
         }
 
     @Test
@@ -181,12 +146,11 @@ class HomeStateFlowTest {
         runTest {
             val fixture =
                 HomeFlowFixture(
-                    listOf(note(id = 1L, tags = listOf("Work")), note(id = 2L, tags = listOf("Home"))),
+                    listOf(note(id = 1L, pinned = true), note(id = 2L, pinned = false)),
                 )
-            fixture.archived.value = listOf(note(id = 3L, tags = listOf("Work")), note(id = 4L))
-            fixture.trashed.value = listOf(note(id = 5L, tags = listOf("Work")), note(id = 6L))
-            // FTS can match terms across fields; the literal query need not occur in the title.
-            fixture.filter.value = NotesFilter(text = "separate terms", tags = persistentSetOf("Work"))
+            fixture.archived.value = listOf(note(id = 3L, pinned = true), note(id = 4L, pinned = false))
+            fixture.trashed.value = listOf(note(id = 5L, pinned = true), note(id = 6L, pinned = false))
+            fixture.filter.value = NotesFilter(text = "separate terms", pinned = true)
             fixture.selected.value = setOf(1L, 3L, 5L)
             val state = fixture.state(this)
             runCurrent()
@@ -207,34 +171,11 @@ class HomeStateFlowTest {
         }
 
     @Test
-    fun available_tags_follow_the_supplied_catalog() =
-        runTest {
-            val notes =
-                listOf(
-                    note(id = 1L, tags = listOf("errands")),
-                    note(id = 2L, tags = listOf("Errands", "subscriptions")),
-                )
-            val state =
-                homeStateFlow(
-                    filter = flowOf(NotesFilter()),
-                    notesSource = flowOf(notes),
-                    allActiveNotes = flowOf(notes),
-                    viewOptions = flowOf(ViewOptions()),
-                    selectedIds = flowOf(emptySet()),
-                    archivedSearchSource = flowOf(emptyList()),
-                    trashedSearchSource = flowOf(emptyList()),
-                    availableTagNames = flowOf(listOf("Errands", "Subscriptions")),
-                ).first()
-
-            assertEquals(listOf("Errands", "Subscriptions"), state.availableTags)
-        }
-
-    @Test
     fun list_preparation_uses_a_background_dispatcher_by_default() =
         runTest {
             val collectorThread = Thread.currentThread()
             val notes =
-                ObservedNotes(listOf(note(id = 1L, tags = listOf("Work")))) {
+                ObservedNotes(listOf(note(id = 1L))) {
                     assertNotSame(collectorThread, Thread.currentThread())
                 }
             val state =
@@ -246,12 +187,10 @@ class HomeStateFlowTest {
                     selectedIds = flowOf(setOf(1L)),
                     archivedSearchSource = flowOf(emptyList()),
                     trashedSearchSource = flowOf(emptyList()),
-                    availableTagNames = flowOf(listOf("Work")),
                 ).first()
 
             assertFalse(state.loading)
             assertEquals(setOf(1L), state.selectedIds)
-            assertEquals(listOf("Work"), state.availableTags)
         }
 
     private class HomeFlowFixture(
@@ -264,15 +203,6 @@ class HomeStateFlowTest {
         val selected = MutableStateFlow(emptySet<Long>())
         val archived = MutableStateFlow(emptyList<NoteWithItems>())
         val trashed = MutableStateFlow(emptyList<NoteWithItems>())
-        val availableTagNames =
-            allActive.map { activeNotes ->
-                activeNotes
-                    .asSequence()
-                    .flatMap { noteWithItems -> RememberReservedTags.userVisibleTags(noteWithItems.note.tags) }
-                    .distinct()
-                    .sorted()
-                    .toList()
-            }
 
         @Suppress("ktlint:standard:function-expression-body")
         fun state(scope: TestScope): StateFlow<HomeState> {
@@ -284,7 +214,6 @@ class HomeStateFlowTest {
                 selectedIds = selected,
                 archivedSearchSource = archived,
                 trashedSearchSource = trashed,
-                availableTagNames = availableTagNames,
                 computationDispatcher = StandardTestDispatcher(scope.testScheduler),
             ).stateIn(scope.backgroundScope, SharingStarted.Eagerly, HomeState())
         }
@@ -307,8 +236,7 @@ class HomeStateFlowTest {
         id: Long,
         title: String = "Note $id",
         pinned: Boolean = false,
-        starred: Boolean = false,
-        tags: List<String> = emptyList(),
+        shoulderId: Long? = null,
     ): NoteWithItems {
         return NoteWithItems(
             note =
@@ -318,12 +246,11 @@ class HomeStateFlowTest {
                     title = title,
                     body = "",
                     colorIndex = 0,
-                    starred = starred,
                     trashed = false,
                     createdAt = 0L,
                     updatedAt = 0L,
                     pinnedAt = if (pinned) 1_000L else null,
-                    tags = tags,
+                    shoulderId = shoulderId,
                 ),
             items = emptyList(),
         )

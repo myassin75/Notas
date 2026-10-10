@@ -8,10 +8,8 @@ import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteSwipeAction
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.RememberReservedTags
 import three.haddad.smartnotas.data.ViewOptions
 import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.data.normalizeTagName
 import three.haddad.smartnotas.data.pinned
 import three.haddad.smartnotas.ui.common.BulkUndoableAction
 import kotlinx.collections.immutable.persistentSetOf
@@ -116,28 +114,8 @@ class HomeViewModel
                 selectedIds = selectedIds,
                 archivedSearchSource = archivedSearchSource,
                 trashedSearchSource = trashedSearchSource,
-                availableTagNames = repository.observeActiveTagSuggestions(),
             ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeState())
 
-        init {
-            viewModelScope.launch {
-                repository.observeActiveTagSuggestions().collect { storedNames ->
-                    val selectedTags = filter.value.tags
-                    if (selectedTags.isEmpty()) return@collect
-                    val storedNamesByKey = LinkedHashMap<String, String>()
-                    storedNames.forEach { storedName ->
-                        storedNamesByKey.putIfAbsent(normalizeTagName(storedName), storedName)
-                    }
-                    val rewrittenTags =
-                        selectedTags
-                            .map { selectedTag -> storedNamesByKey[normalizeTagName(selectedTag)] ?: selectedTag }
-                            .toPersistentSet()
-                    if (rewrittenTags != selectedTags) {
-                        filter.value = filter.value.copy(tags = rewrittenTags)
-                    }
-                }
-            }
-        }
 
         fun setFilter(value: NotesFilter) {
             filter.value = value
@@ -207,10 +185,6 @@ class HomeViewModel
                     // Duplicate is additive: a new card appears in the list. The visible
                     // new row is its own confirmation; no snackbar to avoid noise.
                     NoteSwipeAction.DUPLICATE -> repository.duplicateNote(id)
-                    // Star toggles the star icon in place. The state change is
-                    // already visible on the card so an Undo snackbar would be redundant.
-                    NoteSwipeAction.TOGGLE_STAR ->
-                        repository.setStarred(id, !(liveNote ?: note.note).starred)
                     // Pin/unpin moves the card into (or out of) the top Pinned section. The
                     // row visibly relocates, which is its own confirmation - no snackbar,
                     // same reasoning as the star toggle above.
@@ -312,19 +286,6 @@ class HomeViewModel
          * Stars every selected note that is not already starred. Same "star all" semantics as
          * [pinSelected]: mixed selections converge to starred rather than flipping each row.
          */
-        fun starSelected() {
-            val noteIds = visibleSelectedIdsSnapshot()
-            if (noteIds.isEmpty()) return
-            val ids = noteIds.toSet()
-            viewModelScope.launch {
-                val starredIds = repository.setStarred(ids, true)
-                selectedIds.value = persistentSetOf()
-                if (starredIds.isEmpty()) return@launch
-                val action = BulkUndoableAction.Starred(starredIds)
-                lastBulkAction = action
-                _events.trySend(HomeEvent.BulkActionPerformed(action))
-            }
-        }
 
         fun archiveSelected() {
             val noteIds = visibleSelectedIdsSnapshot()
@@ -368,7 +329,6 @@ class HomeViewModel
                     is BulkUndoableAction.MarkedDone ->
                         repository.markIncomplete(action.ids, action.snapshots)
                     is BulkUndoableAction.Pinned -> repository.setPinned(action.ids, false)
-                    is BulkUndoableAction.Starred -> repository.setStarred(action.ids, false)
                     // The rest aren't produced by HomeViewModel, but exhaustiveness keeps
                     // the inverse mapping correct if a new variant is ever added.
                     is BulkUndoableAction.Restored -> repository.moveToTrash(action.ids)
@@ -379,62 +339,6 @@ class HomeViewModel
             }
         }
 
-        fun applyTagsToSelection(
-            addTags: Set<String>,
-            removeTags: Set<String>,
-            newTagColors: Map<String, String> = emptyMap(),
-        ) {
-            val noteIds = visibleSelectedIdsSnapshot().toList()
-            if (noteIds.isEmpty()) return
-            val additions = addTags - removeTags
-            val removalKeys = removeTags.map { tagName -> normalizeTagName(tagName) }.toSet()
-            viewModelScope.launch {
-                newTagColors.forEach { (tagKey, hex) ->
-                    repository.tagRepository?.setTagColor(tagKey, hex)
-                }
-                noteIds.forEach { noteId ->
-                    val existing = repository.get(noteId) ?: return@forEach
-                    val note = existing.note
-                    val updatedTags = LinkedHashMap<String, String>()
-                    note.tags.forEach { tagName ->
-                        val trimmedName = tagName.trim()
-                        if (trimmedName.isBlank()) return@forEach
-                        val normalizedName = normalizeTagName(trimmedName)
-                        if (normalizedName in removalKeys) return@forEach
-                        updatedTags.putIfAbsent(normalizedName, trimmedName)
-                    }
-                    additions.forEach { tagName ->
-                        val trimmedName = tagName.trim()
-                        if (trimmedName.isBlank() || trimmedName == RememberReservedTags.STARRED) return@forEach
-                        val normalizedName = normalizeTagName(trimmedName)
-                        if (normalizedName in removalKeys) return@forEach
-                        updatedTags[normalizedName] = trimmedName
-                    }
-                    val nextTags = updatedTags.values.toList()
-                    if (nextTags == note.tags) return@forEach
-                    repository.updateNote(
-                        id = noteId,
-                        title = note.title,
-                        body = note.body,
-                        colorIndex = note.colorIndex,
-                        options =
-                            NoteOptions(
-                                reminderAt = note.reminderAt,
-                                importance = note.importance,
-                                visibility = note.visibility,
-                                pictureUri = note.pictureUri,
-                                pictureHeroFraming = note.pictureHeroFraming,
-                                locked = note.locked,
-                                iconKey = note.iconKey,
-                                actions = note.actions,
-                                tags = nextTags,
-                                recurrence = note.recurrence,
-                            ),
-                    )
-                }
-                selectedIds.value = persistentSetOf()
-            }
-        }
 
         private companion object {
             /** Wait this long after the last keystroke before re-running FTS. Tuned to feel instant

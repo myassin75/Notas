@@ -10,8 +10,6 @@ import three.haddad.smartnotas.data.NoteDao
 import three.haddad.smartnotas.data.NoteEntity
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteTagCacheRow
-import three.haddad.smartnotas.data.NoteTagLink
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.Visibility
 import three.haddad.smartnotas.ui.nav.Routes
@@ -72,7 +70,7 @@ class EditListViewModelTest {
         }
 
     @Test
-    fun external_star_and_archive_changes_merge_without_clobbering_local_edits() =
+    fun external_archive_changes_merge_without_clobbering_local_edits() =
         runTest {
             val store = FakeRepositoryStore()
             store.notes[1L] = noteEntity(id = 1L, title = "Original")
@@ -81,18 +79,10 @@ class EditListViewModelTest {
             viewModel.setTitle("Local title")
 
             val externalRepository = store.repository()
-            externalRepository.setStarred(1L, true)
-            advanceUntilIdle()
-
-            assertTrue(viewModel.starred.value)
-            assertEquals("Local title", viewModel.title.value)
-            viewModel.saveIfNeeded("Untitled")
-            assertTrue(store.notes.getValue(1L).starred)
-            assertEquals("Local title", store.notes.getValue(1L).title)
-
             externalRepository.archiveNote(1L)
             advanceUntilIdle()
             assertTrue(viewModel.archived.value)
+            assertEquals("Local title", viewModel.title.value)
 
             externalRepository.deleteForever(1L)
             advanceUntilIdle()
@@ -396,15 +386,7 @@ private class FakeNoteDao(
 
     override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
 
-    override suspend fun activeStarred(): List<NoteWithItems> =
-        store.notes.keys
-            .mapNotNull { noteId -> store.noteWithItems(noteId) }
-            .filter { noteWithItems ->
-                !noteWithItems.note.trashed &&
-                    !noteWithItems.note.archived &&
-                    noteWithItems.note.starred &&
-                    noteWithItems.note.completedAt == null
-            }.sortedByDescending { noteWithItems -> noteWithItems.note.updatedAt }
+
 
     override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
@@ -426,25 +408,9 @@ private class FakeNoteDao(
         store.afterNoteUpdate()
     }
 
-    override suspend fun setStarred(
-        id: Long,
-        starred: Boolean,
-        updatedAt: Long,
-    ) {
-        store.notes[id]?.let { note ->
-            store.notes[id] = note.copy(starred = starred, updatedAt = updatedAt)
-            store.publishNote(id)
-        }
-    }
 
-    override suspend fun updateTagCache(
-        id: Long,
-        tags: List<String>,
-    ) {
-        store.notes[id]?.let { note ->
-            store.notes[id] = note.copy(tags = tags)
-        }
-    }
+
+
 
     override suspend fun setTrashed(
         id: Long,
@@ -476,9 +442,7 @@ private class FakeNoteDao(
 
     override suspend fun allNoteIds(): List<Long> = store.notes.keys.toList()
 
-    override suspend fun noteTagCaches(): List<NoteTagCacheRow> = emptyList()
 
-    override suspend fun noteTagLinks(): List<NoteTagLink> = emptyList()
 
     override suspend fun countPictureUri(uri: String): Int = 0
 
@@ -563,7 +527,6 @@ private fun noteEntity(
         title = title,
         body = "",
         colorIndex = 0,
-        starred = false,
         trashed = false,
         createdAt = 1L,
         updatedAt = 1L,

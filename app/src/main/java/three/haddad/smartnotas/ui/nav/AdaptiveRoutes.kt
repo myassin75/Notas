@@ -96,11 +96,9 @@ import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.history.HistoryRoute
 import three.haddad.smartnotas.ui.history.HistorySection
 import three.haddad.smartnotas.ui.history.HistoryViewModel
-import three.haddad.smartnotas.ui.home.BulkTagSheet
 import three.haddad.smartnotas.ui.home.HomeListItem
 import three.haddad.smartnotas.ui.home.HomeRoute
 import three.haddad.smartnotas.ui.home.HomeViewModel
-import three.haddad.smartnotas.ui.home.buildBulkTagCoverage
 import three.haddad.smartnotas.ui.main.NotesCreateFabMenu
 import three.haddad.smartnotas.ui.settings.AboutSection
 import three.haddad.smartnotas.ui.settings.DevOptionsRoute
@@ -346,12 +344,9 @@ fun NotesTwoPaneRoute(
                                 viewModel.selectNotes(selectableVisibleNoteIds)
                             },
                             onClearSelection = viewModel::clearSelection,
-                            onTagSelected = { tagSheetOpen = true },
-                            onPinSelected = viewModel::pinSelected,
+                                            onPinSelected = viewModel::pinSelected,
                             pinEnabled = state.canPinSelected,
-                            onStarSelected = viewModel::starSelected,
-                            starEnabled = state.canStarSelected,
-                            onMarkDoneSelected = viewModel::markSelectedDone,
+                                                            onMarkDoneSelected = viewModel::markSelectedDone,
                             onArchiveSelected = viewModel::archiveSelected,
                             onTrashSelected = viewModel::trashSelected,
                         )
@@ -415,25 +410,6 @@ fun NotesTwoPaneRoute(
         modifier = Modifier.fillMaxSize(),
         paneExpansionState = paneExpansionState,
     )
-
-    if (tagSheetOpen) {
-        val bulkTagCoverage =
-            remember(visibleNotes, state.availableTags, state.selectedIds) {
-                buildBulkTagCoverage(
-                    availableTags = state.availableTags,
-                    selectedNoteTags =
-                        visibleNotes
-                            .filter { note -> note.note.id in state.selectedIds }
-                            .map { note -> note.note.tags },
-                )
-            }
-        BulkTagSheet(
-            tagCoverage = bulkTagCoverage,
-            selectedNoteCount = state.selectedIds.size,
-            onApply = viewModel::applyTagsToSelection,
-            onDismiss = { tagSheetOpen = false },
-        )
-    }
 }
 
 @Composable
@@ -442,6 +418,7 @@ fun SettingsTwoPaneRoute(
     onOpenIntro: () -> Unit,
     onOpenHelp: () -> Unit,
     onOpenDevOptions: () -> Unit,
+    onOpenHistory: () -> Unit = {},
     updateVm: RememberUpdateViewModel,
     onUpdateCheckStarted: () -> Unit,
     onShareApp: () -> Unit,
@@ -461,6 +438,7 @@ fun SettingsTwoPaneRoute(
             onOpenIntro = onOpenIntro,
             onOpenHelp = onOpenHelp,
             onOpenDevOptions = onOpenDevOptions,
+            onOpenHistory = onOpenHistory,
             updateVm = updateVm,
             onUpdateCheckStarted = onUpdateCheckStarted,
             highlightSectionKey = highlightSectionKey,
@@ -1251,11 +1229,8 @@ private fun NotesSelectionActionPane(
     totalVisibleCount: Int,
     onSelectAll: () -> Unit,
     onClearSelection: () -> Unit,
-    onTagSelected: () -> Unit,
     onPinSelected: () -> Unit,
     pinEnabled: Boolean,
-    onStarSelected: () -> Unit,
-    starEnabled: Boolean,
     onMarkDoneSelected: () -> Unit,
     onArchiveSelected: () -> Unit,
     onTrashSelected: () -> Unit,
@@ -1319,17 +1294,6 @@ private fun NotesSelectionActionPane(
                 SelectionPaneButtonContent("close", stringResource(R.string.home_unselect_all), compact)
             }
             RememberFilledTonalButton(
-                onClick = onTagSelected,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(buttonHeight),
-                shape = SelectionPaneButtonShape,
-                contentPadding = buttonPadding,
-            ) {
-                SelectionPaneButtonContent("label", stringResource(R.string.home_bulk_tag), compact)
-            }
-            RememberFilledTonalButton(
                 onClick = onPinSelected,
                 enabled = pinEnabled,
                 modifier =
@@ -1340,18 +1304,6 @@ private fun NotesSelectionActionPane(
                 contentPadding = buttonPadding,
             ) {
                 SelectionPaneButtonContent("push_pin", stringResource(R.string.edit_bottom_bar_pin), compact)
-            }
-            RememberFilledTonalButton(
-                onClick = onStarSelected,
-                enabled = starEnabled,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(buttonHeight),
-                shape = SelectionPaneButtonShape,
-                contentPadding = buttonPadding,
-            ) {
-                SelectionPaneButtonContent("star", stringResource(R.string.edit_bottom_bar_star), compact)
             }
             RememberFilledTonalButton(
                 onClick = onMarkDoneSelected,

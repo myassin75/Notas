@@ -2,14 +2,10 @@ package three.haddad.smartnotas.ui.theme
 
 import android.content.Context
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.core.graphics.toColorInt
-import com.materialkolor.rememberDynamicColorScheme
-import three.haddad.smartnotas.data.ColorSource
-import three.haddad.smartnotas.data.PaletteStyleOpt
 import three.haddad.smartnotas.data.ThemeState
 
 internal data class RememberColorResolution(
@@ -24,108 +20,26 @@ internal fun rememberResolvedColorScheme(
     darkTheme: Boolean,
     black: Boolean,
 ): RememberColorResolution {
-    val spec = colorSourceSpecFor(themeState.colorSource)
-    val materialYouAvailable = spec.source == ColorSource.MATERIAL_YOU
-    val customTriplet =
-        if (spec.source == ColorSource.CUSTOM) {
-            parseCustomTriplet(themeState.activeCustomSeed)
-        } else {
-            null
-        }
-    val base =
-        when {
-            materialYouAvailable -> {
-                if (darkTheme) {
-                    dynamicDarkColorScheme(context)
-                } else {
-                    dynamicLightColorScheme(context)
-                }
-            }
-            spec.triplet != null -> rememberCuratedColorScheme(spec.triplet, themeState, darkTheme, black)
-            customTriplet != null -> rememberCuratedColorScheme(customTriplet, themeState, darkTheme, black)
-            else -> rememberSeededColorScheme(spec, themeState, darkTheme, black)
-        }
-    val oledAdjusted = if (black) base.toOled() else base
-    val effectiveShading = themeState.effectiveShadingIntensity(black)
-    val tinted =
-        if (!black) {
-            oledAdjusted.tintSurfacesTowardPrimary(darkTheme, effectiveShading)
-        } else {
-            oledAdjusted
-        }
-    val themed =
-        if (materialYouAvailable) {
-            tinted.separateMaterialYouSecondaryContainerWhenNeeded(dark = darkTheme)
-        } else {
-            tinted
-                .boostOutlineForVisibility(darkTheme)
-                .boostContainersForSeedThemes(darkTheme)
-        }
-    return RememberColorResolution(
-        colorScheme = themed,
-        backgroundScheme = oledAdjusted,
-    )
-}
+    val brandPrimary = Color(0xFFA64FA8)
 
-@Composable
-private fun rememberCuratedColorScheme(
-    curated: CuratedPalette,
-    themeState: ThemeState,
-    darkTheme: Boolean,
-    black: Boolean,
-): ColorScheme {
-    val style = themeState.paletteStyle.toLib()
-    val tripletOverrides =
-        curated.takeIf { themeState.paletteStyle == PaletteStyleOpt.TONAL_SPOT }
-    return rememberDynamicColorScheme(
-        seedColor = curated.primary,
-        isDark = darkTheme,
-        primary = tripletOverrides?.primary,
-        secondary = tripletOverrides?.secondary,
-        tertiary = tripletOverrides?.tertiary,
-        style = style,
-        isAmoled = black,
-        specVersion = RememberColorSpecVersion,
-    )
-}
-
-@Composable
-private fun rememberSeededColorScheme(
-    spec: ColorSourceSpec,
-    themeState: ThemeState,
-    darkTheme: Boolean,
-    black: Boolean,
-): ColorScheme {
-    val seed =
-        when (spec.fallbackBehavior) {
-            ColorSourceFallback.DEFAULT_SEED_WHEN_UNAVAILABLE -> DefaultSeed
-            ColorSourceFallback.DEFAULT_SEED_WHEN_INVALID,
-            ColorSourceFallback.NONE,
-            -> colorSourceSeedFor(spec, themeState.activeCustomSeed)
-        }
-    return rememberDynamicColorScheme(
-        seedColor = seed,
-        isDark = darkTheme,
-        style = themeState.paletteStyle.toLib(),
-        isAmoled = black,
-        specVersion = RememberColorSpecVersion,
-    )
-}
-
-internal fun parseCustomTriplet(activeCustomSeed: String): CuratedPalette? {
-    if (activeCustomSeed.isBlank()) return null
-    val parts = activeCustomSeed.split("|")
-    val primaryHex = parts.getOrNull(0) ?: return null
-    val primaryColor = runCatching { Color(primaryHex.toColorInt()) }.getOrNull() ?: return null
-
-    if (parts.size >= 3) {
-        val secondaryHex = parts[1]
-        val tertiaryHex = parts[2]
-        val secondaryColor = runCatching { Color(secondaryHex.toColorInt()) }.getOrNull()
-        val tertiaryColor = runCatching { Color(tertiaryHex.toColorInt()) }.getOrNull()
-        if (secondaryColor != null && tertiaryColor != null) {
-            return CuratedPalette(primaryColor, secondaryColor, tertiaryColor)
-        }
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = brandPrimary,
+        ).let { if (black) it.copy(background = Color.Black, surface = Color.Black) else it }
+    } else {
+        lightColorScheme(
+            primary = brandPrimary,
+            primaryContainer = Color(0xFFF1E5F4),
+            background = Color(0xFFF8F7FC),
+            surface = Color(0xFFFFFFFF),
+            onSurface = Color(0xFF383743),
+            onSurfaceVariant = Color(0xFF8A879B),
+            outline = Color(0xFFE3DFEA),
+        )
     }
-    return generateTripletForSeed(primaryColor)
+
+    return RememberColorResolution(
+        colorScheme = colorScheme,
+        backgroundScheme = colorScheme,
+    )
 }

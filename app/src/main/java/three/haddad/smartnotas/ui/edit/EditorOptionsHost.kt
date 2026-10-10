@@ -37,11 +37,9 @@ fun EditorOptionsPanel(
     visibility: NoteVisibility,
     pictureUri: String?,
     actions: List<NoteAction>,
-    tags: List<String>,
     attachments: List<NoteAttachmentEntity>,
     notificationsAllowed: Boolean,
     readOnly: Boolean,
-    starred: Boolean,
     createdAt: Long?,
     updatedAt: Long?,
     onOpenReminder: () -> Unit,
@@ -50,7 +48,6 @@ fun EditorOptionsPanel(
     onOpenPicture: () -> Unit,
     onBrowsePictureWithApp: () -> Unit,
     onOpenActions: () -> Unit,
-    onOpenTags: () -> Unit,
     onOpenAttachmentsSheet: () -> Unit,
     onPickAttachment: () -> Unit,
 ) {
@@ -60,7 +57,6 @@ fun EditorOptionsPanel(
         visibility = visibility,
         pictureUri = pictureUri,
         actions = actions,
-        tags = tags,
         attachments = attachments,
         onOpenReminder = if (readOnly) ({}) else onOpenReminder,
         reminderPermissionMissing = reminders.isNotEmpty() && !notificationsAllowed,
@@ -69,7 +65,6 @@ fun EditorOptionsPanel(
         onOpenPicture = if (readOnly) ({}) else onOpenPicture,
         onBrowsePictureWithApp = if (readOnly) ({}) else onBrowsePictureWithApp,
         onOpenActions = if (readOnly) ({}) else onOpenActions,
-        onOpenTags = if (readOnly) ({}) else onOpenTags,
         onOpenAttachments =
             if (readOnly) {
                 {}
@@ -83,7 +78,6 @@ fun EditorOptionsPanel(
                 }
             },
         readOnly = readOnly,
-        starred = starred,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
@@ -95,7 +89,6 @@ fun EditorOptionSheets(
     reminderPickerOpen: Boolean,
     iconPickerOpen: Boolean,
     actionsPickerOpen: Boolean,
-    tagsPickerOpen: Boolean,
     attachmentsPickerOpen: Boolean,
     notificationPermissionSheetOpen: Boolean,
     deleteForeverConfirmOpen: Boolean,
@@ -104,18 +97,14 @@ fun EditorOptionSheets(
     pictureViewer: Pair<String, Long>?,
     currentPictureHeroFraming: String?,
     readOnly: Boolean,
-    activeTagSuggestions: List<String>,
     attachments: List<NoteAttachmentEntity>,
     currentReminders: List<NoteReminder>,
     currentIconKey: String?,
     currentActions: List<NoteAction>,
-    currentTags: List<String>,
     heroImageContentDescription: String,
     onReminderChange: (List<NoteReminder>) -> Unit,
     onIconKeyChange: (String?) -> Unit,
     onActionsChange: (List<NoteAction>) -> Unit,
-    onTagsWithColorsChange: (List<String>, Map<String, String>) -> Unit,
-    onEditExistingTag: (String, String, String?, Boolean) -> Unit,
     onAddAttachment: (Uri, String, String?) -> Unit,
     onRemoveAttachment: (Long) -> Unit,
     onHeroCommitted: (String, HeroFraming) -> Unit,
@@ -124,7 +113,6 @@ fun EditorOptionSheets(
     onDismissReminder: () -> Unit,
     onDismissIcon: () -> Unit,
     onDismissActions: () -> Unit,
-    onDismissTags: () -> Unit,
     onDismissAttachments: () -> Unit,
     onDismissNotificationPermission: () -> Unit,
     onDismissPendingHero: () -> Unit,
@@ -179,15 +167,6 @@ fun EditorOptionSheets(
                 onDismissActions()
             },
             onDismiss = onDismissActions,
-        )
-    }
-    if (tagsPickerOpen) {
-        TagEditorSheet(
-            initial = currentTags,
-            availableTags = activeTagSuggestions,
-            onConfirm = onTagsWithColorsChange,
-            onEditExistingTag = onEditExistingTag,
-            onDismiss = onDismissTags,
         )
     }
     if (attachmentsPickerOpen) {

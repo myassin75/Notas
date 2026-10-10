@@ -353,10 +353,7 @@ internal fun EditNoteMarkdownEditorSection(
     autoFocusBodyOnEdit: Boolean,
     scrollState: ScrollState,
     displayMode: MarkdownEditorDisplayMode,
-    assignedTags: List<String>,
-    knownTags: List<String>,
     onMarkdownChanged: (String) -> Unit,
-    onAddTag: (String, String) -> Unit,
     onBodyFocusChanged: (Boolean) -> Unit,
     onEnterEditModeAtOffset: (Int) -> Unit,
     onEnterEditModeSelectingRange: (Int, Int) -> Unit,
@@ -391,9 +388,6 @@ internal fun EditNoteMarkdownEditorSection(
                     .heightIn(min = 140.dp),
             scrollState = scrollState,
             displayMode = displayMode,
-            assignedTags = assignedTags,
-            knownTags = knownTags,
-            onAddTag = onAddTag,
             onFocusChanged = onBodyFocusChanged,
         )
     } else if (existing && bodyEmpty) {
@@ -574,7 +568,6 @@ internal fun EditNoteScrollableContent(
     onBrowsePictureWithApp: () -> Unit,
     onViewPictureFull: (String, Long) -> Unit,
     onOpenActions: () -> Unit,
-    onOpenTags: () -> Unit,
     onOpenAttachments: () -> Unit,
     onEnterEditModeAtOffset: (Int) -> Unit,
     onEnterEditModeSelectingRange: (Int, Int) -> Unit,
@@ -584,8 +577,6 @@ internal fun EditNoteScrollableContent(
 ) {
     val readOnly = shelfState != NoteShelfState.ACTIVE
     val imeBottomPadding = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-    val assignedTags by vm.tags.collectAsStateWithLifecycle()
-    val knownTags by vm.activeTagSuggestions.collectAsStateWithLifecycle()
     EditorContentBodyColumn(
         modifier = modifier,
         horizontalPadding = horizontalPadding,
@@ -610,10 +601,7 @@ internal fun EditNoteScrollableContent(
                 autoFocusBodyOnEdit = autoFocusBodyOnEdit,
                 scrollState = scrollState,
                 displayMode = markdownDisplayMode,
-                assignedTags = assignedTags,
-                knownTags = knownTags,
                 onMarkdownChanged = vm::setBody,
-                onAddTag = vm::addTag,
                 onBodyFocusChanged = onBodyFocusChanged,
                 onEnterEditModeAtOffset = onEnterEditModeAtOffset,
                 onEnterEditModeSelectingRange = onEnterEditModeSelectingRange,
@@ -629,7 +617,6 @@ internal fun EditNoteScrollableContent(
                 onOpenPicture = if (readOnly) ({}) else onOpenPicture,
                 onBrowsePictureWithApp = if (readOnly) ({}) else onBrowsePictureWithApp,
                 onOpenActions = if (readOnly) ({}) else onOpenActions,
-                onOpenTags = if (readOnly) ({}) else onOpenTags,
                 onOpenAttachments = if (readOnly) ({}) else onOpenAttachments,
             )
             Spacer(Modifier.height(36.dp))
@@ -670,7 +657,6 @@ private fun OptionsPanelSection(
     onOpenPicture: () -> Unit,
     onBrowsePictureWithApp: () -> Unit,
     onOpenActions: () -> Unit,
-    onOpenTags: () -> Unit,
     onOpenAttachments: () -> Unit,
 ) {
     val reminders by vm.reminders.collectAsStateWithLifecycle()
@@ -678,9 +664,7 @@ private fun OptionsPanelSection(
     val visibility by vm.visibility.collectAsStateWithLifecycle()
     val pictureUri by vm.pictureUri.collectAsStateWithLifecycle()
     val actions by vm.actions.collectAsStateWithLifecycle()
-    val tags by vm.tags.collectAsStateWithLifecycle()
     val attachments by vm.attachments.collectAsStateWithLifecycle()
-    val starred by vm.starred.collectAsStateWithLifecycle()
     val createdAt by vm.createdAt.collectAsStateWithLifecycle()
     val updatedAt by vm.updatedAt.collectAsStateWithLifecycle()
 
@@ -690,11 +674,9 @@ private fun OptionsPanelSection(
         visibility = visibility,
         pictureUri = pictureUri,
         actions = actions,
-        tags = tags,
         attachments = attachments,
         notificationsAllowed = notificationsAllowed,
         readOnly = readOnly,
-        starred = starred,
         createdAt = createdAt,
         updatedAt = updatedAt,
         onOpenReminder = onOpenReminder,
@@ -703,7 +685,6 @@ private fun OptionsPanelSection(
         onOpenPicture = onOpenPicture,
         onBrowsePictureWithApp = onBrowsePictureWithApp,
         onOpenActions = onOpenActions,
-        onOpenTags = onOpenTags,
         onOpenAttachmentsSheet = onOpenAttachments,
         onPickAttachment = onOpenAttachments,
     )

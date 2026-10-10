@@ -99,7 +99,6 @@ class GoogleTasksImporter(
                             items = checklistItemsFor(group),
                             options =
                                 NoteOptions(
-                                    tags = importedTagsFor(group),
                                     reminders = importedRemindersFor(group),
                                 ),
                         )
@@ -154,7 +153,6 @@ class GoogleTasksImporter(
                             colorIndex = 0,
                             options =
                                 NoteOptions(
-                                    tags = importedTagsFor(group),
                                     reminders = importedRemindersFor(group),
                                 ),
                         )
@@ -204,7 +202,6 @@ class GoogleTasksImporter(
         val options =
             NoteOptions(
                 reminderAt = reminderAt,
-                tags = tags,
                 recurrence = task.recurrence,
             )
 

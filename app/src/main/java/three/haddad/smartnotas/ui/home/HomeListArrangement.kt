@@ -4,11 +4,9 @@ import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.GroupBy
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.RememberReservedTags
 import three.haddad.smartnotas.data.SortDir
 import three.haddad.smartnotas.data.SortKey
 import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.normalizeTagName
 import three.haddad.smartnotas.data.pinned
 import three.haddad.smartnotas.ui.components.toNoteCardUiModel
 import java.time.ZoneId
@@ -280,7 +278,7 @@ private fun arrangeByGroupBy(
                 )
             }
         GroupBy.TYPE -> arrangeByType(activeNotes)
-        GroupBy.TAG -> arrangeByTag(activeNotes)
+        GroupBy.SHOULDER -> arrangeByShoulder(activeNotes)
     }
 
 private fun arrangeByType(activeNotes: List<NoteWithItems>): List<HomeListItem> {
@@ -328,37 +326,25 @@ private fun arrangeByType(activeNotes: List<NoteWithItems>): List<HomeListItem> 
     }
 }
 
-private fun arrangeByTag(activeNotes: List<NoteWithItems>): List<HomeListItem> {
-    val taggedNotes =
-        activeNotes.filter { noteWithItems ->
-            RememberReservedTags.userVisibleTags(noteWithItems.note.tags).isNotEmpty()
-        }
-    val untaggedNotes =
-        activeNotes.filter { noteWithItems ->
-            RememberReservedTags.userVisibleTags(noteWithItems.note.tags).isEmpty()
-        }
-    val tagsByKey = LinkedHashMap<String, String>()
-    taggedNotes
-        .flatMap { noteWithItems -> RememberReservedTags.userVisibleTags(noteWithItems.note.tags) }
-        .forEach { tagName ->
-            val trimmedName = tagName.trim()
-            if (trimmedName.isBlank()) return@forEach
-            tagsByKey.putIfAbsent(normalizeTagName(trimmedName), trimmedName)
-        }
-    val tags = tagsByKey.entries.sortedBy { entry -> entry.key }.map { entry -> entry.value }
-
+private fun arrangeByShoulder(activeNotes: List<NoteWithItems>): List<HomeListItem> {
+    val shoulderedNotes = activeNotes.filter { it.shoulder != null }
+    val unshoulderedNotes = activeNotes.filter { it.shoulder == null }
+    
+    val shouldersById = LinkedHashMap<Long, three.haddad.smartnotas.data.ShoulderEntity>()
+    shoulderedNotes.forEach { noteWithItems ->
+        val shoulder = noteWithItems.shoulder!!
+        shouldersById.putIfAbsent(shoulder.id, shoulder)
+    }
+    
+    val sortedShoulders = shouldersById.values.sortedBy { it.name.lowercase() }
+    
     return buildList {
-        tags.forEach { tag ->
-            val notesInTag =
-                taggedNotes.filter { noteWithItems ->
-                    RememberReservedTags
-                        .userVisibleTags(noteWithItems.note.tags)
-                        .any { tagName -> normalizeTagName(tagName) == normalizeTagName(tag) }
-                }
-            if (notesInTag.isNotEmpty()) {
-                val sectionKey = "TAG_${normalizeTagName(tag)}"
-                add(HomeListItem.Header(label = tag, count = notesInTag.size, stableKey = sectionKey))
-                notesInTag.forEach { noteWithItems ->
+        sortedShoulders.forEach { shoulder ->
+            val notesInShoulder = shoulderedNotes.filter { it.shoulder?.id == shoulder.id }
+            if (notesInShoulder.isNotEmpty()) {
+                val sectionKey = "SHOULDER_${shoulder.id}"
+                add(HomeListItem.Header(label = shoulder.name, count = notesInShoulder.size, stableKey = sectionKey))
+                notesInShoulder.forEach { noteWithItems ->
                     add(
                         HomeListItem.NoteRow(
                             note = noteWithItems,
@@ -369,21 +355,21 @@ private fun arrangeByTag(activeNotes: List<NoteWithItems>): List<HomeListItem> {
                 }
             }
         }
-        if (untaggedNotes.isNotEmpty()) {
+        if (unshoulderedNotes.isNotEmpty()) {
             add(
                 HomeListItem.Header(
                     label = "",
-                    count = untaggedNotes.size,
-                    stableKey = "TAG_UNTAGGED",
+                    count = unshoulderedNotes.size,
+                    stableKey = "SHOULDER_UNSHOULDERED",
                     labelRes = R.string.home_section_untagged,
                 ),
             )
-            untaggedNotes.forEach { noteWithItems ->
+            unshoulderedNotes.forEach { noteWithItems ->
                 add(
                     HomeListItem.NoteRow(
                         note = noteWithItems,
                         card = noteWithItems.toNoteCardUiModel(),
-                        groupKey = "TAG_UNTAGGED",
+                        groupKey = "SHOULDER_UNSHOULDERED",
                     ),
                 )
             }

@@ -133,7 +133,6 @@ private fun PendingNewNoteCard(
                 kind = kind,
                 title = "",
                 body = "",
-                starred = false,
                 pinned = false,
                 completed = false,
                 icon =
@@ -148,7 +147,6 @@ private fun PendingNewNoteCard(
                 remindersCount = 0,
                 recurring = false,
                 hasAttachment = false,
-                visibleTags = persistentListOf(),
                 checklistPreviewItems = persistentListOf(),
                 checklistHiddenItemCount = 0,
             )
@@ -218,11 +216,9 @@ fun HomeRoute(
         onPruneSelection = vm::pruneSelection,
         onClearSelection = vm::clearSelection,
         onPinSelected = vm::pinSelected,
-        onStarSelected = vm::starSelected,
         onMarkSelectedDone = vm::markSelectedDone,
         onArchiveSelected = vm::archiveSelected,
         onTrashSelected = vm::trashSelected,
-        onApplyTagsToSelection = vm::applyTagsToSelection,
         closeRevealRequest = closeRevealRequest,
         onCreateNote = onCreateNote,
         onCreateList = onCreateList,
@@ -253,11 +249,9 @@ fun HomeScreen(
     onPruneSelection: (Set<Long>) -> Unit,
     onClearSelection: () -> Unit,
     onPinSelected: () -> Unit,
-    onStarSelected: () -> Unit,
     onMarkSelectedDone: () -> Unit,
     onArchiveSelected: () -> Unit,
     onTrashSelected: () -> Unit,
-    onApplyTagsToSelection: (Set<String>, Set<String>, Map<String, String>) -> Unit,
     closeRevealRequest: Int,
     onCreateNote: () -> Unit,
     onCreateList: () -> Unit,
@@ -268,7 +262,6 @@ fun HomeScreen(
 ) {
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var searchFocusRequestKey by rememberSaveable { mutableIntStateOf(0) }
-    var tagSheetOpen by rememberSaveable { mutableStateOf(false) }
     // Collapsed by default so the search results feel focused on active notes. Each section
     // remembers its own expansion state when the user switches away and comes back.
     var archiveSectionExpanded by rememberSaveable { mutableStateOf(HomeScreenSessionState.archiveSectionExpanded) }
@@ -392,27 +385,6 @@ fun HomeScreen(
         onPruneSelection(selectableVisibleIds)
         onSelectableVisibleIdsChanged(selectableVisibleIds)
     }
-    val bulkTagCoverage by
-        remember(displayedItems, state.availableTags, state.selectedIds) {
-            derivedStateOf {
-                val selectedTagsByNoteId = LinkedHashMap<Long, List<String>>()
-                displayedItems.forEach { item ->
-                    if (item is HomeListItem.NoteRow && item.card.id in state.selectedIds) {
-                        selectedTagsByNoteId.putIfAbsent(item.card.id, item.note.note.tags)
-                    }
-                }
-                buildBulkTagCoverage(
-                    availableTags = state.availableTags,
-                    selectedNoteTags = selectedTagsByNoteId.values.toList(),
-                )
-            }
-        }
-    // Note ids that appear in more than one row of [displayedItems]. Only multi-tag
-    // notes under the by-tag grouping land here; everything else is mutually exclusive
-    // (a note is either active or done, either overdue or upcoming). For unique ids we
-    // key the LazyColumn row by [note.id] alone so transitions across sections (e.g.
-    // active -> Done bucket) stay the same key and animateItem can slide the card
-    // instead of fading it out and back in.
     val duplicatedRowNoteIds by
         remember(displayedItems) {
             derivedStateOf {
@@ -483,11 +455,8 @@ fun HomeScreen(
                 HomeSelectionActionBar(
                     visible = state.inSelectionMode,
                     onClearSelection = onClearSelection,
-                    onTagSelected = { tagSheetOpen = true },
                     onPinSelected = onPinSelected,
                     pinEnabled = state.canPinSelected,
-                    onStarSelected = onStarSelected,
-                    starEnabled = state.canStarSelected,
                     onMarkDoneSelected = onMarkSelectedDone,
                     onArchiveSelected = onArchiveSelected,
                     onTrashSelected = onTrashSelected,
@@ -790,15 +759,6 @@ fun HomeScreen(
             }
         }
     }
-
-    if (tagSheetOpen) {
-        BulkTagSheet(
-            tagCoverage = bulkTagCoverage,
-            selectedNoteCount = state.selectedIds.size,
-            onApply = onApplyTagsToSelection,
-            onDismiss = { tagSheetOpen = false },
-        )
-    }
 }
 
 private fun homeListItemKey(
@@ -968,7 +928,6 @@ private fun LazyStaggeredGridScope.mosaicListContent(
                 onChange = actions.onFilterChange,
                 viewOptions = display.state.viewOptions,
                 onViewOptionsChange = actions.onViewOptionsChange,
-                availableTags = display.state.availableTags,
                 scrollState = sectionState.filterControlScrollState,
                 expandedDropdown = sectionState.expandedFilterDropdown,
                 onExpandedDropdownChange = sectionState.onExpandedFilterDropdownChange,
@@ -1184,7 +1143,6 @@ private fun LazyListScope.linearListContent(
                 onChange = actions.onFilterChange,
                 viewOptions = display.state.viewOptions,
                 onViewOptionsChange = actions.onViewOptionsChange,
-                availableTags = display.state.availableTags,
                 scrollState = sectionState.filterControlScrollState,
                 expandedDropdown = sectionState.expandedFilterDropdown,
                 onExpandedDropdownChange = sectionState.onExpandedFilterDropdownChange,

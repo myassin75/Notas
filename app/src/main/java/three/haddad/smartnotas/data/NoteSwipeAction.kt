@@ -8,7 +8,7 @@ enum class NoteSwipeAction(
     EDIT("edit"),
     TRASH("delete"),
     DUPLICATE("content_copy"),
-    TOGGLE_STAR("star"),
+    
 
     /** Pin/unpin to the top-pinned "Pinned" section on Home. Placement only - see [NoteEntity.pinnedAt]. */
     TOGGLE_PIN("push_pin"),
@@ -23,5 +23,5 @@ enum class NoteSwipeAction(
      * that state fresh instead of flipping a snapshot captured when the card composed.
      */
     val isToggle: Boolean
-        get() = this == TOGGLE_STAR || this == TOGGLE_PIN || this == MARK_DONE
+        get() = this == TOGGLE_PIN || this == MARK_DONE
 }

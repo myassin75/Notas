@@ -74,12 +74,10 @@ fun NoteActionBottomBar(
     shelfState: NoteShelfState,
     existing: Boolean,
     isEditMode: Boolean,
-    starred: Boolean,
     pinned: Boolean,
     completed: Boolean,
     visible: Boolean,
     onToggleEdit: () -> Unit,
-    onToggleStar: () -> Unit,
     onTogglePin: () -> Unit,
     onToggleCompleted: () -> Unit,
     onArchive: () -> Unit,
@@ -104,11 +102,9 @@ fun NoteActionBottomBar(
             shelfState = shelfState,
             existing = existing,
             isEditMode = isEditMode,
-            starred = starred,
             pinned = pinned,
             completed = completed,
             onToggleEdit = onToggleEdit,
-            onToggleStar = onToggleStar,
             onTogglePin = onTogglePin,
             onToggleCompleted = onToggleCompleted,
             onArchive = onArchive,
@@ -136,11 +132,9 @@ fun NoteActionBottomBarContent(
     shelfState: NoteShelfState,
     existing: Boolean,
     isEditMode: Boolean,
-    starred: Boolean,
     pinned: Boolean,
     completed: Boolean,
     onToggleEdit: () -> Unit,
-    onToggleStar: () -> Unit,
     onTogglePin: () -> Unit,
     onToggleCompleted: () -> Unit,
     onArchive: () -> Unit,
@@ -201,12 +195,6 @@ fun NoteActionBottomBarContent(
                             modifier = activeActionModifier,
                         )
                     }
-                    StarActionItem(
-                        starred = starred,
-                        onClick = onToggleStar,
-                        compact = compact,
-                        modifier = activeActionModifier,
-                    )
                     if (existing) {
                         ActionItem(
                             icon = "notifications",
@@ -646,86 +634,3 @@ private fun PinActionItem(
 /**
  * Star toggle: pulses on activate (scale bump + yellow tint). When starred, stays yellow.
  */
-@Composable
-private fun StarActionItem(
-    starred: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    compact: Boolean = false,
-) {
-    val effectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
-    val colorEffectsSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Color>())
-    val hapticEnabled = LocalHapticEnabled.current
-    val view = LocalView.current
-    var starPulsing by remember { mutableStateOf(false) }
-    val starScale by animateFloatAsState(
-        targetValue = if (starPulsing) 1.35f else 1f,
-        animationSpec = effectsSpec,
-        finishedListener = { if (starPulsing) starPulsing = false },
-        label = "bottomBarStarScale",
-    )
-    val starColor by animateColorAsState(
-        targetValue = if (starPulsing || starred) Color(0xFFF9A825) else MaterialTheme.colorScheme.onSurface,
-        animationSpec = colorEffectsSpec,
-        label = "bottomBarStarColor",
-    )
-    val clickableModifier =
-        modifier
-            .clip(MaterialTheme.shapes.large)
-            .clickable(
-                onClick = {
-                    if (!starred) {
-                        if (hapticEnabled) view.performLongPressHaptic()
-                        starPulsing = true
-                    }
-                    onClick()
-                },
-            )
-    val iconContent: @Composable () -> Unit = {
-        // Shape + color together, so the starred state reads clearly even for users who
-        // can't distinguish the yellow tint (color-blindness, high-contrast themes, grayscale).
-        // We swap the underlying FILL-instanced font family via `filled = starred` rather
-        // than switching the ligature name, because in our instanced subset font both
-        // "starred" and "star_border" resolve to the same FILL=1 glyph.
-        RememberMaterialRoundedSymbol(
-            name = "star",
-            filled = starred,
-            size = if (compact) 19.dp else 24.dp,
-            tint = starColor,
-            weight = FontWeight.Medium,
-            opticalCenterYOffset = 1.5.dp,
-            modifier = Modifier.scale(starScale),
-        )
-    }
-    val labelContent: @Composable () -> Unit = {
-        Text(
-            text = stringResource(R.string.edit_bottom_bar_star),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-    if (compact) {
-        Row(
-            modifier = clickableModifier.padding(horizontal = 4.dp, vertical = 2.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            iconContent()
-            Spacer(Modifier.width(3.dp))
-            labelContent()
-        }
-    } else {
-        Column(
-            modifier = clickableModifier.padding(vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            iconContent()
-            Spacer(Modifier.height(4.dp))
-            labelContent()
-        }
-    }
-}

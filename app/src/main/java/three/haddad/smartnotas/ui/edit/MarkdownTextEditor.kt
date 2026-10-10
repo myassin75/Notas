@@ -57,10 +57,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.data.TagPalette
-import three.haddad.smartnotas.data.normalizeTagName
 import three.haddad.smartnotas.ui.common.rememberMarkdownStyler
-import three.haddad.smartnotas.ui.components.TagChipFilled
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import kotlin.math.roundToInt
 
@@ -77,8 +74,6 @@ internal fun MarkdownTextEditor(
     modifier: Modifier = Modifier,
     scrollState: ScrollState? = null,
     displayMode: MarkdownEditorDisplayMode = MarkdownEditorDisplayMode.LivePreview,
-    assignedTags: List<String> = emptyList(),
-    knownTags: List<String> = emptyList(),
     onStylusInput: () -> Unit = {},
     onAddTag: (String, String) -> Unit = { _, _ -> },
     onFocusChanged: (Boolean) -> Unit = {},
@@ -158,33 +153,6 @@ internal fun MarkdownTextEditor(
         }
     val horizontalRuleColor = MaterialTheme.colorScheme.outlineVariant
     val horizontalRuleStrokeWidthPx = with(density) { 1.dp.toPx() }
-    val activeTagToken =
-        remember(state.markdown, state.textFieldValue.selection) {
-            activeHashTagToken(
-                markdown = state.markdown,
-                cursor = state.textFieldValue.selection.end,
-            )
-        }
-    val resolvedActiveTag =
-        remember(activeTagToken?.tag, knownTags) {
-            activeTagToken?.tag?.let { typedTag ->
-                knownTags.firstOrNull { knownTag ->
-                    normalizeTagName(knownTag) == normalizeTagName(typedTag)
-                } ?: typedTag
-            }
-        }
-    val activeTagColor =
-        remember(resolvedActiveTag) {
-            resolvedActiveTag
-                ?.let { tagName -> TagPalette.defaultFor(normalizeTagName(tagName)) }
-                ?: Color.Transparent
-        }
-    val activeTagAlreadyAssigned =
-        remember(resolvedActiveTag, assignedTags) {
-            resolvedActiveTag?.let { activeTag ->
-                assignedTags.any { assignedTag -> normalizeTagName(assignedTag) == normalizeTagName(activeTag) }
-            } ?: false
-        }
 
     LaunchedEffect(state.focusRequestRevision) {
         if (state.focusRequestRevision > 0) {
@@ -322,60 +290,6 @@ internal fun MarkdownTextEditor(
                 }
             },
         )
-        AnimatedVisibility(
-            visible = resolvedActiveTag != null && !activeTagAlreadyAssigned,
-            enter = fadeIn(tagPreviewEffectsSpec) + scaleIn(tagPreviewSpatialSpec, initialScale = 0.92f),
-            exit = fadeOut(tagPreviewEffectsSpec) + scaleOut(tagPreviewSpatialSpec, targetScale = 0.92f),
-        ) {
-            val previewTag = resolvedActiveTag.orEmpty()
-            TagChipFilled(
-                tag = previewTag,
-                color = activeTagColor,
-                compact = true,
-                highlighted = true,
-                leadingIconName = "add",
-                highlightedIconName = null,
-                onClick = { onAddTag(previewTag, paletteHex(activeTagColor)) },
-                modifier = Modifier.padding(top = 8.dp),
-            )
-        }
     }
 }
 
-private data class ActiveHashTagToken(
-    val tag: String,
-    val tokenStart: Int,
-)
-
-private fun activeHashTagToken(
-    markdown: String,
-    cursor: Int,
-): ActiveHashTagToken? {
-    val boundedCursor = cursor.coerceIn(0, markdown.length)
-    if (boundedCursor < 2) return null
-
-    var tokenStart = boundedCursor - 1
-    while (tokenStart >= 0 && !markdown[tokenStart].isWhitespace()) {
-        if (markdown[tokenStart] == '#') {
-            break
-        }
-        tokenStart--
-    }
-    if (tokenStart < 0 || markdown[tokenStart] != '#') return null
-    if (tokenStart > 0 && !markdown[tokenStart - 1].isWhitespace()) return null
-
-    val token = markdown.substring(tokenStart + 1, boundedCursor)
-    if (token.isBlank()) return null
-    val validToken =
-        token.all { character ->
-            character.isLetterOrDigit() || character == '_' || character == '-'
-        }
-    return if (validToken) {
-        ActiveHashTagToken(
-            tag = token,
-            tokenStart = tokenStart,
-        )
-    } else {
-        null
-    }
-}

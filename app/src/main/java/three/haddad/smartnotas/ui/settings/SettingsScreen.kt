@@ -23,6 +23,7 @@ import androidx.annotation.StringRes
 import androidx.biometric.BiometricManager
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,17 +38,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
@@ -55,6 +59,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -163,6 +169,7 @@ enum class SettingsSectionKey(
      */
     val legacyRouteKeys: List<String> = emptyList(),
 ) {
+    History("history", "history", R.string.main_tab_history),
     Appearance("appearance", "palette", R.string.settings_section_appearance),
 
     // Remember-only. FilePipe has no note cards, so this section is not part of the shared settings list.
@@ -243,6 +250,8 @@ fun SettingsRoute(
     onOpenIntro: () -> Unit = {},
     onOpenHelp: () -> Unit = {},
     onOpenDevOptions: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
+    onBack: () -> Unit = {},
     updateVm: RememberUpdateViewModel = hiltViewModel(),
     onUpdateCheckStarted: () -> Unit = {},
     selectedSectionKey: SettingsSectionKey? = null,
@@ -666,7 +675,7 @@ fun SettingsRoute(
     }
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = SettingsDesignTokens.ScreenBg,
         snackbarHost = {
             SnackbarHost(
                 snackbarHostState,
@@ -674,8 +683,6 @@ fun SettingsRoute(
             )
         },
     ) { _ ->
-        // Pane mode (selectedSectionKey set) has no floating pill over this list, so the
-        // bottom blur band that exists to sit under the pill is dropped.
         val paneHosted = selectedSectionKey != null
         val blurMod =
             remember(blurStyle, paneHosted) {
@@ -683,7 +690,7 @@ fun SettingsRoute(
                     ?.applyToScrollableList(bottomAlphaMultiplier = if (paneHosted) 0f else 1f)
                     ?: Modifier
             }
-        val topInset = statusBarInset + if (showTopActions) 68.dp else 24.dp
+        val topInset = statusBarInset + 8.dp
         val bottomPadding = pillInset + 24.dp
         val listContentPadding =
             remember(topInset, bottomPadding) {
@@ -705,9 +712,112 @@ fun SettingsRoute(
                             .fillMaxSize()
                             .then(blurMod),
                     contentPadding = listContentPadding,
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = settingsScrollEnabled,
                 ) {
+                    if (showTopActions) {
+                        item(key = "header") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                // Left button: Back Arrow button taking user back to Home
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .clickable { onBack() },
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        RememberMaterialRoundedSymbol(
+                                            name = "arrow_back",
+                                            size = 20.dp,
+                                            tint = SettingsDesignTokens.TextPrimary,
+                                            weight = FontWeight.Normal,
+                                            filled = false,
+                                        )
+                                    }
+                                }
+
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(horizontal = 12.dp),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.main_tab_settings),
+                                        style = MaterialTheme.typography.headlineMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 24.sp,
+                                            color = SettingsDesignTokens.TextPrimary,
+                                        ),
+                                    )
+                                    Text(
+                                        text = "Make Notas your own",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 13.sp,
+                                            color = SettingsDesignTokens.TextSecondary,
+                                        ),
+                                    )
+                                }
+
+                                // Right button: Information/Help icon taking user to Help screen
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .clickable { onOpenHelp() },
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        RememberMaterialRoundedSymbol(
+                                            name = "info",
+                                            size = 20.dp,
+                                            tint = SettingsDesignTokens.TextPrimary,
+                                            weight = FontWeight.Normal,
+                                            filled = false,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (includeSettingsSection(SettingsSectionKey.History)) {
+                        item(key = "history") {
+                            SettingsExpandableSection(
+                                sectionKey = SettingsSectionKey.History.routeKey,
+                                materialSymbolName = SettingsSectionKey.History.iconName,
+                                title = stringResource(SettingsSectionKey.History.titleRes),
+                                collapsedSectionKeys = visibleCollapsedSectionKeys,
+                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
+                                showHeader = false,
+                                highlightedSectionKey = activeSectionHighlightKey,
+                            ) {
+                                SettingsSectionCard {
+                                    SettingsRowItem(
+                                        materialSymbolName = "history",
+                                        title = stringResource(R.string.main_tab_history),
+                                        onClick = { onOpenHistory() },
+                                        trailingContent = {
+                                            RememberMaterialRoundedSymbol(
+                                                name = "chevron_right",
+                                                size = 20.dp,
+                                                tint = SettingsDesignTokens.TextSecondary,
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     if (includeSettingsSection(SettingsSectionKey.Appearance)) {
                         item(key = "appearance") {
                             SettingsExpandableSection(
@@ -728,24 +838,7 @@ fun SettingsRoute(
                         }
                     }
 
-                    if (includeSettingsSection(SettingsSectionKey.NotesUi)) {
-                        item(key = "notes_ui") {
-                            SettingsExpandableSection(
-                                sectionKey = SettingsSectionKey.NotesUi.routeKey,
-                                materialSymbolName = SettingsSectionKey.NotesUi.iconName,
-                                title = stringResource(SettingsSectionKey.NotesUi.titleRes),
-                                collapsedSectionKeys = visibleCollapsedSectionKeys,
-                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
-                                showHeader = showSectionHeaders,
-                                highlightedSectionKey = activeSectionHighlightKey,
-                            ) {
-                                NotesUiSection(
-                                    prefs = notesUiPrefs,
-                                    state = notesUiState,
-                                )
-                            }
-                        }
-                    }
+
 
                     if (includeSettingsSection(SettingsSectionKey.Defaults)) {
                         item(key = "defaults") {
@@ -807,19 +900,15 @@ fun SettingsRoute(
                                 showHeader = showSectionHeaders,
                                 highlightedSectionKey = activeSectionHighlightKey,
                             ) {
-                                GroupedListColumn {
-                                    GroupedListItem(position = GroupPosition.ONLY) {
-                                        SettingsToggleRow(
-                                            materialSymbolName = "vibration",
-                                            title = stringResource(R.string.settings_haptic_feedback),
-                                            subtitle = stringResource(R.string.settings_haptic_feedback_desc),
-                                            checked = interactionState.hapticFeedbackEnabled,
-                                            onCheckedChange = { enabled ->
-                                                scope.launch { interactionPrefs.setHapticFeedbackEnabled(enabled) }
-                                            },
-                                        )
-                                    }
-                                }
+                                SettingsToggleRow(
+                                    materialSymbolName = "vibration",
+                                    title = stringResource(R.string.settings_haptic_feedback),
+                                    subtitle = stringResource(R.string.settings_haptic_feedback_desc),
+                                    checked = interactionState.hapticFeedbackEnabled,
+                                    onCheckedChange = { enabled ->
+                                        scope.launch { interactionPrefs.setHapticFeedbackEnabled(enabled) }
+                                    },
+                                )
                             }
                         }
                     }
@@ -835,30 +924,28 @@ fun SettingsRoute(
                                 showHeader = showSectionHeaders,
                                 highlightedSectionKey = activeSectionHighlightKey,
                             ) {
-                                GroupedListColumn {
-                                    GroupedListItem(position = GroupPosition.ONLY) {
-                                        SwipeGestureSettingsPanel(
-                                            currentMode = interactionState.swipeGestureMode,
-                                            onModeChange = { mode ->
-                                                scope.launch { interactionPrefs.setSwipeGestureMode(mode) }
-                                            },
-                                            startAction = interactionState.swipeStartToEnd,
-                                            endAction = interactionState.swipeEndToStart,
-                                            onStartActionChange = { action ->
-                                                scope.launch { interactionPrefs.setSwipeStartToEnd(action) }
-                                            },
-                                            onEndActionChange = { action ->
-                                                scope.launch { interactionPrefs.setSwipeEndToStart(action) }
-                                            },
-                                            startActions = interactionState.swipeStartToEndRevealActions,
-                                            endActions = interactionState.swipeEndToStartRevealActions,
-                                            onRevealActionsChange = { startActions, endActions ->
-                                                scope.launch {
-                                                    interactionPrefs.setSwipeRevealActions(startActions, endActions)
-                                                }
-                                            },
-                                        )
-                                    }
+                                SettingsSectionCard {
+                                    SwipeGestureSettingsPanel(
+                                        currentMode = interactionState.swipeGestureMode,
+                                        onModeChange = { mode ->
+                                            scope.launch { interactionPrefs.setSwipeGestureMode(mode) }
+                                        },
+                                        startAction = interactionState.swipeStartToEnd,
+                                        endAction = interactionState.swipeEndToStart,
+                                        onStartActionChange = { action ->
+                                            scope.launch { interactionPrefs.setSwipeStartToEnd(action) }
+                                        },
+                                        onEndActionChange = { action ->
+                                            scope.launch { interactionPrefs.setSwipeEndToStart(action) }
+                                        },
+                                        startActions = interactionState.swipeStartToEndRevealActions,
+                                        endActions = interactionState.swipeEndToStartRevealActions,
+                                        onRevealActionsChange = { startActions, endActions ->
+                                            scope.launch {
+                                                interactionPrefs.setSwipeRevealActions(startActions, endActions)
+                                            }
+                                        },
+                                    )
                                 }
                             }
                         }
@@ -887,138 +974,7 @@ fun SettingsRoute(
                         }
                     }
 
-                    if (includeSettingsSection(SettingsSectionKey.Backup)) {
-                        item(key = "backup") {
-                            SettingsExpandableSection(
-                                sectionKey = SettingsSectionKey.Backup.routeKey,
-                                materialSymbolName = SettingsSectionKey.Backup.iconName,
-                                title = stringResource(SettingsSectionKey.Backup.titleRes),
-                                collapsedSectionKeys = visibleCollapsedSectionKeys,
-                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
-                                showHeader = showSectionHeaders,
-                                highlightedSectionKey = activeSectionHighlightKey,
-                            ) {
-                                BackupSection(
-                                    backupState = backupState,
-                                    backupPrefs = backupPrefs,
-                                    backupIo = backupIo,
-                                    snackbarHostState = snackbarHostState,
-                                    scope = scope,
-                                    onPickLocalFolder = {
-                                        pendingBackupFolderTarget = BackupFolderTarget.Local
-                                        folderLauncher.launch(null)
-                                    },
-                                    onPickCloudFolder = {
-                                        pendingBackupFolderTarget = BackupFolderTarget.Cloud
-                                        folderLauncher.launch(null)
-                                    },
-                                    onLaunchImportMerge = {
-                                        importMergeLauncher.launch(
-                                            arrayOf("application/zip", "application/json"),
-                                        )
-                                    },
-                                    onLaunchImportReplace = {
-                                        importReplaceLauncher.launch(
-                                            arrayOf("application/zip", "application/json"),
-                                        )
-                                    },
-                                )
-                            }
-                        }
-                    }
 
-                    if (showsUpdatesSection(singleList) && includeSettingsSection(SettingsSectionKey.Updates)) {
-                        item(key = "updates") {
-                            SettingsExpandableSection(
-                                sectionKey = SettingsSectionKey.Updates.routeKey,
-                                materialSymbolName = SettingsSectionKey.Updates.iconName,
-                                title = stringResource(SettingsSectionKey.Updates.titleRes),
-                                collapsedSectionKeys = visibleCollapsedSectionKeys,
-                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
-                                showHeader = showSectionHeaders,
-                                highlightedSectionKey = activeSectionHighlightKey,
-                            ) {
-                                GroupedListColumn {
-                                    if (BuildConfig.CHECK_UPDATES) {
-                                        GroupedListItem(position = GroupPosition.FIRST) {
-                                            UpdateCheckScheduleDropdown(
-                                                selected = updateState.updateCheckSchedule,
-                                                onSelect = { schedule ->
-                                                    scope.launch {
-                                                        updatePrefs.setUpdateCheckSchedule(schedule)
-                                                        updateCheckWorkScheduler.syncFromPreferences()
-                                                    }
-                                                },
-                                                modifier = Modifier.fillMaxWidth(),
-                                            )
-                                        }
-                                        if (BuildConfig.FLAVOR == "github") {
-                                            GroupedListItem(position = GroupPosition.MIDDLE) {
-                                                UpdateSettingsToggleItem(
-                                                    title = stringResource(R.string.settings_save_update_apk_to_downloads),
-                                                    checked = updateState.saveUpdateApkToDownloads,
-                                                    onCheckedChange = { enabled ->
-                                                        scope.launch { updatePrefs.setSaveUpdateApkToDownloads(enabled) }
-                                                    },
-                                                )
-                                            }
-                                        }
-                                        GroupedListItem(position = GroupPosition.MIDDLE) {
-                                            UpdateSettingsToggleItem(
-                                                title = stringResource(R.string.settings_notify_new_updates),
-                                                checked = updateState.notifyOnNewUpdates,
-                                                onCheckedChange = { enabled ->
-                                                    when {
-                                                        !enabled -> {
-                                                            pendingEnableUpdateNotificationsAfterPermission = false
-                                                            scope.launch { updatePrefs.setNotifyOnNewUpdates(false) }
-                                                        }
-                                                        updateState.updateCheckSchedule == UpdateCheckSchedule.NEVER -> {
-                                                            scope.launch {
-                                                                snackbarHostState.showSnackbar(
-                                                                    resources.getString(R.string.settings_notify_updates_need_auto_check),
-                                                                )
-                                                            }
-                                                        }
-                                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                                            ContextCompat.checkSelfPermission(
-                                                                context,
-                                                                Manifest.permission.POST_NOTIFICATIONS,
-                                                            ) != PackageManager.PERMISSION_GRANTED -> {
-                                                            pendingEnableUpdateNotificationsAfterPermission = true
-                                                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                                        }
-                                                        !NotificationManagerCompat.from(context).areNotificationsEnabled() -> {
-                                                            scope.launch {
-                                                                snackbarHostState.showSnackbar(
-                                                                    resources.getString(R.string.settings_notify_updates_enable_notifications),
-                                                                )
-                                                            }
-                                                            context.startActivity(notificationsAppSettingsIntent(context))
-                                                        }
-                                                        else -> scope.launch { updatePrefs.setNotifyOnNewUpdates(true) }
-                                                    }
-                                                },
-                                            )
-                                        }
-                                        GroupedListItem(position = checkForUpdatesRowPosition()) {
-                                            CheckForUpdatesRow(
-                                                availableUpdate = updateInfo,
-                                                onClick = { beginUpdateCheck(true) },
-                                            )
-                                        }
-                                    }
-                                    TrackUpdatesViaObtainXItem()
-                                }
-                            }
-                        }
-                    }
-
-                    if (showsStandaloneObtainXCard(singleList)) {
-                        item(key = "track_updates_via_obtainx") {
-                            StandaloneTrackUpdatesViaObtainXCard()
-                        }
-                    }
 
                     if (devModeEnabled && selectedSectionKey == null) {
                         item(key = "dev_options_entry") {
@@ -1052,78 +1008,10 @@ fun SettingsRoute(
                         }
                     }
                 }
-                if (showTopActions) {
-                    Row(
-                        modifier =
-                            Modifier
-                                .align(Alignment.TopEnd)
-                                .statusBarsPadding()
-                                .padding(top = 8.dp, end = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val actionButtonSize = rememberResponsiveActionButtonSize()
-                        val actionIconSize = rememberResponsiveActionIconSize()
-                        val openHelpLabel = stringResource(R.string.settings_open_help_cd)
-                        RememberFilledTonalIconButton(
-                            onClick = onOpenHelp,
-                            modifier =
-                                Modifier
-                                    .size(actionButtonSize)
-                                    .semantics {
-                                        contentDescription = openHelpLabel
-                                    },
-                            tooltipLabel = openHelpLabel,
-                        ) {
-                            Text(
-                                text = "?",
-                                style =
-                                    MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = actionIconSize.value.sp,
-                                        lineHeight = actionIconSize.value.sp,
-                                    ),
-                            )
-                        }
-                        val expandCollapseAllLabel =
-                            stringResource(
-                                if (allSettingsSectionsCollapsed) {
-                                    R.string.settings_expand_all_sections_cd
-                                } else {
-                                    R.string.settings_collapse_all_sections_cd
-                                },
-                            )
-                        RememberFilledTonalIconButton(
-                            onClick = {
-                                updateCollapsedSettingsSectionKeys(
-                                    if (allSettingsSectionsCollapsed) {
-                                        currentCollapsedSectionKeys - settingsExpandableSectionKeys
-                                    } else {
-                                        currentCollapsedSectionKeys + settingsExpandableSectionKeys
-                                    },
-                                )
-                            },
-                            modifier =
-                                Modifier
-                                    .size(actionButtonSize)
-                                    .semantics {
-                                        contentDescription = expandCollapseAllLabel
-                                    },
-                            tooltipLabel = expandCollapseAllLabel,
-                        ) {
-                            RememberMaterialRoundedSymbol(
-                                name = if (allSettingsSectionsCollapsed) "unfold_more" else "unfold_less",
-                                size = actionIconSize,
-                                weight = FontWeight.Medium,
-                            )
-                        }
-                    }
-                }
             }
         }
-    }
 
-    pendingRestore?.let { restore ->
+        pendingRestore?.let { restore ->
         AlertDialog(
             onDismissRequest = { pendingRestore = null },
             title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
@@ -1188,6 +1076,7 @@ fun SettingsRoute(
                 }
             },
         )
+    }
     }
 }
 
@@ -1324,3 +1213,4 @@ private fun settingsSectionScrollIndex(
         .takeWhile { section -> section != target }
         .count { section -> isIncluded(section) }
 }
+

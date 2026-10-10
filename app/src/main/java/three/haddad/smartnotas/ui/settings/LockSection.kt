@@ -7,18 +7,9 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * Security section: app-lock toggle (uses the device's keyguard / PIN to unlock the
- * app on launch) and the biometric-unlock toggle (only enabled if the device has
- * biometric hardware AND the app lock itself is on). Pulled out of [SettingsRoute] in
- * audit 3.1.
- */
 @Composable
 internal fun LockSection(
     lockState: LockPrefs.State,
@@ -29,52 +20,84 @@ internal fun LockSection(
     scope: CoroutineScope,
 ) {
     val resources = LocalResources.current
-    GroupedListColumn {
-        GroupedListItem(position = GroupPosition.FIRST) {
-            ToggleRow(
-                materialSymbolName = "lock",
-                title = stringResource(R.string.settings_app_lock_title),
-                subtitle =
-                    when {
-                        !deviceCredentialAvailable -> stringResource(R.string.settings_app_lock_no_device_lock)
-                        lockState.enabled -> stringResource(R.string.settings_app_lock_enabled)
-                        else -> stringResource(R.string.settings_app_lock_disabled)
-                    },
-                checked = lockState.enabled,
-                enabled = deviceCredentialAvailable || lockState.enabled,
-                onChange = { want ->
-                    if (want) {
-                        scope.launch {
-                            if (deviceCredentialAvailable) {
-                                lockPrefs.enableDeviceCredential()
-                            } else {
-                                snackbarHostState.showSnackbar(
-                                    message = resources.getString(R.string.settings_app_lock_no_device_lock),
-                                    duration = SnackbarDuration.Short,
-                                )
-                            }
+    val isAppLockEnabled = deviceCredentialAvailable || lockState.enabled
+    val isBiometricEnabled = biometricAvailable && lockState.enabled
+
+    SettingsSectionCard {
+        // App Lock row
+        SettingsRowItem(
+            materialSymbolName = "lock",
+            title = stringResource(R.string.settings_app_lock_title),
+            subtitle = when {
+                !deviceCredentialAvailable -> stringResource(R.string.settings_app_lock_no_device_lock)
+                lockState.enabled -> stringResource(R.string.settings_app_lock_enabled)
+                else -> stringResource(R.string.settings_app_lock_disabled)
+            },
+            enabled = isAppLockEnabled,
+            onClick = {
+                val want = !lockState.enabled
+                if (want) {
+                    scope.launch {
+                        if (deviceCredentialAvailable) {
+                            lockPrefs.enableDeviceCredential()
+                        } else {
+                            snackbarHostState.showSnackbar(
+                                message = resources.getString(R.string.settings_app_lock_no_device_lock),
+                                duration = SnackbarDuration.Short,
+                            )
                         }
-                    } else {
-                        scope.launch { lockPrefs.disable() }
                     }
-                },
-            )
-        }
-        GroupedListItem(position = GroupPosition.LAST) {
-            ToggleRow(
-                materialSymbolName = "fingerprint",
-                title = stringResource(R.string.settings_biometric_title),
-                subtitle =
-                    when {
-                        !biometricAvailable -> stringResource(R.string.settings_biometric_no_hardware)
-                        !lockState.enabled -> stringResource(R.string.settings_biometric_need_lock)
-                        lockState.biometric -> stringResource(R.string.settings_biometric_enabled)
-                        else -> stringResource(R.string.settings_biometric_disabled)
+                } else {
+                    scope.launch { lockPrefs.disable() }
+                }
+            },
+            trailingContent = {
+                SettingsCustomSwitch(
+                    checked = lockState.enabled,
+                    enabled = isAppLockEnabled,
+                    onCheckedChange = { want ->
+                        if (want) {
+                            scope.launch {
+                                if (deviceCredentialAvailable) {
+                                    lockPrefs.enableDeviceCredential()
+                                } else {
+                                    snackbarHostState.showSnackbar(
+                                        message = resources.getString(R.string.settings_app_lock_no_device_lock),
+                                        duration = SnackbarDuration.Short,
+                                    )
+                                }
+                            }
+                        } else {
+                            scope.launch { lockPrefs.disable() }
+                        }
                     },
-                checked = lockState.biometric,
-                enabled = biometricAvailable && lockState.enabled,
-                onChange = { scope.launch { lockPrefs.setBiometric(it) } },
-            )
-        }
+                )
+            },
+        )
+
+        SettingsDivider()
+
+        // Biometric Unlock row
+        SettingsRowItem(
+            materialSymbolName = "fingerprint",
+            title = stringResource(R.string.settings_biometric_title),
+            subtitle = when {
+                !biometricAvailable -> stringResource(R.string.settings_biometric_no_hardware)
+                !lockState.enabled -> stringResource(R.string.settings_biometric_need_lock)
+                lockState.biometric -> stringResource(R.string.settings_biometric_enabled)
+                else -> stringResource(R.string.settings_biometric_disabled)
+            },
+            enabled = isBiometricEnabled,
+            onClick = if (isBiometricEnabled) {
+                { scope.launch { lockPrefs.setBiometric(!lockState.biometric) } }
+            } else null,
+            trailingContent = {
+                SettingsCustomSwitch(
+                    checked = lockState.biometric,
+                    enabled = isBiometricEnabled,
+                    onCheckedChange = { scope.launch { lockPrefs.setBiometric(it) } },
+                )
+            },
+        )
     }
 }

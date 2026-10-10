@@ -105,6 +105,9 @@ object Routes {
      * Help deep link switched the tab behind a Help screen that was never dismissed. Keep them
      * registered.
      */
+    const val HOME = "home"
+    const val CALENDAR = "calendar"
+    const val SEARCH = "search"
     const val NOTES = "notes"
     const val HISTORY = "history"
     const val SETTINGS = "settings"
@@ -184,8 +187,9 @@ object Routes {
 private val MainTab.route: String
     get() =
         when (this) {
-            MainTab.Notes -> Routes.NOTES
-            MainTab.History -> Routes.HISTORY
+            MainTab.Home -> Routes.HOME
+            MainTab.Calendar -> Routes.CALENDAR
+            MainTab.Search -> Routes.SEARCH
             MainTab.Settings -> Routes.SETTINGS
         }
 
@@ -450,14 +454,14 @@ fun RememberNavGraph(
             when {
                 !introSeenAtLaunch -> Routes.ONBOARDING_TITLE
                 initialExternalLaunch -> Routes.EXTERNAL_LAUNCH
-                else -> Routes.NOTES
+                else -> Routes.HOME
             }
         }
 
     /**
      * Select a main tab. Identical to FilePipe's bottom-nav / navigation-rail click handler.
      *
-     * Pops to [Routes.NOTES] rather than to `graph.findStartDestination()`. Notes is always the root
+     * Pops to [Routes.HOME] rather than to `graph.findStartDestination()`. Notes is always the root
      * of the back stack once tabs are reachable - both the onboarding hand-off and an external note
      * launch re-root onto it - but the graph's *nominal* start destination is whatever the app
      * launched into, which after either of those paths is no longer on the back stack at all. A
@@ -466,7 +470,7 @@ fun RememberNavGraph(
      */
     val openMainTab: (MainTab) -> Unit = { selectedTab ->
         navController.navigate(selectedTab.route) {
-            popUpTo(Routes.NOTES) {
+            popUpTo(Routes.HOME) {
                 saveState = true
             }
             launchSingleTop = true
@@ -480,7 +484,7 @@ fun RememberNavGraph(
             val poppedToSettings = navController.popBackStack(Routes.SETTINGS, inclusive = false)
             if (!poppedToSettings) {
                 navController.navigate(Routes.SETTINGS) {
-                    popUpTo(Routes.NOTES) {
+                    popUpTo(Routes.HOME) {
                         saveState = true
                     }
                     launchSingleTop = true
@@ -509,7 +513,7 @@ fun RememberNavGraph(
                             val note = repository.get(action.id)
                             if (note == null) {
                                 if (action.externalLaunch) {
-                                    navController.navigate(Routes.NOTES) {
+                                    navController.navigate(Routes.HOME) {
                                         popUpTo(navController.graph.id) {
                                             inclusive = true
                                         }
@@ -626,7 +630,7 @@ fun RememberNavGraph(
                     },
                     exitTransition = {
                         if (targetState.destination.route == Routes.ONBOARDING_TITLE ||
-                            targetState.destination.route == Routes.NOTES
+                            targetState.destination.route == Routes.HOME
                         ) {
                             if (reducedMotion) {
                                 ExitTransition.None
@@ -667,7 +671,7 @@ fun RememberNavGraph(
                         onContinue = {
                             onboardingScope.launch {
                                 onboardingPrefs.markIntroSeen()
-                                navController.navigate(Routes.NOTES) {
+                                navController.navigate(Routes.HOME) {
                                     popUpTo(navController.graph.id) {
                                         inclusive = true
                                     }
@@ -682,7 +686,7 @@ fun RememberNavGraph(
                 }
 
                 mainTabComposable(
-                    route = Routes.NOTES,
+                    route = Routes.HOME,
                     reducedMotion = reducedMotion,
                     verticalMotion = useDualPaneMode,
                     spatialSpec = navSpatialSpec,
@@ -690,7 +694,7 @@ fun RememberNavGraph(
                     fadeOutSpec = navFadeOutSpec,
                 ) {
                     androidx.compose.runtime.CompositionLocalProvider(
-                        LocalNavAnimatedVisibilityScope provides this@mainTabComposable,
+                        LocalNavAnimatedVisibilityScope provides this,
                     ) {
                         if (useDualPaneMode) {
                             NotesTwoPaneRoute(
@@ -720,16 +724,15 @@ fun RememberNavGraph(
                     }
                 }
 
-                mainTabComposable(
+                composable(
                     route = Routes.HISTORY,
-                    reducedMotion = reducedMotion,
-                    verticalMotion = useDualPaneMode,
-                    spatialSpec = navSpatialSpec,
-                    fadeInSpec = navFadeInSpec,
-                    fadeOutSpec = navFadeOutSpec,
+                    enterTransition = { slideInHorizontally { it } + fadeIn() },
+                    exitTransition = { slideOutHorizontally { -it / 3 } + fadeOut() },
+                    popEnterTransition = { slideInHorizontally { -it / 3 } + fadeIn() },
+                    popExitTransition = { slideOutHorizontally { it } + fadeOut() }
                 ) {
                     androidx.compose.runtime.CompositionLocalProvider(
-                        LocalNavAnimatedVisibilityScope provides this@mainTabComposable,
+                        LocalNavAnimatedVisibilityScope provides this,
                     ) {
                         if (useDualPaneMode) {
                             HistoryTwoPaneRoute(
@@ -760,6 +763,29 @@ fun RememberNavGraph(
                     }
                 }
 
+
+                mainTabComposable(
+                    route = Routes.CALENDAR,
+                    reducedMotion = reducedMotion,
+                    verticalMotion = useDualPaneMode,
+                    spatialSpec = navSpatialSpec,
+                    fadeInSpec = navFadeInSpec,
+                    fadeOutSpec = navFadeOutSpec,
+                ) {
+                    three.haddad.smartnotas.ui.calendar.CalendarRoute()
+                }
+
+                mainTabComposable(
+                    route = Routes.SEARCH,
+                    reducedMotion = reducedMotion,
+                    verticalMotion = useDualPaneMode,
+                    spatialSpec = navSpatialSpec,
+                    fadeInSpec = navFadeInSpec,
+                    fadeOutSpec = navFadeOutSpec,
+                ) {
+                    three.haddad.smartnotas.ui.search.SearchRoute()
+                }
+
                 mainTabComposable(
                     route = Routes.SETTINGS,
                     reducedMotion = reducedMotion,
@@ -769,7 +795,7 @@ fun RememberNavGraph(
                     fadeOutSpec = navFadeOutSpec,
                 ) {
                     androidx.compose.runtime.CompositionLocalProvider(
-                        LocalNavAnimatedVisibilityScope provides this@mainTabComposable,
+                        LocalNavAnimatedVisibilityScope provides this,
                     ) {
                         if (useDualPaneMode) {
                             SettingsTwoPaneRoute(
@@ -777,6 +803,7 @@ fun RememberNavGraph(
                                 onOpenIntro = { navController.navigate(Routes.ONBOARDING_TITLE) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
+                                onOpenHistory = { navController.navigate(Routes.HISTORY) },
                                 updateVm = updateVm,
                                 onUpdateCheckStarted = handleUpdateCheckStarted,
                                 onShareApp = shareApp,
@@ -788,6 +815,7 @@ fun RememberNavGraph(
                                 onOpenIntro = { navController.navigate(Routes.ONBOARDING_TITLE) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
+                                onOpenHistory = { navController.navigate(Routes.HISTORY) },
                                 updateVm = updateVm,
                                 onUpdateCheckStarted = handleUpdateCheckStarted,
                                 highlightSectionKey = settingsHighlightSection,
@@ -1074,7 +1102,7 @@ fun RememberNavGraph(
         ) {
             MainTabScaffold(
                 repository = repository,
-                currentTab = currentMainTab ?: MainTab.Notes,
+                currentTab = currentMainTab ?: MainTab.Home,
                 chromeVisible = onMainTab,
                 useDualPaneMode = useDualPaneMode,
                 onTabSelected = openMainTab,
@@ -1129,7 +1157,7 @@ private fun NavController.openEditRouteFor(
     externalLaunch: Boolean = false,
 ) {
     if (externalLaunch) {
-        navigate(Routes.NOTES) {
+        navigate(Routes.HOME) {
             popUpTo(graph.id) {
                 inclusive = true
             }
