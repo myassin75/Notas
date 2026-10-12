@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -22,13 +23,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -80,175 +85,99 @@ internal fun SearchableTopBarTitle(
     onToggleLayout: () -> Unit,
     onToggleExpandCollapseAll: () -> Unit,
     onToggleSearch: () -> Unit,
+    onCreateNote: () -> Unit = {},
 ) {
-    val spatialSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>())
-    val fadeInSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
-    val fadeOutSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
-    val scaleIconSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
-    val layoutMorphSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        AnimatedContent(
-            targetState = searchOpen,
-            modifier = Modifier.weight(1f),
-            transitionSpec = {
-                (fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec))
-                    .using(SizeTransform(clip = false))
-            },
-            label = "topBarTitleSearchExpand",
-        ) { open ->
-            if (open) {
-                RememberInlineSearchField(
-                    focusRequestKey = searchFocusRequestKey,
-                    query = query,
-                    onQueryChange = onQueryChange,
-                    placeholderText = stringResource(R.string.home_search_placeholder),
+        if (searchOpen) {
+            RememberInlineSearchField(
+                focusRequestKey = searchFocusRequestKey,
+                query = query,
+                onQueryChange = onQueryChange,
+                placeholderText = stringResource(R.string.home_search_placeholder),
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable { onToggleSearch() },
+                contentAlignment = Alignment.Center,
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = "close",
+                    size = 20.dp,
+                    tint = Color(0xFF32313F),
+                    weight = FontWeight.Normal,
+                    filled = false,
                 )
-            } else {
-                // Empty title placeholder to remove the big title
             }
-        }
-        // Layout and expand/collapse-all buttons hide while searching so the weight-1
-        // slot above grows into the space they free up. clip = false (matching the
-        // search field's own SizeTransform above) so the buttons fade/scale away instead
-        // of getting cropped by a hard-edged wipe as the row width animates.
-        AnimatedVisibility(
-            visible = !searchOpen,
-            enter = fadeIn(fadeInSpec) + expandHorizontally(spatialSpec, clip = false),
-            exit = fadeOut(fadeOutSpec) + shrinkHorizontally(spatialSpec, clip = false),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Breathing room so the open search pill doesn't touch the action buttons.
-                Spacer(Modifier.width(8.dp))
-                if (showLayoutToggle) {
-                    val switchToMosaic = noteLayoutMode == NoteLayoutMode.LIST
-                    val layoutToggleDescription =
-                        stringResource(
-                            if (switchToMosaic) {
-                                R.string.home_layout_switch_to_mosaic_cd
-                            } else {
-                                R.string.home_layout_switch_to_list_cd
-                            },
-                        )
-                    RememberFilledTonalIconButton(
-                        onClick = onToggleLayout,
-                        modifier = Modifier.size(rememberResponsiveActionButtonSize()),
-                        enabled = layoutToggleEnabled,
-                        tooltipLabel = layoutToggleDescription,
-                    ) {
-                        val layoutMorphProgress by animateFloatAsState(
-                            targetValue = if (noteLayoutMode == NoteLayoutMode.MOSAIC) 1f else 0f,
-                            animationSpec = layoutMorphSpec,
-                            label = "layoutIconMorphProgress",
-                        )
-                        Box(
-                            modifier =
-                                Modifier
-                                    .size(rememberResponsiveActionButtonSize())
-                                    .clearAndSetSemantics {
-                                        contentDescription = layoutToggleDescription
-                                    },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer {
-                                            alpha = 1f - layoutMorphProgress
-                                            scaleX = 1f - (0.08f * layoutMorphProgress)
-                                            scaleY = 1f - (0.08f * layoutMorphProgress)
-                                            rotationZ = 90f * layoutMorphProgress
-                                        },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "grid_view",
-                                    weight = FontWeight.Medium,
-                                )
-                            }
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer {
-                                            alpha = layoutMorphProgress
-                                            scaleX = 0.92f + (0.08f * layoutMorphProgress)
-                                            scaleY = 0.92f + (0.08f * layoutMorphProgress)
-                                            rotationZ = -90f + (90f * layoutMorphProgress)
-                                        },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "view_agenda",
-                                    weight = FontWeight.Medium,
-                                )
-                            }
-                        }
-                    }
+        } else {
+            Text(
+                text = "Notas",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 30.sp,
+                    color = Color(0xFF32313F),
+                ),
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                // Search icon button
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onToggleSearch() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "search",
+                        size = 24.dp,
+                        tint = Color(0xFF32313F),
+                        weight = FontWeight.Normal,
+                        filled = false,
+                    )
                 }
-                if (showExpandCollapseAllToggle) {
-                    Spacer(Modifier.width(8.dp))
-                    val expandCollapseAllLabel =
-                        stringResource(
-                            if (allSectionsCollapsed) {
-                                R.string.home_expand_all_sections_cd
-                            } else {
-                                R.string.home_collapse_all_sections_cd
-                            },
-                        )
-                    RememberFilledTonalIconButton(
-                        onClick = onToggleExpandCollapseAll,
-                        modifier =
-                            Modifier
-                                .size(rememberResponsiveActionButtonSize())
-                                .semantics { contentDescription = expandCollapseAllLabel },
-                        tooltipLabel = expandCollapseAllLabel,
+
+                // + Add button
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFF98549C),
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable { onCreateNote() },
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         RememberMaterialRoundedSymbol(
-                            name = if (allSectionsCollapsed) "unfold_more" else "unfold_less",
-                            weight = FontWeight.Medium,
+                            name = "add",
+                            size = 18.dp,
+                            tint = Color.White,
+                            weight = FontWeight.Bold,
+                            filled = false,
+                        )
+                        Text(
+                            text = "Add",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                color = Color.White,
+                            ),
                         )
                     }
                 }
             }
         }
-        // Unconditional gap between the field and the search toggle button. Kept outside
-        // the AnimatedVisibility above so it survives when that content collapses to zero
-        // width while searching - otherwise the search pill would butt up against the
-        // search/close button.
-        Spacer(Modifier.width(8.dp))
-        // Toggle button stays in place at the End. The icon morphs between search and
-        // close, scoped inside its own AnimatedContent so the rest of the row's
-        // expansion animation isn't gated on the icon swap.
-        val cdCloseSearch = stringResource(R.string.cd_close_search)
-        val cdSearch = stringResource(R.string.cd_search)
-        RememberFilledTonalIconButton(
-            onClick = onToggleSearch,
-            modifier = Modifier.size(rememberResponsiveActionButtonSize()),
-        ) {
-            AnimatedContent(
-                targetState = searchOpen,
-                transitionSpec = {
-                    (scaleIn(scaleIconSpec) + fadeIn(fadeInSpec)) togetherWith
-                        (scaleOut(scaleIconSpec) + fadeOut(fadeOutSpec))
-                },
-                label = "searchIconSwap",
-            ) { open ->
-                RememberMaterialRoundedSymbol(
-                    name = if (open) "close" else "search",
-                    weight = FontWeight.Medium,
-                    modifier =
-                        Modifier.semantics {
-                            contentDescription = if (open) cdCloseSearch else cdSearch
-                        },
-                )
-            }
-        }
-        Spacer(Modifier.width(4.dp))
     }
 }
 

@@ -772,7 +772,18 @@ fun RememberNavGraph(
                     fadeInSpec = navFadeInSpec,
                     fadeOutSpec = navFadeOutSpec,
                 ) {
-                    three.haddad.smartnotas.ui.calendar.CalendarRoute()
+                    three.haddad.smartnotas.ui.calendar.CalendarRoute(
+                        onOpenNote = { noteId ->
+                            navController.navigate(Routes.editNote(noteId)) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onCreateEvent = {
+                            navController.navigate(Routes.editNote(null)) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
                 }
 
                 mainTabComposable(

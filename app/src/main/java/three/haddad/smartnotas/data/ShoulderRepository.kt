@@ -12,13 +12,17 @@ class ShoulderRepository @Inject constructor(
 
     suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulderDao.getShoulderById(id)
 
-    suspend fun createShoulder(name: String, timestamp: Long = System.currentTimeMillis()): Long {
+    suspend fun createShoulder(
+        name: String,
+        colorHex: String? = null,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Long {
         val entity = ShoulderEntity(
             name = name,
-            normalizedName = name.lowercase(),
-            colorHex = null,
+            normalizedName = name.trim().lowercase(),
+            colorHex = colorHex,
             createdAt = timestamp,
-            updatedAt = timestamp
+            updatedAt = timestamp,
         )
         return shoulderDao.insertShoulder(entity)
     }

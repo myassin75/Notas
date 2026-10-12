@@ -134,7 +134,7 @@ private fun PortraitLayout(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F7FC))
+            .background(Color(0xFFF5F5F8))
     ) {
         val screenW = maxWidth
         val horizontalMargin = screenW * 0.05f
@@ -335,7 +335,7 @@ private fun LandscapeLayout(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F7FC))
+            .background(Color(0xFFF5F5F8))
     ) {
         val screenW = maxWidth
         val screenH = maxHeight

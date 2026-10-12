@@ -117,6 +117,19 @@
     <string name="cd_search">Search</string>
 <string name="main_tab_home">Home</string>
     <string name="main_tab_calendar">Calendar</string>
+    <string name="calendar_view_selector_title">Calendar view</string>
+    <string name="calendar_view_day">Day</string>
+    <string name="calendar_view_week">Week</string>
+    <string name="calendar_view_month">Month</string>
+    <string name="calendar_view_year">Year</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_new_event">New event</string>
+    <string name="calendar_todays_agenda">Today’s agenda</string>
+    <string name="calendar_weeks_agenda">This week’s agenda</string>
+    <string name="calendar_birthdays">Birthdays</string>
+    <string name="calendar_no_events">No events</string>
+    <string name="calendar_events_count">%1$d events</string>
+    <string name="calendar_event_count_single">1 event</string>
     <string name="main_tab_search">Search</string>
     <string name="search_tab_all">All</string>
     <string name="search_tab_notes">Notes</string>
@@ -138,10 +151,12 @@
     <string name="main_speed_dial_checklist">Checklist</string>
     <string name="main_speed_dial_note">Note</string>
     <string name="main_speed_dial_import">Import</string>
-    <string name="home_no_notes_title">No notes yet</string>
-    <string name="home_no_notes_subtitle">Create a note or a checklist to get started</string>
-    <string name="home_create_note">Create note</string>
-    <string name="home_create_list">Create list</string>
+    <string name="home_no_notes_title">A fresh space for your ideas</string>
+    <string name="home_no_notes_subtitle">No notes or tasks yet. Start with a note or make a checklist for your day.</string>
+    <string name="home_create_note">Create a note</string>
+    <string name="home_create_note_subtitle">Capture an idea, thought or reminder</string>
+    <string name="home_create_list">Create a checklist</string>
+    <string name="home_create_list_subtitle">Add tasks and check them off</string>
 
     <!-- Filter and view options -->
     <string name="filter_type_all">All</string>
@@ -613,20 +628,28 @@
         <item quantity="other">In %1$d days</item>
     </plurals>
 
-    <!-- Tags editor -->
-    <string name="tag_editor_assigned_heading">Assigned</string>
-    <string name="tag_editor_available_heading">Available</string>
-    <string name="tag_editor_no_assigned_tags">No tags assigned</string>
-    <string name="tag_editor_no_available_tags">No available tags</string>
-    <string name="tag_editor_create_placeholder">Create new tag</string>
-    <string name="tag_editor_field_placeholder">Name this tag</string>
-    <string name="tag_editor_name_length_counter">%1$d/%2$d</string>
-    <string name="tag_editor_duplicate_existing">A tag with this name already exists</string>
-    <string name="tag_editor_reserved_name">This tag name is reserved by the app</string>
-    <string name="tag_editor_edit_mode_label">Edit mode</string>
-    <string name="tag_editor_edit_mode_cd">Edit tags</string>
-    <string name="tag_editor_edit_mode_hint">Create new tag or tap a tag to change its name and color</string>
-    <string name="tag_editor_assign_mode_hint">Tap a tag to change its state: (+) Assign, (x) Remove</string>
+    <!-- Shoulder editor / picker -->
+    <string name="shoulder_sheet_title">Shoulders</string>
+    <string name="shoulder_sheet_subtitle">Choose one for this note. Tap a pencil to edit.</string>
+    <string name="shoulder_search_placeholder">Search shoulders</string>
+    <string name="shoulder_assigned_status">Assigned to this note</string>
+    <string name="shoulder_assign_status">Assign to this note</string>
+    <string name="shoulder_none">No shoulder</string>
+    <string name="shoulder_remove_from_note">Remove %1$s from this note</string>
+    <string name="shoulder_no_assigned">No shoulder assigned</string>
+    <string name="shoulder_preview_stripe_hint">Your note’s color stripe</string>
+    <string name="shoulder_create_new">Create new shoulder</string>
+    <string name="shoulder_apply_named">Apply %1$s</string>
+    <string name="shoulder_apply">Apply</string>
+    <string name="shoulder_edit_title">Edit shoulder</string>
+    <string name="shoulder_create_title">Create shoulder</string>
+    <string name="shoulder_edit_subtitle">Give %1$s a name and a color.</string>
+    <string name="shoulder_name_label">Shoulder name</string>
+    <string name="shoulder_name_placeholder">e.g. Work</string>
+    <string name="shoulder_save">Save shoulder</string>
+    <string name="shoulder_delete">Delete shoulder</string>
+    <string name="shoulder_delete_confirm_title">Delete shoulder?</string>
+    <string name="shoulder_delete_confirm_message">This shoulder will be deleted and removed from all notes.</string>
 
 
     <!-- Note actions (sheet and editor) -->

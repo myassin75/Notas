@@ -147,6 +147,7 @@ fun EditNoteScreen(
         }
     }
 
+    var shoulderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var reminderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var iconPickerOpen by rememberSaveable { mutableStateOf(false) }
     var actionsPickerOpen by rememberSaveable { mutableStateOf(false) }
@@ -352,9 +353,9 @@ fun EditNoteScreen(
     val adaptiveNoteThemes = LocalAdaptiveNoteThemes.current
     val imageDerivedColors = null
     val imageResolution: Any? = null
-    
+
         Box(Modifier.fillMaxSize()) {
-            
+
             Scaffold(
                 // This nested scroll hides/shows the bottom action bar with a source filter so
                 // overscroll spring-back doesn't flash it back in.
@@ -497,6 +498,7 @@ fun EditNoteScreen(
                     autoFocusBodyOnEdit = hasPersistedEditorRow && !suppressBodyAutoFocusOnEdit,
                     shelfState = shelfState,
                     pictureViewerOpen = pictureViewer != null,
+                    onOpenShoulders = { shoulderPickerOpen = true },
                     onOpenReminder = {
                         reminderPickerOpen = true
                     },
@@ -535,8 +537,13 @@ fun EditNoteScreen(
                 )
             }
 
+            val shoulders by vm.allShoulders.collectAsStateWithLifecycle()
+            val currentShoulderId by vm.shoulderId.collectAsStateWithLifecycle()
+            val titleText by vm.title.collectAsStateWithLifecycle()
+
             EditorOptionSheets(
                 contentKind = NoteKind.NOTE,
+                shoulderPickerOpen = shoulderPickerOpen,
                 reminderPickerOpen = reminderPickerOpen,
                 iconPickerOpen = iconPickerOpen,
                 actionsPickerOpen = actionsPickerOpen,
@@ -548,11 +555,19 @@ fun EditNoteScreen(
                 pictureViewer = pictureViewer,
                 currentPictureHeroFraming = pictureHeroFraming,
                 readOnly = readOnly,
+                shoulders = shoulders,
+                currentShoulderId = currentShoulderId,
+                noteTitle = titleText,
                 attachments = attachments,
                 currentReminders = reminders,
                 currentIconKey = iconKey,
                 currentActions = actions,
                 heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
+                onSelectShoulder = vm::setShoulder,
+                onCreateShoulder = vm::createShoulder,
+                onUpdateShoulder = vm::updateShoulder,
+                onDeleteShoulder = vm::deleteShoulder,
+                onDismissShoulders = { shoulderPickerOpen = false },
                 onReminderChange = vm::setReminders,
                 onIconKeyChange = vm::setIconKey,
                 onActionsChange = vm::setActions,

@@ -111,6 +111,8 @@ import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
 import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
 
 private object HomeScreenSessionState {
     var archiveSectionExpanded: Boolean = false
@@ -203,9 +205,12 @@ fun HomeRoute(
             }
         }
     }
+    val activeShoulders by vm.activeShoulders.collectAsStateWithLifecycle()
+
     HomeScreen(
         state = state,
         interaction = interaction,
+        activeShoulders = activeShoulders,
         onQueryChange = vm::setQuery,
         onFilterChange = vm::setFilter,
         onViewOptionsChange = vm::setViewOptions,
@@ -239,6 +244,7 @@ fun HomeRoute(
 fun HomeScreen(
     state: HomeState,
     interaction: InteractionState,
+    activeShoulders: List<ShoulderEntity> = emptyList(),
     onQueryChange: (String) -> Unit,
     onFilterChange: (NotesFilter) -> Unit,
     onViewOptionsChange: (ViewOptions) -> Unit,
@@ -449,7 +455,7 @@ fun HomeScreen(
                         }
                     }
                 },
-        containerColor = Color.Transparent,
+        containerColor = SettingsDesignTokens.ScreenBg,
         bottomBar = {
             if (showSelectionActionBar) {
                 HomeSelectionActionBar(
@@ -559,6 +565,7 @@ fun HomeScreen(
                 onToggleArchiveSection = { archiveSectionExpanded = !archiveSectionExpanded },
                 trashSectionExpanded = trashSectionExpanded,
                 onToggleTrashSection = { trashSectionExpanded = !trashSectionExpanded },
+                activeShoulders = activeShoulders,
             )
         val homeListReveal =
             HomeListRevealState(
@@ -705,6 +712,7 @@ fun HomeScreen(
                                 searchFocusRequestKey += 1
                             }
                         },
+                        onCreateNote = onCreateNote,
                     )
                 } else if (showSelectionActionBar) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -808,6 +816,7 @@ private class HomeListSectionState(
     val onToggleArchiveSection: () -> Unit,
     val trashSectionExpanded: Boolean,
     val onToggleTrashSection: () -> Unit,
+    val activeShoulders: List<ShoulderEntity> = emptyList(),
 )
 
 private class HomeListRevealState(
@@ -926,6 +935,8 @@ private fun LazyStaggeredGridScope.mosaicListContent(
             ActiveFilterChips(
                 filter = display.state.filter,
                 onChange = actions.onFilterChange,
+                totalActiveCount = display.state.totalActive,
+                activeShoulders = sectionState.activeShoulders,
                 viewOptions = display.state.viewOptions,
                 onViewOptionsChange = actions.onViewOptionsChange,
                 scrollState = sectionState.filterControlScrollState,
@@ -1141,6 +1152,8 @@ private fun LazyListScope.linearListContent(
             ActiveFilterChips(
                 filter = display.state.filter,
                 onChange = actions.onFilterChange,
+                totalActiveCount = display.state.totalActive,
+                activeShoulders = sectionState.activeShoulders,
                 viewOptions = display.state.viewOptions,
                 onViewOptionsChange = actions.onViewOptionsChange,
                 scrollState = sectionState.filterControlScrollState,

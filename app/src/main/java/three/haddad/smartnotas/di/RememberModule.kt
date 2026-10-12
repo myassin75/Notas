@@ -21,6 +21,7 @@ import three.haddad.smartnotas.data.OnboardingPrefs
 import three.haddad.smartnotas.data.QuickCapturePrefs
 import three.haddad.smartnotas.data.RememberDatabase
 import three.haddad.smartnotas.data.ReminderPrefs
+import three.haddad.smartnotas.data.SearchPreferences
 import three.haddad.smartnotas.data.ShoulderRepository
 import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.UpdatePrefs
@@ -97,6 +98,12 @@ object RememberModule {
     fun provideViewOptionsPrefs(
         @ApplicationContext context: Context,
     ): ViewOptionsPrefs = ViewOptionsPrefs(context)
+
+    @Provides
+    @Singleton
+    fun provideSearchPreferences(
+        @ApplicationContext context: Context,
+    ): SearchPreferences = SearchPreferences(context)
 
     @Provides
     @Singleton
@@ -281,7 +288,7 @@ class AppStartupWarmup(
         // happening, so the first fullscreen Home frame is less likely to render before Room
         // has produced the active notes list.
         applicationScope.launch(ioDispatcher) {
-            
+
             noteRepository.observeActive().first()
         }
     }

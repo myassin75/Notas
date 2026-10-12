@@ -21,9 +21,9 @@ data class NoteOptions(
     val locked: Boolean = false,
     val iconKey: String? = null,
     val actions: List<NoteAction> = emptyList(),
-    
     val recurrence: RecurrenceRule? = null,
     val reminders: List<NoteReminder> = emptyList(),
+    val shoulderId: Long? = null,
 )
 
 /**
@@ -205,7 +205,7 @@ class NoteRepository(
         options: NoteOptions,
     ) = contentWriter.updateList(id, title, colorIndex, items, options)
 
-    
+
     /**
      * Pins or unpins [id]. Pinning only affects placement on Home (the top "Pinned" section).
      *
@@ -267,7 +267,7 @@ class NoteRepository(
                 locked = note.locked,
                 iconKey = note.iconKey,
                 actions = note.actions,
-                
+
                 recurrence = note.recurrence,
                 reminders = updatedReminders,
             )
@@ -362,7 +362,7 @@ class NoteRepository(
         pinned: Boolean,
     ): Set<Long> = bulkOperations.setPinned(ids, pinned)
 
-    
+
     suspend fun archiveNotes(ids: Collection<Long>) = bulkOperations.archiveNotes(ids)
 
     suspend fun unarchiveNotes(ids: Collection<Long>) = bulkOperations.unarchiveNotes(ids)
@@ -504,7 +504,7 @@ class NoteRepository(
                 locked = note.locked,
                 iconKey = note.iconKey,
                 actions = note.actions,
-                
+
                 recurrence = null,
             )
         val newId =

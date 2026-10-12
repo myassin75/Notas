@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,8 +39,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import three.haddad.smartnotas.data.ShoulderEntity
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -91,6 +97,7 @@ import three.haddad.smartnotas.ui.feedback.appCombinedClickable
 import three.haddad.smartnotas.ui.help.HELP_FOCUS_IMPORTANCE
 import three.haddad.smartnotas.ui.help.HELP_FOCUS_VISIBILITY
 import three.haddad.smartnotas.ui.help.LocalOpenHelp
+import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import java.text.DateFormat
 import java.util.Date
@@ -101,12 +108,14 @@ private const val STARRED_WATERMARK_ALPHA = 0.28f
 
 @Composable
 fun OptionsPanel(
+    shoulder: ShoulderEntity? = null,
     reminders: List<NoteReminder>,
     importance: Importance,
     visibility: NoteVisibility,
     pictureUri: String?,
     actions: List<NoteAction>,
     attachments: List<NoteAttachmentEntity>,
+    onOpenShoulders: () -> Unit = {},
     onOpenReminder: () -> Unit,
     onSetImportance: (Importance) -> Unit,
     onSetVisibility: (NoteVisibility) -> Unit,
@@ -175,136 +184,182 @@ fun OptionsPanel(
         animationSpec = starredCueSpec,
         label = "optionsPanelStarredCue",
     )
-    Surface(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.largeIncreased,
-        color = baseContainerColor,
-        tonalElevation = 1.dp,
-        shadowElevation = 0.dp,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            if (starredCueProgress > 0.001f) {
-                StarredRadiantWash(
-                    modifier = Modifier.matchParentSize(),
-                    progress = starredCueProgress,
-                )
-            }
-            // Watermark star for starred cards, mirrored from NoteCard. It softly fades
-            // and settles into the same tilted pose when the editor star state changes.
-            if (starredCueProgress > 0.001f) {
-                RememberMaterialRoundedSymbol(
-                    name = "star",
-                    filled = true,
-                    size = 96.dp,
-                    tint = Color(0xFFF9A825),
-                    weight = FontWeight.Bold,
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .graphicsLayer {
-                                val inverseProgress = 1f - starredCueProgress
-                                rotationZ = -15f - (12f * inverseProgress)
-                                scaleX = 0.82f + (0.18f * starredCueProgress)
-                                scaleY = scaleX
-                                alpha = STARRED_WATERMARK_ALPHA * starredCueProgress
-                            },
-                )
-            }
-            Column(
-                modifier = Modifier.padding(vertical = 6.dp),
-            ) {
-                Column(
-                    modifier =
-                        Modifier
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OptionCell(
-                        symbolName = if (reminderPermissionMissing) "alarm_off" else "alarm",
-                        title = stringResource(R.string.options_reminder),
-                        summary = "",
-                        onClick = onOpenReminder,
-                        modifier = Modifier.fillMaxWidth(),
-                        iconTint =
-                            if (reminderPermissionMissing) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
-                        summaryContent = {
-                            ReminderOptionSummary(
-                                reminders = reminders,
-                                permissionMissing = reminderPermissionMissing,
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                // Row 1: Shoulders
+                OptionCell(
+                    symbolName = "local_offer",
+                    title = stringResource(R.string.view_options_group_shoulders),
+                    summary = "",
+                    onClick = onOpenShoulders,
+                    modifier = Modifier.fillMaxWidth(),
+                    summaryContent = {
+                        if (shoulder != null) {
+                            val shoulderColor = remember(shoulder.colorHex) {
+                                if (shoulder.colorHex.isNullOrBlank()) SettingsDesignTokens.PrimaryPurple else try {
+                                    Color(android.graphics.Color.parseColor(if (shoulder.colorHex.startsWith("#")) shoulder.colorHex else "#${shoulder.colorHex}"))
+                                } catch (_: Throwable) {
+                                    SettingsDesignTokens.PrimaryPurple
+                                }
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(shoulderColor),
+                                )
+                                Text(
+                                    text = shoulder.name,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 13.sp,
+                                        color = shoulderColor,
+                                        fontWeight = FontWeight.Bold,
+                                    ),
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "No shoulder",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF89899C),
+                                ),
                             )
-                        },
-                        trailingContent =
-                            if (reminders.any { it.originalReminderAt != null }) {
-                                {
-                                    RememberMaterialRoundedSymbol(
-                                        name = "snooze",
-                                        size = 19.dp,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        weight = FontWeight.Medium,
-                                    )
-                                }
-                            } else {
-                                null
-                            },
-                    )
-                    OptionCell(
-                        symbolName = firstAction?.type?.materialSymbolName() ?: "bolt",
-                        icon = firstActionIcon,
-                        title = stringResource(R.string.options_actions),
-                        summary = actionsSummary(actions),
-                        onClick = onOpenActions,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OptionCell(
-                        symbolName = "visibility",
-                        title = stringResource(R.string.options_behavior),
-                        summary = "",
-                        onClick =
-                            if (readOnly) {
-                                null
-                            } else {
-                                {
-                                    draftVisibility = visibility
-                                    draftImportance = importance
-                                    behaviorOpen = true
-                                }
-                            },
-                        modifier = Modifier.fillMaxWidth(),
-                        summaryContent = { BehaviorOptionSummary(visibility, importance) },
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        OptionCell(
-                            symbolName = "add_a_photo",
-                            title = stringResource(R.string.options_picture),
-                            summary =
-                                if (pictureUri == null) {
-                                    stringResource(R.string.options_picture_none)
-                                } else {
-                                    stringResource(R.string.options_picture_attached)
-                                },
-                            onClick = onOpenPicture,
-                            onLongClick = onBrowsePictureWithApp,
-                            onLongClickLabel = stringResource(R.string.hero_image_picker_browse_with_app),
-                            modifier = Modifier.weight(1f),
+                        }
+                    },
+                )
+
+                HorizontalDivider(color = Color(0xFFE9E3EF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+
+                // Row 2: Reminder
+                OptionCell(
+                    symbolName = if (reminderPermissionMissing) "alarm_off" else "alarm",
+                    title = stringResource(R.string.options_reminder),
+                    summary = "",
+                    onClick = onOpenReminder,
+                    modifier = Modifier.fillMaxWidth(),
+                    iconTint = if (reminderPermissionMissing) MaterialTheme.colorScheme.error else SettingsDesignTokens.PrimaryPurple,
+                    summaryContent = {
+                        ReminderOptionSummary(
+                            reminders = reminders,
+                            permissionMissing = reminderPermissionMissing,
                         )
-                        OptionCell(
-                            symbolName = "attach_file",
-                            title = stringResource(R.string.options_attachments),
-                            summary = attachmentSummary,
-                            onClick = onOpenAttachments,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
+                    },
+                )
+
+                HorizontalDivider(color = Color(0xFFE9E3EF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+
+                // Row 3: Notification action
+                OptionCell(
+                    symbolName = firstAction?.type?.materialSymbolName() ?: "bolt",
+                    icon = firstActionIcon,
+                    title = stringResource(R.string.options_actions),
+                    summary = actionsSummary(actions),
+                    onClick = onOpenActions,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                HorizontalDivider(color = Color(0xFFE9E3EF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+
+                // Row 4: Behavior
+                OptionCell(
+                    symbolName = "visibility",
+                    title = stringResource(R.string.options_behavior),
+                    summary = "",
+                    onClick = if (readOnly) null else {
+                        {
+                            draftVisibility = visibility
+                            draftImportance = importance
+                            behaviorOpen = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    summaryContent = { BehaviorOptionSummary(visibility, importance) },
+                )
+            }
+        }
+
+        // Side-by-side Picture and Attachments action buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(22.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .clickable(onClick = onOpenPicture),
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "image",
+                        size = 20.dp,
+                        tint = SettingsDesignTokens.PrimaryPurple,
+                        weight = FontWeight.Normal,
+                        filled = false,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.options_picture),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color(0xFF32313F),
+                        ),
+                    )
                 }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(22.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .clickable(onClick = onOpenAttachments),
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "attach_file",
+                        size = 20.dp,
+                        tint = SettingsDesignTokens.PrimaryPurple,
+                        weight = FontWeight.Normal,
+                        filled = false,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.options_attachments),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color(0xFF32313F),
+                        ),
+                    )
+                }
+            }
+        }
                 if (createdAt != null && createdAt > 0L) {
                     Spacer(Modifier.height(6.dp))
                     BoxWithConstraints(
@@ -352,8 +407,6 @@ fun OptionsPanel(
                     }
                 }
             }
-        }
-    }
 
     // The sheet draws in its own window, above any navigation, so it is only shown while this
     // screen is the resumed one. Opening Help from it takes it off screen as Help slides in;
@@ -661,82 +714,76 @@ private fun OptionCell(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
-    iconTint: Color = MaterialTheme.colorScheme.primary,
+    iconTint: Color = SettingsDesignTokens.PrimaryPurple,
     fixedHeight: Boolean = false,
     summaryContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    val tileModifier =
-        if (fixedHeight) {
-            modifier.height(OPTION_CELL_HEIGHT)
-        } else {
-            modifier.heightIn(min = OPTION_CELL_HEIGHT)
-        }
-    Surface(
-        modifier = tileModifier,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        tonalElevation = 2.dp,
-        border =
-            BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
-            ),
+    val clickableModifier = when {
+        onClick == null -> Modifier
+        onLongClick != null -> Modifier.appCombinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel)
+        else -> Modifier.appClickable(onClick = onClick)
+    }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(clickableModifier)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .let { if (fixedHeight) it.fillMaxHeight() else it }
-                    .let {
-                        when {
-                            onClick == null -> it
-                            onLongClick != null ->
-                                it.appCombinedClickable(
-                                    onClick = onClick,
-                                    onLongClick = onLongClick,
-                                    onLongClickLabel = onLongClickLabel,
-                                )
-                            else -> it.appClickable(onClick = onClick)
-                        }
-                    }.padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFF4EAF6)),
+            contentAlignment = Alignment.Center,
         ) {
             OptionCellIcon(
                 symbolName = symbolName,
                 icon = icon,
                 iconTint = iconTint,
             )
-            Spacer(Modifier.size(8.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
-            ) {
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color(0xFF32313F),
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (summaryContent != null) {
+                summaryContent()
+            } else if (summary.isNotBlank()) {
                 Text(
-                    title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 13.sp,
+                        color = Color(0xFF89899C),
+                    ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    softWrap = false,
                 )
-                if (summaryContent != null) {
-                    Spacer(Modifier.size(2.dp))
-                    summaryContent()
-                } else {
-                    Text(
-                        summary,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        softWrap = false,
-                    )
-                }
             }
-            if (trailingContent != null) {
-                Spacer(Modifier.size(8.dp))
-                trailingContent()
-            }
+        }
+        if (trailingContent != null) {
+            trailingContent()
+        } else {
+            RememberMaterialRoundedSymbol(
+                name = "chevron_right",
+                size = 20.dp,
+                tint = Color(0xFF89899C),
+                weight = FontWeight.Normal,
+                filled = false,
+            )
         }
     }
 }
@@ -759,14 +806,15 @@ private fun OptionCellIcon(
         Image(
             painter = painter,
             contentDescription = null,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(20.dp),
         )
     } else {
         RememberMaterialRoundedSymbol(
             name = symbolName,
-            size = 19.dp,
+            size = 20.dp,
             tint = iconTint,
-            weight = FontWeight.Medium,
+            weight = FontWeight.Normal,
+            filled = false,
         )
     }
 }
@@ -852,6 +900,7 @@ private fun BehaviorSheet(
         title = stringResource(R.string.options_behavior),
         subtitle = stringResource(R.string.options_behavior_subtitle),
         sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.background,
         onDismiss = {
             if (hasChanges) {
                 showUnsavedDialog = true

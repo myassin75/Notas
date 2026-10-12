@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
@@ -121,10 +123,10 @@ fun NoteCard(
     val heroPictureUri = model.pictureUri?.takeIf { heroEnabled }
     val showHero = heroPictureUri != null
     val surface = MaterialTheme.colorScheme.surface
-    
-    val cardContentColor = cardColors.contentColor
+
+    val cardContentColor = Color(0xFF32313F)
     val heroScrimColor = if (showHero) Color.Black else surface
-    val cardShape = MaterialTheme.shapes.medium
+    val cardShape = RoundedCornerShape(28.dp)
     val pinnedIconDescription = stringResource(R.string.notecard_pinned_cd)
 
     // Pre-resolve every fragment of the merged TalkBack announcement so the body of
@@ -266,7 +268,7 @@ fun NoteCard(
                     renderEffect = completedRenderEffect
                 }.then(sharedModifier)
                 .clip(cardShape)
-                
+
                 .then(activePaneBorder)
                 .then(selectionBorder)
                 .then(clickableModifier)
@@ -274,9 +276,9 @@ fun NoteCard(
                     contentDescription = noteCardAnnouncement
                 },
         shape = cardShape,
-        color = completedContainerColor,
+        color = if (model.completed) completedContainerColor else Color.White,
         contentColor = cardContentColor,
-        tonalElevation = 1.dp,
+        tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
         Box(
@@ -308,7 +310,37 @@ fun NoteCard(
             // declares mergeDescendants and contentDescription includes "Starred".
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
-            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
+            val stripeColor = remember(model.shoulderColorHex) {
+                if (model.shoulderColorHex.isNullOrBlank()) Color(0xFF2454E8) else try {
+                    Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
+                } catch (_: Throwable) {
+                    Color(0xFF2454E8)
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (model.shoulderName != null) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 14.dp, top = 16.dp, bottom = 16.dp)
+                            .width(4.dp)
+                            .height(48.dp)
+                            .clip(CircleShape)
+                            .background(stripeColor),
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(
+                            start = if (model.shoulderName != null) 12.dp else 20.dp,
+                            end = 20.dp,
+                            top = 18.dp,
+                            bottom = 18.dp,
+                        ),
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -451,6 +483,7 @@ fun NoteCard(
                         showPictureIndicator = !showHero,
                     )
                 }
+            }
             // Selection badge: shape morph + bloom. [selectionProgress] is hoisted to
             // the top of NoteCard (alongside [completedProgress]) so the same value
             // drives both the rendering here and the [doneBadgeProgress] computation
@@ -495,95 +528,87 @@ private fun MetadataRow(
     showPictureIndicator: Boolean,
 ) {
     val reminderAt = model.reminderAt
-    val isRecurring = model.recurring
-    val hasPicture = showPictureIndicator && model.pictureUri != null
-    val hasAttachment = model.hasAttachment
-    val anyMetadata = reminderAt != null || hasPicture || hasAttachment
-    if (!anyMetadata) return
+    val isOverdue = reminderAt != null && reminderAt < System.currentTimeMillis()
+    val reminderColor = if (isOverdue) Color(0xFFB86473) else Color(0xFF89899C)
 
-    Spacer(Modifier.height(10.dp))
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
     ) {
-            if (hasPicture) {
-                val cdPicture = stringResource(R.string.notecard_picture_cd)
-                RememberMaterialRoundedSymbol(
-                    name = "image",
-                    size = 14.dp,
-                    tint = contentColor,
-                    weight = FontWeight.Medium,
-                    modifier =
-                        Modifier
-                            .semantics { contentDescription = cdPicture }
-                            .alpha(0.6f),
-                )
+        // Left side: Shoulder chip OR completed count for list
+        if (model.shoulderName != null) {
+            val chipColor = remember(model.shoulderColorHex) {
+                if (model.shoulderColorHex.isNullOrBlank()) Color(0xFF2454E8) else try {
+                    Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
+                } catch (_: Throwable) {
+                    Color(0xFF2454E8)
+                }
             }
-            if (hasAttachment) {
-                val cdAttachment = stringResource(R.string.notecard_attachment_cd)
-                RememberMaterialRoundedSymbol(
-                    name = "attach_file",
-                    size = 14.dp,
-                    tint = contentColor,
-                    weight = FontWeight.Medium,
-                    modifier =
-                        Modifier
-                            .semantics { contentDescription = cdAttachment }
-                            .alpha(0.6f),
-                )
-            }
-            // Reminder slot - last in the row (rightmost). Replaces the old generic
-            // notification icon with a short "MMM d" date string so the user reads the
-            // due date directly off the card. When the note is recurring, a tiny
-            // repeat icon precedes the date as a glanceable indicator.
-            if (reminderAt != null) {
-                val cdReminder = stringResource(R.string.notecard_reminder_cd)
-                val reminderPermissionMissing = !reminderNotificationsAllowed
-                RememberMaterialRoundedSymbol(
-                    name = if (reminderPermissionMissing) "notifications_off" else "notifications",
-                    size = 14.dp,
-                    tint =
-                        if (reminderPermissionMissing) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            contentColor
-                        },
-                    weight = FontWeight.Medium,
-                    modifier =
-                        Modifier
-                            .semantics { contentDescription = cdReminder }
-                            .alpha(if (reminderPermissionMissing) 1f else 0.68f),
-                )
-                if (isRecurring) {
-                    val cdRecurring = stringResource(R.string.notecard_recurring_cd)
+            Surface(
+                shape = CircleShape,
+                color = Color(0xFFEAEFFE),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     RememberMaterialRoundedSymbol(
-                        name = "repeat",
-                        size = 14.dp,
-                        tint = contentColor,
-                        weight = FontWeight.Medium,
-                        modifier =
-                            Modifier
-                                .semantics { contentDescription = cdRecurring }
-                                .alpha(0.68f),
+                        name = "local_offer",
+                        size = 12.dp,
+                        tint = chipColor,
+                        weight = FontWeight.Bold,
+                        filled = true,
+                    )
+                    Text(
+                        text = model.shoulderName,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = chipColor,
+                        ),
                     )
                 }
+            }
+        } else if (model.kind == NoteKind.LIST && model.checklistPreviewItems.isNotEmpty()) {
+            val totalCount = model.checklistPreviewItems.size + model.checklistHiddenItemCount
+            val checkedCount = model.checklistPreviewItems.count { it.checked }
+            Text(
+                text = "$checkedCount of $totalCount complete",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = 12.sp,
+                    color = Color(0xFF89899C),
+                ),
+            )
+        } else {
+            Spacer(Modifier.width(1.dp))
+        }
+
+        // Right side: reminder icon & date
+        if (reminderAt != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = "notifications",
+                    size = 15.dp,
+                    tint = reminderColor,
+                    weight = FontWeight.Normal,
+                    filled = false,
+                )
                 Text(
                     text = formatShortReminderDate(reminderAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color =
-                        if (reminderPermissionMissing) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            contentColor
-                        },
-                    fontWeight = FontWeight.Medium,
-                    modifier =
-                        Modifier
-                            .alpha(if (reminderPermissionMissing) 1f else 0.85f),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 13.sp,
+                        color = reminderColor,
+                        fontWeight = FontWeight.Medium,
+                    ),
                 )
             }
         }
+    }
 }
 
 /**
@@ -615,56 +640,55 @@ private fun ChecklistPreview(
         )
         return
     }
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         items.forEach { item ->
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Indent children one gutter's width to mirror the editor hierarchy.
                     if (item.depth > 0) Spacer(Modifier.width(16.dp))
-                    RememberMaterialRoundedSymbol(
-                        name = if (item.checked) "check_box" else "check_box_outline_blank",
-                        size = 16.dp,
-                        tint = contentColor,
-                        weight = FontWeight.Medium,
-                        modifier = Modifier.alpha(if (item.checked) 0.6f else 0.85f),
-                    )
+                    if (item.checked) {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(5.dp))
+                                .background(Color(0xFF98549C)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            RememberMaterialRoundedSymbol(
+                                name = "check",
+                                size = 12.dp,
+                                tint = Color.White,
+                                weight = FontWeight.Bold,
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .border(BorderStroke(1.5.dp, Color(0xFF89899C)), androidx.compose.foundation.shape.RoundedCornerShape(5.dp)),
+                        )
+                    }
                     Spacer(Modifier.width(10.dp))
                     Text(
                         text = item.text,
-                        style = MaterialTheme.typography.bodyMedium.copy(color = contentColor),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = if (item.checked) Color(0xFF89899C) else Color(0xFF32313F),
+                            fontSize = 14.sp,
+                        ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textDecoration = if (item.checked) TextDecoration.LineThrough else TextDecoration.None,
-                        modifier = Modifier.alpha(if (item.checked) 0.55f else 0.92f),
                     )
-                }
-                val detailPreview =
-                    item.details
-                        .lineSequence()
-                        .firstOrNull { line -> line.isNotBlank() }
-                        ?.trim()
-                        .orEmpty()
-                if (detailPreview.isNotBlank()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (item.depth > 0) Spacer(Modifier.width(16.dp))
-                        Spacer(Modifier.width(26.dp))
-                        Text(
-                            text = detailPreview,
-                            style = MaterialTheme.typography.bodySmall.copy(color = contentColor),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.alpha(if (item.checked) 0.42f else 0.62f),
-                        )
-                    }
                 }
             }
         }
         if (hiddenCount > 0) {
-            Spacer(Modifier.height(2.dp))
             Text(
-                text = pluralStringResource(R.plurals.notecard_extra_items, hiddenCount, hiddenCount),
-                style = MaterialTheme.typography.labelMedium.copy(color = contentColor),
-                modifier = Modifier.alpha(0.6f),
+                text = "+$hiddenCount more",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF89899C),
+                    fontSize = 13.sp,
+                ),
+                modifier = Modifier.padding(start = 28.dp, top = 2.dp),
             )
         }
     }

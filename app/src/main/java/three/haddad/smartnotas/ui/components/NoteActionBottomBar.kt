@@ -10,8 +10,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,13 +22,20 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.isSmallLandscape
@@ -144,146 +155,195 @@ fun NoteActionBottomBarContent(
     onRestore: () -> Unit,
     onDeleteForever: () -> Unit,
     modifier: Modifier = Modifier,
-    showEditAction: Boolean = true,
+    showEditAction: Boolean = false,
 ) {
-    val compact = isSmallLandscape()
-    val actionRow: @Composable () -> Unit = {
+    var overflowMenuOpen by remember { mutableStateOf(false) }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White,
+        shadowElevation = 2.dp,
+    ) {
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .then(if (compact) Modifier.height(36.dp) else Modifier.windowInsetsPadding(WindowInsets.navigationBars))
-                    .padding(
-                        start = if (compact) 4.dp else 8.dp,
-                        top = if (compact) 0.dp else 8.dp,
-                        end = if (compact) 4.dp else 8.dp,
-                        bottom = if (compact) 4.dp else 8.dp,
-                    ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The ACTIVE set is the widest one, and it grew past what five fixed 72.dp columns
-            // could hold once Pin joined it (6 x 72 = 432.dp overflows a 360.dp-wide phone).
-            // Past five items we share the width instead, the way the TRASHED branch already
-            // does, so the row shrinks to fit rather than clipping its last action.
-            val activeActionCount = (if (showEditAction) 1 else 0) + 1 + (if (existing) 5 else 0)
-            val activeActionModifier =
-                if (compact || activeActionCount > 5) Modifier.weight(1f) else Modifier.width(72.dp)
-            when (shelfState) {
-                NoteShelfState.ACTIVE -> {
-                    if (showEditAction) {
-                        EditActionItem(
-                            isEditMode = isEditMode,
-                            onClick = onToggleEdit,
-                            compact = compact,
-                            modifier = activeActionModifier,
-                        )
-                    }
-                    // Pin sits next to Star on purpose: showing the two toggles side by side
-                    // with distinct icons and labels teaches the difference between "favorite"
-                    // and "keep at the top", instead of hiding it. Pin leads, matching the
-                    // action order used by the swipe settings.
-                    //
-                    // Split across two `existing` checks because Pin needs a saved row to write
-                    // to, while Star is part of the draft and works on a brand-new note. A new
-                    // note therefore shows Star alone here.
-                    if (existing) {
-                        PinActionItem(
-                            pinned = pinned,
-                            onClick = onTogglePin,
-                            compact = compact,
-                            modifier = activeActionModifier,
-                        )
-                    }
-                    if (existing) {
-                        ActionItem(
-                            icon = "notifications",
-                            label = stringResource(R.string.edit_bottom_bar_notification),
-                            onClick = onNotification,
-                            modifier = activeActionModifier,
-                            compact = compact,
-                        )
-                        // Mark done / not done. Filled check_circle when completed,
-                        // outlined when active, so the toggle state reads at a glance.
-                        // Label flips to match: "Mark done" vs "Mark not done".
-                        DoneActionItem(
-                            completed = completed,
-                            onClick = onToggleCompleted,
-                            compact = compact,
-                            modifier = activeActionModifier,
-                        )
-                        ActionItem(
-                            icon = "archive",
-                            label = stringResource(R.string.edit_bottom_bar_archive),
-                            onClick = onArchive,
-                            modifier = activeActionModifier,
-                            compact = compact,
-                        )
-                        ActionItem(
-                            icon = "delete_outline",
-                            label = stringResource(R.string.edit_bottom_bar_trash),
-                            onClick = onTrash,
-                            modifier = activeActionModifier,
-                            compact = compact,
-                        )
-                    }
-                }
-                NoteShelfState.ARCHIVED -> {
-                    val archivedActionModifier = if (compact) Modifier.weight(1f) else Modifier.width(72.dp)
-                    ActionItem(
-                        icon = "unarchive",
-                        label = stringResource(R.string.edit_bottom_bar_unarchive),
-                        onClick = onUnarchive,
-                        modifier = archivedActionModifier,
-                        compact = compact,
+            // 1. Pin
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onTogglePin() }
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = if (pinned) "push_pin" else "push_pin",
+                    size = 20.dp,
+                    tint = Color(0xFF272936),
+                    weight = FontWeight.Normal,
+                    filled = pinned,
+                )
+                Text(
+                    text = "Pin",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp,
+                        color = Color(0xFF272936),
+                    ),
+                )
+            }
+
+            // 2. Notify
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onNotification() }
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = "notifications",
+                    size = 20.dp,
+                    tint = Color(0xFF272936),
+                    weight = FontWeight.Normal,
+                    filled = false,
+                )
+                Text(
+                    text = "Notify",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp,
+                        color = Color(0xFF272936),
+                    ),
+                )
+            }
+
+            // 3. Done (Purple Pill Button)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF945394),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onToggleCompleted() },
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "check_circle",
+                        size = 18.dp,
+                        tint = Color.White,
+                        weight = FontWeight.Normal,
+                        filled = completed,
                     )
-                    ActionItem(
-                        icon = "delete_outline",
-                        label = stringResource(R.string.edit_bottom_bar_trash),
-                        onClick = onTrash,
-                        modifier = archivedActionModifier,
-                        compact = compact,
-                    )
-                }
-                NoteShelfState.TRASHED -> {
-                    ActionItem(
-                        icon = "restore_from_trash",
-                        label = stringResource(R.string.edit_bottom_bar_restore),
-                        onClick = onRestore,
-                        modifier = Modifier.weight(1f),
-                        compact = compact,
-                    )
-                    ActionItem(
-                        icon = "archive",
-                        label = stringResource(R.string.edit_bottom_bar_archive),
-                        onClick = onArchive,
-                        modifier = Modifier.weight(1f),
-                        compact = compact,
-                    )
-                    ActionItem(
-                        icon = "delete_forever",
-                        label = stringResource(R.string.edit_bottom_bar_delete_forever),
-                        onClick = onDeleteForever,
-                        modifier = Modifier.weight(1f),
-                        compact = compact,
+                    Text(
+                        text = "Done",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color.White,
+                        ),
                     )
                 }
             }
-        }
-    }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 3.dp,
-    ) {
-        if (compact) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                actionRow()
-                Spacer(Modifier.height(12.dp))
+
+            // 4. Overflow Menu Button (...)
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF3EAF6))
+                        .clickable { overflowMenuOpen = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Canvas(modifier = Modifier.size(20.dp)) {
+                        val radius = 2.2.dp.toPx()
+                        val dotColor = Color(0xFF272936)
+                        val centerY = size.height / 2f
+                        val spacing = 5.5.dp.toPx()
+                        val centerX = size.width / 2f
+
+                        drawCircle(dotColor, radius, Offset(centerX - spacing, centerY))
+                        drawCircle(dotColor, radius, Offset(centerX, centerY))
+                        drawCircle(dotColor, radius, Offset(centerX + spacing, centerY))
+                    }
+                }
+
+                // Floating Menu Card
+                DropdownMenu(
+                    expanded = overflowMenuOpen,
+                    onDismissRequest = { overflowMenuOpen = false },
+                    modifier = Modifier.background(Color.White),
+                ) {
+                    // Row 1: Archive
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                overflowMenuOpen = false
+                                onArchive()
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = "archive",
+                            size = 20.dp,
+                            tint = Color(0xFF272936),
+                            weight = FontWeight.Normal,
+                            filled = false,
+                        )
+                        Text(
+                            text = "Archive",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                color = Color(0xFF272936),
+                            ),
+                        )
+                    }
+
+                    HorizontalDivider(color = Color(0xFFEBEBF1), thickness = 1.dp)
+
+                    // Row 2: Trash
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                overflowMenuOpen = false
+                                onTrash()
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = "delete",
+                            size = 20.dp,
+                            tint = Color(0xFFD24750),
+                            weight = FontWeight.Normal,
+                            filled = false,
+                        )
+                        Text(
+                            text = "Trash",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                color = Color(0xFFD24750),
+                            ),
+                        )
+                    }
+                }
             }
-        } else {
-            actionRow()
         }
     }
 }

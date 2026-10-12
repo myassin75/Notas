@@ -301,6 +301,38 @@ class EditListViewModelTest {
             assertEquals(1, child.depth)
         }
 
+    @Test
+    fun existing_list_shoulder_change_is_saved() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Existing list").copy(shoulderId = 5L)
+
+            val viewModel = editListViewModel(store, noteId = 1L)
+            advanceUntilIdle()
+
+            viewModel.setShoulderId(8L)
+            val undoAction = viewModel.saveIfNeeded("Untitled")
+
+            assertTrue(undoAction != null)
+            assertEquals(8L, store.notes[1L]?.shoulderId)
+        }
+
+    @Test
+    fun existing_list_shoulder_removal_is_saved() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Existing list").copy(shoulderId = 5L)
+
+            val viewModel = editListViewModel(store, noteId = 1L)
+            advanceUntilIdle()
+
+            viewModel.setShoulderId(null)
+            val undoAction = viewModel.saveIfNeeded("Untitled")
+
+            assertTrue(undoAction != null)
+            assertNull(store.notes[1L]?.shoulderId)
+        }
+
     private fun editListViewModel(
         store: FakeRepositoryStore,
         noteId: Long? = null,

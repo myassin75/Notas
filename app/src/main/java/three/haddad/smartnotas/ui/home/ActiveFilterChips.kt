@@ -1,5 +1,6 @@
 package three.haddad.smartnotas.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -10,22 +11,29 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.FilterType
 import three.haddad.smartnotas.data.GroupBy
 import three.haddad.smartnotas.data.NotesFilter
+import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.SortDir
 import three.haddad.smartnotas.data.SortKey
 import three.haddad.smartnotas.data.ViewOptions
@@ -41,6 +49,8 @@ private val ActiveChipHeight = 32.dp
 internal fun ActiveFilterChips(
     filter: NotesFilter,
     onChange: (NotesFilter) -> Unit,
+    totalActiveCount: Int = 0,
+    activeShoulders: List<ShoulderEntity> = emptyList(),
     modifier: Modifier = Modifier,
     viewOptions: ViewOptions = ViewOptions(),
     onViewOptionsChange: ((ViewOptions) -> Unit)? = null,
@@ -48,142 +58,134 @@ internal fun ActiveFilterChips(
     expandedDropdown: ActiveFilterDropdown? = null,
     onExpandedDropdownChange: (ActiveFilterDropdown?) -> Unit = {},
 ) {
-    val defaultFilter = NotesFilter()
-    val defaultViewOptions = ViewOptions()
-    val canReset =
-        filter != defaultFilter ||
-            viewOptions.sortKey != defaultViewOptions.sortKey ||
-            viewOptions.sortDir != defaultViewOptions.sortDir ||
-            viewOptions.groupBy != defaultViewOptions.groupBy
     Row(
-        modifier =
-            modifier
-                .horizontalScroll(scrollState)
-                .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        FilterDropdownChip(
-            label = stringResource(R.string.filter_dropdown_type, typeLabel(filter.type)),
-            selected = filter.type != FilterType.ALL,
-            expanded = expandedDropdown == ActiveFilterDropdown.TYPE,
-            onExpandedChange = { expanded ->
-                onExpandedDropdownChange(if (expanded) ActiveFilterDropdown.TYPE else null)
-            },
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .horizontalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            FilterType.entries.forEach { type ->
-                RadioMenuItem(
-                    label = typeLabel(type),
-                    selected = filter.type == type,
-                    onClick = {
-                        onChange(filter.copy(type = type))
-                    },
-                )
-            }
-        }
-        FilterDropdownChip(
-            label = stringResource(R.string.filter_dropdown_group, groupLabel(viewOptions.groupBy)),
-            selected = viewOptions.groupBy != defaultViewOptions.groupBy,
-            expanded = expandedDropdown == ActiveFilterDropdown.GROUP,
-            onExpandedChange = { expanded ->
-                onExpandedDropdownChange(if (expanded) ActiveFilterDropdown.GROUP else null)
-            },
-        ) {
-            groupOptions().forEach { (groupBy, label) ->
-                RadioMenuItem(
-                    label = label,
-                    selected = viewOptions.groupBy == groupBy,
-                    onClick = {
-                        onViewOptionsChange?.invoke(viewOptions.copy(groupBy = groupBy))
-                    },
-                )
-            }
-        }
-        FilterDropdownChip(
-            label = stringResource(R.string.filter_dropdown_sort, sortLabel(viewOptions.sortKey, viewOptions.sortDir)),
-            selected = viewOptions.sortKey != defaultViewOptions.sortKey || viewOptions.sortDir != defaultViewOptions.sortDir,
-            expanded = expandedDropdown == ActiveFilterDropdown.SORT,
-            onExpandedChange = { expanded ->
-                onExpandedDropdownChange(if (expanded) ActiveFilterDropdown.SORT else null)
-            },
-        ) {
-            sortOptions().forEach { sortOption ->
-                RadioMenuItem(
-                    label = sortOption.label,
-                    selected = viewOptions.sortKey == sortOption.sortKey && viewOptions.sortDir == sortOption.sortDir,
-                    onClick = {
-                        onViewOptionsChange?.invoke(
-                            viewOptions.copy(sortKey = sortOption.sortKey, sortDir = sortOption.sortDir),
+            // "All" Chip
+            val allSelected = filter.shoulderId == null
+            Surface(
+                shape = CircleShape,
+                color = if (allSelected) Color(0xFFF4EAF6) else Color.Transparent,
+                border = if (allSelected) null else BorderStroke(1.dp, Color(0xFFE9E3EF)),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable { onChange(filter.copy(shoulderId = null)) },
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = "All",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
+                        ),
+                    )
+                    if (totalActiveCount > 0) {
+                        Text(
+                            text = totalActiveCount.toString(),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 13.sp,
+                                color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
+                            ),
                         )
-                    },
-                )
+                    }
+                }
+            }
+
+            // Shoulder Chips
+            activeShoulders.forEach { shoulder ->
+                val selected = filter.shoulderId == shoulder.id
+                val shoulderColor = parseColorHex(shoulder.colorHex, Color(0xFF2454E8))
+                val chipBg = if (selected) shoulderColor.copy(alpha = 0.15f) else Color.Transparent
+                val chipBorderColor = if (selected) shoulderColor.copy(alpha = 0.4f) else Color(0xFFE9E3EF)
+                val chipTextColor = if (selected) shoulderColor else Color(0xFF32313F)
+
+                Surface(
+                    shape = CircleShape,
+                    color = chipBg,
+                    border = BorderStroke(1.dp, chipBorderColor),
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable {
+                            onChange(filter.copy(shoulderId = if (selected) null else shoulder.id))
+                        },
+                ) {
+                    Text(
+                        text = shoulder.name,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = chipTextColor,
+                        ),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    )
+                }
             }
         }
-        val otherFilterCount =
-            listOf(
-                filter.hasReminder,
-                filter.hasPicture,
-                filter.hasAttachment,
-                filter.pinned,
-            ).count { active -> active == true }
-        FilterDropdownChip(
-            label =
-                if (otherFilterCount == 0) {
-                    stringResource(R.string.filter_dropdown_others)
-                } else {
-                    stringResource(R.string.filter_dropdown_others_count, otherFilterCount)
-                },
-            selected = otherFilterCount > 0,
-            expanded = expandedDropdown == ActiveFilterDropdown.OTHERS,
-            onExpandedChange = { expanded ->
-                onExpandedDropdownChange(if (expanded) ActiveFilterDropdown.OTHERS else null)
-            },
-        ) {
-            CheckableMenuItem(
-                label = stringResource(R.string.filter_has_reminder),
-                checked = filter.hasReminder == true,
-                onClick = { onChange(filter.copy(hasReminder = if (filter.hasReminder == true) null else true)) },
-            )
-            CheckableMenuItem(
-                label = stringResource(R.string.filter_has_picture),
-                checked = filter.hasPicture == true,
-                onClick = { onChange(filter.copy(hasPicture = if (filter.hasPicture == true) null else true)) },
-            )
-            CheckableMenuItem(
-                label = stringResource(R.string.filter_has_attachment),
-                checked = filter.hasAttachment == true,
-                onClick = { onChange(filter.copy(hasAttachment = if (filter.hasAttachment == true) null else true)) },
-            )
-            CheckableMenuItem(
-                label = stringResource(R.string.filter_pinned),
-                checked = filter.pinned == true,
-                onClick = { onChange(filter.copy(pinned = if (filter.pinned == true) null else true)) },
-            )
-        }
-        RememberInputChip(
-            selected = false,
-            onClick = {
-                onChange(defaultFilter)
-                onViewOptionsChange?.invoke(
-                    viewOptions.copy(
-                        sortKey = defaultViewOptions.sortKey,
-                        sortDir = defaultViewOptions.sortDir,
-                        groupBy = defaultViewOptions.groupBy,
-                    ),
-                )
-            },
-            enabled = canReset,
-            label = { Text(stringResource(R.string.action_reset)) },
-            modifier = Modifier.height(ActiveChipHeight),
-            leadingIcon = {
+
+        // Sort button on the right
+        Box {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable {
+                        onExpandedDropdownChange(if (expandedDropdown == ActiveFilterDropdown.SORT) null else ActiveFilterDropdown.SORT)
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
                 RememberMaterialRoundedSymbol(
-                    name = "undo",
-                    autoMirror = true,
-                    size = 16.dp,
-                    weight = FontWeight.Medium,
+                    name = "tune",
+                    size = 20.dp,
+                    tint = Color(0xFF89899C),
+                    weight = FontWeight.Normal,
+                    filled = false,
                 )
-            },
-        )
+            }
+
+            DropdownMenu(
+                expanded = expandedDropdown == ActiveFilterDropdown.SORT,
+                onDismissRequest = { onExpandedDropdownChange(null) },
+            ) {
+                sortOptions().forEach { sortOption ->
+                    RadioMenuItem(
+                        label = sortOption.label,
+                        selected = viewOptions.sortKey == sortOption.sortKey && viewOptions.sortDir == sortOption.sortDir,
+                        onClick = {
+                            onViewOptionsChange?.invoke(
+                                viewOptions.copy(sortKey = sortOption.sortKey, sortDir = sortOption.sortDir),
+                            )
+                            onExpandedDropdownChange(null)
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun parseColorHex(hex: String?, fallback: Color): Color {
+    if (hex.isNullOrBlank()) return fallback
+    return try {
+        Color(android.graphics.Color.parseColor(if (hex.startsWith("#")) hex else "#$hex"))
+    } catch (_: Throwable) {
+        fallback
     }
 }
 

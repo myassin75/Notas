@@ -2,7 +2,9 @@ package three.haddad.smartnotas.ui.edit
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -12,14 +14,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,6 +61,7 @@ import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
@@ -173,17 +181,25 @@ internal fun EditorTitleTopBar(
                 },
                 navigationIcon = {
                     if (showNavigateBack) {
-                        RememberIconButton(
-                            onClick = onBack,
-                            modifier = Modifier.size(rememberResponsiveActionButtonSize()),
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White,
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable { onBack() },
                         ) {
-                            RememberMaterialRoundedSymbol(
-                                name = "arrow_back",
-                                autoMirror = true,
-                                size = 24.dp,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                weight = FontWeight.Medium,
-                            )
+                            Box(contentAlignment = Alignment.Center) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "arrow_back",
+                                    autoMirror = true,
+                                    size = 20.dp,
+                                    tint = Color(0xFF32313F),
+                                    weight = FontWeight.Normal,
+                                    filled = false,
+                                )
+                            }
                         }
                     }
                 },
@@ -219,20 +235,35 @@ internal fun EditorTitleTopBar(
                         }
                     }
                     if ((isEditMode || hasUnsavedChanges) && !readOnly) {
-                        val saveCd = stringResource(R.string.edit_save_cd)
-                        RememberIconButton(
-                            onClick = onSave,
-                            modifier =
-                                Modifier
-                                    .size(rememberResponsiveActionButtonSize())
-                                    .semantics { contentDescription = saveCd },
+                        Surface(
+                            shape = CircleShape,
+                            color = SettingsDesignTokens.PrimaryPurple,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clip(CircleShape)
+                                .clickable { onSave() },
                         ) {
-                            RememberMaterialRoundedSymbol(
-                                name = "check",
-                                size = 24.dp,
-                                tint = MaterialTheme.colorScheme.primary,
-                                weight = FontWeight.Medium,
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "check",
+                                    size = 18.dp,
+                                    tint = Color.White,
+                                    weight = FontWeight.Bold,
+                                    filled = false,
+                                )
+                                Text(
+                                    text = "Save",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                        color = Color.White,
+                                    ),
+                                )
+                            }
                         }
                     }
                 },

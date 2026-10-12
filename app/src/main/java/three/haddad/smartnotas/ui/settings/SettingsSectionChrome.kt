@@ -46,7 +46,7 @@ import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 
 object SettingsDesignTokens {
-    val ScreenBg = Color(0xFFFAFAFD)
+    val ScreenBg = Color(0xFFF5F5F8)
     val CardBg = Color(0xFFFFFFFF)
     val PrimaryPurple = Color(0xFF98549C)
     val SoftLavender = Color(0xFFF4EAF6)

@@ -79,7 +79,7 @@ class EditNoteViewModel
             val b = _body.value
             val opts = currentOptions()
             if (id == null) {
-                return t.isNotBlank() || b.isNotBlank() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null
+                return t.isNotBlank() || b.isNotBlank() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null || opts.shoulderId != null
             } else {
                 val old = originalNote ?: return true
                 if (t != old.title) return true
@@ -94,6 +94,7 @@ class EditNoteViewModel
                 if (opts.actions != old.actions) return true
                 if (opts.recurrence != old.recurrence) return true
                 if (opts.reminders != old.getActiveReminders()) return true
+                if (opts.shoulderId != old.shoulderId) return true
                 return false
             }
         }
@@ -166,6 +167,7 @@ class EditNoteViewModel
                                         actions = old.actions,
                                         recurrence = old.recurrence,
                                         reminders = old.getActiveReminders(),
+                                        shoulderId = old.shoulderId,
                                     ),
                             )
                         }

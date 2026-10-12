@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import three.haddad.smartnotas.data.ShoulderEntity
 import javax.inject.Inject
 
 sealed interface HomeEvent {
@@ -115,6 +116,13 @@ class HomeViewModel
                 archivedSearchSource = archivedSearchSource,
                 trashedSearchSource = trashedSearchSource,
             ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeState())
+
+        val activeShoulders: StateFlow<List<ShoulderEntity>> =
+            repository.shoulderRepository?.getAllShoulders()?.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList(),
+            ) ?: MutableStateFlow(emptyList())
 
 
         fun setFilter(value: NotesFilter) {

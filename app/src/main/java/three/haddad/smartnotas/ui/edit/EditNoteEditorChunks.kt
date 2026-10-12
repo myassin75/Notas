@@ -562,6 +562,7 @@ internal fun EditNoteScrollableContent(
     autoFocusBodyOnEdit: Boolean,
     shelfState: NoteShelfState,
     pictureViewerOpen: Boolean,
+    onOpenShoulders: () -> Unit = {},
     onOpenReminder: () -> Unit,
     notificationsAllowed: Boolean,
     onOpenPicture: () -> Unit,
@@ -612,6 +613,7 @@ internal fun EditNoteScrollableContent(
             OptionsPanelSection(
                 vm = vm,
                 readOnly = readOnly,
+                onOpenShoulders = if (readOnly) ({}) else onOpenShoulders,
                 onOpenReminder = if (readOnly) ({}) else onOpenReminder,
                 notificationsAllowed = notificationsAllowed,
                 onOpenPicture = if (readOnly) ({}) else onOpenPicture,
@@ -652,6 +654,7 @@ private fun PictureHeroSection(
 private fun OptionsPanelSection(
     vm: EditNoteViewModel,
     readOnly: Boolean,
+    onOpenShoulders: () -> Unit,
     onOpenReminder: () -> Unit,
     notificationsAllowed: Boolean,
     onOpenPicture: () -> Unit,
@@ -659,6 +662,7 @@ private fun OptionsPanelSection(
     onOpenActions: () -> Unit,
     onOpenAttachments: () -> Unit,
 ) {
+    val shoulder by vm.shoulder.collectAsStateWithLifecycle()
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val importance by vm.importance.collectAsStateWithLifecycle()
     val visibility by vm.visibility.collectAsStateWithLifecycle()
@@ -669,6 +673,7 @@ private fun OptionsPanelSection(
     val updatedAt by vm.updatedAt.collectAsStateWithLifecycle()
 
     EditorOptionsPanel(
+        shoulder = shoulder,
         reminders = reminders,
         importance = importance,
         visibility = visibility,
@@ -679,6 +684,7 @@ private fun OptionsPanelSection(
         readOnly = readOnly,
         createdAt = createdAt,
         updatedAt = updatedAt,
+        onOpenShoulders = onOpenShoulders,
         onOpenReminder = onOpenReminder,
         onImportanceChange = vm::setImportance,
         onVisibilityChange = vm::setVisibility,

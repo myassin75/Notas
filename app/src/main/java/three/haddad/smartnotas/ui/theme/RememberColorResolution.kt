@@ -30,7 +30,7 @@ internal fun rememberResolvedColorScheme(
         lightColorScheme(
             primary = brandPrimary,
             primaryContainer = Color(0xFFF1E5F4),
-            background = Color(0xFFF8F7FC),
+            background = Color(0xFFF5F5F8),
             surface = Color(0xFFFFFFFF),
             onSurface = Color(0xFF383743),
             onSurfaceVariant = Color(0xFF8A879B),

@@ -34,6 +34,8 @@ data class NoteCardUiModel(
     val hasAttachment: Boolean,
     val checklistPreviewItems: PersistentList<NoteCardChecklistItemUiModel>,
     val checklistHiddenItemCount: Int,
+    val shoulderName: String? = null,
+    val shoulderColorHex: String? = null,
 )
 
 @Immutable
@@ -77,5 +79,7 @@ fun NoteWithItems.toNoteCardUiModel(
                     )
                 }.toPersistentList(),
         checklistHiddenItemCount = (orderedChecklistItems.size - checklistPreviewLimit).coerceAtLeast(0),
+        shoulderName = shoulder?.name,
+        shoulderColorHex = shoulder?.colorHex,
     )
 }

@@ -134,7 +134,7 @@ fun OnboardingPermissionsScreen(
     val isDark = isSystemInDarkTheme()
     val baseScheme = MaterialTheme.colorScheme
     val scheme = if (isDark) baseScheme else baseScheme.copy(
-        background = Color(0xFFF8F7FC),
+        background = Color(0xFFF5F5F8),
         surface = Color(0xFFFFFFFF),
         onSurface = Color(0xFF383743),
         onSurfaceVariant = Color(0xFF8A879B),

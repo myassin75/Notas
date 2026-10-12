@@ -186,11 +186,15 @@ internal fun GroupHeader(
                 )
             }
         }
+        val isOverdue = label.contains("Overdue", ignoreCase = true)
+        val titleColor = if (isOverdue) Color(0xFFB86473) else Color(0xFF32313F)
+        val countColor = Color(0xFF89899C)
+
         Text(
             text = label,
-            style = MaterialTheme.typography.titleMediumEmphasized,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.titleMedium,
+            color = titleColor,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = safeTitleStartPadding),
@@ -198,8 +202,8 @@ internal fun GroupHeader(
         if (count != null) {
             Text(
                 text = count.toString(),
-                style = MaterialTheme.typography.titleMediumEmphasized,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleMedium,
+                color = countColor,
                 fontWeight = FontWeight.Normal,
             )
         }

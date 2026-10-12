@@ -23,8 +23,11 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -102,7 +105,15 @@ internal fun EditorContentBodyColumn(
         heroContent?.invoke(this)
         EditorShelfNoticeBlock(shelfState = shelfState)
         Spacer(Modifier.height(EditorContentBodyDefaults.BodyTopSpacing))
-        bodyContent()
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                bodyContent()
+            }
+        }
         optionsContent()
         Spacer(Modifier.height(EditorContentBodyDefaults.BottomSpacing + bottomPadding))
     }

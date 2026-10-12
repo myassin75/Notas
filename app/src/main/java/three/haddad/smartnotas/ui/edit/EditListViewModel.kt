@@ -379,7 +379,7 @@ class EditListViewModel
             val nonEmpty = _items.value.filter { it.text.isNotBlank() }
             val opts = currentOptions()
             if (id == null) {
-                return t.isNotBlank() || nonEmpty.isNotEmpty() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null
+                return t.isNotBlank() || nonEmpty.isNotEmpty() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null || opts.shoulderId != null
             } else {
                 val old = originalNote ?: return true
                 val oldItems = originalItems
@@ -394,6 +394,7 @@ class EditListViewModel
                 if (opts.actions != old.actions) return true
                 if (opts.recurrence != old.recurrence) return true
                 if (opts.reminders != old.getActiveReminders()) return true
+                if (opts.shoulderId != old.shoulderId) return true
                 if (nonEmpty.size != oldItems.size) return true
                 // Compare by sortOrder-sorted traversal rather than raw list index, since the editor
                 // reorders items by sortOrder while the persisted list also comes back ordered by
@@ -503,6 +504,7 @@ class EditListViewModel
                                         actions = old.actions,
                                         recurrence = old.recurrence,
                                         reminders = old.getActiveReminders(),
+                                        shoulderId = old.shoulderId,
                                     ),
                             )
                         }

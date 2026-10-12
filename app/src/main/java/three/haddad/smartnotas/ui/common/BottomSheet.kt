@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +60,7 @@ fun AppBottomSheet(
     scrollable: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
     subtitleSpacing: Dp = 6.dp,
-    containerColor: Color = BottomSheetDefaults.ContainerColor,
+    containerColor: Color = MaterialTheme.colorScheme.background,
     contentColor: Color = contentColorFor(containerColor),
     subtitleContent: (@Composable () -> Unit)? = null,
     titleAccessory: (@Composable RowScope.() -> Unit)? = null,

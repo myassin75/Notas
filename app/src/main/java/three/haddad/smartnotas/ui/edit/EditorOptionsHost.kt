@@ -17,6 +17,7 @@ import three.haddad.smartnotas.data.NoteAttachmentEntity
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteReminder
 import three.haddad.smartnotas.data.ReminderPreferencesState
+import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.SnoozeType
 import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
 import three.haddad.smartnotas.ui.common.FullScreenHeroImageOverlay
@@ -32,6 +33,7 @@ import three.haddad.smartnotas.data.Visibility as NoteVisibility
  */
 @Composable
 fun EditorOptionsPanel(
+    shoulder: ShoulderEntity? = null,
     reminders: List<NoteReminder>,
     importance: Importance,
     visibility: NoteVisibility,
@@ -42,6 +44,7 @@ fun EditorOptionsPanel(
     readOnly: Boolean,
     createdAt: Long?,
     updatedAt: Long?,
+    onOpenShoulders: () -> Unit = {},
     onOpenReminder: () -> Unit,
     onImportanceChange: (Importance) -> Unit,
     onVisibilityChange: (NoteVisibility) -> Unit,
@@ -52,12 +55,14 @@ fun EditorOptionsPanel(
     onPickAttachment: () -> Unit,
 ) {
     OptionsPanel(
+        shoulder = shoulder,
         reminders = reminders,
         importance = importance,
         visibility = visibility,
         pictureUri = pictureUri,
         actions = actions,
         attachments = attachments,
+        onOpenShoulders = if (readOnly) ({}) else onOpenShoulders,
         onOpenReminder = if (readOnly) ({}) else onOpenReminder,
         reminderPermissionMissing = reminders.isNotEmpty() && !notificationsAllowed,
         onSetImportance = if (readOnly) ({ _ -> }) else onImportanceChange,
@@ -86,6 +91,7 @@ fun EditorOptionsPanel(
 @Composable
 fun EditorOptionSheets(
     contentKind: NoteKind,
+    shoulderPickerOpen: Boolean = false,
     reminderPickerOpen: Boolean,
     iconPickerOpen: Boolean,
     actionsPickerOpen: Boolean,
@@ -97,11 +103,18 @@ fun EditorOptionSheets(
     pictureViewer: Pair<String, Long>?,
     currentPictureHeroFraming: String?,
     readOnly: Boolean,
+    shoulders: List<ShoulderEntity> = emptyList(),
+    currentShoulderId: Long? = null,
+    noteTitle: String? = null,
     attachments: List<NoteAttachmentEntity>,
     currentReminders: List<NoteReminder>,
     currentIconKey: String?,
     currentActions: List<NoteAction>,
     heroImageContentDescription: String,
+    onSelectShoulder: (ShoulderEntity?) -> Unit = {},
+    onCreateShoulder: (String, String) -> Unit = { _, _ -> },
+    onUpdateShoulder: (ShoulderEntity) -> Unit = {},
+    onDeleteShoulder: (ShoulderEntity) -> Unit = {},
     onReminderChange: (List<NoteReminder>) -> Unit,
     onIconKeyChange: (String?) -> Unit,
     onActionsChange: (List<NoteAction>) -> Unit,
@@ -110,6 +123,7 @@ fun EditorOptionSheets(
     onHeroCommitted: (String, HeroFraming) -> Unit,
     onPictureChange: (String?) -> Unit,
     onDeleteForever: () -> Unit,
+    onDismissShoulders: () -> Unit = {},
     onDismissReminder: () -> Unit,
     onDismissIcon: () -> Unit,
     onDismissActions: () -> Unit,
@@ -135,6 +149,21 @@ fun EditorOptionSheets(
     val reminderState by reminderPrefs.state.collectAsStateWithLifecycle(
         initialValue = ReminderPreferencesState(),
     )
+    if (shoulderPickerOpen) {
+        ShoulderPickerSheet(
+            shoulders = shoulders,
+            selectedShoulderId = currentShoulderId,
+            noteTitle = noteTitle,
+            onSelectShoulder = { shoulder ->
+                onSelectShoulder(shoulder)
+                onDismissShoulders()
+            },
+            onCreateShoulder = onCreateShoulder,
+            onUpdateShoulder = onUpdateShoulder,
+            onDeleteShoulder = onDeleteShoulder,
+            onDismiss = onDismissShoulders,
+        )
+    }
     if (reminderPickerOpen) {
         ReminderPickerSheet(
             initialReminders = currentReminders,

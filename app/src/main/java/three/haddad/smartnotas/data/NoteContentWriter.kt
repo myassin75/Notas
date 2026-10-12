@@ -46,7 +46,7 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                
+                shoulderId = options.shoulderId,
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
             )
@@ -89,7 +89,7 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                
+                shoulderId = options.shoulderId,
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
             )
@@ -152,7 +152,7 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                
+                shoulderId = options.shoulderId,
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
             )
@@ -193,7 +193,7 @@ internal class NoteContentWriter(
                 iconKey = options.iconKey,
                 actions = options.actions,
                 actionsText = actionsSearchText(options.actions),
-                
+                shoulderId = options.shoulderId,
                 recurrence = options.recurrence?.sanitized(),
                 reminders = resolvedReminders,
                 completedAt =
@@ -245,7 +245,7 @@ internal class NoteContentWriter(
                         iconKey = options.iconKey,
                         actions = options.actions,
                         actionsText = actionsSearchText(options.actions),
-                        
+                        shoulderId = options.shoulderId,
                         recurrence = options.recurrence?.sanitized(),
                         reminders = resolvedReminders,
                         completedAt =

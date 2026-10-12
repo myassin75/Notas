@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.Visibility as NoteVisibility
 
 /**
@@ -80,6 +81,12 @@ abstract class BaseEditorViewModel(
 
     private val _reminderAt = MutableStateFlow<Long?>(null)
     val reminderAt: StateFlow<Long?> = _reminderAt.asStateFlow()
+
+    private val _shoulderId = MutableStateFlow<Long?>(null)
+    val shoulderId: StateFlow<Long?> = _shoulderId.asStateFlow()
+
+    private val _shoulder = MutableStateFlow<ShoulderEntity?>(null)
+    val shoulder: StateFlow<ShoulderEntity?> = _shoulder.asStateFlow()
 
     private val _recurrence = MutableStateFlow<RecurrenceRule?>(null)
     val recurrence: StateFlow<RecurrenceRule?> = _recurrence.asStateFlow()
@@ -226,6 +233,8 @@ abstract class BaseEditorViewModel(
         _recurrence.value = soonest?.recurrence?.sanitized()
         _importance.value = n.importance
         _visibility.value = n.visibility
+        _shoulderId.value = n.shoulderId
+        _shoulder.value = existing.shoulder
         _locked.value = n.locked
         _pictureUri.value = n.pictureUri
         _pictureHeroFraming.value = n.pictureHeroFraming
@@ -422,6 +431,50 @@ abstract class BaseEditorViewModel(
         }
     }
 
+    fun setShoulderId(value: Long?) {
+        if (_shoulderId.value == value) return
+        _shoulderId.value = value
+        markDirty()
+    }
+
+    fun setShoulder(value: ShoulderEntity?) {
+        _shoulder.value = value
+        setShoulderId(value?.id)
+    }
+
+    val allShoulders: StateFlow<List<ShoulderEntity>> =
+        repository.shoulderRepository?.getAllShoulders()?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList(),
+        ) ?: MutableStateFlow(emptyList())
+
+    fun createShoulder(name: String, colorHex: String) {
+        viewModelScope.launch {
+            val id = repository.shoulderRepository?.createShoulder(name, colorHex)
+            setShoulderId(id)
+        }
+    }
+
+    fun updateShoulder(shoulder: ShoulderEntity) {
+        viewModelScope.launch {
+            repository.shoulderRepository?.updateShoulder(shoulder)
+            if (_shoulderId.value == shoulder.id) {
+                _shoulder.value = shoulder
+            }
+        }
+    }
+
+    fun deleteShoulder(shoulder: ShoulderEntity) {
+        viewModelScope.launch {
+            repository.shoulderRepository?.deleteShoulder(shoulder)
+            if (_shoulderId.value == shoulder.id) {
+                setShoulderId(null)
+                _shoulder.value = null
+            }
+        }
+    }
+
     protected fun currentOptions() =
         NoteOptions(
             reminderAt = _reminderAt.value,
@@ -434,6 +487,7 @@ abstract class BaseEditorViewModel(
             actions = _actions.value,
             recurrence = _recurrence.value,
             reminders = _reminders.value,
+            shoulderId = _shoulderId.value,
         )
 
     /**

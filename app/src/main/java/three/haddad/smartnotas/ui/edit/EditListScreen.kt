@@ -275,6 +275,7 @@ fun EditListScreen(
     val createdAt by vm.createdAt.collectAsStateWithLifecycle()
     val updatedAt by vm.updatedAt.collectAsStateWithLifecycle()
 
+    var shoulderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var reminderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var iconPickerOpen by rememberSaveable { mutableStateOf(false) }
     var actionsPickerOpen by rememberSaveable { mutableStateOf(false) }
@@ -510,9 +511,9 @@ fun EditListScreen(
     val imageResolution: Any? = null
     var showChecked by rememberSaveable { mutableStateOf(true) }
 
-    
+
         Box(Modifier.fillMaxSize()) {
-            
+
             Scaffold(
                 modifier =
                     Modifier
@@ -995,8 +996,10 @@ fun EditListScreen(
                     }
 
                     editorContentOptionsItem(padding = padding) {
+                        val shoulder by vm.shoulder.collectAsStateWithLifecycle()
                         Spacer(Modifier.height(20.dp))
                         EditorOptionsPanel(
+                            shoulder = shoulder,
                             reminders = reminders,
                             importance = importance,
                             visibility = visibility,
@@ -1007,6 +1010,7 @@ fun EditListScreen(
                             readOnly = readOnly,
                             createdAt = createdAt,
                             updatedAt = updatedAt,
+                            onOpenShoulders = { shoulderPickerOpen = true },
                             onOpenReminder = { reminderPickerOpen = true },
                             onImportanceChange = vm::setImportance,
                             onVisibilityChange = vm::setVisibility,
@@ -1020,8 +1024,12 @@ fun EditListScreen(
                 }
             }
 
+            val shoulders by vm.allShoulders.collectAsStateWithLifecycle()
+            val currentShoulderId by vm.shoulderId.collectAsStateWithLifecycle()
+
             EditorOptionSheets(
                 contentKind = NoteKind.LIST,
+                shoulderPickerOpen = shoulderPickerOpen,
                 reminderPickerOpen = reminderPickerOpen,
                 iconPickerOpen = iconPickerOpen,
                 actionsPickerOpen = actionsPickerOpen,
@@ -1033,11 +1041,19 @@ fun EditListScreen(
                 pictureViewer = pictureViewer,
                 currentPictureHeroFraming = pictureHeroFraming,
                 readOnly = readOnly,
+                shoulders = shoulders,
+                currentShoulderId = currentShoulderId,
+                noteTitle = title,
                 attachments = attachments,
                 currentReminders = reminders,
                 currentIconKey = iconKey,
                 currentActions = actions,
                 heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
+                onSelectShoulder = vm::setShoulder,
+                onCreateShoulder = vm::createShoulder,
+                onUpdateShoulder = vm::updateShoulder,
+                onDeleteShoulder = vm::deleteShoulder,
+                onDismissShoulders = { shoulderPickerOpen = false },
                 onReminderChange = vm::setReminders,
                 onIconKeyChange = vm::setIconKey,
                 onActionsChange = vm::setActions,

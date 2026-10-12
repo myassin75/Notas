@@ -1,29 +1,38 @@
 package three.haddad.smartnotas.ui.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NotesFilter
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.emptyStateSpacing
 import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.components.EmptyFilterIllustration
 import three.haddad.smartnotas.ui.components.EmptyNotesIllustration
 import three.haddad.smartnotas.ui.components.RememberButton
 import three.haddad.smartnotas.ui.components.RememberOutlinedButton
@@ -55,17 +64,23 @@ internal fun NotesEmptyState(
                 modifier = Modifier.semantics(mergeDescendants = true) {},
             ) {
                 EmptyNotesIllustration()
-                Spacer(Modifier.height(heroSpacing.titleSpacer))
+                Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.home_no_notes_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        color = Color(0xFF32313F),
+                    ),
+                    textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(heroSpacing.subtitleSpacer))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.home_no_notes_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 14.sp,
+                        color = Color(0xFF89899C),
+                    ),
                     textAlign = TextAlign.Center,
                     modifier =
                         Modifier
@@ -74,66 +89,120 @@ internal fun NotesEmptyState(
                 )
             }
             if (showCreateActions) {
-                Spacer(Modifier.height(heroSpacing.titleSpacer))
-                if (isSmallLandscape) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(0.9f),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        RememberButton(
-                            onClick = onCreateNote,
-                            shape = MaterialTheme.shapes.large,
-                            modifier = Modifier.weight(1f),
+                Spacer(Modifier.height(24.dp))
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { onCreateNote() }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFF4EAF6)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "edit_note",
+                                    size = 22.dp,
+                                    tint = Color(0xFF98549C),
+                                    weight = FontWeight.Normal,
+                                    filled = false,
+                                )
+                            }
+                            Spacer(Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.home_create_note),
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF32313F),
+                                    ),
+                                )
+                                Text(
+                                    text = stringResource(R.string.home_create_note_subtitle),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF89899C),
+                                    ),
+                                )
+                            }
                             RememberMaterialRoundedSymbol(
-                                name = "add",
+                                name = "chevron_right",
                                 size = 20.dp,
-                                weight = FontWeight.Medium,
+                                tint = Color(0xFF89899C),
+                                weight = FontWeight.Normal,
+                                filled = false,
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.home_create_note))
                         }
-                        RememberOutlinedButton(
-                            onClick = onCreateList,
-                            shape = MaterialTheme.shapes.large,
-                            modifier = Modifier.weight(1f),
+
+                        HorizontalDivider(
+                            color = Color(0xFFF0EFF4),
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { onCreateList() }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFFF4EAF6)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "checklist",
+                                    size = 22.dp,
+                                    tint = Color(0xFF98549C),
+                                    weight = FontWeight.Normal,
+                                    filled = false,
+                                )
+                            }
+                            Spacer(Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.home_create_list),
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF32313F),
+                                    ),
+                                )
+                                Text(
+                                    text = stringResource(R.string.home_create_list_subtitle),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF89899C),
+                                    ),
+                                )
+                            }
                             RememberMaterialRoundedSymbol(
-                                name = "add",
+                                name = "chevron_right",
                                 size = 20.dp,
-                                weight = FontWeight.Medium,
+                                tint = Color(0xFF89899C),
+                                weight = FontWeight.Normal,
+                                filled = false,
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.home_create_list))
                         }
-                    }
-                } else {
-                    RememberButton(
-                        onClick = onCreateNote,
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.fillMaxWidth(0.78f),
-                    ) {
-                        RememberMaterialRoundedSymbol(
-                            name = "add",
-                            size = 20.dp,
-                            weight = FontWeight.Medium,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.home_create_note))
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    RememberOutlinedButton(
-                        onClick = onCreateList,
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.fillMaxWidth(0.78f),
-                    ) {
-                        RememberMaterialRoundedSymbol(
-                            name = "add",
-                            size = 20.dp,
-                            weight = FontWeight.Medium,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.home_create_list))
                     }
                 }
             }
@@ -156,19 +225,22 @@ internal fun NotesEmptyState(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.semantics(mergeDescendants = true) {},
             ) {
-                EmptyFilterIllustration()
-                Spacer(Modifier.height(filterSpacing.titleSpacer))
+                EmptyNotesIllustration()
+                Spacer(Modifier.height(16.dp))
                 Text(
                     text = titleText,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF32313F),
+                    ),
                     textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(filterSpacing.subtitleSpacer))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     text = hintText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color(0xFF89899C),
+                    ),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
