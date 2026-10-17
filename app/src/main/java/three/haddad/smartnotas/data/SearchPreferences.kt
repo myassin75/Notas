@@ -21,7 +21,7 @@ data class SearchHistoryEntry(
 private val Context.searchDataStore by preferencesDataStore(name = "search_prefs")
 
 @Singleton
-class SearchPreferences(
+open class SearchPreferences(
     private val dataStore: DataStore<Preferences>,
 ) {
     constructor(context: Context) : this(context.searchDataStore)
@@ -30,13 +30,13 @@ class SearchPreferences(
         val RECENT_SEARCHES_JSON = stringPreferencesKey("recent_searches_json")
     }
 
-    val recentSearches: Flow<List<SearchHistoryEntry>> =
+    open val recentSearches: Flow<List<SearchHistoryEntry>> =
         dataStore.data.map { prefs ->
             val jsonStr = prefs[Keys.RECENT_SEARCHES_JSON] ?: "[]"
             parseRecentSearchesJson(jsonStr)
         }
 
-    suspend fun addSearchQuery(query: String) {
+    open suspend fun addSearchQuery(query: String) {
         val trimmed = query.trim()
         if (trimmed.isBlank()) return
         dataStore.edit { prefs ->
@@ -49,7 +49,7 @@ class SearchPreferences(
         }
     }
 
-    suspend fun removeSearchQuery(query: String) {
+    open suspend fun removeSearchQuery(query: String) {
         dataStore.edit { prefs ->
             val jsonStr = prefs[Keys.RECENT_SEARCHES_JSON] ?: "[]"
             val currentList = parseRecentSearchesJson(jsonStr).toMutableList()
@@ -58,7 +58,7 @@ class SearchPreferences(
         }
     }
 
-    suspend fun clearRecentSearches() {
+    open suspend fun clearRecentSearches() {
         dataStore.edit { prefs ->
             prefs[Keys.RECENT_SEARCHES_JSON] = "[]"
         }

@@ -813,7 +813,17 @@ fun RememberNavGraph(
                     fadeInSpec = navFadeInSpec,
                     fadeOutSpec = navFadeOutSpec,
                 ) {
-                    three.haddad.smartnotas.ui.search.SearchRoute()
+                    three.haddad.smartnotas.ui.search.SearchRoute(
+                        onOpenNote = { item ->
+                            if (three.haddad.smartnotas.ui.search.SearchViewModel.isEvent(item)) {
+                                navController.navigate(Routes.editEvent(id = item.note.id)) {
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                navController.openEditRouteFor(item)
+                            }
+                        },
+                    )
                 }
 
                 mainTabComposable(
