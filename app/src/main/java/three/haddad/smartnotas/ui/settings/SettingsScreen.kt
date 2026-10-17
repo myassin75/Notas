@@ -680,13 +680,96 @@ fun SettingsRoute(
 
     Scaffold(
         containerColor = SettingsDesignTokens.ScreenBg,
+        topBar = {
+            if (showTopActions) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(SettingsDesignTokens.ScreenBg)
+                        .statusBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        if (showBackArrow) {
+                            // Left button: Back Arrow button taking user back to Home
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .clickable { onBack() },
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "arrow_back",
+                                        size = 20.dp,
+                                        tint = SettingsDesignTokens.TextPrimary,
+                                        weight = FontWeight.Normal,
+                                        filled = false,
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.main_tab_settings),
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 26.sp,
+                                    color = SettingsDesignTokens.TextPrimary,
+                                ),
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Make Notas your own",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 13.sp,
+                                    color = SettingsDesignTokens.TextSecondary,
+                                ),
+                            )
+                        }
+
+                        // Right button: Information/Help icon taking user to Help screen
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White,
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .clickable { onOpenHelp() },
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "info",
+                                    size = 20.dp,
+                                    tint = SettingsDesignTokens.TextPrimary,
+                                    weight = FontWeight.Normal,
+                                    filled = false,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
         snackbarHost = {
             SnackbarHost(
                 snackbarHostState,
                 modifier = Modifier.padding(bottom = 80.dp),
             )
         },
-    ) { _ ->
+    ) { innerPadding ->
         val paneHosted = selectedSectionKey != null
         val blurMod =
             remember(blurStyle, paneHosted) {
@@ -694,21 +777,25 @@ fun SettingsRoute(
                     ?.applyToScrollableList(bottomAlphaMultiplier = if (paneHosted) 0f else 1f)
                     ?: Modifier
             }
-        val topInset = statusBarInset + 8.dp
+        val topPadding = if (showTopActions) 12.dp else (statusBarInset + 8.dp)
         val bottomPadding = pillInset + 24.dp
         val listContentPadding =
-            remember(topInset, bottomPadding) {
+            remember(topPadding, bottomPadding) {
                 PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    top = topInset,
+                    top = topPadding,
                     bottom = bottomPadding,
                 )
             }
         if (viewOptionsState == null) {
             Box(Modifier.fillMaxSize())
         } else {
-            Box(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding()),
+            ) {
                 LazyColumn(
                     state = settingsListState,
                     modifier =
@@ -719,81 +806,6 @@ fun SettingsRoute(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = settingsScrollEnabled,
                 ) {
-                    if (showTopActions) {
-                        item(key = "header") {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                if (showBackArrow) {
-                                    // Left button: Back Arrow button taking user back to Home
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = Color.White,
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(CircleShape)
-                                            .clickable { onBack() },
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            RememberMaterialRoundedSymbol(
-                                                name = "arrow_back",
-                                                size = 20.dp,
-                                                tint = SettingsDesignTokens.TextPrimary,
-                                                weight = FontWeight.Normal,
-                                                filled = false,
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                }
-
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.main_tab_settings),
-                                        style = MaterialTheme.typography.headlineMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 26.sp,
-                                            color = SettingsDesignTokens.TextPrimary,
-                                        ),
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Make Notas your own",
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontSize = 13.sp,
-                                            color = SettingsDesignTokens.TextSecondary,
-                                        ),
-                                    )
-                                }
-
-                                // Right button: Information/Help icon taking user to Help screen
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color.White,
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .clickable { onOpenHelp() },
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        RememberMaterialRoundedSymbol(
-                                            name = "info",
-                                            size = 20.dp,
-                                            tint = SettingsDesignTokens.TextPrimary,
-                                            weight = FontWeight.Normal,
-                                            filled = false,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
 
                     if (includeSettingsSection(SettingsSectionKey.History)) {
                         item(key = "history") {
