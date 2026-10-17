@@ -18,7 +18,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.theme.LocalIsDark
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -36,9 +40,11 @@ fun CalendarRoute(
     modifier: Modifier = Modifier,
     viewModel: CalendarViewModel = hiltViewModel(),
     onOpenNote: (Long) -> Unit = {},
-    onCreateEvent: () -> Unit = {},
+    onCreateEvent: (Long) -> Unit = {},
+    onOpenEditorWithPrefill: ((Long) -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val availableShoulders by viewModel.availableShoulders.collectAsStateWithLifecycle()
     val isDark = LocalIsDark.current
     val today = remember { LocalDate.now() }
 
@@ -80,10 +86,10 @@ fun CalendarRoute(
     ) {
         // 1. Top Bar with view dropdown and notifications
         CalendarTopBar(
-            title = if (uiState.viewMode == CalendarViewMode.DAY || uiState.viewMode == CalendarViewMode.WEEK) {
-                stringResource(R.string.main_tab_calendar)
-            } else {
+            title = if (uiState.viewMode == CalendarViewMode.MONTH) {
                 monthTitle
+            } else {
+                stringResource(R.string.main_tab_calendar)
             },
             subtitle = selectedDateSubtitle,
             currentViewMode = uiState.viewMode,
@@ -137,7 +143,10 @@ fun CalendarRoute(
                 AgendaSectionHeader(
                     title = dayAgendaTitle,
                     subtitle = dayAgendaSubtitle,
-                    onNewEventClick = onCreateEvent,
+                    onNewEventClick = {
+                        val dateMillis = uiState.selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        onCreateEvent(dateMillis)
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -199,7 +208,10 @@ fun CalendarRoute(
                 AgendaSectionHeader(
                     title = stringResource(R.string.calendar_weeks_agenda),
                     subtitle = weekAgendaSubtitle,
-                    onNewEventClick = onCreateEvent,
+                    onNewEventClick = {
+                        val dateMillis = uiState.selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        onCreateEvent(dateMillis)
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -212,16 +224,59 @@ fun CalendarRoute(
                 )
             }
 
-            else -> {
-            // ==================== MONTH VIEW ====================
+            CalendarViewMode.YEAR -> {
+                // ==================== YEAR VIEW ====================
 
-            // 2. Month Navigation Header (< Today >)
-            CalendarNavigationHeader(
-                title = monthTitle,
-                onPrevious = viewModel::onPreviousMonth,
-                onToday = viewModel::onTodayClicked,
-                onNext = viewModel::onNextMonth,
-            )
+                // 2. Year Navigation Header (< Today >) inside rounded card
+                YearNavigationHeaderCard(
+                    yearTitle = uiState.yearUiModel.yearTitle,
+                    yearSubtitle = uiState.yearUiModel.yearSubtitle,
+                    onPrevious = viewModel::onPreviousYear,
+                    onToday = viewModel::onTodayClicked,
+                    onNext = viewModel::onNextYear,
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 3. Year Overview Section Header
+                val yearEventsCount = uiState.yearUiModel.totalYearEventsCount
+                val yearOverviewSubtitle = if (yearEventsCount == 1) {
+                    stringResource(R.string.calendar_event_count_single)
+                } else if (yearEventsCount > 1) {
+                    stringResource(R.string.calendar_events_count, yearEventsCount)
+                } else {
+                    stringResource(R.string.calendar_no_events)
+                }
+
+                AgendaSectionHeader(
+                    title = "${uiState.yearUiModel.yearTitle} Overview",
+                    subtitle = yearOverviewSubtitle,
+                    onNewEventClick = {
+                        val dateMillis = uiState.selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        onCreateEvent(dateMillis)
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 4. 12 Months Responsive Grid
+                YearViewContent(
+                    yearUiModel = uiState.yearUiModel,
+                    onMonthClick = viewModel::onMonthSelectedInYearView,
+                    onDateClick = viewModel::onDateSelectedInYearView,
+                )
+            }
+
+            CalendarViewMode.MONTH -> {
+                // ==================== MONTH VIEW ====================
+
+                // 2. Month Navigation Header (< Today >)
+                CalendarNavigationHeader(
+                    title = monthTitle,
+                    onPrevious = viewModel::onPreviousMonth,
+                    onToday = viewModel::onTodayClicked,
+                    onNext = viewModel::onNextMonth,
+                )
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -290,7 +345,10 @@ fun CalendarRoute(
             AgendaSectionHeader(
                 title = agendaTitle,
                 subtitle = agendaSubtitle,
-                onNewEventClick = onCreateEvent,
+                onNewEventClick = {
+                    val dateMillis = uiState.selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    onCreateEvent(dateMillis)
+                },
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -338,3 +396,4 @@ fun CalendarRoute(
         Spacer(modifier = Modifier.height(96.dp))
     }
 }
+

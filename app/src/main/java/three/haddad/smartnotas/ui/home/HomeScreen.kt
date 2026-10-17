@@ -43,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -112,7 +113,9 @@ import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.ui.calendar.CalendarDesignTokens
 import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 
 private object HomeScreenSessionState {
     var archiveSectionExpanded: Boolean = false
@@ -298,6 +301,9 @@ fun HomeScreen(
             additionalScrollEnabled = true,
         )
     val filterControlScrollState = rememberScrollState()
+    val isDark = LocalIsDark.current
+    val screenBg = CalendarDesignTokens.resolveScreenBg(isDark)
+    val density = LocalDensity.current
     val blurStyle = rememberProgressiveBlurStyle(blurTop = false)
     val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -307,7 +313,7 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val notificationsAllowed = rememberNotificationsAllowed()
     val initialListLiftPx =
-        with(LocalDensity.current) {
+        with(density) {
             16.dp.roundToPx()
         }
 
@@ -455,7 +461,7 @@ fun HomeScreen(
                         }
                     }
                 },
-        containerColor = SettingsDesignTokens.ScreenBg,
+        containerColor = screenBg,
         bottomBar = {
             if (showSelectionActionBar) {
                 HomeSelectionActionBar(
@@ -659,109 +665,128 @@ fun HomeScreen(
                     )
                 }
             }
-            Box(
+            val isScrolled by remember(useMosaicLayout, listState, mosaicGridState) {
+                derivedStateOf {
+                    val thresholdPx = with(density) { 4.dp.toPx() }
+                    if (useMosaicLayout) {
+                        mosaicGridState.firstVisibleItemIndex > 0 || mosaicGridState.firstVisibleItemScrollOffset > thresholdPx
+                    } else {
+                        listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > thresholdPx
+                    }
+                }
+            }
+
+            Surface(
                 modifier =
                     Modifier
-                        .align(Alignment.TopEnd)
+                        .align(Alignment.TopCenter)
                         .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(start = 16.dp, top = 8.dp, end = 16.dp)
                         .then(topBarOverlayModifier),
-                contentAlignment = Alignment.TopEnd,
+                color = screenBg,
+                shadowElevation = if (isScrolled) 2.dp else 0.dp,
             ) {
-                // In pane mode (showSelectionActionBar = false) the detail pane owns
-                // Select all / Cancel selection, so only selection chrome stays out.
-                if (!state.inSelectionMode) {
-                    SearchableTopBarTitle(
-                        searchOpen = searchOpen,
-                        searchFocusRequestKey = searchFocusRequestKey,
-                        query = state.filter.text,
-                        noteLayoutMode = effectiveNoteLayoutMode,
-                        showLayoutToggle = true,
-                        layoutToggleEnabled = layoutToggleEnabled,
-                        showExpandCollapseAllToggle = collapsibleSectionKeys.isNotEmpty(),
-                        allSectionsCollapsed = allSectionsCollapsed,
-                        onQueryChange = onQueryChange,
-                        onToggleLayout = {
-                            onViewOptionsChange(
-                                state.viewOptions.copy(
-                                    noteLayoutMode =
-                                        if (effectiveNoteLayoutMode == NoteLayoutMode.LIST) {
-                                            NoteLayoutMode.MOSAIC
-                                        } else {
-                                            NoteLayoutMode.LIST
-                                        },
-                                ),
-                            )
-                        },
-                        onToggleExpandCollapseAll = {
-                            collapsedSectionKeys =
-                                if (allSectionsCollapsed) {
-                                    collapsedSectionKeys - collapsibleSectionKeys
-                                } else {
-                                    collapsedSectionKeys + collapsibleSectionKeys
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
+                    contentAlignment = Alignment.TopEnd,
+                ) {
+                    // In pane mode (showSelectionActionBar = false) the detail pane owns
+                    // Select all / Cancel selection, so only selection chrome stays out.
+                    if (!state.inSelectionMode) {
+                        SearchableTopBarTitle(
+                            searchOpen = searchOpen,
+                            searchFocusRequestKey = searchFocusRequestKey,
+                            query = state.filter.text,
+                            noteLayoutMode = effectiveNoteLayoutMode,
+                            showLayoutToggle = true,
+                            layoutToggleEnabled = layoutToggleEnabled,
+                            showExpandCollapseAllToggle = collapsibleSectionKeys.isNotEmpty(),
+                            allSectionsCollapsed = allSectionsCollapsed,
+                            onQueryChange = onQueryChange,
+                            onToggleLayout = {
+                                onViewOptionsChange(
+                                    state.viewOptions.copy(
+                                        noteLayoutMode =
+                                            if (effectiveNoteLayoutMode == NoteLayoutMode.LIST) {
+                                                NoteLayoutMode.MOSAIC
+                                            } else {
+                                                NoteLayoutMode.LIST
+                                            },
+                                    ),
+                                )
+                            },
+                            onToggleExpandCollapseAll = {
+                                collapsedSectionKeys =
+                                    if (allSectionsCollapsed) {
+                                        collapsedSectionKeys - collapsibleSectionKeys
+                                    } else {
+                                        collapsedSectionKeys + collapsibleSectionKeys
+                                    }
+                            },
+                            onToggleSearch = {
+                                if (searchOpen && state.filter.text.isNotEmpty()) {
+                                    onQueryChange("")
                                 }
-                        },
-                        onToggleSearch = {
-                            if (searchOpen && state.filter.text.isNotEmpty()) {
-                                onQueryChange("")
+                                val nextSearchOpen = !searchOpen
+                                searchOpen = nextSearchOpen
+                                if (nextSearchOpen) {
+                                    searchFocusRequestKey += 1
+                                }
+                            },
+                            onCreateNote = onCreateNote,
+                        )
+                    } else if (showSelectionActionBar) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val actionButtonSize = rememberResponsiveActionButtonSize()
+                            val cdSelectAll = stringResource(R.string.home_select_all)
+                            Box(modifier = Modifier.size(actionButtonSize)) {
+                                RememberFilledTonalIconButton(
+                                    onClick = { onSelectAllVisible(selectableVisibleIds) },
+                                    enabled = selectableVisibleIds.isNotEmpty(),
+                                    modifier = Modifier.align(Alignment.Center).size(actionButtonSize),
+                                ) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "select_all",
+                                        weight = FontWeight.Medium,
+                                        modifier = Modifier.semantics { contentDescription = cdSelectAll },
+                                    )
+                                }
+                                Badge(
+                                    modifier =
+                                        Modifier
+                                            .align(Alignment.BottomStart)
+                                            .offset(x = 2.dp, y = (-2).dp),
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                ) {
+                                    Text(
+                                        text = state.selectedIds.size.toString(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
                             }
-                            val nextSearchOpen = !searchOpen
-                            searchOpen = nextSearchOpen
-                            if (nextSearchOpen) {
-                                searchFocusRequestKey += 1
-                            }
-                        },
-                        onCreateNote = onCreateNote,
-                    )
-                } else if (showSelectionActionBar) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val actionButtonSize = rememberResponsiveActionButtonSize()
-                        val cdSelectAll = stringResource(R.string.home_select_all)
-                        Box(modifier = Modifier.size(actionButtonSize)) {
+                            Spacer(Modifier.width(6.dp))
+                            val cdUnselectAll = stringResource(R.string.home_unselect_all)
                             RememberFilledTonalIconButton(
-                                onClick = { onSelectAllVisible(selectableVisibleIds) },
-                                enabled = selectableVisibleIds.isNotEmpty(),
-                                modifier = Modifier.align(Alignment.Center).size(actionButtonSize),
+                                onClick = onClearSelection,
+                                modifier = Modifier.size(actionButtonSize),
+                                colors =
+                                    IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
                             ) {
                                 RememberMaterialRoundedSymbol(
-                                    name = "select_all",
+                                    name = "deselect",
                                     weight = FontWeight.Medium,
-                                    modifier = Modifier.semantics { contentDescription = cdSelectAll },
+                                    modifier = Modifier.semantics { contentDescription = cdUnselectAll },
                                 )
                             }
-                            Badge(
-                                modifier =
-                                    Modifier
-                                        .align(Alignment.BottomStart)
-                                        .offset(x = 2.dp, y = (-2).dp),
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                            ) {
-                                Text(
-                                    text = state.selectedIds.size.toString(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                )
-                            }
+                            Spacer(Modifier.width(4.dp))
                         }
-                        Spacer(Modifier.width(6.dp))
-                        val cdUnselectAll = stringResource(R.string.home_unselect_all)
-                        RememberFilledTonalIconButton(
-                            onClick = onClearSelection,
-                            modifier = Modifier.size(actionButtonSize),
-                            colors =
-                                IconButtonDefaults.filledTonalIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                        ) {
-                            RememberMaterialRoundedSymbol(
-                                name = "deselect",
-                                weight = FontWeight.Medium,
-                                modifier = Modifier.semantics { contentDescription = cdUnselectAll },
-                            )
-                        }
-                        Spacer(Modifier.width(4.dp))
                     }
                 }
             }

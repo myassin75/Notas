@@ -57,6 +57,9 @@ abstract class BaseEditorViewModel(
     /** Only the Edit Note screen passes a prefill; lists leave this blank. */
     protected val prefillBody: String = savedStateHandle[Routes.ARG_PREFILL] ?: ""
 
+    private val prefillReminderAt: Long? =
+        savedStateHandle.get<Long>(Routes.ARG_REMINDER_AT)?.takeIf { it > 0L }
+
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
@@ -79,7 +82,7 @@ abstract class BaseEditorViewModel(
     private val _pinned = MutableStateFlow(false)
     val pinned: StateFlow<Boolean> = _pinned.asStateFlow()
 
-    private val _reminderAt = MutableStateFlow<Long?>(null)
+    private val _reminderAt = MutableStateFlow<Long?>(if (noteId == null) prefillReminderAt else null)
     val reminderAt: StateFlow<Long?> = _reminderAt.asStateFlow()
 
     private val _shoulderId = MutableStateFlow<Long?>(null)

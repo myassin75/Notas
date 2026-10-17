@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -31,8 +32,11 @@ import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
+import three.haddad.smartnotas.data.ShoulderDao
 import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.data.ShoulderRepository
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -42,9 +46,14 @@ class CalendarViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val activeNotesFlow = MutableStateFlow<List<NoteWithItems>>(emptyList())
 
+    private var insertedNotes = mutableListOf<NoteEntity>()
+    private var updatedNotes = mutableListOf<NoteEntity>()
+
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        insertedNotes.clear()
+        updatedNotes.clear()
     }
 
     @After
@@ -52,20 +61,37 @@ class CalendarViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun TestScope.createViewModel(): CalendarViewModel {
+    private fun TestScope.createViewModel(
+        shoulderRepository: ShoulderRepository? = null,
+    ): CalendarViewModel {
         val fakeDao = object : NoteDao {
             override fun observeActive(): Flow<List<NoteWithItems>> = activeNotesFlow
             override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
             override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
             override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
-            override suspend fun get(id: Long): NoteWithItems? = null
+            override suspend fun get(id: Long): NoteWithItems? {
+                val found = insertedNotes.firstOrNull { it.id == id }
+                    ?: activeNotesFlow.value.firstOrNull { it.note.id == id }?.note
+                return found?.let { NoteWithItems(it, emptyList()) }
+            }
             override suspend fun allNotes(): List<NoteWithItems> = emptyList()
             override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
             override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
             override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
             override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override suspend fun insert(note: NoteEntity): Long = 1L
-            override suspend fun update(note: NoteEntity) = Unit
+            override suspend fun insert(note: NoteEntity): Long {
+                val id = if (note.id > 0) note.id else (insertedNotes.size + 1).toLong()
+                val assigned = note.copy(id = id)
+                insertedNotes.add(assigned)
+                return id
+            }
+            override suspend fun update(note: NoteEntity) {
+                updatedNotes.add(note)
+                val idx = insertedNotes.indexOfFirst { it.id == note.id }
+                if (idx >= 0) {
+                    insertedNotes[idx] = note
+                }
+            }
             override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) = Unit
             override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) = Unit
             override suspend fun deleteById(id: Long) = Unit
@@ -106,9 +132,12 @@ class CalendarViewModelTest {
             defaultDispatcher = testDispatcher,
         )
 
-        val viewModel = CalendarViewModel(repository)
+        val viewModel = CalendarViewModel(repository, shoulderRepository)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
+        }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.availableShoulders.collect {}
         }
         return viewModel
     }
@@ -657,4 +686,377 @@ class CalendarViewModelTest {
         assertEquals(TimelineItemType.ALL_DAY, state.dayAllDayItems[0].type)
         assertEquals("Ideas to research", state.dayAllDayItems[0].title)
     }
+
+    @Test
+    fun year_navigation_increments_and_decrements_year() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onDateSelected(LocalDate.of(2026, 10, 3))
+        advanceUntilIdle()
+
+        assertEquals(2026, viewModel.uiState.value.displayedYear)
+        assertEquals(2026, viewModel.uiState.value.yearUiModel.year)
+
+        viewModel.onNextYear()
+        advanceUntilIdle()
+        assertEquals(2027, viewModel.uiState.value.displayedYear)
+        assertEquals(2027, viewModel.uiState.value.yearUiModel.year)
+
+        viewModel.onPreviousYear()
+        advanceUntilIdle()
+        assertEquals(2026, viewModel.uiState.value.displayedYear)
+        assertEquals(2026, viewModel.uiState.value.yearUiModel.year)
+    }
+
+    @Test
+    fun today_resets_displayed_year_to_current_year() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onDateSelected(LocalDate.of(2030, 5, 20))
+        advanceUntilIdle()
+
+        assertEquals(2030, viewModel.uiState.value.displayedYear)
+
+        viewModel.onTodayClicked()
+        advanceUntilIdle()
+
+        assertEquals(LocalDate.now().year, viewModel.uiState.value.displayedYear)
+        assertEquals(LocalDate.now(), viewModel.uiState.value.selectedDate)
+    }
+
+    @Test
+    fun year_view_generates_twelve_months_with_correct_lengths_including_leap_year() = runTest {
+        val viewModel = createViewModel()
+
+        // Test leap year 2024
+        viewModel.onDateSelected(LocalDate.of(2024, 1, 1))
+        advanceUntilIdle()
+
+        val leapYearModel = viewModel.uiState.value.yearUiModel
+        assertEquals(2024, leapYearModel.year)
+        assertTrue(leapYearModel.isLeapYear)
+        assertEquals(12, leapYearModel.months.size)
+        assertTrue(leapYearModel.yearSubtitle.contains("366 days"))
+        assertTrue(leapYearModel.yearSubtitle.contains("Leap year"))
+
+        // February in 2024 has 29 days
+        val feb2024Days = leapYearModel.months[1].days.filterNotNull()
+        assertEquals(29, feb2024Days.size)
+        assertEquals(29, feb2024Days.last().dayNumber)
+
+        // Test common year 2026
+        viewModel.onDateSelected(LocalDate.of(2026, 1, 1))
+        advanceUntilIdle()
+
+        val commonYearModel = viewModel.uiState.value.yearUiModel
+        assertEquals(2026, commonYearModel.year)
+        assertFalse(commonYearModel.isLeapYear)
+        assertTrue(commonYearModel.yearSubtitle.contains("365 days"))
+
+        // February in 2026 has 28 days
+        val feb2026Days = commonYearModel.months[1].days.filterNotNull()
+        assertEquals(28, feb2026Days.size)
+        assertEquals(28, feb2026Days.last().dayNumber)
+    }
+
+    @Test
+    fun selecting_month_in_year_view_transitions_to_month_view() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onViewModeSelected(CalendarViewMode.YEAR)
+        advanceUntilIdle()
+
+        assertEquals(CalendarViewMode.YEAR, viewModel.uiState.value.viewMode)
+
+        viewModel.onMonthSelectedInYearView(YearMonth.of(2026, 8))
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(CalendarViewMode.MONTH, state.viewMode)
+        assertEquals(YearMonth.of(2026, 8), state.displayedMonth)
+        assertEquals(8, state.selectedDate.monthValue)
+    }
+
+    @Test
+    fun selecting_date_in_year_view_transitions_to_day_view_and_preserves_date() = runTest {
+        val viewModel = createViewModel()
+        viewModel.onViewModeSelected(CalendarViewMode.YEAR)
+        advanceUntilIdle()
+
+        val targetDate = LocalDate.of(2026, 8, 15)
+        viewModel.onDateSelectedInYearView(targetDate)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(CalendarViewMode.DAY, state.viewMode)
+        assertEquals(targetDate, state.selectedDate)
+        assertEquals(YearMonth.of(2026, 8), state.displayedMonth)
+    }
+
+    @Test
+    fun view_selector_mode_switching_preserves_selected_date() = runTest {
+        val viewModel = createViewModel()
+        val testDate = LocalDate.of(2026, 10, 15)
+        viewModel.onDateSelected(testDate)
+        advanceUntilIdle()
+
+        viewModel.onViewModeSelected(CalendarViewMode.DAY)
+        advanceUntilIdle()
+        assertEquals(testDate, viewModel.uiState.value.selectedDate)
+        assertEquals(CalendarViewMode.DAY, viewModel.uiState.value.viewMode)
+
+        viewModel.onViewModeSelected(CalendarViewMode.WEEK)
+        advanceUntilIdle()
+        assertEquals(testDate, viewModel.uiState.value.selectedDate)
+        assertEquals(CalendarViewMode.WEEK, viewModel.uiState.value.viewMode)
+
+        viewModel.onViewModeSelected(CalendarViewMode.MONTH)
+        advanceUntilIdle()
+        assertEquals(testDate, viewModel.uiState.value.selectedDate)
+        assertEquals(CalendarViewMode.MONTH, viewModel.uiState.value.viewMode)
+
+        viewModel.onViewModeSelected(CalendarViewMode.YEAR)
+        advanceUntilIdle()
+        assertEquals(testDate, viewModel.uiState.value.selectedDate)
+        assertEquals(CalendarViewMode.YEAR, viewModel.uiState.value.viewMode)
+    }
+
+    @Test
+    fun year_view_surfaces_event_indicators_for_dates_with_events() = runTest {
+        val viewModel = createViewModel()
+        val may10 = LocalDate.of(2026, 5, 10)
+        val may10Millis = may10.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+        val note = NoteWithItems(
+            note = NoteEntity(
+                id = 701L,
+                kind = NoteKind.NOTE,
+                title = "Mother's Day Gift",
+                body = "Remember gift",
+                colorIndex = 0,
+                trashed = false,
+                createdAt = 1000L,
+                updatedAt = 1000L,
+                reminderAt = may10Millis,
+            ),
+            items = emptyList(),
+        )
+
+        activeNotesFlow.value = listOf(note)
+        viewModel.onDateSelected(LocalDate.of(2026, 1, 1))
+        advanceUntilIdle()
+
+        val mayModel = viewModel.uiState.value.yearUiModel.months[4] // Index 4 = May
+        assertEquals(1, mayModel.totalEventsCount)
+
+        val may10Day = mayModel.days.filterNotNull().first { it.dayNumber == 10 }
+        assertTrue(may10Day.hasEvents)
+        assertNotNull(may10Day.dotColor)
+
+        val may11Day = mayModel.days.filterNotNull().first { it.dayNumber == 11 }
+        assertFalse(may11Day.hasEvents)
+    }
+
+    @Test
+    fun create_event_saves_note_with_reminder_and_time_range_on_selected_date() = runTest {
+        val viewModel = createViewModel()
+        val eventDate = LocalDate.of(2026, 10, 15)
+        val startTime = LocalTime.of(14, 0)
+        val endTime = LocalTime.of(15, 30)
+
+        val result = viewModel.createEvent(
+            title = "Doctor Appointment",
+            date = eventDate,
+            startTime = startTime,
+            endTime = endTime,
+            isAllDay = false,
+            shoulderId = null,
+            description = "Bring medical records",
+        )
+
+        advanceUntilIdle()
+        assertTrue(result.isSuccess)
+        assertEquals(1, insertedNotes.size)
+
+        val inserted = insertedNotes[0]
+        assertEquals("Doctor Appointment", inserted.title)
+        assertTrue(inserted.body.contains("2:00 PM – 3:30 PM"))
+        assertTrue(inserted.body.contains("Bring medical records"))
+        assertNotNull(inserted.reminderAt)
+
+        val expectedReminderAt = eventDate.atTime(startTime)
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        assertEquals(expectedReminderAt, inserted.reminderAt)
+    }
+
+    @Test
+    fun create_event_validates_blank_title_and_returns_failure() = runTest {
+        val viewModel = createViewModel()
+        val result = viewModel.createEvent(
+            title = "   ",
+            date = LocalDate.of(2026, 10, 15),
+            startTime = LocalTime.of(9, 0),
+            endTime = LocalTime.of(10, 0),
+            isAllDay = false,
+        )
+
+        advanceUntilIdle()
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        assertEquals("Title cannot be blank", result.exceptionOrNull()?.message)
+        assertTrue(insertedNotes.isEmpty())
+    }
+
+    @Test
+    fun create_event_validates_same_start_and_end_time() = runTest {
+        val viewModel = createViewModel()
+        val result = viewModel.createEvent(
+            title = "Zero duration event",
+            date = LocalDate.of(2026, 10, 15),
+            startTime = LocalTime.of(10, 0),
+            endTime = LocalTime.of(10, 0),
+            isAllDay = false,
+        )
+
+        advanceUntilIdle()
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        assertEquals("Start time and end time cannot be the same", result.exceptionOrNull()?.message)
+        assertTrue(insertedNotes.isEmpty())
+    }
+
+    @Test
+    fun create_event_supports_cross_midnight_end_time() = runTest {
+        val viewModel = createViewModel()
+        val eventDate = LocalDate.of(2026, 10, 15)
+        val startTime = LocalTime.of(23, 0)
+        val endTime = LocalTime.of(1, 0)
+
+        val result = viewModel.createEvent(
+            title = "Overnight Hackathon",
+            date = eventDate,
+            startTime = startTime,
+            endTime = endTime,
+            isAllDay = false,
+        )
+
+        advanceUntilIdle()
+        assertTrue(result.isSuccess)
+        assertEquals(1, insertedNotes.size)
+
+        val inserted = insertedNotes[0]
+        assertEquals("Overnight Hackathon", inserted.title)
+        assertTrue(inserted.body.contains("11:00 PM – 1:00 AM"))
+    }
+
+    @Test
+    fun create_event_creates_all_day_event() = runTest {
+        val viewModel = createViewModel()
+        val eventDate = LocalDate.of(2026, 10, 15)
+
+        val result = viewModel.createEvent(
+            title = "National Holiday",
+            date = eventDate,
+            startTime = null,
+            endTime = null,
+            isAllDay = true,
+            description = "Office closed",
+        )
+
+        advanceUntilIdle()
+        assertTrue(result.isSuccess)
+        assertEquals(1, insertedNotes.size)
+
+        val inserted = insertedNotes[0]
+        assertEquals("National Holiday", inserted.title)
+        assertTrue(inserted.body.contains("[All Day]"))
+        assertTrue(inserted.body.contains("Office closed"))
+
+        val expectedStartOfDay = eventDate.atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        assertEquals(expectedStartOfDay, inserted.reminderAt)
+    }
+
+    @Test
+    fun create_event_associates_shoulder_category() = runTest {
+        val viewModel = createViewModel()
+        val eventDate = LocalDate.of(2026, 10, 15)
+
+        val result = viewModel.createEvent(
+            title = "Client Presentation",
+            date = eventDate,
+            startTime = LocalTime.of(11, 0),
+            endTime = LocalTime.of(12, 0),
+            isAllDay = false,
+            shoulderId = 42L,
+        )
+
+        advanceUntilIdle()
+        assertTrue(result.isSuccess)
+        assertEquals(1, insertedNotes.size)
+        assertEquals(42L, insertedNotes[0].shoulderId)
+    }
+
+    @Test
+    fun toggling_event_done_updates_completion_via_repository() = runTest {
+        val viewModel = createViewModel()
+        val note = NoteEntity(
+            id = 55L,
+            kind = NoteKind.NOTE,
+            title = "Review slides",
+            body = "Final review",
+            colorIndex = 0,
+            trashed = false,
+            createdAt = 1000L,
+            updatedAt = 1000L,
+            completedAt = null,
+        )
+        insertedNotes.add(note)
+
+        // Toggle from incomplete to completed
+        viewModel.toggleEventDone(noteId = 55L, currentDone = false)
+        advanceUntilIdle()
+
+        assertTrue(updatedNotes.isNotEmpty())
+        val updated = updatedNotes.last()
+        assertNotNull(updated.completedAt)
+
+        // Toggle back from completed to incomplete
+        viewModel.toggleEventDone(noteId = 55L, currentDone = true)
+        advanceUntilIdle()
+
+        val updatedIncomplete = updatedNotes.last()
+        assertEquals(null, updatedIncomplete.completedAt)
+    }
+
+    @Test
+    fun available_shoulders_surfaces_data_from_shoulder_repository() = runTest {
+        val fakeShoulderDao = object : ShoulderDao {
+            override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = flowOf(
+                listOf(
+                    ShoulderEntity(id = 1L, name = "Work", normalizedName = "work", colorHex = "#4285F4", createdAt = 1000L, updatedAt = 1000L),
+                    ShoulderEntity(id = 2L, name = "Personal", normalizedName = "personal", colorHex = "#34A853", createdAt = 1000L, updatedAt = 1000L),
+                )
+            )
+            override suspend fun allShoulders(): List<ShoulderEntity> = emptyList()
+            override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = flowOf(emptyList())
+            override suspend fun getShoulderById(id: Long): ShoulderEntity? = null
+            override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? = null
+            override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
+            override suspend fun insertShoulder(shoulder: ShoulderEntity): Long = 1L
+            override suspend fun updateShoulder(shoulder: ShoulderEntity) = Unit
+            override suspend fun deleteShoulder(shoulder: ShoulderEntity) = Unit
+            override suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?) = Unit
+        }
+
+        val shoulderRepository = ShoulderRepository(fakeShoulderDao)
+        val viewModel = createViewModel(shoulderRepository)
+        advanceUntilIdle()
+
+        val shoulders = viewModel.availableShoulders.value
+        assertEquals(2, shoulders.size)
+        assertEquals("Work", shoulders[0].name)
+        assertEquals("Personal", shoulders[1].name)
+    }
 }
+

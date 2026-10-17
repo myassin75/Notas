@@ -7,22 +7,29 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.Importance
 import three.haddad.smartnotas.data.MonthlyMode
 import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteOptions
 import three.haddad.smartnotas.data.NoteReminder
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceUnit
+import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.data.ShoulderRepository
 import three.haddad.smartnotas.data.getActiveReminders
+import three.haddad.smartnotas.ui.theme.NoteColors
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.Year
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -35,21 +42,48 @@ import javax.inject.Inject
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val noteRepository: NoteRepository,
+    private val shoulderRepository: ShoulderRepository? = null,
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     private val _displayedMonth = MutableStateFlow(YearMonth.now())
     private val _currentWeekStart = MutableStateFlow(LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
+    private val _displayedYear = MutableStateFlow(LocalDate.now().year)
     private val _viewMode = MutableStateFlow(CalendarViewMode.MONTH)
+
+    val availableShoulders: StateFlow<List<ShoulderEntity>> =
+        (shoulderRepository?.getAllShoulders() ?: flowOf(emptyList()))
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList(),
+            )
+
+    private data class CalendarUiParameters(
+        val selectedDate: LocalDate,
+        val displayedMonth: YearMonth,
+        val currentWeekStart: LocalDate,
+        val displayedYear: Int,
+        val viewMode: CalendarViewMode,
+    )
 
     val uiState: StateFlow<CalendarUiState> = combine(
         _selectedDate,
         _displayedMonth,
         _currentWeekStart,
+        _displayedYear,
         _viewMode,
-        noteRepository.observeActive(),
-    ) { selectedDate, displayedMonth, currentWeekStart, viewMode, activeNotes ->
-        buildCalendarUiState(selectedDate, displayedMonth, currentWeekStart, viewMode, activeNotes)
+    ) { selectedDate, displayedMonth, currentWeekStart, displayedYear, viewMode ->
+        CalendarUiParameters(selectedDate, displayedMonth, currentWeekStart, displayedYear, viewMode)
+    }.combine(noteRepository.observeActive()) { params, activeNotes ->
+        buildCalendarUiState(
+            selectedDate = params.selectedDate,
+            displayedMonth = params.displayedMonth,
+            currentWeekStart = params.currentWeekStart,
+            displayedYear = params.displayedYear,
+            viewMode = params.viewMode,
+            activeNotes = activeNotes,
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -59,17 +93,22 @@ class CalendarViewModel @Inject constructor(
     fun onDateSelected(date: LocalDate) {
         _selectedDate.value = date
         _currentWeekStart.value = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        if (date.month != _displayedMonth.value.month) {
+        if (date.month != _displayedMonth.value.month || date.year != _displayedMonth.value.year) {
             _displayedMonth.value = YearMonth.from(date)
         }
+        _displayedYear.value = date.year
     }
 
     fun onPreviousMonth() {
-        _displayedMonth.update { it.minusMonths(1) }
+        val newMonth = _displayedMonth.value.minusMonths(1)
+        _displayedMonth.value = newMonth
+        _displayedYear.value = newMonth.year
     }
 
     fun onNextMonth() {
-        _displayedMonth.update { it.plusMonths(1) }
+        val newMonth = _displayedMonth.value.plusMonths(1)
+        _displayedMonth.value = newMonth
+        _displayedYear.value = newMonth.year
     }
 
     fun onPreviousWeek() {
@@ -88,11 +127,38 @@ class CalendarViewModel @Inject constructor(
         onDateSelected(_selectedDate.value.plusDays(1))
     }
 
+    fun onPreviousYear() {
+        val newYear = _displayedYear.value - 1
+        _displayedYear.value = newYear
+        _displayedMonth.value = YearMonth.of(newYear, _displayedMonth.value.month)
+    }
+
+    fun onNextYear() {
+        val newYear = _displayedYear.value + 1
+        _displayedYear.value = newYear
+        _displayedMonth.value = YearMonth.of(newYear, _displayedMonth.value.month)
+    }
+
+    fun onMonthSelectedInYearView(yearMonth: YearMonth) {
+        _displayedMonth.value = yearMonth
+        _displayedYear.value = yearMonth.year
+        val clampedDay = _selectedDate.value.dayOfMonth.coerceAtMost(yearMonth.lengthOfMonth())
+        _selectedDate.value = yearMonth.atDay(clampedDay)
+        _currentWeekStart.value = _selectedDate.value.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        _viewMode.value = CalendarViewMode.MONTH
+    }
+
+    fun onDateSelectedInYearView(date: LocalDate) {
+        onDateSelected(date)
+        _viewMode.value = CalendarViewMode.DAY
+    }
+
     fun onTodayClicked() {
         val today = LocalDate.now()
         _selectedDate.value = today
         _currentWeekStart.value = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
         _displayedMonth.value = YearMonth.from(today)
+        _displayedYear.value = today.year
     }
 
     fun onViewModeSelected(mode: CalendarViewMode) {
@@ -109,10 +175,71 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    suspend fun createEvent(
+        title: String,
+        date: LocalDate,
+        startTime: LocalTime?,
+        endTime: LocalTime?,
+        isAllDay: Boolean,
+        shoulderId: Long? = null,
+        description: String = "",
+    ): Result<Long> {
+        val trimmedTitle = title.trim()
+        if (trimmedTitle.isBlank()) {
+            return Result.failure(IllegalArgumentException("Title cannot be blank"))
+        }
+
+        val trimmedDescription = description.trim()
+
+        val (reminderEpochMillis, bodyText) = if (isAllDay) {
+            val startOfDayMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val body = if (trimmedDescription.isNotBlank()) {
+                "[All Day]\n$trimmedDescription"
+            } else {
+                "[All Day]"
+            }
+            startOfDayMillis to body
+        } else {
+            val start = startTime ?: LocalTime.of(9, 0)
+            val end = endTime ?: start.plusHours(1)
+
+            if (start == end) {
+                return Result.failure(IllegalArgumentException("Start time and end time cannot be the same"))
+            }
+
+            val startMillis = date.atTime(start).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+            val timeRange = "${start.format(timeFormatter)} – ${end.format(timeFormatter)}"
+            val body = if (trimmedDescription.isNotBlank()) {
+                "$timeRange\n$trimmedDescription"
+            } else {
+                timeRange
+            }
+            startMillis to body
+        }
+
+        return try {
+            val noteId = noteRepository.createNote(
+                title = trimmedTitle,
+                body = bodyText,
+                colorIndex = 0,
+                options = NoteOptions(
+                    reminderAt = reminderEpochMillis,
+                    shoulderId = shoulderId,
+                ),
+            )
+            Result.success(noteId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
     private fun buildCalendarUiState(
         selectedDate: LocalDate,
         displayedMonth: YearMonth,
         currentWeekStart: LocalDate,
+        displayedYear: Int,
         viewMode: CalendarViewMode,
         activeNotes: List<NoteWithItems>,
     ): CalendarUiState {
@@ -268,10 +395,14 @@ class CalendarViewModel @Inject constructor(
         // 5. Extract daily timeline items for Day View
         val (dayTimelineItems, dayAllDayItems) = extractDayTimelineItems(selectedDate, activeNotes)
 
+        // 6. Build Year View UI Model
+        val yearUiModel = buildYearUiModel(displayedYear, selectedDate, activeNotes)
+
         return CalendarUiState(
             selectedDate = selectedDate,
             displayedMonth = displayedMonth,
             currentWeekStart = currentWeekStart,
+            displayedYear = displayedYear,
             weekRangeTitle = weekRangeTitle,
             weekYearLabel = weekYearLabel,
             viewMode = viewMode,
@@ -281,8 +412,94 @@ class CalendarViewModel @Inject constructor(
             selectedDayBirthdays = birthdayModels,
             dayTimelineItems = dayTimelineItems,
             dayAllDayItems = dayAllDayItems,
+            yearUiModel = yearUiModel,
             weekTotalEventsCount = totalWeekEvents,
             isLoading = false,
+        )
+    }
+
+    private fun buildYearUiModel(
+        year: Int,
+        selectedDate: LocalDate,
+        activeNotes: List<NoteWithItems>,
+    ): CalendarYearUiModel {
+        val today = LocalDate.now()
+        val isLeapYear = Year.isLeap(year.toLong())
+        val daysInYear = if (isLeapYear) 366 else 365
+        val yearTitle = year.toString()
+        val yearSubtitle = if (isLeapYear) {
+            "12 months · $daysInYear days (Leap year)"
+        } else {
+            "12 months · $daysInYear days"
+        }
+
+        var totalYearEvents = 0
+        val months = (1..12).map { monthIndex ->
+            val yearMonth = YearMonth.of(year, monthIndex)
+            val monthName = yearMonth.format(DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()))
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+
+            val firstDay = yearMonth.atDay(1)
+            val leadOffset = firstDay.dayOfWeek.value - 1 // 0 for Monday .. 6 for Sunday
+
+            val daysList = mutableListOf<CalendarYearDayUiModel?>()
+            repeat(leadOffset) {
+                daysList.add(null)
+            }
+
+            var monthEventsCount = 0
+            val daysInMonth = yearMonth.lengthOfMonth()
+            for (dayNum in 1..daysInMonth) {
+                val date = yearMonth.atDay(dayNum)
+                val notesOnDate = activeNotes.filter { matchesDate(it, date) && !isBirthday(it) }
+                val hasEvents = notesOnDate.isNotEmpty()
+                if (hasEvents) {
+                    monthEventsCount += notesOnDate.size
+                }
+
+                val isToday = (date == today)
+                val isSelected = (date == selectedDate)
+
+                val dotColor = if (hasEvents) {
+                    val firstNote = notesOnDate.first()
+                    when {
+                        firstNote.note.importance == Importance.HIGH ||
+                            firstNote.note.importance == Importance.CRITICAL -> CalendarDesignTokens.DotOrange
+                        firstNote.note.kind == NoteKind.LIST -> CalendarDesignTokens.DotGreen
+                        firstNote.shoulder?.name?.contains("work", ignoreCase = true) == true -> CalendarDesignTokens.DotBlue
+                        else -> CalendarDesignTokens.DotPurple
+                    }
+                } else null
+
+                daysList.add(
+                    CalendarYearDayUiModel(
+                        date = date,
+                        dayNumber = dayNum,
+                        isToday = isToday,
+                        isSelected = isSelected,
+                        hasEvents = hasEvents,
+                        dotColor = dotColor,
+                    ),
+                )
+            }
+
+            totalYearEvents += monthEventsCount
+
+            CalendarYearMonthUiModel(
+                yearMonth = yearMonth,
+                monthName = monthName,
+                days = daysList,
+                totalEventsCount = monthEventsCount,
+            )
+        }
+
+        return CalendarYearUiModel(
+            year = year,
+            isLeapYear = isLeapYear,
+            yearTitle = yearTitle,
+            yearSubtitle = yearSubtitle,
+            months = months,
+            totalYearEventsCount = totalYearEvents,
         )
     }
 
@@ -298,6 +515,7 @@ class CalendarViewModel @Inject constructor(
         val rawTimedItems = mutableListOf<CalendarTimelineItemUiModel>()
 
         for (noteWithItems in notesOnDate) {
+            val isExplicitAllDay = noteWithItems.note.body.contains("[All Day]", ignoreCase = true)
             val reminders = noteWithItems.note.getActiveReminders()
             val reminderOnDate = reminders.firstOrNull { reminder ->
                 val rDate = Instant.ofEpochMilli(reminder.reminderAt)
@@ -306,7 +524,7 @@ class CalendarViewModel @Inject constructor(
                 rDate == selectedDate || isRecurringMatch(reminder, selectedDate)
             }
 
-            if (reminderOnDate == null && noteWithItems.note.reminderAt == null) {
+            if (isExplicitAllDay || (reminderOnDate == null && noteWithItems.note.reminderAt == null)) {
                 // Unscheduled note or all-day note: do not invent artificial times
                 allDayItems.add(
                     createTimelineItem(
@@ -581,7 +799,13 @@ class CalendarViewModel @Inject constructor(
         val subtitle = if (!shoulder.isNullOrBlank()) {
             "$timeRangeDisplay · $shoulder"
         } else {
-            val firstLine = noteWithItems.note.body.lineSequence().firstOrNull()?.take(30)
+            val firstLine = noteWithItems.note.body.lineSequence()
+                .firstOrNull { line ->
+                    val trimmed = line.trim()
+                    trimmed.isNotBlank() &&
+                        !trimmed.equals("[All Day]", ignoreCase = true) &&
+                        !trimmed.contains("–") && !trimmed.contains("-")
+                }?.take(30)
             if (!firstLine.isNullOrBlank()) "$timeRangeDisplay · $firstLine" else timeRangeDisplay
         }
 
@@ -610,16 +834,16 @@ class CalendarViewModel @Inject constructor(
         val iconName = resolveIconName(noteWithItems)
         val isList = noteWithItems.note.kind == NoteKind.LIST
         val isWork = noteWithItems.shoulder?.name?.contains("work", ignoreCase = true) == true
+        val colorIndex = noteWithItems.note.colorIndex
 
-        val iconBg = when {
-            isList -> CalendarDesignTokens.CategoryGreenBg
-            isWork -> CalendarDesignTokens.CategoryBlueBg
-            else -> CalendarDesignTokens.CategoryPurpleBg
-        }
-        val iconTint = when {
-            isList -> CalendarDesignTokens.CategoryGreenIcon
-            isWork -> CalendarDesignTokens.CategoryBlueIcon
-            else -> CalendarDesignTokens.CategoryPurpleIcon
+        val (iconBg, iconTint) = when {
+            colorIndex > 0 -> {
+                val accent = NoteColors.at(colorIndex)
+                accent.light.copy(alpha = 0.15f) to accent.light
+            }
+            isList -> CalendarDesignTokens.CategoryGreenBg to CalendarDesignTokens.CategoryGreenIcon
+            isWork -> CalendarDesignTokens.CategoryBlueBg to CalendarDesignTokens.CategoryBlueIcon
+            else -> CalendarDesignTokens.CategoryPurpleBg to CalendarDesignTokens.CategoryPurpleIcon
         }
 
         return CalendarEventUiModel(
@@ -707,7 +931,6 @@ class CalendarViewModel @Inject constructor(
                             }
                             calWeekday == mode.weekday
                         }
-                        else -> false
                     }
                 } else false
             }
@@ -717,7 +940,6 @@ class CalendarViewModel @Inject constructor(
                     yearsDiff >= 0 && yearsDiff % interval == 0
                 } else false
             }
-            else -> false
         }
     }
 
@@ -731,6 +953,9 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun formatTimeDisplay(note: NoteWithItems, date: LocalDate): String {
+        if (note.note.body.contains("[All Day]", ignoreCase = true)) {
+            return "All day"
+        }
         val reminderAt = note.note.reminderAt
         return if (reminderAt != null) {
             val dateTime = Instant.ofEpochMilli(reminderAt).atZone(ZoneId.systemDefault())
@@ -742,12 +967,17 @@ class CalendarViewModel @Inject constructor(
 
     private fun formatEventSubtitle(note: NoteWithItems, timeDisplay: String): String {
         val shoulder = note.shoulder?.name
-        return if (!shoulder.isNullOrBlank()) {
-            "$timeDisplay • $shoulder"
-        } else {
-            val firstLine = note.note.body.lineSequence().firstOrNull()?.take(40)
-            if (!firstLine.isNullOrBlank()) "$timeDisplay • $firstLine" else timeDisplay
+        if (!shoulder.isNullOrBlank()) {
+            return "$timeDisplay • $shoulder"
         }
+        val firstLine = note.note.body.lineSequence()
+            .firstOrNull { line ->
+                val trimmed = line.trim()
+                trimmed.isNotBlank() &&
+                    !trimmed.equals("[All Day]", ignoreCase = true) &&
+                    !trimmed.contains("–") && !trimmed.contains("-")
+            }?.take(40)
+        return if (!firstLine.isNullOrBlank()) "$timeDisplay • $firstLine" else timeDisplay
     }
 
     private fun formatBirthdaySubtitle(note: NoteWithItems): String {
@@ -759,7 +989,15 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun resolveIconName(note: NoteWithItems): String {
-        note.note.iconKey?.let { return it }
+        note.note.iconKey?.let { raw ->
+            val stripped = raw
+                .removePrefix("symbol:")
+                .removePrefix("symbol_filled:")
+                .removePrefix("symbol_outlined:")
+                .removePrefix("emoji:")
+                .removePrefix("drawable:")
+            if (stripped.isNotBlank()) return stripped
+        }
         val titleLower = note.note.title.lowercase(Locale.getDefault())
         return when {
             note.note.kind == NoteKind.LIST -> "checklist"

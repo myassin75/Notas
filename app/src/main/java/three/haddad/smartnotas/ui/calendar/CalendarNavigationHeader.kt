@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -101,7 +102,8 @@ fun CalendarNavigationHeader(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     RememberMaterialRoundedSymbol(
-                        name = "chevron_left",
+                        name = "chevron_right",
+                        modifier = Modifier.graphicsLayer { scaleX = -1f },
                         size = 20.dp,
                         tint = textPrimary,
                     )

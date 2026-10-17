@@ -117,10 +117,13 @@ object Routes {
     const val GOOGLE_TASKS_IMPORT = "googleTasksImport"
     const val HELP = "help"
     const val DEV_OPTIONS = "devOptions"
+    const val EDIT_EVENT = "editEvent"
     const val ARG_ID = "id"
     const val ARG_TYPE = "type"
     const val ARG_PREFILL = "prefill"
     const val ARG_FORCE_EDIT = "forceEdit"
+    const val ARG_REMINDER_AT = "reminderAt"
+    const val ARG_DATE_MILLIS = "dateMillis"
     const val ARG_FOCUS_SECTION = "focusSection"
     const val TYPE_NOTE = "note"
     const val TYPE_LIST = "checklist"
@@ -136,6 +139,7 @@ object Routes {
         type: NoteKind? = null,
         prefill: String = "",
         forceEdit: Boolean = false,
+        reminderAt: Long? = null,
     ): String {
         val t =
             type?.let { kind ->
@@ -147,19 +151,22 @@ object Routes {
             } ?: ""
         val p = if (prefill.isNotEmpty()) "&$ARG_PREFILL=${Uri.encode(prefill)}" else ""
         val f = if (forceEdit) "&$ARG_FORCE_EDIT=true" else ""
-        return "$EDIT_CONTENT?${ARG_ID}=${id ?: -1L}$t$p$f"
+        val r = if (reminderAt != null && reminderAt > 0L) "&$ARG_REMINDER_AT=$reminderAt" else ""
+        return "$EDIT_CONTENT?${ARG_ID}=${id ?: -1L}$t$p$f$r"
     }
 
     fun editNote(
         id: Long?,
         prefill: String = "",
         forceEdit: Boolean = false,
+        reminderAt: Long? = null,
     ): String =
         editContent(
             id = id,
             type = NoteKind.NOTE,
             prefill = prefill,
             forceEdit = forceEdit,
+            reminderAt = reminderAt,
         )
 
     fun editList(
@@ -171,6 +178,14 @@ object Routes {
             type = NoteKind.LIST,
             forceEdit = forceEdit,
         )
+
+    fun editEvent(
+        id: Long? = null,
+        dateMillis: Long? = null,
+    ): String {
+        val d = if (dateMillis != null && dateMillis > 0L) "&$ARG_DATE_MILLIS=$dateMillis" else ""
+        return "$EDIT_EVENT?${ARG_ID}=${id ?: -1L}$d"
+    }
 
     fun noteKindFor(type: String?): NoteKind? =
         when (type) {
@@ -214,6 +229,7 @@ private fun crossFadesWithTab(route: String?): Boolean =
             route.startsWith(Routes.EDIT_CONTENT) ||
                 route.startsWith(Routes.EDIT_NOTE) ||
                 route.startsWith(Routes.EDIT_LIST) ||
+                route.startsWith(Routes.EDIT_EVENT) ||
                 route == Routes.DEV_OPTIONS
         )
 
@@ -774,12 +790,17 @@ fun RememberNavGraph(
                 ) {
                     three.haddad.smartnotas.ui.calendar.CalendarRoute(
                         onOpenNote = { noteId ->
-                            navController.navigate(Routes.editNote(noteId)) {
+                            navController.navigate(Routes.editEvent(id = noteId)) {
                                 launchSingleTop = true
                             }
                         },
-                        onCreateEvent = {
-                            navController.navigate(Routes.editNote(null)) {
+                        onCreateEvent = { dateMillis ->
+                            navController.navigate(Routes.editEvent(dateMillis = dateMillis)) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onOpenEditorWithPrefill = { reminderMillis ->
+                            navController.navigate(Routes.editNote(null, reminderAt = reminderMillis)) {
                                 launchSingleTop = true
                             }
                         },
@@ -794,7 +815,22 @@ fun RememberNavGraph(
                     fadeInSpec = navFadeInSpec,
                     fadeOutSpec = navFadeOutSpec,
                 ) {
-                    three.haddad.smartnotas.ui.search.SearchRoute()
+                    three.haddad.smartnotas.ui.search.SearchRoute(
+                        onOpenNote = { noteWithItems ->
+                            when (noteWithItems.note.kind) {
+                                three.haddad.smartnotas.data.NoteKind.NOTE -> {
+                                    navController.navigate(Routes.editNote(noteWithItems.note.id)) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                                three.haddad.smartnotas.data.NoteKind.LIST -> {
+                                    navController.navigate(Routes.editList(noteWithItems.note.id)) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }
+                        },
+                    )
                 }
 
                 mainTabComposable(
@@ -837,7 +873,7 @@ fun RememberNavGraph(
                 }
 
                 composable(
-                    route = "${Routes.EDIT_CONTENT}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_TYPE}={${Routes.ARG_TYPE}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}",
+                    route = "${Routes.EDIT_CONTENT}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_TYPE}={${Routes.ARG_TYPE}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}&${Routes.ARG_REMINDER_AT}={${Routes.ARG_REMINDER_AT}}",
                     arguments =
                         listOf(
                             navArgument(Routes.ARG_ID) {
@@ -855,6 +891,10 @@ fun RememberNavGraph(
                             navArgument(Routes.ARG_FORCE_EDIT) {
                                 type = NavType.BoolType
                                 defaultValue = false
+                            },
+                            navArgument(Routes.ARG_REMINDER_AT) {
+                                type = NavType.LongType
+                                defaultValue = -1L
                             },
                         ),
                 ) { entry ->
@@ -906,7 +946,7 @@ fun RememberNavGraph(
                 }
 
                 composable(
-                    route = "${Routes.EDIT_NOTE}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}",
+                    route = "${Routes.EDIT_NOTE}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}&${Routes.ARG_REMINDER_AT}={${Routes.ARG_REMINDER_AT}}",
                     arguments =
                         listOf(
                             navArgument(Routes.ARG_ID) {
@@ -920,6 +960,10 @@ fun RememberNavGraph(
                             navArgument(Routes.ARG_FORCE_EDIT) {
                                 type = NavType.BoolType
                                 defaultValue = false
+                            },
+                            navArgument(Routes.ARG_REMINDER_AT) {
+                                type = NavType.LongType
+                                defaultValue = -1L
                             },
                         ),
                 ) { entry ->
@@ -1098,6 +1142,34 @@ fun RememberNavGraph(
                             forceEdit = forceEdit,
                             onBack = leaveEditor,
                             onNavigateUp = leaveEditor,
+                        )
+                    }
+                }
+
+                composable(
+                    route = "${Routes.EDIT_EVENT}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_DATE_MILLIS}={${Routes.ARG_DATE_MILLIS}}",
+                    arguments =
+                        listOf(
+                            navArgument(Routes.ARG_ID) {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            },
+                            navArgument(Routes.ARG_DATE_MILLIS) {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            },
+                        ),
+                ) {
+                    val leaveEditor = {
+                        navController.popBackStack()
+                        Unit
+                    }
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        LocalSharedTransitionScope provides this@SharedTransitionLayout,
+                        LocalNavAnimatedVisibilityScope provides this@composable,
+                    ) {
+                        three.haddad.smartnotas.ui.event.EditEventScreen(
+                            onBack = leaveEditor,
                         )
                     }
                 }

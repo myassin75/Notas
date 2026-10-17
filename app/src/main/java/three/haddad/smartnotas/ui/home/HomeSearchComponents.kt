@@ -54,7 +54,9 @@ import three.haddad.smartnotas.ui.components.NoteCardUiModel
 import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
 import three.haddad.smartnotas.ui.components.SwipeableRememberNoteCard
 import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
+import three.haddad.smartnotas.ui.calendar.CalendarDesignTokens
 import three.haddad.smartnotas.ui.feedback.appClickable
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 
 /**
@@ -87,6 +89,9 @@ internal fun SearchableTopBarTitle(
     onToggleSearch: () -> Unit,
     onCreateNote: () -> Unit = {},
 ) {
+    val isDark = LocalIsDark.current
+    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -111,7 +116,7 @@ internal fun SearchableTopBarTitle(
                 RememberMaterialRoundedSymbol(
                     name = "close",
                     size = 20.dp,
-                    tint = Color(0xFF32313F),
+                    tint = textPrimary,
                     weight = FontWeight.Normal,
                     filled = false,
                 )
@@ -122,7 +127,7 @@ internal fun SearchableTopBarTitle(
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 30.sp,
-                    color = Color(0xFF32313F),
+                    color = textPrimary,
                 ),
             )
             Row(
@@ -140,7 +145,7 @@ internal fun SearchableTopBarTitle(
                     RememberMaterialRoundedSymbol(
                         name = "search",
                         size = 24.dp,
-                        tint = Color(0xFF32313F),
+                        tint = textPrimary,
                         weight = FontWeight.Normal,
                         filled = false,
                     )
