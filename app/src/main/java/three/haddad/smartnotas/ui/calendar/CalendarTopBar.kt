@@ -19,9 +19,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +60,10 @@ fun CalendarTopBar(
 ) {
     val isDark = LocalIsDark.current
     var menuExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentViewMode) {
+        menuExpanded = false
+    }
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
@@ -207,26 +213,8 @@ fun CalendarViewDropdown(
             }
             val contentColor = if (isSelected) CalendarDesignTokens.PrimaryPurple else textPrimary
 
-            Surface(
-                onClick = { onSelectViewMode(mode) },
-                shape = RoundedCornerShape(12.dp),
-                color = itemBg,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RememberMaterialRoundedSymbol(
-                        name = mode.symbolName,
-                        size = 18.dp,
-                        tint = contentColor,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
+            DropdownMenuItem(
+                text = {
                     Text(
                         text = stringResource(mode.labelRes),
                         style = MaterialTheme.typography.bodyMedium.copy(
@@ -234,17 +222,38 @@ fun CalendarViewDropdown(
                             color = contentColor,
                             fontSize = 14.sp,
                         ),
-                        modifier = Modifier.weight(1f),
                     )
-                    if (isSelected) {
+                },
+                leadingIcon = {
+                    RememberMaterialRoundedSymbol(
+                        name = mode.symbolName,
+                        size = 18.dp,
+                        tint = contentColor,
+                    )
+                },
+                trailingIcon = if (isSelected) {
+                    {
                         RememberMaterialRoundedSymbol(
                             name = "check",
                             size = 18.dp,
                             tint = CalendarDesignTokens.PrimaryPurple,
                         )
                     }
-                }
-            }
+                } else null,
+                onClick = {
+                    onDismiss()
+                    onSelectViewMode(mode)
+                },
+                colors = MenuDefaults.itemColors(
+                    textColor = contentColor,
+                    leadingIconColor = contentColor,
+                    trailingIconColor = CalendarDesignTokens.PrimaryPurple,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .background(itemBg, RoundedCornerShape(12.dp)),
+            )
         }
     }
 }

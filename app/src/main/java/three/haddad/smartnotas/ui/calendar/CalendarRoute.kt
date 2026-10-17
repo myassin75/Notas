@@ -24,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,11 +97,13 @@ fun CalendarRoute(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        val scrollState = key(uiState.viewMode) { rememberScrollState() }
+
         // Scrollable calendar content
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
         ) {
             when (uiState.viewMode) {
             CalendarViewMode.DAY -> {
@@ -220,7 +223,24 @@ fun CalendarRoute(
                 )
             }
 
-            else -> {
+            CalendarViewMode.YEAR -> {
+                // ==================== YEAR VIEW ====================
+                CalendarYearView(
+                    displayedYear = uiState.displayedMonth.year,
+                    selectedDate = uiState.selectedDate,
+                    today = uiState.today,
+                    onPreviousYear = viewModel::onPreviousYear,
+                    onNextYear = viewModel::onNextYear,
+                    onToday = viewModel::onTodayClicked,
+                    onMonthSelected = viewModel::onMonthSelected,
+                    onDateSelected = { date ->
+                        viewModel.onDateSelected(date)
+                        viewModel.onViewModeSelected(CalendarViewMode.MONTH)
+                    },
+                )
+            }
+
+            CalendarViewMode.MONTH -> {
                 // ==================== MONTH VIEW ====================
 
                 // 2. Calendar Month Card enclosing navigation header, weekday row, and grid
@@ -411,8 +431,8 @@ fun CalendarRoute(
         }
     }
 
-        // Common: Birthdays Section
-        if (uiState.selectedDayBirthdays.isNotEmpty()) {
+        // Common: Birthdays Section (for Day, Week, and Month views)
+        if (uiState.viewMode != CalendarViewMode.YEAR && uiState.selectedDayBirthdays.isNotEmpty()) {
             Spacer(modifier = Modifier.height(14.dp))
             Text(
                 text = stringResource(R.string.calendar_birthdays),

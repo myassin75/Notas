@@ -992,4 +992,73 @@ class CalendarViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
         assertTrue(viewModel.uiState.value.errorMessage != null)
     }
+
+    @Test
+    fun year_navigation_previous_and_next_updates_displayed_month_year() = runTest {
+        val savedStateHandle = SavedStateHandle().apply {
+            set(CalendarViewModel.KEY_SELECTED_DATE, "2026-10-17")
+            set(CalendarViewModel.KEY_DISPLAYED_MONTH, "2026-10")
+            set(CalendarViewModel.KEY_VIEW_MODE, "YEAR")
+        }
+        val viewModel = createViewModel(savedStateHandle)
+        advanceUntilIdle()
+
+        assertEquals(2026, viewModel.uiState.value.displayedMonth.year)
+        assertEquals(CalendarViewMode.YEAR, viewModel.uiState.value.viewMode)
+
+        // Previous year -> 2025
+        viewModel.onPreviousYear()
+        advanceUntilIdle()
+        assertEquals(2025, viewModel.uiState.value.displayedMonth.year)
+        assertEquals(10, viewModel.uiState.value.displayedMonth.monthValue)
+
+        // Next year -> 2026, then 2027
+        viewModel.onNextYear()
+        viewModel.onNextYear()
+        advanceUntilIdle()
+        assertEquals(2027, viewModel.uiState.value.displayedMonth.year)
+    }
+
+    @Test
+    fun month_selected_from_year_view_switches_mode_to_month_and_updates_displayed_month() = runTest {
+        val savedStateHandle = SavedStateHandle().apply {
+            set(CalendarViewModel.KEY_SELECTED_DATE, "2026-10-17")
+            set(CalendarViewModel.KEY_DISPLAYED_MONTH, "2026-10")
+            set(CalendarViewModel.KEY_VIEW_MODE, "YEAR")
+        }
+        val viewModel = createViewModel(savedStateHandle)
+        advanceUntilIdle()
+
+        // Select November 2026
+        viewModel.onMonthSelected(YearMonth.of(2026, 11))
+        advanceUntilIdle()
+
+        assertEquals(CalendarViewMode.MONTH, viewModel.uiState.value.viewMode)
+        assertEquals(YearMonth.of(2026, 11), viewModel.uiState.value.displayedMonth)
+        assertEquals(LocalDate.of(2026, 11, 17), viewModel.uiState.value.selectedDate)
+    }
+
+    @Test
+    fun month_selected_clamps_day_of_month_if_target_month_is_shorter() = runTest {
+        val savedStateHandle = SavedStateHandle().apply {
+            set(CalendarViewModel.KEY_SELECTED_DATE, "2026-10-31")
+            set(CalendarViewModel.KEY_DISPLAYED_MONTH, "2026-10")
+            set(CalendarViewModel.KEY_VIEW_MODE, "YEAR")
+        }
+        val viewModel = createViewModel(savedStateHandle)
+        advanceUntilIdle()
+
+        // Select November (has 30 days) -> day 31 should clamp to 30
+        viewModel.onMonthSelected(YearMonth.of(2026, 11))
+        advanceUntilIdle()
+
+        assertEquals(LocalDate.of(2026, 11, 30), viewModel.uiState.value.selectedDate)
+
+        // Select February 2026 (non-leap year, has 28 days) -> should clamp to 28
+        viewModel.onMonthSelected(YearMonth.of(2026, 2))
+        advanceUntilIdle()
+
+        assertEquals(LocalDate.of(2026, 2, 28), viewModel.uiState.value.selectedDate)
+    }
 }
+

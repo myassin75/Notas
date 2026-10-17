@@ -144,6 +144,36 @@ class CalendarViewModel @Inject constructor(
         savedStateHandle[KEY_VIEW_MODE] = mode.name
     }
 
+    fun onPreviousYear() {
+        _displayedMonth.update {
+            val prev = it.minusYears(1)
+            savedStateHandle[KEY_DISPLAYED_MONTH] = prev.toString()
+            prev
+        }
+    }
+
+    fun onNextYear() {
+        _displayedMonth.update {
+            val next = it.plusYears(1)
+            savedStateHandle[KEY_DISPLAYED_MONTH] = next.toString()
+            next
+        }
+    }
+
+    fun onMonthSelected(yearMonth: YearMonth) {
+        _displayedMonth.value = yearMonth
+        savedStateHandle[KEY_DISPLAYED_MONTH] = yearMonth.toString()
+        val currentDay = _selectedDate.value.dayOfMonth
+        val maxDay = yearMonth.lengthOfMonth()
+        val targetDay = minOf(currentDay, maxDay)
+        val newDate = yearMonth.atDay(targetDay)
+        _selectedDate.value = newDate
+        savedStateHandle[KEY_SELECTED_DATE] = newDate.toString()
+        _currentWeekStart.value = newDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        _viewMode.value = CalendarViewMode.MONTH
+        savedStateHandle[KEY_VIEW_MODE] = CalendarViewMode.MONTH.name
+    }
+
     fun toggleEventDone(noteId: Long, currentDone: Boolean) {
         viewModelScope.launch {
             if (currentDone) {
