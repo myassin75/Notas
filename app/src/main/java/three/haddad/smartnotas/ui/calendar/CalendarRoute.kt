@@ -231,7 +231,6 @@ fun CalendarRoute(
                     today = uiState.today,
                     onPreviousYear = viewModel::onPreviousYear,
                     onNextYear = viewModel::onNextYear,
-                    onToday = viewModel::onTodayClicked,
                     onMonthSelected = viewModel::onMonthSelected,
                     onDateSelected = { date ->
                         viewModel.onDateSelected(date)

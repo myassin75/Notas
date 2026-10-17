@@ -1,5 +1,13 @@
 package three.haddad.smartnotas.ui.calendar
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,11 +45,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
+import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -50,34 +60,27 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 /**
- * Navigation header for Year View displaying the current year and controls.
+ * Navigation header for Year View with centered year title and stationary previous/next arrows.
  */
 @Composable
 fun YearNavigationHeader(
     year: Int,
-    isCurrentYear: Boolean,
     onPreviousYear: () -> Unit,
     onNextYear: () -> Unit,
-    onToday: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
     val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
 
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = CalendarDesignTokens.ScreenHorizontalPadding,
-                vertical = 6.dp,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .height(48.dp)
+            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
     ) {
-        // Active Year Title
+        // Centered Year Title
         Text(
             text = year.toString(),
             style = MaterialTheme.typography.headlineMedium.copy(
@@ -85,82 +88,57 @@ fun YearNavigationHeader(
                 fontSize = 28.sp,
                 color = textPrimary,
             ),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 48.dp),
         )
 
-        // Navigation controls (< Today >)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        // Previous Year Button (<)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .size(40.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            // Previous Year Button (<)
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center,
+            Surface(
+                onClick = onPreviousYear,
+                shape = CircleShape,
+                color = buttonBg,
+                border = border,
+                modifier = Modifier.size(36.dp),
             ) {
-                Surface(
-                    onClick = onPreviousYear,
-                    shape = CircleShape,
-                    color = buttonBg,
-                    border = border,
-                    modifier = Modifier.size(34.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        RememberMaterialRoundedSymbol(
-                            name = "chevron_right",
-                            modifier = Modifier.graphicsLayer { scaleX = -1f },
-                            size = 18.dp,
-                            tint = textPrimary,
-                        )
-                    }
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        modifier = Modifier.graphicsLayer { scaleX = -1f },
+                        size = 20.dp,
+                        tint = textPrimary,
+                    )
                 }
             }
+        }
 
-            // Today Button (jump back to current year)
-            if (!isCurrentYear) {
-                Surface(
-                    onClick = onToday,
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
-                    modifier = Modifier
-                        .height(34.dp)
-                        .defaultMinSize(minWidth = 52.dp),
-                ) {
-                    Box(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.calendar_today),
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.5.sp,
-                                color = CalendarDesignTokens.PrimaryPurple,
-                            ),
-                        )
-                    }
-                }
-            }
-
-            // Next Year Button (>)
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center,
+        // Next Year Button (>)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .size(40.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Surface(
+                onClick = onNextYear,
+                shape = CircleShape,
+                color = buttonBg,
+                border = border,
+                modifier = Modifier.size(36.dp),
             ) {
-                Surface(
-                    onClick = onNextYear,
-                    shape = CircleShape,
-                    color = buttonBg,
-                    border = border,
-                    modifier = Modifier.size(34.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        RememberMaterialRoundedSymbol(
-                            name = "chevron_right",
-                            size = 18.dp,
-                            tint = textPrimary,
-                        )
-                    }
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        size = 20.dp,
+                        tint = textPrimary,
+                    )
                 }
             }
         }
@@ -172,6 +150,7 @@ fun YearNavigationHeader(
  *
  * - Mobile portrait (<540dp): 2 columns for maximum legibility and comfortable touch targets.
  * - Tablet / wide landscape (>=540dp): 3 columns (or 4 on large tablets >=760dp).
+ * - Animated year transition: Directional horizontal slide and fade when navigating years.
  */
 @Composable
 fun CalendarYearView(
@@ -180,81 +159,188 @@ fun CalendarYearView(
     today: LocalDate,
     onPreviousYear: () -> Unit,
     onNextYear: () -> Unit,
-    onToday: () -> Unit,
     onMonthSelected: (YearMonth) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val months = remember(displayedYear) {
-        (1..12).map { YearMonth.of(displayedYear, it) }
-    }
-    val isCurrentYear = displayedYear == today.year
+    val isDark = LocalIsDark.current
+    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
+    val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
+    val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val reducedMotion = LocalReducedMotion.current
 
-    Column(
+    Box(
         modifier = modifier.fillMaxWidth(),
     ) {
-        // Year Navigation Header
-        YearNavigationHeader(
-            year = displayedYear,
-            isCurrentYear = isCurrentYear,
-            onPreviousYear = onPreviousYear,
-            onNextYear = onNextYear,
-            onToday = onToday,
-        )
+        // 1. Animated Year Content: Centered Year Title and 12-Month Grid animate together
+        AnimatedContent(
+            targetState = displayedYear,
+            transitionSpec = {
+                if (reducedMotion) {
+                    fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                } else {
+                    val direction = if (targetState >= initialState) 1 else -1
+                    val slideDistanceFactor = 0.35f
+                    val enterSpec = tween<Float>(durationMillis = 260, easing = FastOutSlowInEasing)
+                    val enterSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+                    val exitSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+                    val exitSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Responsive Months Grid
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-        ) {
-            val columns = when {
-                maxWidth >= 760.dp -> 4
-                maxWidth >= 540.dp -> 3
-                else -> 2
-            }
-
-            val monthRows = remember(months, columns) {
-                months.chunked(columns)
+                    (slideInHorizontally(
+                        animationSpec = enterSlideSpec,
+                        initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
+                    ) + fadeIn(
+                        animationSpec = enterSpec,
+                    )).togetherWith(
+                        slideOutHorizontally(
+                            animationSpec = exitSlideSpec,
+                            targetOffsetX = { fullWidth -> (-direction * fullWidth * slideDistanceFactor).toInt() },
+                        ) + fadeOut(
+                            animationSpec = exitSpec,
+                        )
+                    )
+                }
+            },
+            label = "YearViewAnimation",
+        ) { targetYear ->
+            val months = remember(targetYear) {
+                (1..12).map { YearMonth.of(targetYear, it) }
             }
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                monthRows.forEach { rowMonths ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        rowMonths.forEach { month ->
-                            YearMonthCard(
-                                month = month,
-                                selectedDate = selectedDate,
-                                today = today,
-                                onMonthClick = onMonthSelected,
-                                onDateClick = onDateSelected,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                            )
-                        }
+                // Centered Year Title Row (animated with the month grid)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .padding(horizontal = 60.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = targetYear.toString(),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
+                            color = textPrimary,
+                        ),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                    )
+                }
 
-                        // Fill trailing slots if row has fewer columns
-                        val missingSlots = columns - rowMonths.size
-                        repeat(missingSlots) {
-                            Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Responsive Months Grid
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+                ) {
+                    val columns = when {
+                        maxWidth >= 760.dp -> 4
+                        maxWidth >= 540.dp -> 3
+                        else -> 2
+                    }
+
+                    val monthRows = remember(months, columns) {
+                        months.chunked(columns)
+                    }
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        monthRows.forEach { rowMonths ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(IntrinsicSize.Min),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                rowMonths.forEach { month ->
+                                    YearMonthCard(
+                                        month = month,
+                                        selectedDate = selectedDate,
+                                        today = today,
+                                        onMonthClick = onMonthSelected,
+                                        onDateClick = onDateSelected,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight(),
+                                    )
+                                }
+
+                                val missingSlots = columns - rowMonths.size
+                                repeat(missingSlots) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+
+        // 2. Stationary Navigation Arrows (< on left, > on right) pinned in place
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // Previous Year Button (<)
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Surface(
+                    onClick = onPreviousYear,
+                    shape = CircleShape,
+                    color = buttonBg,
+                    border = border,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        RememberMaterialRoundedSymbol(
+                            name = "chevron_right",
+                            modifier = Modifier.graphicsLayer { scaleX = -1f },
+                            size = 20.dp,
+                            tint = textPrimary,
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Next Year Button (>)
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Surface(
+                    onClick = onNextYear,
+                    shape = CircleShape,
+                    color = buttonBg,
+                    border = border,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        RememberMaterialRoundedSymbol(
+                            name = "chevron_right",
+                            size = 20.dp,
+                            tint = textPrimary,
+                        )
                     }
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
