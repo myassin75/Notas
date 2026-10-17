@@ -138,47 +138,26 @@ fun SearchScreen(
                     .statusBarsPadding()
                     .padding(start = 20.dp, end = 20.dp, top = 12.dp),
             ) {
-                // Header Row
-                Row(
+                // Header
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color.White,
-                            modifier = Modifier.size(40.dp),
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "search",
-                                    size = 22.dp,
-                                    tint = Color(0xFF272936),
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = stringResource(R.string.main_tab_search),
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 22.sp,
-                                    color = Color(0xFF272936),
-                                ),
-                            )
-                            Text(
-                                text = stringResource(R.string.search_subtitle),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF7C7D8B),
-                                ),
-                            )
-                        }
-                    }
+                    Text(
+                        text = stringResource(R.string.main_tab_search),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 26.sp,
+                            color = Color(0xFF272936),
+                        ),
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.search_subtitle),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            color = Color(0xFF7C7D8B),
+                        ),
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

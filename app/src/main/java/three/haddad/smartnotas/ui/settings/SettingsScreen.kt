@@ -35,13 +35,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -256,6 +259,7 @@ fun SettingsRoute(
     onUpdateCheckStarted: () -> Unit = {},
     selectedSectionKey: SettingsSectionKey? = null,
     showTopActions: Boolean = true,
+    showBackArrow: Boolean = false,
     showSectionHeaders: Boolean = true,
     showAboutHeader: Boolean = true,
     showAboutHeaderTitle: Boolean = true,
@@ -724,39 +728,41 @@ fun SettingsRoute(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                // Left button: Back Arrow button taking user back to Home
-                                Surface(
-                                    shape = CircleShape,
-                                    color = Color.White,
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .clickable { onBack() },
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        RememberMaterialRoundedSymbol(
-                                            name = "arrow_back",
-                                            size = 20.dp,
-                                            tint = SettingsDesignTokens.TextPrimary,
-                                            weight = FontWeight.Normal,
-                                            filled = false,
-                                        )
+                                if (showBackArrow) {
+                                    // Left button: Back Arrow button taking user back to Home
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color.White,
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .clip(CircleShape)
+                                            .clickable { onBack() },
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            RememberMaterialRoundedSymbol(
+                                                name = "arrow_back",
+                                                size = 20.dp,
+                                                tint = SettingsDesignTokens.TextPrimary,
+                                                weight = FontWeight.Normal,
+                                                filled = false,
+                                            )
+                                        }
                                     }
+                                    Spacer(modifier = Modifier.width(12.dp))
                                 }
 
                                 Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 12.dp),
+                                    modifier = Modifier.weight(1f),
                                 ) {
                                     Text(
                                         text = stringResource(R.string.main_tab_settings),
                                         style = MaterialTheme.typography.headlineMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 24.sp,
+                                            fontSize = 26.sp,
                                             color = SettingsDesignTokens.TextPrimary,
                                         ),
                                     )
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = "Make Notas your own",
                                         style = MaterialTheme.typography.bodyMedium.copy(
