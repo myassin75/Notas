@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -53,114 +54,124 @@ fun WeekDaySelectorRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         weekDays.forEach { day ->
-            if (day.isSelected) {
-                // Selected Day: Tall purple pill
-                Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = CalendarDesignTokens.PrimaryPurple,
-                    modifier = Modifier
-                        .width(42.dp)
-                        .height(68.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .clickable { onDateSelected(day.date) },
-                ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 6.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (day.isSelected) {
+                    // Selected Day: Tall purple pill
+                    Surface(
+                        onClick = { onDateSelected(day.date) },
+                        shape = RoundedCornerShape(18.dp),
+                        color = CalendarDesignTokens.PrimaryPurple,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = 42.dp)
+                            .height(68.dp),
                     ) {
-                        Text(
-                            text = day.dayOfWeekLetter,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color.White.copy(alpha = 0.85f),
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp,
-                            ),
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = day.dayNumber.toString(),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                            ),
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        // Indicator dots inside selected pill
-                        if (day.dots.isNotEmpty()) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                day.dots.take(3).forEach {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(4.dp)
-                                            .background(Color.White, shape = CircleShape),
-                                    )
+                        Column(
+                            modifier = Modifier.padding(vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                text = day.dayOfWeekLetter,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp,
+                                ),
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = day.dayNumber.toString(),
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                ),
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            // Indicator dots inside selected pill
+                            if (day.dots.isNotEmpty()) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    day.dots.take(3).forEach {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(4.dp)
+                                                .background(Color.White, shape = CircleShape),
+                                        )
+                                    }
                                 }
+                            } else {
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
-                        } else {
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
-                }
-            } else {
-                // Non-selected Day
-                val dayTextColor = if (day.state == CalendarDayState.OUT_OF_MONTH) textMuted else textPrimary
-                Column(
-                    modifier = Modifier
-                        .width(42.dp)
-                        .height(68.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { onDateSelected(day.date) }
-                        .padding(vertical = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = day.dayOfWeekLetter,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = textSecondary,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                        ),
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = day.dayNumber.toString(),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = dayTextColor,
-                            fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                        ),
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    if (day.dots.isNotEmpty()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                } else {
+                    // Non-selected Day
+                    val dayTextColor = if (day.state == CalendarDayState.OUT_OF_MONTH) textMuted else textPrimary
+                    Surface(
+                        onClick = { onDateSelected(day.date) },
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color.Transparent,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = 42.dp)
+                            .height(68.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
                         ) {
-                            day.dots.take(3).forEach { dot ->
-                                Box(
-                                    modifier = Modifier
-                                        .size(4.dp)
-                                        .background(dot.color, shape = CircleShape),
-                                )
+                            Text(
+                                text = day.dayOfWeekLetter,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = textSecondary,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                ),
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = day.dayNumber.toString(),
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = dayTextColor,
+                                    fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.SemiBold,
+                                    fontSize = 15.sp,
+                                ),
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            if (day.dots.isNotEmpty()) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    day.dots.take(3).forEach { dot ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(4.dp)
+                                                .background(dot.color, shape = CircleShape),
+                                        )
+                                    }
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
-                    } else {
-                        Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
             }
@@ -349,13 +360,11 @@ private fun WeekEventItemCard(
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color = itemBg,
         border = border,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier
@@ -370,10 +379,10 @@ private fun WeekEventItemCard(
                     .background(event.iconBgColor, shape = CalendarDesignTokens.IconBoxShape),
                 contentAlignment = Alignment.Center,
             ) {
-                RememberMaterialRoundedSymbol(
-                    name = event.iconName,
-                    size = 20.dp,
+                CalendarEventIcon(
+                    iconName = event.iconName,
                     tint = event.iconTint,
+                    size = 20.dp,
                 )
             }
 

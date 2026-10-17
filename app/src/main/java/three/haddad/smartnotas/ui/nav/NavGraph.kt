@@ -117,16 +117,16 @@ object Routes {
     const val GOOGLE_TASKS_IMPORT = "googleTasksImport"
     const val HELP = "help"
     const val DEV_OPTIONS = "devOptions"
-    const val EDIT_EVENT = "editEvent"
     const val ARG_ID = "id"
     const val ARG_TYPE = "type"
     const val ARG_PREFILL = "prefill"
     const val ARG_FORCE_EDIT = "forceEdit"
-    const val ARG_REMINDER_AT = "reminderAt"
-    const val ARG_DATE_MILLIS = "dateMillis"
     const val ARG_FOCUS_SECTION = "focusSection"
+    const val ARG_INITIAL_DATE = "initialDate"
+    const val ARG_DATE_MILLIS = "dateMillis"
     const val TYPE_NOTE = "note"
     const val TYPE_LIST = "checklist"
+    const val EDIT_EVENT = "editEvent"
 
     /**
      * Help, optionally opened at the subsection a HELP_FOCUS_* id names. Same shape as FilePipe's
@@ -139,7 +139,7 @@ object Routes {
         type: NoteKind? = null,
         prefill: String = "",
         forceEdit: Boolean = false,
-        reminderAt: Long? = null,
+        initialDateMillis: Long? = null,
     ): String {
         val t =
             type?.let { kind ->
@@ -151,22 +151,22 @@ object Routes {
             } ?: ""
         val p = if (prefill.isNotEmpty()) "&$ARG_PREFILL=${Uri.encode(prefill)}" else ""
         val f = if (forceEdit) "&$ARG_FORCE_EDIT=true" else ""
-        val r = if (reminderAt != null && reminderAt > 0L) "&$ARG_REMINDER_AT=$reminderAt" else ""
-        return "$EDIT_CONTENT?${ARG_ID}=${id ?: -1L}$t$p$f$r"
+        val d = if (initialDateMillis != null && initialDateMillis > 0L) "&$ARG_INITIAL_DATE=$initialDateMillis" else ""
+        return "$EDIT_CONTENT?${ARG_ID}=${id ?: -1L}$t$p$f$d"
     }
 
     fun editNote(
         id: Long?,
         prefill: String = "",
         forceEdit: Boolean = false,
-        reminderAt: Long? = null,
+        initialDateMillis: Long? = null,
     ): String =
         editContent(
             id = id,
             type = NoteKind.NOTE,
             prefill = prefill,
             forceEdit = forceEdit,
-            reminderAt = reminderAt,
+            initialDateMillis = initialDateMillis,
         )
 
     fun editList(
@@ -794,13 +794,11 @@ fun RememberNavGraph(
                                 launchSingleTop = true
                             }
                         },
-                        onCreateEvent = { dateMillis ->
-                            navController.navigate(Routes.editEvent(dateMillis = dateMillis)) {
-                                launchSingleTop = true
-                            }
-                        },
-                        onOpenEditorWithPrefill = { reminderMillis ->
-                            navController.navigate(Routes.editNote(null, reminderAt = reminderMillis)) {
+                        onCreateEvent = { selectedDate ->
+                            val initialMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli()
+                            navController.navigate(Routes.editEvent(dateMillis = initialMillis)) {
                                 launchSingleTop = true
                             }
                         },
@@ -815,22 +813,7 @@ fun RememberNavGraph(
                     fadeInSpec = navFadeInSpec,
                     fadeOutSpec = navFadeOutSpec,
                 ) {
-                    three.haddad.smartnotas.ui.search.SearchRoute(
-                        onOpenNote = { noteWithItems ->
-                            when (noteWithItems.note.kind) {
-                                three.haddad.smartnotas.data.NoteKind.NOTE -> {
-                                    navController.navigate(Routes.editNote(noteWithItems.note.id)) {
-                                        launchSingleTop = true
-                                    }
-                                }
-                                three.haddad.smartnotas.data.NoteKind.LIST -> {
-                                    navController.navigate(Routes.editList(noteWithItems.note.id)) {
-                                        launchSingleTop = true
-                                    }
-                                }
-                            }
-                        },
-                    )
+                    three.haddad.smartnotas.ui.search.SearchRoute()
                 }
 
                 mainTabComposable(
@@ -873,7 +856,7 @@ fun RememberNavGraph(
                 }
 
                 composable(
-                    route = "${Routes.EDIT_CONTENT}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_TYPE}={${Routes.ARG_TYPE}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}&${Routes.ARG_REMINDER_AT}={${Routes.ARG_REMINDER_AT}}",
+                    route = "${Routes.EDIT_CONTENT}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_TYPE}={${Routes.ARG_TYPE}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}&${Routes.ARG_INITIAL_DATE}={${Routes.ARG_INITIAL_DATE}}",
                     arguments =
                         listOf(
                             navArgument(Routes.ARG_ID) {
@@ -892,7 +875,7 @@ fun RememberNavGraph(
                                 type = NavType.BoolType
                                 defaultValue = false
                             },
-                            navArgument(Routes.ARG_REMINDER_AT) {
+                            navArgument(Routes.ARG_INITIAL_DATE) {
                                 type = NavType.LongType
                                 defaultValue = -1L
                             },
@@ -946,7 +929,7 @@ fun RememberNavGraph(
                 }
 
                 composable(
-                    route = "${Routes.EDIT_NOTE}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}&${Routes.ARG_REMINDER_AT}={${Routes.ARG_REMINDER_AT}}",
+                    route = "${Routes.EDIT_NOTE}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_PREFILL}={${Routes.ARG_PREFILL}}&${Routes.ARG_FORCE_EDIT}={${Routes.ARG_FORCE_EDIT}}&${Routes.ARG_INITIAL_DATE}={${Routes.ARG_INITIAL_DATE}}",
                     arguments =
                         listOf(
                             navArgument(Routes.ARG_ID) {
@@ -961,7 +944,7 @@ fun RememberNavGraph(
                                 type = NavType.BoolType
                                 defaultValue = false
                             },
-                            navArgument(Routes.ARG_REMINDER_AT) {
+                            navArgument(Routes.ARG_INITIAL_DATE) {
                                 type = NavType.LongType
                                 defaultValue = -1L
                             },

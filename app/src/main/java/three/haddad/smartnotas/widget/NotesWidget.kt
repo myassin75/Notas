@@ -1030,14 +1030,14 @@ private fun NoteWidgetIcon(
             MaterialSymbolWidgetImage(
                 context = context,
                 name = DEFAULT_LIST_HEADER_SYMBOL,
-                filled = true,
+                filled = false,
                 tint = tint,
             )
         NoteIcon.NotePlaceholder ->
             MaterialSymbolWidgetImage(
                 context = context,
                 name = DEFAULT_NOTE_HEADER_SYMBOL,
-                filled = true,
+                filled = false,
                 tint = tint,
             )
     }

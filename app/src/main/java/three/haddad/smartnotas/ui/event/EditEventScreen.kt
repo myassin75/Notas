@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -1210,17 +1211,28 @@ private fun EventIconAndColorRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        val accent = NoteColors.at(colorIndex)
+        val resolvedColor = if (NoteColors.isNone(colorIndex)) {
+            CalendarDesignTokens.PrimaryPurple
+        } else if (isDark) accent.dark else accent.light
+
+        val boxBg = if (NoteColors.isNone(colorIndex)) {
+            if (isDark) Color(0xFF382942) else CalendarDesignTokens.SoftLavender
+        } else {
+            resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)
+        }
+
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(if (isDark) Color(0xFF382942) else CalendarDesignTokens.SoftLavender),
+                .background(boxBg),
             contentAlignment = Alignment.Center,
         ) {
-            RememberMaterialRoundedSymbol(
-                name = "push_pin",
+            EventSmallIconRenderer(
+                iconKey = iconKey,
+                tint = resolvedColor,
                 size = 20.dp,
-                tint = CalendarDesignTokens.PrimaryPurple,
             )
         }
 
@@ -1238,11 +1250,6 @@ private fun EventIconAndColorRow(
             )
 
             Spacer(modifier = Modifier.height(3.dp))
-
-            val accent = NoteColors.at(colorIndex)
-            val resolvedColor = if (NoteColors.isNone(colorIndex)) {
-                CalendarDesignTokens.PrimaryPurple
-            } else if (isDark) accent.dark else accent.light
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -1337,13 +1344,14 @@ private fun getEventIconDisplayName(iconKey: String?): String {
 private fun EventSmallIconRenderer(
     iconKey: String?,
     tint: Color,
+    size: Dp = 12.dp,
 ) {
     if (iconKey?.startsWith(ICON_EMOJI_PREFIX) == true) {
         val emoji = iconEmojiPayload(iconKey) ?: ""
         Text(
             text = emoji,
-            fontSize = 11.sp,
-            lineHeight = 11.sp,
+            fontSize = (size.value * 0.9f).sp,
+            lineHeight = (size.value * 0.9f).sp,
         )
     } else if (iconKey?.startsWith(ICON_DRAWABLE_PREFIX) == true) {
         val resId = iconDrawableRes(iconKey)
@@ -1352,12 +1360,12 @@ private fun EventSmallIconRenderer(
                 painter = painterResource(resId),
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier.size(size),
             )
         } else {
             RememberMaterialRoundedSymbol(
                 name = "calendar_month",
-                size = 12.dp,
+                size = size,
                 tint = tint,
             )
         }
@@ -1365,7 +1373,7 @@ private fun EventSmallIconRenderer(
         val symbolName = extractSymbolName(iconKey)
         RememberMaterialRoundedSymbol(
             name = symbolName,
-            size = 12.dp,
+            size = size,
             tint = tint,
         )
     }

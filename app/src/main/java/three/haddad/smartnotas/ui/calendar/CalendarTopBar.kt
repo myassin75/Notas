@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
+import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * Top bar for the Calendar screen matching the reference design:
@@ -66,25 +69,27 @@ fun CalendarTopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Left: Squircle Menu Button with View Selector Dropdown
-        Box {
+        // Left: Squircle Menu Button with Menu Icon and View Selector Dropdown
+        Box(
+            modifier = Modifier.size(48.dp),
+            contentAlignment = Alignment.Center,
+        ) {
             Surface(
+                onClick = { menuExpanded = true },
                 shape = CalendarDesignTokens.MenuButtonShape,
                 color = if (isDark) CalendarDesignTokens.CardBgDark else Color.White,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = CalendarDesignTokens.PrimaryPurple.copy(alpha = 0.35f),
+                    color = CalendarDesignTokens.resolveCardBorder(isDark),
                 ),
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CalendarDesignTokens.MenuButtonShape)
-                    .clickable { menuExpanded = true },
+                modifier = Modifier.size(42.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    RememberMaterialRoundedSymbol(
-                        name = "menu",
-                        size = 22.dp,
-                        tint = CalendarDesignTokens.PrimaryPurple,
+                    Icon(
+                        painter = painterResource(R.drawable.ic_menu),
+                        contentDescription = stringResource(R.string.calendar_menu),
+                        tint = textPrimary,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -109,6 +114,8 @@ fun CalendarTopBar(
         ) {
             Text(
                 text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
@@ -118,6 +125,8 @@ fun CalendarTopBar(
             if (subtitle.isNotBlank()) {
                 Text(
                     text = subtitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 13.sp,
                         color = textSecondary,
@@ -126,22 +135,27 @@ fun CalendarTopBar(
             }
         }
 
+        Spacer(modifier = Modifier.width(12.dp))
+
         // Right: Notification Bell Button
-        Surface(
-            shape = CircleShape,
-            color = if (isDark) CalendarDesignTokens.CardBgDark else Color.White,
-            border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark)),
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onNotificationClick),
+        Box(
+            modifier = Modifier.size(48.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                RememberMaterialRoundedSymbol(
-                    name = "notifications",
-                    size = 20.dp,
-                    tint = textPrimary,
-                )
+            Surface(
+                onClick = onNotificationClick,
+                shape = CircleShape,
+                color = if (isDark) CalendarDesignTokens.CardBgDark else Color.White,
+                border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark)),
+                modifier = Modifier.size(42.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "notifications",
+                        size = 20.dp,
+                        tint = textPrimary,
+                    )
+                }
             }
         }
     }
@@ -194,13 +208,12 @@ fun CalendarViewDropdown(
             val contentColor = if (isSelected) CalendarDesignTokens.PrimaryPurple else textPrimary
 
             Surface(
+                onClick = { onSelectViewMode(mode) },
                 shape = RoundedCornerShape(12.dp),
                 color = itemBg,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { onSelectViewMode(mode) },
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
             ) {
                 Row(
                     modifier = Modifier

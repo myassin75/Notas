@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +32,11 @@ import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
+
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 
 /**
  * Calendar navigation header matching the reference design:
@@ -52,10 +59,52 @@ fun CalendarNavigationHeader(
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
     val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
 
+    val annotatedTitle = remember(title, textPrimary, textSecondary) {
+        val trimmed = title.trim()
+        val parts = trimmed.split(" ")
+        if (parts.size >= 2 && parts.last().all { it.isDigit() }) {
+            val mainText = parts.dropLast(1).joinToString(" ")
+            val yearText = parts.last()
+            buildAnnotatedString {
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        fontSize = 18.sp,
+                    )
+                ) {
+                    append(mainText)
+                    append(" ")
+                }
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.Normal,
+                        color = textSecondary,
+                        fontSize = 18.sp,
+                    )
+                ) {
+                    append(yearText)
+                }
+            }
+        } else {
+            buildAnnotatedString {
+                withStyle(
+                    SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        fontSize = 18.sp,
+                    )
+                ) {
+                    append(trimmed)
+                }
+            }
+        }
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -65,16 +114,16 @@ fun CalendarNavigationHeader(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = textPrimary,
-                ),
+                text = annotatedTitle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium,
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 12.sp,
                         color = textSecondary,
@@ -88,37 +137,40 @@ fun CalendarNavigationHeader(
         // Right: Navigation cluster (< Today >)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // Previous Button (<)
-            Surface(
-                shape = CircleShape,
-                color = buttonBg,
-                border = border,
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onPrevious),
+            // Previous Button (<) with 40dp touch target
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    RememberMaterialRoundedSymbol(
-                        name = "chevron_right",
-                        modifier = Modifier.graphicsLayer { scaleX = -1f },
-                        size = 20.dp,
-                        tint = textPrimary,
-                    )
+                Surface(
+                    onClick = onPrevious,
+                    shape = CircleShape,
+                    color = buttonBg,
+                    border = border,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        RememberMaterialRoundedSymbol(
+                            name = "chevron_right",
+                            modifier = Modifier.graphicsLayer { scaleX = -1f },
+                            size = 18.dp,
+                            tint = textPrimary,
+                        )
+                    }
                 }
             }
 
             // Today Pill Button
             if (showTodayButton) {
                 Surface(
+                    onClick = onToday,
                     shape = RoundedCornerShape(12.dp),
                     color = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
                     modifier = Modifier
-                        .height(34.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClick = onToday),
+                        .height(32.dp)
+                        .defaultMinSize(minWidth = 48.dp),
                 ) {
                     Box(
                         modifier = Modifier.padding(horizontal = 12.dp),
@@ -126,9 +178,10 @@ fun CalendarNavigationHeader(
                     ) {
                         Text(
                             text = stringResource(R.string.calendar_today),
+                            maxLines = 1,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
+                                fontSize = 12.5.sp,
                                 color = CalendarDesignTokens.PrimaryPurple,
                             ),
                         )
@@ -136,22 +189,25 @@ fun CalendarNavigationHeader(
                 }
             }
 
-            // Next Button (>)
-            Surface(
-                shape = CircleShape,
-                color = buttonBg,
-                border = border,
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onNext),
+            // Next Button (>) with 40dp touch target
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    RememberMaterialRoundedSymbol(
-                        name = "chevron_right",
-                        size = 20.dp,
-                        tint = textPrimary,
-                    )
+                Surface(
+                    onClick = onNext,
+                    shape = CircleShape,
+                    color = buttonBg,
+                    border = border,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        RememberMaterialRoundedSymbol(
+                            name = "chevron_right",
+                            size = 18.dp,
+                            tint = textPrimary,
+                        )
+                    }
                 }
             }
         }

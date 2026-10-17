@@ -57,8 +57,8 @@ private val FlatLineHeightStyle =
  * have no visual effect; callers can keep passing them without changes. To switch
  * between filled and outlined presentations, pass [filled].
  *
- * @param filled `true` renders from the filled TTF (FILL=1, default), `false` renders
- *   from the outlined TTF (FILL=0). This is the only way to get a visually distinct
+ * @param filled `false` renders from the outlined TTF (FILL=0, default), `true` renders
+ *   from the filled TTF (FILL=1). This is the only way to get a visually distinct
  *   outlined glyph: the `_border` / `_outline` Material name aliases collapse to the
  *   filled shape once FILL is instanced.
  * @param opticalCenterYOffset Downward shift for glyphs that sit high in the em box (Material
@@ -73,7 +73,7 @@ fun RememberMaterialRoundedSymbol(
     contentDescription: String? = null,
     @Suppress("UNUSED_PARAMETER") weight: FontWeight = FontWeight.Medium,
     @Suppress("UNUSED_PARAMETER") grade: Float = 0f,
-    filled: Boolean = true,
+    filled: Boolean = false,
     autoMirror: Boolean = false,
     opticalCenterYOffset: Dp = 0.dp,
 ) {

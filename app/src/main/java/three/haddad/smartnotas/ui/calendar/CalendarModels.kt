@@ -16,7 +16,7 @@ enum class CalendarViewMode(
     val symbolName: String,
 ) {
     DAY(R.string.calendar_view_day, "event"),
-    WEEK(R.string.calendar_view_week, "view_agenda"),
+    WEEK(R.string.calendar_view_week, "calendar_clock"),
     MONTH(R.string.calendar_view_month, "calendar_month"),
     YEAR(R.string.calendar_view_year, "grid_view"),
 }
@@ -47,6 +47,8 @@ data class CalendarDayUiModel(
     val dayNumber: Int,
     val state: CalendarDayState = CalendarDayState.NORMAL,
     val dots: List<CalendarDot> = emptyList(),
+    val isSelected: Boolean = false,
+    val isToday: Boolean = false,
 )
 
 /**
@@ -77,6 +79,7 @@ data class CalendarEventUiModel(
     val iconBgColor: Color = CalendarDesignTokens.CategoryPurpleBg,
     val iconTint: Color = CalendarDesignTokens.CategoryPurpleIcon,
     val isDone: Boolean = false,
+    val isTask: Boolean = false,
 )
 
 /**
@@ -120,57 +123,24 @@ data class CalendarTimelineItemUiModel(
 )
 
 /**
- * UI model representing an individual day cell in a mini month grid within the Year View.
- */
-data class CalendarYearDayUiModel(
-    val date: LocalDate,
-    val dayNumber: Int,
-    val isToday: Boolean = false,
-    val isSelected: Boolean = false,
-    val hasEvents: Boolean = false,
-    val dotColor: Color? = null,
-)
-
-/**
- * UI model representing a month within the Year View (1 of 12).
- */
-data class CalendarYearMonthUiModel(
-    val yearMonth: YearMonth,
-    val monthName: String,
-    val days: List<CalendarYearDayUiModel?>,
-    val totalEventsCount: Int = 0,
-)
-
-/**
- * UI model representing the complete Year View.
- */
-data class CalendarYearUiModel(
-    val year: Int = LocalDate.now().year,
-    val isLeapYear: Boolean = false,
-    val yearTitle: String = "",
-    val yearSubtitle: String = "",
-    val months: List<CalendarYearMonthUiModel> = emptyList(),
-    val totalYearEventsCount: Int = 0,
-)
-
-/**
  * UI state for the Calendar screen.
  */
 data class CalendarUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val displayedMonth: YearMonth = YearMonth.now(),
+    val today: LocalDate = LocalDate.now(),
     val currentWeekStart: LocalDate = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)),
-    val displayedYear: Int = LocalDate.now().year,
     val weekRangeTitle: String = "",
     val weekYearLabel: String = "",
     val viewMode: CalendarViewMode = CalendarViewMode.MONTH,
     val monthDays: List<CalendarDayUiModel> = emptyList(),
     val weekDays: List<CalendarWeekDayUiModel> = emptyList(),
     val selectedDayEvents: List<CalendarEventUiModel> = emptyList(),
+    val selectedDayTasks: List<CalendarEventUiModel> = emptyList(),
     val selectedDayBirthdays: List<CalendarBirthdayUiModel> = emptyList(),
     val dayTimelineItems: List<CalendarTimelineItemUiModel> = emptyList(),
     val dayAllDayItems: List<CalendarTimelineItemUiModel> = emptyList(),
-    val yearUiModel: CalendarYearUiModel = CalendarYearUiModel(),
     val weekTotalEventsCount: Int = 0,
     val isLoading: Boolean = false,
+    val errorMessage: String? = null,
 )

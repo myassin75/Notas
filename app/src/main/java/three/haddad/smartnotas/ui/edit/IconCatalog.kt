@@ -40,7 +40,7 @@ data class IconChoice(
     val symbolName: String?,
     @param:DrawableRes val drawableRes: Int?,
     val label: String? = null,
-    val filled: Boolean = true,
+    val filled: Boolean = false,
 ) {
     init {
         require((symbolName != null) xor (drawableRes != null)) {
@@ -58,7 +58,7 @@ data class IconCategory(
 sealed class NoteIcon {
     data class Symbol(
         val name: String,
-        val filled: Boolean = true,
+        val filled: Boolean = false,
     ) : NoteIcon()
 
     data class Drawable(
@@ -140,7 +140,7 @@ fun isSymbolIconKey(iconKey: String?): Boolean =
 
 fun iconSymbolVariantFilled(iconKey: String?): Boolean? =
     when {
-        iconKey?.startsWith(ICON_SYMBOL_FILLED_PREFIX) == true -> true
+        iconKey?.startsWith(ICON_SYMBOL_FILLED_PREFIX) == true -> false
         iconKey?.startsWith(ICON_SYMBOL_OUTLINED_PREFIX) == true -> false
         else -> null
     }
@@ -173,7 +173,7 @@ fun iconKeyWithSymbolFilled(
 fun resolvedSymbolFilled(iconKey: String?): Boolean? {
     val normalized = normalizeIconKey(iconKey) ?: return null
     val catalogKey = iconSymbolCatalogKey(normalized) ?: return null
-    return iconSymbolVariantFilled(normalized) ?: symbolFilledByKey[catalogKey] ?: true
+    return iconSymbolVariantFilled(normalized) ?: symbolFilledByKey[catalogKey] ?: false
 }
 
 fun iconSymbolName(key: String?): String? {
@@ -212,7 +212,7 @@ fun resolveNoteIcon(
 
     iconSymbolCatalogKey(normalized)?.let { catalogKey ->
         symbolNameByKey[catalogKey]?.let { symbolName ->
-            return NoteIcon.Symbol(symbolName, filled = resolvedSymbolFilled(normalized) ?: true)
+            return NoteIcon.Symbol(symbolName, filled = resolvedSymbolFilled(normalized) ?: false)
         }
     }
 

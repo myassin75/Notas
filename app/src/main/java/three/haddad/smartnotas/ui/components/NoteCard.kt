@@ -559,7 +559,7 @@ private fun MetadataRow(
                         size = 12.dp,
                         tint = chipColor,
                         weight = FontWeight.Bold,
-                        filled = true,
+                        filled = false,
                     )
                     Text(
                         text = model.shoulderName,

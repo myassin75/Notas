@@ -57,9 +57,6 @@ abstract class BaseEditorViewModel(
     /** Only the Edit Note screen passes a prefill; lists leave this blank. */
     protected val prefillBody: String = savedStateHandle[Routes.ARG_PREFILL] ?: ""
 
-    private val prefillReminderAt: Long? =
-        savedStateHandle.get<Long>(Routes.ARG_REMINDER_AT)?.takeIf { it > 0L }
-
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
@@ -82,7 +79,7 @@ abstract class BaseEditorViewModel(
     private val _pinned = MutableStateFlow(false)
     val pinned: StateFlow<Boolean> = _pinned.asStateFlow()
 
-    private val _reminderAt = MutableStateFlow<Long?>(if (noteId == null) prefillReminderAt else null)
+    private val _reminderAt = MutableStateFlow<Long?>(null)
     val reminderAt: StateFlow<Long?> = _reminderAt.asStateFlow()
 
     private val _shoulderId = MutableStateFlow<Long?>(null)
@@ -189,6 +186,12 @@ abstract class BaseEditorViewModel(
     private var importanceEditedLocally = false
 
     init {
+        val initialDateMillis: Long? = savedStateHandle.get<Long>(Routes.ARG_INITIAL_DATE)?.takeIf { it > 0L }
+        if (noteId == null && initialDateMillis != null) {
+            _reminderAt.value = initialDateMillis
+            _reminders.value = listOf(NoteReminder(reminderAt = initialDateMillis, recurrence = null))
+        }
+
         if (noteId == null && defaultNotePrefs != null) {
             // Acquire before launching so a save or attachment cannot persist unseeded defaults.
             check(persistence.tryLock()) { "persistence lock must be unlocked at construction" }

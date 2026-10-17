@@ -227,12 +227,10 @@ fun TimelineEventBlock(
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(10.dp),
         color = item.containerBgColor,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -263,10 +261,10 @@ fun TimelineEventBlock(
                             .background(item.accentColor.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        RememberMaterialRoundedSymbol(
-                            name = item.iconName,
-                            size = 16.dp,
+                        CalendarEventIcon(
+                            iconName = item.iconName,
                             tint = item.accentColor,
+                            size = 16.dp,
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
@@ -337,12 +335,11 @@ fun TimelineTaskMarker(
     val cardBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
 
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = cardBg,
         border = BorderStroke(1.dp, cardBorder),
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick),
+        modifier = modifier,
     ) {
         Row(
             modifier = Modifier
@@ -421,13 +418,12 @@ private fun AllDayItemsSection(
 
         items.forEach { item ->
             Surface(
+                onClick = { onItemClick(item.id) },
                 shape = RoundedCornerShape(8.dp),
                 color = item.containerBgColor,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 3.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onItemClick(item.id) },
+                    .padding(vertical = 3.dp),
             ) {
                 Row(
                     modifier = Modifier

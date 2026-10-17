@@ -171,7 +171,7 @@ internal fun GroupHeader(
             ) {
                 RememberMaterialRoundedSymbol(
                     name = badgeSymbolName,
-                    filled = true,
+                    filled = false,
                     size = badgeIconSize,
                     tint = MaterialTheme.colorScheme.primary,
                     weight = FontWeight.Medium,

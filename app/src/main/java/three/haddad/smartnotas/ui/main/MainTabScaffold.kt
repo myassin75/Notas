@@ -181,7 +181,7 @@ fun MainTabScaffold(
                                         RememberMaterialRoundedSymbol(
                                             name = tabItem.symbolName,
                                             weight = FontWeight.Medium,
-                                            filled = selected
+                                            filled = false,
                                         )
                                     }
                                 },

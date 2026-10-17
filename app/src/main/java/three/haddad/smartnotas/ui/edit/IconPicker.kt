@@ -1103,10 +1103,10 @@ private fun IconPickerSymbolStyle.toggled(): IconPickerSymbolStyle =
     }
 
 private fun initialIconPickerSymbolStyle(iconKey: String): IconPickerSymbolStyle =
-    if (resolvedSymbolFilled(iconKey) == false) {
-        IconPickerSymbolStyle.OUTLINED
-    } else {
+    if (resolvedSymbolFilled(iconKey) == true) {
         IconPickerSymbolStyle.FILLED
+    } else {
+        IconPickerSymbolStyle.OUTLINED
     }
 
 private fun IconChoice.withSymbolStyle(symbolStyle: IconPickerSymbolStyle): IconChoice =
@@ -1127,13 +1127,13 @@ private fun iconChoiceMatchesSelection(
     val choiceCatalogKey = iconSymbolCatalogKey(choice.key) ?: return false
     val selectionCatalogKey = iconSymbolCatalogKey(selectionKey) ?: return false
     return choiceCatalogKey == selectionCatalogKey &&
-        choice.filled == (resolvedSymbolFilled(selectionKey) ?: true)
+        choice.filled == (resolvedSymbolFilled(selectionKey) ?: false)
 }
 
 private fun normalizeFavoriteIconKey(iconKey: String): String {
     val normalized = normalizeIconKey(iconKey) ?: iconKey
     return if (isSymbolIconKey(normalized)) {
-        iconKeyWithSymbolFilled(normalized, resolvedSymbolFilled(normalized) ?: true)
+        iconKeyWithSymbolFilled(normalized, resolvedSymbolFilled(normalized) ?: false)
     } else {
         normalized
     }

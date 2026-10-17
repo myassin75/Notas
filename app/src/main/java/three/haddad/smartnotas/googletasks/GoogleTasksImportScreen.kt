@@ -1954,7 +1954,7 @@ private fun SourceIdentityCard(state: GoogleTasksImportUiState) {
                 size = 22.dp,
                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
                 weight = FontWeight.Medium,
-                filled = true,
+                filled = false,
             )
         }
     }
