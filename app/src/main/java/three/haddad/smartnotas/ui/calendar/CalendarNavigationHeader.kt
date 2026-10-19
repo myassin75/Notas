@@ -1,10 +1,13 @@
 package three.haddad.smartnotas.ui.calendar
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -201,8 +204,14 @@ fun CalendarNavigationHeader(
             }
         }
 
-        // Right: Today Pill Button
-        if (showTodayButton) {
+        // Right: Today Pill Button (animated appearance/disappearance)
+        AnimatedVisibility(
+            visible = showTodayButton,
+            enter = fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) +
+                expandHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing)),
+            exit = fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing)) +
+                shrinkHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing)),
+        ) {
             Surface(
                 onClick = onToday,
                 shape = RoundedCornerShape(12.dp),

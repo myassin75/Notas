@@ -49,6 +49,7 @@ import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -138,6 +139,8 @@ fun CalendarRoute(
                 when (currentViewMode) {
                     CalendarViewMode.DAY -> {
                         // ==================== DAY VIEW ====================
+                        val reducedMotion = LocalReducedMotion.current
+                        val isDayViewOnToday = uiState.selectedDate == uiState.today
                         Column(modifier = Modifier.fillMaxWidth()) {
                             // 2. Day Navigation Header (< Today >) inside rounded card
                             Surface(
@@ -152,6 +155,7 @@ fun CalendarRoute(
                                 CalendarNavigationHeader(
                                     title = dayHeaderTitle,
                                     subtitle = dayHeaderSubtitle,
+                                    showTodayButton = !isDayViewOnToday,
                                     onPrevious = viewModel::onPreviousDay,
                                     onToday = viewModel::onTodayClicked,
                                     onNext = viewModel::onNextDay,
@@ -162,7 +166,7 @@ fun CalendarRoute(
                             Spacer(modifier = Modifier.height(20.dp))
 
                             // 3. Day Agenda Section Header
-                            val isTodaySelected = uiState.selectedDate == uiState.today
+                            val isTodaySelected = isDayViewOnToday
                             val dayAgendaTitle =
                                 if (isTodaySelected) {
                                     stringResource(R.string.calendar_todays_agenda)
@@ -186,14 +190,44 @@ fun CalendarRoute(
 
                             Spacer(modifier = Modifier.height(6.dp))
 
-                            // 4. Daily Timeline Card
-                            DayTimelineCard(
-                                timelineItems = uiState.dayTimelineItems,
-                                allDayItems = uiState.dayAllDayItems,
-                                selectedDate = uiState.selectedDate,
-                                onOpenItemDetails = onOpenItemDetails,
-                                onToggleDone = viewModel::toggleEventDone,
-                            )
+                            // 4. Daily Timeline Card with directional day transition animation
+                            AnimatedContent(
+                                targetState = uiState.selectedDate,
+                                transitionSpec = {
+                                    if (reducedMotion) {
+                                        fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                                    } else {
+                                        val direction = if (targetState.isAfter(initialState)) 1 else -1
+                                        val slideDistanceFactor = 0.35f
+                                        val enterSpec = tween<Float>(durationMillis = 260, easing = FastOutSlowInEasing)
+                                        val enterSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+                                        val exitSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+                                        val exitSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+
+                                        (
+                                            slideInHorizontally(
+                                                animationSpec = enterSlideSpec,
+                                                initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
+                                            ) + fadeIn(animationSpec = enterSpec)
+                                        ).togetherWith(
+                                            slideOutHorizontally(
+                                                animationSpec = exitSlideSpec,
+                                                targetOffsetX = { fullWidth -> (-direction * fullWidth * slideDistanceFactor).toInt() },
+                                            ) + fadeOut(animationSpec = exitSpec)
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.clipToBounds(),
+                                label = "DayTimelineCardAnimation",
+                            ) { targetDate ->
+                                DayTimelineCard(
+                                    timelineItems = uiState.dayTimelineItems,
+                                    allDayItems = uiState.dayAllDayItems,
+                                    selectedDate = targetDate,
+                                    onOpenItemDetails = onOpenItemDetails,
+                                    onToggleDone = viewModel::toggleEventDone,
+                                )
+                            }
                         }
                     }
 
@@ -223,9 +257,11 @@ fun CalendarRoute(
                                         .fillMaxWidth()
                                         .padding(horizontal = 6.dp, vertical = 12.dp),
                             ) {
+                                val isWeekViewOnToday = uiState.weekDays.any { it.isToday && it.isSelected }
                                 CalendarNavigationHeader(
                                     title = uiState.weekRangeTitle,
                                     subtitle = uiState.weekYearLabel,
+                                    showTodayButton = !isWeekViewOnToday,
                                     onPrevious = viewModel::onPreviousWeek,
                                     onToday = viewModel::onTodayClicked,
                                     onNext = viewModel::onNextWeek,
@@ -365,9 +401,11 @@ fun CalendarRoute(
                                     .fillMaxWidth()
                                     .padding(vertical = 12.dp, horizontal = 4.dp),
                         ) {
-                            // Month Navigation Header inside the card (< Today >)
+                            val isMonthViewOnToday =
+                                uiState.displayedMonth == YearMonth.from(uiState.today) && uiState.selectedDate == uiState.today
                             CalendarNavigationHeader(
                                 title = monthTitle,
+                                showTodayButton = !isMonthViewOnToday,
                                 onPrevious = viewModel::onPreviousMonth,
                                 onToday = viewModel::onTodayClicked,
                                 onNext = viewModel::onNextMonth,
