@@ -153,7 +153,7 @@ class CalendarViewModelTest {
                 defaultDispatcher = testDispatcher,
             )
 
-        val viewModel = CalendarViewModel(repository, savedStateHandle)
+        val viewModel = CalendarViewModel(repository, savedStateHandle, testDispatcher)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
         }
@@ -1230,7 +1230,7 @@ class CalendarViewModelTest {
                     defaultDispatcher = testDispatcher,
                 )
 
-            val viewModel = CalendarViewModel(repository)
+            val viewModel = CalendarViewModel(repository, SavedStateHandle(), testDispatcher)
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
                 viewModel.uiState.collect {}
             }

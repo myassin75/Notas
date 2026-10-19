@@ -106,6 +106,7 @@ data class NoteReminder(
     val reminderAt: Long,
     val recurrence: RecurrenceRule? = null,
     val originalReminderAt: Long? = null,
+    val endAt: Long? = null,
 )
 
 const val MAX_REMINDERS_PER_NOTE = 3
@@ -139,6 +140,10 @@ data class NoteEntity(
     val createdAt: Long,
     val updatedAt: Long,
     val reminderAt: Long? = null,
+    /** Independent event end timestamp in epoch milliseconds. */
+    val endAt: Long? = null,
+    /** True if this is an all-day event. */
+    val isAllDay: Boolean = false,
     val importance: Importance = Importance.DEFAULT,
     val visibility: Visibility = Visibility.DEFAULT,
     val pictureUri: String? = null,
@@ -196,7 +201,7 @@ fun NoteEntity.getActiveReminders(): List<NoteReminder> {
     if (reminders.isNotEmpty()) return reminders.limitedToReminderSlots()
     val primaryAt = reminderAt
     return if (primaryAt != null) {
-        listOf(NoteReminder(primaryAt, recurrence)).limitedToReminderSlots()
+        listOf(NoteReminder(primaryAt, recurrence, endAt = endAt)).limitedToReminderSlots()
     } else {
         emptyList()
     }
@@ -206,8 +211,9 @@ fun NoteEntity.withSyncedPrimaryReminder(): NoteEntity {
     val active = getActiveReminders()
     val soonest = active.minByOrNull { it.reminderAt }
     return this.copy(
-        reminderAt = soonest?.reminderAt,
-        recurrence = soonest?.recurrence,
+        reminderAt = soonest?.reminderAt ?: this.reminderAt,
+        endAt = soonest?.endAt ?: this.endAt,
+        recurrence = soonest?.recurrence ?: this.recurrence,
         reminders = active,
     )
 }

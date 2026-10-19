@@ -1163,6 +1163,38 @@ fun RememberNavGraph(
                                 defaultValue = -1L
                             },
                         ),
+                    enterTransition = {
+                        if (reducedMotion) {
+                            EnterTransition.None
+                        } else {
+                            slideInHorizontally(animationSpec = navSpatialSpec) { it } +
+                                fadeIn(animationSpec = navFadeInSpec)
+                        }
+                    },
+                    exitTransition = {
+                        if (reducedMotion) {
+                            ExitTransition.None
+                        } else {
+                            slideOutHorizontally(animationSpec = navSpatialSpec) { it } +
+                                fadeOut(animationSpec = navFadeOutSpec)
+                        }
+                    },
+                    popEnterTransition = {
+                        if (reducedMotion) {
+                            EnterTransition.None
+                        } else {
+                            slideInHorizontally(animationSpec = navSpatialSpec) { -it } +
+                                fadeIn(animationSpec = navFadeInSpec)
+                        }
+                    },
+                    popExitTransition = {
+                        if (reducedMotion) {
+                            ExitTransition.None
+                        } else {
+                            slideOutHorizontally(animationSpec = navSpatialSpec) { -it } +
+                                fadeOut(animationSpec = navFadeOutSpec)
+                        }
+                    },
                 ) {
                     three.haddad.smartnotas.ui.calendar.details.CalendarDetailsRoute(
                         onBack = { navController.popBackStack() },

@@ -125,11 +125,31 @@ fun WeekDaySelectorRow(
                     }
                 } else {
                     // Non-selected Day
-                    val dayTextColor = if (day.state == CalendarDayState.OUT_OF_MONTH) textMuted else textPrimary
+                    val isTodayNonSelected = day.isToday
+                    val dayTextColor =
+                        when {
+                            isTodayNonSelected -> CalendarDesignTokens.PrimaryPurple
+                            day.state == CalendarDayState.OUT_OF_MONTH -> textMuted
+                            else -> textPrimary
+                        }
+                    val nonSelectedBg =
+                        if (isTodayNonSelected) {
+                            if (isDark) CalendarDesignTokens.DarkPurpleSelected.copy(alpha = 0.35f) else CalendarDesignTokens.SoftLavender.copy(alpha = 0.6f)
+                        } else {
+                            Color.Transparent
+                        }
+                    val nonSelectedBorder =
+                        if (isTodayNonSelected) {
+                            BorderStroke(1.5.dp, CalendarDesignTokens.PrimaryPurple)
+                        } else {
+                            null
+                        }
+
                     Surface(
                         onClick = { onDateSelected(day.date) },
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.Transparent,
+                        color = nonSelectedBg,
+                        border = nonSelectedBorder,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -145,8 +165,8 @@ fun WeekDaySelectorRow(
                                 text = day.dayOfWeekLetter,
                                 style =
                                     MaterialTheme.typography.labelSmall.copy(
-                                        color = textSecondary,
-                                        fontWeight = FontWeight.Medium,
+                                        color = if (isTodayNonSelected) CalendarDesignTokens.PrimaryPurple else textSecondary,
+                                        fontWeight = if (isTodayNonSelected) FontWeight.Bold else FontWeight.Medium,
                                         fontSize = 12.sp,
                                     ),
                                 textAlign = TextAlign.Center,

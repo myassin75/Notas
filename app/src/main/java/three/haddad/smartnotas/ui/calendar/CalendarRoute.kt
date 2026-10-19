@@ -1,5 +1,10 @@
 package three.haddad.smartnotas.ui.calendar
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +33,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,16 +65,27 @@ fun CalendarRoute(
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         }
 
-    val dayTitle =
-        remember(uiState.selectedDate) {
-            val formatter = DateTimeFormatter.ofPattern("MMMM d", Locale.getDefault())
-            uiState.selectedDate.format(formatter)
+    val isTodaySelected = uiState.selectedDate == uiState.today
+
+    val dayHeaderTitle =
+        if (isTodaySelected) {
+            stringResource(R.string.calendar_today)
+        } else {
+            remember(uiState.selectedDate) {
+                val formatter = DateTimeFormatter.ofPattern("MMMM d", Locale.getDefault())
+                uiState.selectedDate.format(formatter)
+            }
         }
 
-    val daySubtitle =
-        remember(uiState.selectedDate) {
-            val formatter = DateTimeFormatter.ofPattern("EEEE · yyyy", Locale.getDefault())
-            uiState.selectedDate.format(formatter)
+    val dayHeaderSubtitle =
+        remember(uiState.selectedDate, isTodaySelected) {
+            if (isTodaySelected) {
+                val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+                uiState.selectedDate.format(formatter)
+            } else {
+                val formatter = DateTimeFormatter.ofPattern("EEEE · yyyy", Locale.getDefault())
+                uiState.selectedDate.format(formatter)
+            }
         }
 
     val dayAgendaDatePrefix =
@@ -114,128 +131,137 @@ fun CalendarRoute(
                     .fillMaxSize()
                     .verticalScroll(scrollState),
         ) {
-            when (uiState.viewMode) {
-                CalendarViewMode.DAY -> {
-                    // ==================== DAY VIEW ====================
+            AnimatedContent(
+                targetState = uiState.viewMode,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(140))
+                },
+                label = "CalendarViewTransition",
+            ) { currentViewMode ->
+                when (currentViewMode) {
+                    CalendarViewMode.DAY -> {
+                        // ==================== DAY VIEW ====================
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            // 2. Day Navigation Header (< Today >) inside rounded card
+                            Surface(
+                                shape = CalendarDesignTokens.CardShape,
+                                color = cardBg,
+                                border = BorderStroke(1.dp, cardBorder),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+                            ) {
+                                CalendarNavigationHeader(
+                                    title = dayHeaderTitle,
+                                    subtitle = dayHeaderSubtitle,
+                                    onPrevious = viewModel::onPreviousDay,
+                                    onToday = viewModel::onTodayClicked,
+                                    onNext = viewModel::onNextDay,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+                                )
+                            }
 
-                    // 2. Day Navigation Header (< Today >) inside rounded card
-                    Surface(
-                        shape = CalendarDesignTokens.CardShape,
-                        color = cardBg,
-                        border = BorderStroke(1.dp, cardBorder),
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-                    ) {
-                        CalendarNavigationHeader(
-                            title = dayTitle,
-                            subtitle = daySubtitle,
-                            onPrevious = viewModel::onPreviousDay,
-                            onToday = viewModel::onTodayClicked,
-                            onNext = viewModel::onNextDay,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
-                        )
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // 3. Day Agenda Section Header
+                            val isTodaySelected = uiState.selectedDate == uiState.today
+                            val dayAgendaTitle =
+                                if (isTodaySelected) {
+                                    stringResource(R.string.calendar_todays_agenda)
+                                } else {
+                                    stringResource(R.string.calendar_date_agenda, dayAgendaDatePrefix)
+                                }
+
+                            val totalDayItems = uiState.dayTimelineItems.size + uiState.dayAllDayItems.size
+                            val dayAgendaSubtitle =
+                                when {
+                                    totalDayItems == 1 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_event_count_single)
+                                    totalDayItems > 1 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_events_count, totalDayItems)
+                                    else -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_no_events_or_tasks)
+                                }
+
+                            AgendaSectionHeader(
+                                title = dayAgendaTitle,
+                                subtitle = dayAgendaSubtitle,
+                                onNewEventClick = { onCreateEvent(uiState.selectedDate) },
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // 4. Daily Timeline Card
+                            DayTimelineCard(
+                                timelineItems = uiState.dayTimelineItems,
+                                allDayItems = uiState.dayAllDayItems,
+                                selectedDate = uiState.selectedDate,
+                                onOpenItemDetails = onOpenItemDetails,
+                                onToggleDone = viewModel::toggleEventDone,
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // 3. Day Agenda Section Header
-                    val isTodaySelected = uiState.selectedDate == uiState.today
-                    val dayAgendaTitle =
-                        if (isTodaySelected) {
-                            stringResource(R.string.calendar_todays_agenda)
-                        } else {
-                            stringResource(R.string.calendar_date_agenda, dayAgendaDatePrefix)
-                        }
-
-                    val totalDayItems = uiState.dayTimelineItems.size + uiState.dayAllDayItems.size
-                    val dayAgendaSubtitle =
-                        when {
-                            totalDayItems == 1 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_event_count_single)
-                            totalDayItems > 1 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_events_count, totalDayItems)
-                            else -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_no_events_or_tasks)
-                        }
-
-                    AgendaSectionHeader(
-                        title = dayAgendaTitle,
-                        subtitle = dayAgendaSubtitle,
-                        onNewEventClick = { onCreateEvent(uiState.selectedDate) },
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // 4. Daily Timeline Card
-                    DayTimelineCard(
-                        timelineItems = uiState.dayTimelineItems,
-                        allDayItems = uiState.dayAllDayItems,
-                        selectedDate = uiState.selectedDate,
-                        onOpenItemDetails = onOpenItemDetails,
-                        onToggleDone = viewModel::toggleEventDone,
-                    )
-                }
 
                 CalendarViewMode.WEEK -> {
                     // ==================== WEEK VIEW ====================
-
-                    // 2. Week Navigation Header (< Today >) inside week view card
-                    Surface(
-                        shape = CalendarDesignTokens.CardShape,
-                        color = cardBg,
-                        border = BorderStroke(1.dp, cardBorder),
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-                    ) {
-                        Column(
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // 2. Week Navigation Header (< Today >) inside week view card
+                        Surface(
+                            shape = CalendarDesignTokens.CardShape,
+                            color = cardBg,
+                            border = BorderStroke(1.dp, cardBorder),
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 6.dp, vertical = 12.dp),
+                                    .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
                         ) {
-                            CalendarNavigationHeader(
-                                title = uiState.weekRangeTitle,
-                                subtitle = uiState.weekYearLabel,
-                                onPrevious = viewModel::onPreviousWeek,
-                                onToday = viewModel::onTodayClicked,
-                                onNext = viewModel::onNextWeek,
-                            )
+                            Column(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 6.dp, vertical = 12.dp),
+                            ) {
+                                CalendarNavigationHeader(
+                                    title = uiState.weekRangeTitle,
+                                    subtitle = uiState.weekYearLabel,
+                                    onPrevious = viewModel::onPreviousWeek,
+                                    onToday = viewModel::onTodayClicked,
+                                    onNext = viewModel::onNextWeek,
+                                )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
 
-                            // 7-day compact selector row with tall selected pill
-                            WeekDaySelectorRow(
-                                weekDays = uiState.weekDays,
-                                onDateSelected = viewModel::onDateSelected,
-                            )
+                                // 7-day compact selector row with tall selected pill
+                                WeekDaySelectorRow(
+                                    weekDays = uiState.weekDays,
+                                    onDateSelected = viewModel::onDateSelected,
+                                )
+                            }
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // 3. "This week's agenda" section header
+                        val weekAgendaSubtitle =
+                            if (uiState.weekTotalEventsCount == 1) {
+                                "${uiState.weekRangeTitle} • " + stringResource(R.string.calendar_event_count_single)
+                            } else {
+                                "${uiState.weekRangeTitle} • " + stringResource(R.string.calendar_events_count, uiState.weekTotalEventsCount)
+                            }
+
+                        AgendaSectionHeader(
+                            title = stringResource(R.string.calendar_weeks_agenda),
+                            subtitle = weekAgendaSubtitle,
+                            onNewEventClick = { onCreateEvent(uiState.selectedDate) },
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // 4. Week Agenda Card grouped by day
+                        WeekAgendaCard(
+                            weekDays = uiState.weekDays,
+                            onDateSelected = viewModel::onDateSelected,
+                            onOpenItemDetails = onOpenItemDetails,
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // 3. "This week's agenda" section header
-                    val weekAgendaSubtitle =
-                        if (uiState.weekTotalEventsCount == 1) {
-                            "${uiState.weekRangeTitle} • " + stringResource(R.string.calendar_event_count_single)
-                        } else {
-                            "${uiState.weekRangeTitle} • " + stringResource(R.string.calendar_events_count, uiState.weekTotalEventsCount)
-                        }
-
-                    AgendaSectionHeader(
-                        title = stringResource(R.string.calendar_weeks_agenda),
-                        subtitle = weekAgendaSubtitle,
-                        onNewEventClick = { onCreateEvent(uiState.selectedDate) },
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // 4. Week Agenda Card grouped by day
-                    WeekAgendaCard(
-                        weekDays = uiState.weekDays,
-                        onDateSelected = viewModel::onDateSelected,
-                        onOpenItemDetails = onOpenItemDetails,
-                    )
                 }
 
                 CalendarViewMode.YEAR -> {
@@ -256,9 +282,9 @@ fun CalendarRoute(
 
                 CalendarViewMode.MONTH -> {
                     // ==================== MONTH VIEW ====================
-
-                    // 2. Calendar Month Card enclosing navigation header, weekday row, and grid
-                    Surface(
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // 2. Calendar Month Card enclosing navigation header, weekday row, and grid
+                        Surface(
                         shape = CalendarDesignTokens.CardShape,
                         color = cardBg,
                         border = BorderStroke(1.dp, cardBorder),
@@ -406,80 +432,68 @@ fun CalendarRoute(
 
                         Spacer(modifier = Modifier.height(6.dp))
                         if (uiState.selectedDayEvents.isNotEmpty()) {
-                            if (uiState.selectedDayTasks.isNotEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.calendar_events),
-                                    style =
-                                        MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = CalendarDesignTokens.resolveTextSecondary(isDark),
-                                        ),
-                                    modifier =
-                                        Modifier.padding(
-                                            horizontal = CalendarDesignTokens.ScreenHorizontalPadding,
-                                            vertical = 4.dp,
-                                        ),
-                                )
-                            }
+                            AgendaCategoryHeader(
+                                title = stringResource(R.string.calendar_events),
+                                iconName = "calendar_month",
+                                count = uiState.selectedDayEvents.size,
+                                iconTint = CalendarDesignTokens.PrimaryPurple,
+                            )
                             uiState.selectedDayEvents.forEach { event ->
-                                AgendaEventCard(
-                                    event = event,
-                                    onClick = { onOpenItemDetails(event.id, false) },
-                                )
+                                key(event.id) {
+                                    AgendaEventCard(
+                                        event = event,
+                                        onClick = { onOpenItemDetails(event.id, false) },
+                                    )
+                                }
                             }
                         }
 
                         if (uiState.selectedDayTasks.isNotEmpty()) {
                             if (uiState.selectedDayEvents.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
                             }
-                            Text(
-                                text = stringResource(R.string.calendar_tasks),
-                                style =
-                                    MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = CalendarDesignTokens.resolveTextSecondary(isDark),
-                                    ),
-                                modifier =
-                                    Modifier.padding(
-                                        horizontal = CalendarDesignTokens.ScreenHorizontalPadding,
-                                        vertical = 4.dp,
-                                    ),
+                            AgendaCategoryHeader(
+                                title = stringResource(R.string.calendar_tasks),
+                                iconName = "task_alt",
+                                count = uiState.selectedDayTasks.size,
+                                iconTint = CalendarDesignTokens.CategoryGreenIcon,
+                                badgeBgColor = if (isDark) Color(0xFF1B3828) else CalendarDesignTokens.CategoryGreenBg,
+                                badgeTextColor = if (isDark) Color(0xFF81C784) else CalendarDesignTokens.CategoryGreenIcon,
                             )
                             uiState.selectedDayTasks.forEach { task ->
-                                AgendaEventCard(
-                                    event = task,
-                                    onClick = { onOpenItemDetails(task.id, true) },
-                                    onToggleDone = viewModel::toggleEventDone,
-                                )
+                                key(task.id) {
+                                    AgendaEventCard(
+                                        event = task,
+                                        onClick = { onOpenItemDetails(task.id, true) },
+                                        onToggleDone = viewModel::toggleEventDone,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+            }
+        }
 
             // Common: Birthdays Section (for Day, Week, and Month views)
             if (uiState.viewMode != CalendarViewMode.YEAR && uiState.selectedDayBirthdays.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(14.dp))
-                Text(
-                    text = stringResource(R.string.calendar_birthdays),
-                    style =
-                        MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            color = CalendarDesignTokens.resolveTextSecondary(isDark),
-                        ),
-                    modifier =
-                        Modifier.padding(
-                            horizontal = CalendarDesignTokens.ScreenHorizontalPadding,
-                            vertical = 4.dp,
-                        ),
+                AgendaCategoryHeader(
+                    title = stringResource(R.string.calendar_birthdays),
+                    iconName = "cake",
+                    count = uiState.selectedDayBirthdays.size,
+                    iconTint = CalendarDesignTokens.BirthdayIconTint,
+                    badgeBgColor = if (isDark) Color(0xFF3E1C28) else CalendarDesignTokens.BirthdayBoxBg,
+                    badgeTextColor = if (isDark) Color(0xFFF48FB1) else CalendarDesignTokens.BirthdayIconTint,
                 )
                 uiState.selectedDayBirthdays.forEach { birthday ->
-                    BirthdayCard(
-                        birthday = birthday,
-                        onClick = { onOpenItemDetails(birthday.id, false) },
-                    )
+                    key(birthday.id) {
+                        BirthdayCard(
+                            birthday = birthday,
+                            onClick = { onOpenItemDetails(birthday.id, false) },
+                        )
+                    }
                 }
             }
 

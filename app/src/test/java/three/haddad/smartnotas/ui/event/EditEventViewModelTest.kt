@@ -258,10 +258,11 @@ class EditEventViewModelTest {
             assertEquals(1, insertedNotes.size)
             val note = insertedNotes.first()
             assertEquals("Team Standup", note.title)
-            assertTrue(note.body.contains("10:00 AM – 10:30 AM"))
-            assertTrue(note.body.contains("Discuss Q4 goals"))
+            assertEquals("Discuss Q4 goals", note.body)
             assertEquals(NoteKind.NOTE, note.kind)
             assertNotNull(note.reminderAt)
+            assertNotNull(note.endAt)
+            assertFalse(note.isAllDay)
         }
 
     @Test
@@ -286,8 +287,8 @@ class EditEventViewModelTest {
             assertTrue(result.isSuccess)
             val note = insertedNotes.first()
             assertEquals("Annual Conference", note.title)
-            assertTrue(note.body.startsWith("[All Day]"))
-            assertTrue(note.body.contains("Bring badges"))
+            assertEquals("Bring badges", note.body)
+            assertTrue(note.isAllDay)
         }
 
     @Test
@@ -419,8 +420,68 @@ class EditEventViewModelTest {
             assertEquals(99L, result.getOrNull())
             val updated = insertedNotes.first { it.id == 99L }
             assertEquals("Updated Title", updated.title)
-            assertTrue(updated.body.contains("New notes content"))
+            assertEquals("New notes content", updated.body)
             assertEquals(Importance.CRITICAL, updated.importance)
+        }
+
+    @Test
+    fun testIndependentEndAtAndBodyIntegrity() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val handle = SavedStateHandle()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
+
+            val userDescription = "Project sync with team:\n- Review roadmap\n- Discuss blockers"
+            viewModel.setTitle("Sprint Review")
+            viewModel.setNotes(userDescription)
+            viewModel.setStartTime(LocalTime.of(14, 0))
+            viewModel.setEndTime(LocalTime.of(15, 30))
+
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
+
+            assertTrue(result.isSuccess)
+            val note = insertedNotes.first()
+
+            val initialEndAt = note.endAt!!
+
+            // Verify body is strictly the user description, without any time text appended
+            assertEquals(userDescription, note.body)
+            assertNotNull(note.reminderAt)
+            assertNotNull(note.endAt)
+            assertTrue(note.endAt!! > note.reminderAt!!)
+
+            // Reload via new ViewModel in edit mode
+            val editHandle = SavedStateHandle(mapOf(Routes.ARG_ID to note.id))
+            val editViewModel =
+                EditEventViewModel(
+                    savedStateHandle = editHandle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
+
+            // Verify restored values
+            assertEquals("Sprint Review", editViewModel.title.value)
+            assertEquals(userDescription, editViewModel.notes.value)
+            assertEquals(LocalTime.of(14, 0), editViewModel.startTime.value)
+            assertEquals(LocalTime.of(15, 30), editViewModel.endTime.value)
+            assertFalse(editViewModel.isAllDay.value)
+
+            // Update only end time
+            editViewModel.setEndTime(LocalTime.of(16, 0))
+            val editResult = editViewModel.saveEvent()
+            advanceUntilIdle()
+
+            assertTrue(editResult.isSuccess)
+            val updatedNote = insertedNotes.first { it.id == note.id }
+            assertEquals(userDescription, updatedNote.body)
+            assertEquals("Sprint Review", updatedNote.title)
+            assertTrue(updatedNote.endAt!! > initialEndAt)
         }
 
     @Test

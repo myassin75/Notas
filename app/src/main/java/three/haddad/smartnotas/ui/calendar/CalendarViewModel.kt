@@ -5,11 +5,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import three.haddad.smartnotas.di.DefaultDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,14 +39,23 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 
+private val MonthDayFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+private val DayOnlyFormatter = DateTimeFormatter.ofPattern("d", Locale.getDefault())
+private val EEEFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+private val FullDateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
+private val Time12HourMinuteFormatter = DateTimeFormatter.ofPattern("h:mm", Locale.getDefault())
+private val Time12HourMinuteAmPmFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+private val AmPmFormatter = DateTimeFormatter.ofPattern("a", Locale.getDefault())
+
 @HiltViewModel
 class CalendarViewModel
     @Inject
     constructor(
         private val noteRepository: NoteRepository,
         private val savedStateHandle: SavedStateHandle,
+        @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
     ) : ViewModel() {
-        constructor(noteRepository: NoteRepository) : this(noteRepository, SavedStateHandle())
+        constructor(noteRepository: NoteRepository) : this(noteRepository, SavedStateHandle(), Dispatchers.Default)
 
         companion object {
             const val KEY_SELECTED_DATE = "calendar_selected_date"
@@ -89,7 +102,8 @@ class CalendarViewModel
                 },
             ) { selectedDate, displayedMonth, currentWeekStart, viewMode, activeNotes ->
                 buildCalendarUiState(selectedDate, displayedMonth, currentWeekStart, viewMode, activeNotes, _errorMessage.value)
-            }.stateIn(
+            }.flowOn(defaultDispatcher)
+            .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = CalendarUiState(today = LocalDate.now()),
@@ -228,8 +242,8 @@ class CalendarViewModel
                 gridDates.map { date ->
                     val notesOnDate = activeNotes.filter { matchesDate(it, date) }
                     val isSelected = date == selectedDate
-                    val isToday = date == today
                     val isOutOfMonth = YearMonth.from(date) != displayedMonth
+                    val isToday = (date == today) && !isOutOfMonth
 
                     val state =
                         when {
@@ -270,13 +284,9 @@ class CalendarViewModel
 
             val weekRangeTitle =
                 if (weekStart.month == weekEnd.month) {
-                    val startPattern = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-                    val endPattern = DateTimeFormatter.ofPattern("d", Locale.getDefault())
-                    "${weekStart.format(startPattern)} – ${weekEnd.format(endPattern)}"
+                    "${weekStart.format(MonthDayFormatter)} – ${weekEnd.format(DayOnlyFormatter)}"
                 } else {
-                    val startPattern = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-                    val endPattern = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-                    "${weekStart.format(startPattern)} – ${weekEnd.format(endPattern)}"
+                    "${weekStart.format(MonthDayFormatter)} – ${weekEnd.format(MonthDayFormatter)}"
                 }
 
             val weekYearLabel =
@@ -323,8 +333,8 @@ class CalendarViewModel
                             DayOfWeek.SUNDAY -> "S"
                         }
 
-                    val dayShortName = date.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault()))
-                    val fullDateLabel = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault()))
+                    val dayShortName = date.format(EEEFormatter)
+                    val fullDateLabel = date.format(FullDateFormatter)
                     val isSelected = date == selectedDate
                     val isToday = date == today
                     val isOutOfMonth = YearMonth.from(date) != displayedMonth
@@ -364,34 +374,32 @@ class CalendarViewModel
                 }
 
             val agendaEvents =
-                eventNotes.map { noteWithItems ->
-                    mapToEventUiModel(noteWithItems, selectedDate, isTask = false)
-                }
+                eventNotes
+                    .sortedBy { it.note.reminderAt ?: it.note.createdAt }
+                    .map { noteWithItems ->
+                        mapToEventUiModel(noteWithItems, selectedDate, isTask = false)
+                    }
 
             val agendaTasks =
-                taskNotes.map { noteWithItems ->
-                    mapToEventUiModel(noteWithItems, selectedDate, isTask = true)
-                }
+                taskNotes
+                    .sortedBy { it.note.reminderAt ?: it.note.createdAt }
+                    .map { noteWithItems ->
+                        mapToEventUiModel(noteWithItems, selectedDate, isTask = true)
+                    }
 
-            // 4. Extract birthdays
-            val allBirthdays = activeNotes.filter { isBirthday(it) }
-            val effectiveBirthdays =
-                if (birthdayNotesOnDate.isNotEmpty()) {
-                    birthdayNotesOnDate
-                } else {
-                    allBirthdays.take(2)
-                }
-
+            // 4. Extract genuine birthdays for this date without fabricating records
             val birthdayModels =
-                effectiveBirthdays.map { noteWithItems ->
-                    val subtitle = formatBirthdaySubtitle(noteWithItems)
-                    CalendarBirthdayUiModel(
-                        id = noteWithItems.note.id,
-                        name = noteWithItems.note.title.ifBlank { "Birthday" },
-                        subtitle = subtitle,
-                        iconName = "cake",
-                    )
-                }
+                birthdayNotesOnDate
+                    .sortedBy { it.note.reminderAt ?: it.note.createdAt }
+                    .map { noteWithItems ->
+                        val subtitle = formatBirthdaySubtitle(noteWithItems)
+                        CalendarBirthdayUiModel(
+                            id = noteWithItems.note.id,
+                            name = noteWithItems.note.title.ifBlank { "Birthday" },
+                            subtitle = subtitle,
+                            iconName = "cake",
+                        )
+                    }
 
             // 5. Extract daily timeline items for Day View
             val (dayTimelineItems, dayAllDayItems) = extractDayTimelineItems(selectedDate, activeNotes)
@@ -441,8 +449,8 @@ class CalendarViewModel
                         rDate == selectedDate || isRecurringMatch(reminder, selectedDate)
                     }
 
-                if (reminderOnDate == null && noteWithItems.note.reminderAt == null) {
-                    // Unscheduled note or all-day note: do not invent artificial times
+                val isAllDay = noteWithItems.note.isAllDay || (reminderOnDate == null && noteWithItems.note.reminderAt == null)
+                if (isAllDay) {
                     allDayItems.add(
                         createTimelineItem(
                             noteWithItems = noteWithItems,
@@ -476,7 +484,14 @@ class CalendarViewModel
                         ),
                     )
                 } else {
-                    val durationMinutes = parseDurationMinutes(noteWithItems) ?: 30
+                    val durationMinutes =
+                        if (noteWithItems.note.endAt != null && noteWithItems.note.endAt > epochMillis) {
+                            val diffMillis = noteWithItems.note.endAt - epochMillis
+                            val mins = (diffMillis / (60 * 1000L)).toInt()
+                            mins.coerceIn(15, 1440)
+                        } else {
+                            parseDurationMinutes(noteWithItems) ?: 30
+                        }
                     val rawEndMinute = startMinute + durationMinutes
                     val (clampedEnd, isCrossStart) =
                         if (rawEndMinute > 1440) {
@@ -507,6 +522,24 @@ class CalendarViewModel
 
             for (noteWithItems in yesterdayNotes) {
                 if (noteWithItems.note.kind == NoteKind.LIST) continue
+                if (noteWithItems.note.endAt != null) {
+                    val endInstant = Instant.ofEpochMilli(noteWithItems.note.endAt).atZone(ZoneId.systemDefault())
+                    val endDate = endInstant.toLocalDate()
+                    if (endDate >= selectedDate) {
+                        val carryOver = if (endDate > selectedDate) 1440 else (endInstant.hour * 60 + endInstant.minute).coerceIn(1, 1440)
+                        rawTimedItems.add(
+                            createTimelineItem(
+                                noteWithItems = noteWithItems,
+                                type = TimelineItemType.EVENT,
+                                startMinute = 0,
+                                endMinute = carryOver,
+                                selectedDate = selectedDate,
+                                isCrossMidnightEnd = true,
+                            ),
+                        )
+                        continue
+                    }
+                }
                 val reminders = noteWithItems.note.getActiveReminders()
                 val reminderYesterday =
                     reminders.firstOrNull { reminder ->
@@ -720,28 +753,28 @@ class CalendarViewModel
                         val hour = startMinute / 60
                         val min = startMinute % 60
                         val localTime = LocalTime.of(hour, min)
-                        localTime.format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
+                        localTime.format(Time12HourMinuteAmPmFormatter)
                     }
                     TimelineItemType.EVENT -> {
                         val startH = startMinute / 60
                         val startM = startMinute % 60
                         val startTime = LocalTime.of(startH, startM)
-                        val startStr = startTime.format(DateTimeFormatter.ofPattern("h:mm", Locale.getDefault()))
+                        val startStr = startTime.format(Time12HourMinuteFormatter)
 
                         if (isCrossMidnightStart) {
-                            val ampm = startTime.format(DateTimeFormatter.ofPattern("a", Locale.getDefault()))
+                            val ampm = startTime.format(AmPmFormatter)
                             "$startStr $ampm – 12:00 AM (+1)"
                         } else if (isCrossMidnightEnd) {
                             val endH = endMinute / 60
                             val endM = endMinute % 60
                             val endTime = LocalTime.of(endH, endM)
-                            val endStr = endTime.format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
+                            val endStr = endTime.format(Time12HourMinuteAmPmFormatter)
                             "12:00 AM – $endStr"
                         } else {
                             val endH = endMinute / 60
                             val endM = endMinute % 60
                             val endTime = LocalTime.of(endH, endM)
-                            val endStr = endTime.format(DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()))
+                            val endStr = endTime.format(Time12HourMinuteAmPmFormatter)
                             "$startStr–$endStr"
                         }
                     }
@@ -837,6 +870,21 @@ class CalendarViewModel
             note: NoteWithItems,
             date: LocalDate,
         ): Boolean {
+            if (note.note.endAt != null) {
+                val startMillis = note.note.reminderAt ?: note.note.createdAt
+                val startDate =
+                    Instant
+                        .ofEpochMilli(startMillis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                val endDate =
+                    Instant
+                        .ofEpochMilli(note.note.endAt)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                if (!date.isBefore(startDate) && !date.isAfter(endDate)) return true
+            }
+
             val reminders = note.note.getActiveReminders()
             if (reminders.isNotEmpty()) {
                 for (reminder in reminders) {
@@ -949,10 +997,11 @@ class CalendarViewModel
             note: NoteWithItems,
             date: LocalDate,
         ): String {
+            if (note.note.isAllDay) return "All day"
             val reminderAt = note.note.reminderAt
             return if (reminderAt != null) {
                 val dateTime = Instant.ofEpochMilli(reminderAt).atZone(ZoneId.systemDefault())
-                dateTime.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+                dateTime.format(Time12HourMinuteAmPmFormatter)
             } else {
                 "All day"
             }

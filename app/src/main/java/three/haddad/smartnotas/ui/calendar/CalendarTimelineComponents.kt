@@ -25,7 +25,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.delay
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
@@ -175,6 +184,13 @@ fun DayTimelineCard(
                             .fillMaxWidth()
                             .height(HourHeight * 24),
                 ) {
+                    // Live Current-Time indicator line (rendered behind event cards)
+                    LiveCurrentTimeLine(
+                        selectedDate = selectedDate,
+                        hourHeight = HourHeight,
+                        timeColumnWidth = TimeColumnWidth,
+                    )
+
                     val availableWidth = maxWidth - TimeColumnWidth - 12.dp
 
                     timelineItems.forEach { item ->
@@ -220,6 +236,87 @@ fun DayTimelineCard(
                 }
             }
         }
+    }
+}
+
+/**
+ * Live horizontal current-time indicator line across the Day timeline:
+ * - Visible ONLY when viewing today.
+ * - Shows a small 8.dp circle dot indicator at the beginning of the timeline grid.
+ * - Draws a thin 1.8.dp clearly visible horizontal line across the timeline.
+ * - Positioned by the current time according to the timeline scale (hourHeight / 60 per minute).
+ * - Lifecycle-aware: updates on app resume (ON_RESUME) and recalculates when day changes.
+ * - Efficient minute-based delay ticker isolated to this composable (zero parent recomposition).
+ * - Layered behind event blocks so titles and descriptions are never obscured.
+ */
+@Composable
+fun LiveCurrentTimeLine(
+    selectedDate: LocalDate,
+    hourHeight: Dp = HourHeight,
+    timeColumnWidth: Dp = TimeColumnWidth,
+    modifier: Modifier = Modifier,
+) {
+    var todayDate by remember { mutableStateOf(LocalDate.now()) }
+    var currentTime by remember { mutableStateOf(LocalTime.now()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    todayDate = LocalDate.now()
+                    currentTime = LocalTime.now()
+                }
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(lifecycleOwner, selectedDate) {
+        while (true) {
+            val now = LocalTime.now()
+            val nowDate = LocalDate.now()
+            todayDate = nowDate
+            currentTime = now
+            val millisUntilNextMinute =
+                ((60 - now.second) * 1000L - (now.nano / 1_000_000L)).coerceIn(1000L, 60_000L)
+            delay(millisUntilNextMinute)
+        }
+    }
+
+    if (selectedDate != todayDate) return
+
+    val currentMinuteOfDay = currentTime.hour * 60 + currentTime.minute
+    val lineTopOffset = hourHeight * (currentMinuteOfDay / 60f)
+
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .offset(y = lineTopOffset - 4.dp)
+                .height(8.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        // Horizontal line starting at timeColumnWidth and spanning across to the right edge
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = timeColumnWidth, end = 12.dp)
+                    .height(1.8.dp)
+                    .background(CalendarDesignTokens.PrimaryPurple, shape = RoundedCornerShape(1.dp)),
+        )
+
+        // Small indicator circle at the beginning of the line
+        Box(
+            modifier =
+                Modifier
+                    .padding(start = timeColumnWidth)
+                    .size(8.dp)
+                    .background(CalendarDesignTokens.PrimaryPurple, shape = CircleShape),
+        )
     }
 }
 

@@ -1,6 +1,8 @@
 package three.haddad.smartnotas.data
 
+import android.content.ContentValues
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -11,6 +13,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.Instant
+import java.time.LocalTime
+import java.time.ZoneId
+import java.util.Locale
 
 class Converters {
     private val json =
@@ -73,7 +79,7 @@ class Converters {
         NoteFtsEntity::class,
         ShoulderEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -90,7 +96,7 @@ abstract class RememberDatabase : RoomDatabase() {
         fun build(context: Context): RememberDatabase =
             Room
                 .databaseBuilder(context, RememberDatabase::class.java, "remember.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .fallbackToDestructiveMigration(false)
                 .build()
 
@@ -273,6 +279,77 @@ abstract class RememberDatabase : RoomDatabase() {
                         SELECT rowid, title, body, checklistText, attachmentText, actionsText FROM notes
                         """.trimIndent(),
                     )
+                }
+            }
+
+        internal val MIGRATION_6_7 =
+            object : Migration(6, 7) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE `notes` ADD COLUMN `endAt` INTEGER DEFAULT NULL")
+                    db.execSQL("ALTER TABLE `notes` ADD COLUMN `isAllDay` INTEGER NOT NULL DEFAULT 0")
+
+                    // Backward-compatible migration of legacy events with time range in body
+                    db.query("SELECT id, reminderAt, body FROM notes WHERE reminderAt IS NOT NULL").use { cursor ->
+                        val idCol = cursor.getColumnIndex("id")
+                        val reminderCol = cursor.getColumnIndex("reminderAt")
+                        val bodyCol = cursor.getColumnIndex("body")
+                        val rangeRegex =
+                            Regex(
+                                """^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?""",
+                                RegexOption.IGNORE_CASE,
+                            )
+
+                        while (cursor.moveToNext()) {
+                            val id = cursor.getLong(idCol)
+                            val reminderAt = cursor.getLong(reminderCol)
+                            val body = cursor.getString(bodyCol) ?: ""
+                            val trimmed = body.trim()
+
+                            if (trimmed.contains("[All Day]", ignoreCase = true)) {
+                                val cleaned = trimmed.replace("[All Day]", "").trim()
+                                val cv =
+                                    ContentValues().apply {
+                                        put("isAllDay", 1)
+                                        put("body", cleaned)
+                                    }
+                                db.update("notes", SQLiteDatabase.CONFLICT_REPLACE, cv, "id = ?", arrayOf(id))
+                            } else {
+                                val firstLine = trimmed.lines().firstOrNull()?.trim().orEmpty()
+                                val match = rangeRegex.find(firstLine)
+                                if (match != null) {
+                                    val (h1Str, m1Str, ampm1, h2Str, m2Str, ampm2) = match.destructured
+                                    var h1 = h1Str.toIntOrNull() ?: 9
+                                    val m1 = m1Str.toIntOrNull() ?: 0
+                                    var h2 = h2Str.toIntOrNull() ?: 10
+                                    val m2 = m2Str.toIntOrNull() ?: 0
+
+                                    val p2 = ampm2.lowercase(Locale.getDefault())
+                                    val p1 = if (ampm1.isNotBlank()) ampm1.lowercase(Locale.getDefault()) else p2
+
+                                    if (p1 == "pm" && h1 < 12) h1 += 12
+                                    if (p1 == "am" && h1 == 12) h1 = 0
+                                    if (p2 == "pm" && h2 < 12) h2 += 12
+                                    if (p2 == "am" && h2 == 12) h2 = 0
+
+                                    val startDate =
+                                        Instant
+                                            .ofEpochMilli(reminderAt)
+                                            .atZone(ZoneId.systemDefault())
+                                            .toLocalDate()
+                                    val endDateTime = startDate.atTime(LocalTime.of(h2.coerceIn(0, 23), m2.coerceIn(0, 59)))
+                                    val endMillis = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+                                    val remainingBody = trimmed.lines().drop(1).joinToString("\n").trim()
+                                    val cv =
+                                        ContentValues().apply {
+                                            put("endAt", endMillis)
+                                            put("body", remainingBody)
+                                        }
+                                    db.update("notes", SQLiteDatabase.CONFLICT_REPLACE, cv, "id = ?", arrayOf(id))
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

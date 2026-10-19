@@ -14,6 +14,8 @@ import java.util.Locale
 
 data class NoteOptions(
     val reminderAt: Long? = null,
+    val endAt: Long? = null,
+    val isAllDay: Boolean = false,
     val importance: Importance = Importance.DEFAULT,
     val visibility: Visibility = Visibility.DEFAULT,
     val pictureUri: String? = null,

@@ -22,8 +22,9 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
         note.completedAt?.let { put("completedAt", it) }
         note.pinnedAt?.let { put("pinnedAt", it) }
         put("createdAt", note.createdAt)
-        put("updatedAt", note.updatedAt)
         note.reminderAt?.let { put("reminderAt", it) }
+        note.endAt?.let { put("endAt", it) }
+        put("isAllDay", note.isAllDay)
         put("importance", note.importance.name)
         put("visibility", note.visibility.name)
         note.pictureUri?.let { put("pictureUri", it) }
@@ -100,6 +101,9 @@ internal fun encodeReminderForBackup(reminder: NoteReminder): JSONObject {
         reminder.originalReminderAt?.let { originalReminderAt ->
             put("originalReminderAt", originalReminderAt)
         }
+        reminder.endAt?.let { endAt ->
+            put("endAt", endAt)
+        }
     }
 }
 
@@ -120,6 +124,8 @@ internal fun decodeNoteEntity(o: JSONObject): NoteEntity {
         createdAt = o.optLong("createdAt"),
         updatedAt = o.optLong("updatedAt"),
         reminderAt = o.optLongOrNull("reminderAt"),
+        endAt = o.optLongOrNull("endAt"),
+        isAllDay = o.optBoolean("isAllDay", false),
         importance =
             runCatching { Importance.valueOf(o.optString("importance", Importance.DEFAULT.name)) }
                 .getOrDefault(Importance.DEFAULT),
@@ -151,10 +157,17 @@ internal fun decodeReminderFromBackup(reminderJson: JSONObject): NoteReminder? {
         } else {
             null
         }
+    val endAt =
+        if (reminderJson.has("endAt") && !reminderJson.isNull("endAt")) {
+            reminderJson.getLong("endAt")
+        } else {
+            null
+        }
     return NoteReminder(
         reminderAt = reminderAt,
         recurrence = recurrence,
         originalReminderAt = originalReminderAt,
+        endAt = endAt,
     )
 }
 

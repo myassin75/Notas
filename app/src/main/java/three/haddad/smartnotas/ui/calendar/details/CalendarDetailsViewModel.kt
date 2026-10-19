@@ -20,6 +20,7 @@ import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
 import three.haddad.smartnotas.data.getActiveReminders
+import three.haddad.smartnotas.ui.event.EditEventViewModel
 import three.haddad.smartnotas.ui.nav.Routes
 import three.haddad.smartnotas.ui.theme.NoteColors
 import java.time.DayOfWeek
@@ -152,7 +153,36 @@ class CalendarDetailsViewModel @Inject constructor(
             note.body.lineSequence().firstOrNull()?.take(40) ?: "Untitled"
         }
 
-        val (isAllDay, startTime, endTime, parsedDescription) = parseEventBody(note.body, note.reminderAt, isTask)
+        val (isAllDay, startTime, endTime, parsedDescription) =
+            if (isTask) {
+                ParsedBodyResult(
+                    isAllDay = false,
+                    startTime = null,
+                    endTime = null,
+                    description = note.body.trim(),
+                )
+            } else if (note.endAt != null || note.isAllDay) {
+                val start =
+                    if (!note.isAllDay && note.reminderAt != null && note.reminderAt > 0L) {
+                        Instant.ofEpochMilli(note.reminderAt).atZone(ZoneId.systemDefault()).toLocalTime()
+                    } else {
+                        null
+                    }
+                val end =
+                    if (!note.isAllDay && note.endAt != null && note.endAt > 0L) {
+                        Instant.ofEpochMilli(note.endAt).atZone(ZoneId.systemDefault()).toLocalTime()
+                    } else {
+                        null
+                    }
+                ParsedBodyResult(
+                    isAllDay = note.isAllDay,
+                    startTime = start,
+                    endTime = end,
+                    description = EditEventViewModel.cleanLegacyTimeFromBody(note.body),
+                )
+            } else {
+                parseEventBody(note.body, note.reminderAt, isTask)
+            }
 
         // 4. Time range & duration
         val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", locale)

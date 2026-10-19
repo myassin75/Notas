@@ -156,15 +156,34 @@ class EditEventViewModel
                         _colorIndex.value = if (note.colorIndex > 0) note.colorIndex else 8
                         _iconKey.value = note.iconKey ?: "calendar_month"
                         _title.value = note.title
-                        val parsed =
-                            parseEventBodyAndTimes(
-                                body = note.body,
-                                reminderAt = note.reminderAt,
-                            )
-                        _isAllDay.value = parsed.isAllDay
-                        _startTime.value = parsed.startTime
-                        _endTime.value = parsed.endTime
-                        _notes.value = parsed.notes
+                        if (note.endAt != null || note.isAllDay) {
+                            _isAllDay.value = note.isAllDay
+                            val startTime =
+                                if (note.reminderAt != null && note.reminderAt > 0L) {
+                                    Instant.ofEpochMilli(note.reminderAt).atZone(ZoneId.systemDefault()).toLocalTime()
+                                } else {
+                                    LocalTime.of(9, 0)
+                                }
+                            val endTime =
+                                if (note.endAt != null && note.endAt > 0L) {
+                                    Instant.ofEpochMilli(note.endAt).atZone(ZoneId.systemDefault()).toLocalTime()
+                                } else {
+                                    startTime.plusMinutes(30)
+                                }
+                            _startTime.value = startTime
+                            _endTime.value = endTime
+                            _notes.value = cleanLegacyTimeFromBody(note.body)
+                        } else {
+                            val parsed =
+                                parseEventBodyAndTimes(
+                                    body = note.body,
+                                    reminderAt = note.reminderAt,
+                                )
+                            _isAllDay.value = parsed.isAllDay
+                            _startTime.value = parsed.startTime
+                            _endTime.value = parsed.endTime
+                            _notes.value = parsed.notes
+                        }
 
                         val epoch = note.reminderAt ?: note.createdAt
                         _selectedDate.value =
@@ -177,7 +196,7 @@ class EditEventViewModel
                             _reminders.value = activeReminders
                             _reminderAtStart.value = true
                         } else if (note.reminderAt != null) {
-                            _reminders.value = listOf(NoteReminder(note.reminderAt, note.recurrence))
+                            _reminders.value = listOf(NoteReminder(note.reminderAt, note.recurrence, endAt = note.endAt))
                             _reminderAtStart.value = true
                         } else {
                             _reminders.value = emptyList()
@@ -365,16 +384,12 @@ class EditEventViewModel
             _saveError.value = null
 
             val date = _selectedDate.value
-            val (reminderEpochMillis, bodyText) =
-                if (_isAllDay.value) {
-                    val startOfDayMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    val body =
-                        if (_notes.value.isNotBlank()) {
-                            "[All Day]\n${_notes.value.trim()}"
-                        } else {
-                            "[All Day]"
-                        }
-                    startOfDayMillis to body
+            val isAllDay = _isAllDay.value
+            val (reminderEpochMillis, endEpochMillis) =
+                if (isAllDay) {
+                    val startMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    val endMillis = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    startMillis to endMillis
                 } else {
                     val start = _startTime.value
                     val end = _endTime.value
@@ -384,25 +399,32 @@ class EditEventViewModel
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
                             .toEpochMilli()
-                    val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
-                    val timeRange = "${start.format(timeFormatter)} – ${end.format(timeFormatter)}"
-                    val body =
-                        if (_notes.value.isNotBlank()) {
-                            "$timeRange\n${_notes.value.trim()}"
+                    val endMillis =
+                        if (end < start) {
+                            date.plusDays(1).atTime(end).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                         } else {
-                            timeRange
+                            date.atTime(end).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                         }
-                    startMillis to body
+                    startMillis to endMillis
                 }
+
+            val bodyText = _notes.value.trim()
 
             val activeReminders =
                 if (_reminders.value.isNotEmpty()) {
-                    _reminders.value
+                    _reminders.value.map { r ->
+                        if (r.endAt != null) {
+                            r.copy(endAt = endEpochMillis, recurrence = _recurrence.value)
+                        } else {
+                            r
+                        }
+                    }
                 } else if (_reminderAtStart.value) {
                     listOf(
                         NoteReminder(
                             reminderAt = reminderEpochMillis,
                             recurrence = _recurrence.value,
+                            endAt = endEpochMillis,
                         ),
                     )
                 } else {
@@ -417,6 +439,8 @@ class EditEventViewModel
                         } else {
                             reminderEpochMillis
                         },
+                    endAt = endEpochMillis,
+                    isAllDay = isAllDay,
                     shoulderId = _selectedShoulderId.value,
                     recurrence = _recurrence.value,
                     reminders = activeReminders,
@@ -524,6 +548,24 @@ class EditEventViewModel
                     endTime = defaultEnd,
                     notes = trimmedBody,
                 )
+            }
+
+            fun cleanLegacyTimeFromBody(body: String): String {
+                val trimmed = body.trim()
+                if (trimmed.contains("[All Day]", ignoreCase = true)) {
+                    return trimmed.replace("[All Day]", "").trim()
+                }
+                val lines = trimmed.lines()
+                val firstLine = lines.firstOrNull()?.trim().orEmpty()
+                val rangeRegex =
+                    Regex(
+                        """^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$""",
+                        RegexOption.IGNORE_CASE,
+                    )
+                if (rangeRegex.matches(firstLine)) {
+                    return lines.drop(1).joinToString("\n").trim()
+                }
+                return trimmed
             }
         }
     }

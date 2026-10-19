@@ -81,6 +81,12 @@ abstract class BaseEditorViewModel(
     private val _reminderAt = MutableStateFlow<Long?>(null)
     val reminderAt: StateFlow<Long?> = _reminderAt.asStateFlow()
 
+    private val _endAt = MutableStateFlow<Long?>(null)
+    val endAt: StateFlow<Long?> = _endAt.asStateFlow()
+
+    private val _isAllDay = MutableStateFlow(false)
+    val isAllDay: StateFlow<Boolean> = _isAllDay.asStateFlow()
+
     private val _shoulderId = MutableStateFlow<Long?>(null)
     val shoulderId: StateFlow<Long?> = _shoulderId.asStateFlow()
 
@@ -238,6 +244,8 @@ abstract class BaseEditorViewModel(
         _reminders.value = activeRems
         val soonest = activeRems.minByOrNull { it.reminderAt }
         _reminderAt.value = soonest?.reminderAt
+        _endAt.value = n.endAt ?: soonest?.endAt
+        _isAllDay.value = n.isAllDay
         _recurrence.value = soonest?.recurrence?.sanitized()
         _importance.value = n.importance
         _visibility.value = n.visibility
@@ -497,6 +505,8 @@ abstract class BaseEditorViewModel(
     protected fun currentOptions() =
         NoteOptions(
             reminderAt = _reminderAt.value,
+            endAt = _endAt.value ?: _reminders.value.firstOrNull()?.endAt,
+            isAllDay = _isAllDay.value,
             importance = _importance.value,
             visibility = _visibility.value,
             pictureUri = _pictureUri.value,

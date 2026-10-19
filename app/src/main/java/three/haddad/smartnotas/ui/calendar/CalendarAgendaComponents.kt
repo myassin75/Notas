@@ -135,6 +135,74 @@ fun AgendaSectionHeader(
 }
 
 /**
+ * Distinguishable header for agenda categories (Events, Tasks, Birthdays)
+ * with a themed icon, category label, and count badge.
+ */
+@Composable
+fun AgendaCategoryHeader(
+    title: String,
+    iconName: String,
+    count: Int,
+    modifier: Modifier = Modifier,
+    iconTint: Color = CalendarDesignTokens.PrimaryPurple,
+    badgeBgColor: Color? = null,
+    badgeTextColor: Color? = null,
+) {
+    val isDark = LocalIsDark.current
+    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
+    val defaultBadgeBg = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender
+    val defaultBadgeText = if (isDark) Color(0xFFD6B5EB) else CalendarDesignTokens.PrimaryPurple
+    val finalBadgeBg = badgeBgColor ?: defaultBadgeBg
+    val finalBadgeText = badgeTextColor ?: defaultBadgeText
+
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        RememberMaterialRoundedSymbol(
+            name = iconName,
+            size = 18.dp,
+            tint = iconTint,
+        )
+        Text(
+            text = title,
+            style =
+                MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.5.sp,
+                    color = textPrimary,
+                ),
+        )
+        if (count > 0) {
+            Surface(
+                shape = CircleShape,
+                color = finalBadgeBg,
+                modifier = Modifier.defaultMinSize(minHeight = 20.dp, minWidth = 20.dp),
+            ) {
+                Box(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "$count",
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                color = finalBadgeText,
+                            ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
  * An individual event/task card within the agenda.
  *
  * Displays a time badge on the left (2 lines: hour + AM/PM), and a styled card on the right
