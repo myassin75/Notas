@@ -36,9 +36,9 @@ fun NotesFilter.matches(n: NoteWithItems): Boolean {
             FilterType.LIST -> note.kind == NoteKind.LIST
         }
     if (!typeOk) return false
-    
+
     if (shoulderId != null && note.shoulderId != shoulderId) return false
-    
+
     hasReminder?.let { if ((note.reminderAt != null) != it) return false }
     hasPicture?.let { if ((!note.pictureUri.isNullOrBlank()) != it) return false }
     hasAttachment?.let { if (n.attachments.isNotEmpty() != it) return false }

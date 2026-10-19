@@ -5,11 +5,11 @@ import androidx.compose.foundation.text.input.toTextFieldBuffer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import three.haddad.smartnotas.ui.common.MarkdownStyler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.ui.common.MarkdownStyler
 
 class MarkdownEditorTransactionsTest {
     private val styler =

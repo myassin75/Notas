@@ -2,14 +2,14 @@ package three.haddad.smartnotas.ui.home
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.ui.components.NoteCardUiModel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.NotesFilter
+import three.haddad.smartnotas.data.ViewOptions
+import three.haddad.smartnotas.ui.components.NoteCardUiModel
 
 @Immutable
 sealed class HomeListItem {

@@ -11,14 +11,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.Importance
 import three.haddad.smartnotas.data.NoteEntity
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.ReminderPrefs
 import three.haddad.smartnotas.di.ApplicationScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /*

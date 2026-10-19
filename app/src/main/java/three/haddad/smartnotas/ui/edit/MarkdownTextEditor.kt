@@ -292,4 +292,3 @@ internal fun MarkdownTextEditor(
         )
     }
 }
-

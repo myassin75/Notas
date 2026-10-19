@@ -18,6 +18,8 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.MainActivity
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.ActionType
@@ -39,8 +41,6 @@ import three.haddad.smartnotas.notifications.canPostNotifications
 import three.haddad.smartnotas.notifications.postNotificationIfAllowed
 import three.haddad.smartnotas.ui.common.HeroFraming
 import three.haddad.smartnotas.ui.edit.iconEmojiPayload
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlin.math.max

@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import three.haddad.smartnotas.ui.theme.CustomFontStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
+import three.haddad.smartnotas.ui.theme.CustomFontStorage
 
 enum class ThemeMode {
     SYSTEM,
@@ -53,8 +53,11 @@ data class ThemeState(
     val customFontName: String = "",
 ) {
     val useEnhancedShading: Boolean = false
+
     fun blackThemeActive(isDarkTheme: Boolean): Boolean = useBlackTheme && themeMode.blackThemeEligible(isDarkTheme)
+
     fun effectiveShadingIntensity(blackThemeActive: Boolean): Float = 0f
+
     fun effectiveUseGradient(blackThemeActive: Boolean): Boolean = false
 }
 

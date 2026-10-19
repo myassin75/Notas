@@ -1,8 +1,10 @@
 package three.haddad.smartnotas.ui.edit
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
+import three.haddad.smartnotas.ui.theme.NoteColors
 
 @Composable
 internal fun EditorHeaderIcon(
@@ -31,6 +34,7 @@ internal fun EditorHeaderIcon(
     kind: NoteKind,
     iconSize: Dp,
     modifier: Modifier = Modifier,
+    colorIndex: Int = 0,
     showBoundary: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
@@ -38,17 +42,47 @@ internal fun EditorHeaderIcon(
     val iconSlotShape = RoundedCornerShape(10.dp)
     val iconContentDescription = stringResource(R.string.options_icon_cd)
     val iconInteractionSource = remember { MutableInteractionSource() }
-    val boundaryModifier =
-        if (showBoundary) {
-            Modifier.border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f),
+
+    val isDark = isSystemInDarkTheme()
+    val accent = NoteColors.at(colorIndex)
+    val hasCustomColor = !NoteColors.isNone(colorIndex)
+    val effectiveTint =
+        if (!hasCustomColor) {
+            MaterialTheme.colorScheme.primary
+        } else if (isDark) {
+            accent.dark
+        } else {
+            accent.light
+        }
+
+    val slotBgModifier =
+        if (hasCustomColor) {
+            Modifier.background(
+                effectiveTint.copy(alpha = if (isDark) 0.25f else 0.15f),
                 shape = iconSlotShape,
             )
         } else {
             Modifier
         }
-    val slotModifier = modifier.size(iconSlotSize).then(boundaryModifier)
+
+    val slotBorderModifier =
+        if (showBoundary) {
+            val borderColor =
+                if (hasCustomColor) {
+                    effectiveTint.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
+                }
+            Modifier.border(
+                width = 1.dp,
+                color = borderColor,
+                shape = iconSlotShape,
+            )
+        } else {
+            Modifier
+        }
+
+    val slotModifier = modifier.size(iconSlotSize).then(slotBgModifier).then(slotBorderModifier)
     val interactiveModifier =
         if (onClick != null) {
             slotModifier
@@ -71,7 +105,7 @@ internal fun EditorHeaderIcon(
                 RememberMaterialRoundedSymbol(
                     name = headerIcon.name,
                     size = iconSize,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = effectiveTint,
                     weight = FontWeight.Medium,
                     filled = headerIcon.filled,
                 )
@@ -79,7 +113,7 @@ internal fun EditorHeaderIcon(
                 Icon(
                     painterResource(headerIcon.resId),
                     contentDescription = if (onClick != null) iconContentDescription else null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = effectiveTint,
                     modifier = Modifier.size(iconSize),
                 )
             is NoteIcon.Emoji ->
@@ -91,14 +125,14 @@ internal fun EditorHeaderIcon(
                 RememberMaterialRoundedSymbol(
                     name = DEFAULT_LIST_HEADER_SYMBOL,
                     size = iconSize,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = effectiveTint,
                     weight = FontWeight.Medium,
                 )
             NoteIcon.NotePlaceholder ->
                 RememberMaterialRoundedSymbol(
                     name = DEFAULT_NOTE_HEADER_SYMBOL,
                     size = iconSize,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = effectiveTint,
                     weight = FontWeight.Medium,
                 )
         }

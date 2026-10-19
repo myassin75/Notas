@@ -64,8 +64,8 @@ open class SearchPreferences(
         }
     }
 
-    private fun parseRecentSearchesJson(jsonStr: String): List<SearchHistoryEntry> {
-        return try {
+    private fun parseRecentSearchesJson(jsonStr: String): List<SearchHistoryEntry> =
+        try {
             val array = JSONArray(jsonStr)
             val list = mutableListOf<SearchHistoryEntry>()
             for (i in 0 until array.length()) {
@@ -78,15 +78,15 @@ open class SearchPreferences(
         } catch (_: Throwable) {
             emptyList()
         }
-    }
 
     private fun serializeRecentSearchesJson(list: List<SearchHistoryEntry>): String {
         val array = JSONArray()
         for (item in list) {
-            val obj = JSONObject().apply {
-                put("query", item.query)
-                put("timestamp", item.timestamp)
-            }
+            val obj =
+                JSONObject().apply {
+                    put("query", item.query)
+                    put("timestamp", item.timestamp)
+                }
             array.put(obj)
         }
         return array.toString()

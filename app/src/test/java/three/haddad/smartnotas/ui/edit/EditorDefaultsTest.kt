@@ -5,11 +5,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.SavedStateHandle
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.ui.nav.Routes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -23,6 +18,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import three.haddad.smartnotas.data.DefaultNotePrefs
+import three.haddad.smartnotas.data.Importance
+import three.haddad.smartnotas.data.NoteOptions
+import three.haddad.smartnotas.data.Visibility
+import three.haddad.smartnotas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditorDefaultsTest {

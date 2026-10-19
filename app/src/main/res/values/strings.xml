@@ -141,6 +141,13 @@
     <string name="calendar_task_count_single">1 task</string>
     <string name="calendar_tasks_count">%1$d tasks</string>
     <string name="calendar_your_agenda">Your agenda</string>
+    <string name="calendar_details_back">Back</string>
+    <string name="calendar_details_edit">Edit</string>
+    <string name="calendar_details_color">Color</string>
+    <string name="calendar_details_all_day">All - day</string>
+    <string name="calendar_details_status_completed">Completed</string>
+    <string name="calendar_details_status_todo">To do</string>
+    <string name="calendar_details_not_found">Event or task not found</string>
     <string name="calendar_empty_room_title">A little room in your day</string>
     <string name="calendar_empty_no_events_desc">No events or tasks for this date.</string>
     <string name="calendar_empty_enjoy_space_desc">Add a plan, or enjoy the open space.</string>
@@ -414,6 +421,22 @@
         <item quantity="other">%1$d days left</item>
     </plurals>
     <string name="history_expires_today">Expires today</string>
+    <string name="history_archive_move_all_to_trash">Move All to Trash</string>
+    <string name="history_archive_move_all_dialog_title">Move all archived notes to Trash?</string>
+    <string name="history_archive_move_all_dialog_message">All archived notes will be moved to Trash. You can restore them later if the app supports restoration.</string>
+    <string name="history_trash_empty_action">Empty Trash</string>
+    <string name="history_trash_empty_dialog_title">Permanently delete all trashed notes?</string>
+    <string name="history_trash_empty_dialog_message">This action permanently deletes every note in Trash and cannot be undone.</string>
+    <string name="history_trash_empty_dialog_confirm">Delete All</string>
+    <string name="history_operation_failed">Operation failed. Please try again.</string>
+    <plurals name="history_note_count">
+        <item quantity="one">%1$d note</item>
+        <item quantity="other">%1$d notes</item>
+    </plurals>
+
+    <!-- Splash Screen -->
+    <string name="splash_app_name">Notas</string>
+    <string name="splash_brand_attribution">from 3EE</string>
 
     <!-- Home: full-text search + bulk select -->
     <string name="home_search_placeholder">Search</string>

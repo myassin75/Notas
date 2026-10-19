@@ -6,16 +6,16 @@ import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import three.haddad.smartnotas.backup.RememberBackupWork
-import three.haddad.smartnotas.backup.SettingsBackup
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.domain.backupFileTimestamp
-import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import three.haddad.smartnotas.backup.RememberBackupWork
+import three.haddad.smartnotas.backup.SettingsBackup
+import three.haddad.smartnotas.diagnostics.DiagnosticLog
+import three.haddad.smartnotas.domain.backupFileTimestamp
+import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -230,11 +230,11 @@ class BackupIo(
 
     private suspend fun snapshotNotes(): NotesSnapshot {
         val all = repository.snapshotAllNotes()
-                val root =
+        val root =
             JSONObject().apply {
                 put("version", SCHEMA_VERSION)
                 put("exportedAt", System.currentTimeMillis())
-                                put(
+                put(
                     "notes",
                     JSONArray().apply {
                         all.forEach { put(encodeNoteForBackup(it)) }
@@ -880,13 +880,12 @@ class BackupIo(
             }
             added++
         }
-                return NoteImportResult(
+        return NoteImportResult(
             noteCount = added,
             noteIds = insertedNoteIds,
         )
     }
 
-    
     private fun copyRelToAppFiles(
         relative: String,
         extractDir: File,

@@ -329,15 +329,15 @@ private fun arrangeByType(activeNotes: List<NoteWithItems>): List<HomeListItem> 
 private fun arrangeByShoulder(activeNotes: List<NoteWithItems>): List<HomeListItem> {
     val shoulderedNotes = activeNotes.filter { it.shoulder != null }
     val unshoulderedNotes = activeNotes.filter { it.shoulder == null }
-    
+
     val shouldersById = LinkedHashMap<Long, three.haddad.smartnotas.data.ShoulderEntity>()
     shoulderedNotes.forEach { noteWithItems ->
         val shoulder = noteWithItems.shoulder!!
         shouldersById.putIfAbsent(shoulder.id, shoulder)
     }
-    
+
     val sortedShoulders = shouldersById.values.sortedBy { it.name.lowercase() }
-    
+
     return buildList {
         sortedShoulders.forEach { shoulder ->
             val notesInShoulder = shoulderedNotes.filter { it.shoulder?.id == shoulder.id }

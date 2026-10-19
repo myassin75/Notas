@@ -10,6 +10,10 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.biometric.BiometricManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +37,9 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.InteractionState
 import three.haddad.smartnotas.data.LockPrefs
@@ -57,15 +64,13 @@ import three.haddad.smartnotas.ui.lock.AppLockSession
 import three.haddad.smartnotas.ui.lock.LockScreen
 import three.haddad.smartnotas.ui.nav.RememberNavGraph
 import three.haddad.smartnotas.ui.settings.RememberUpdateViewModel
+import three.haddad.smartnotas.ui.splash.SplashScreen
 import three.haddad.smartnotas.ui.theme.RememberTheme
 import three.haddad.smartnotas.update.AppReviewLauncher
 import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
 import three.haddad.smartnotas.update.PlayInAppUpdateProgressController
 import three.haddad.smartnotas.update.RememberUpdateState
 import three.haddad.smartnotas.update.notificationDedupeKey
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -117,6 +122,7 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        val isInitialLaunch = savedInstanceState == null
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
@@ -136,13 +142,20 @@ class MainActivity : FragmentActivity() {
             )
             val systemDark = isSystemInDarkTheme()
             val darkTheme = themeState.themeMode.effectiveDarkTheme(systemDark)
+            var splashActive by rememberSaveable { mutableStateOf(isInitialLaunch) }
             SideEffect {
                 enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
-                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+                    statusBarStyle =
+                        SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) {
+                            if (splashActive) false else darkTheme
+                        },
+                    navigationBarStyle =
+                        SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) {
+                            if (splashActive) false else darkTheme
+                        },
                 )
             }
-                        val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
+            val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
                 initialValue = InteractionState(),
             )
             CompositionLocalProvider(
@@ -166,6 +179,8 @@ class MainActivity : FragmentActivity() {
                         appScope = applicationScope,
                         launchFlow = pendingLaunch,
                         appLockSession = appLockSession,
+                        splashActive = splashActive,
+                        onDismissSplash = { splashActive = false },
                     )
                 }
             }
@@ -247,6 +262,8 @@ private fun AppRoot(
     appScope: CoroutineScope,
     launchFlow: MutableStateFlow<LaunchAction?>,
     appLockSession: AppLockSession,
+    splashActive: Boolean,
+    onDismissSplash: () -> Unit,
 ) {
     val lockState by lockPrefs.state.collectAsStateWithLifecycle(
         initialValue = null,
@@ -285,99 +302,114 @@ private fun AppRoot(
     }
     val currentLockState = lockState
 
-    if (currentLockState == null) {
-        Box(modifier = Modifier.fillMaxSize())
-        return
-    }
-
-    val deviceUnlockAvailable =
-        remember(context) {
-            BiometricManager
-                .from(context)
-                .canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) ==
-                BiometricManager.BIOMETRIC_SUCCESS
-        }
-    val deviceUnlockRequired = currentLockState.enabled && !currentLockState.hasPin
-    LaunchedEffect(deviceUnlockRequired, deviceUnlockAvailable) {
-        if (deviceUnlockRequired && !deviceUnlockAvailable) {
-            lockPrefs.disable()
+    LaunchedEffect(currentLockState, splashActive) {
+        if (currentLockState != null && splashActive) {
+            kotlinx.coroutines.delay(500)
+            onDismissSplash()
         }
     }
-    val showLockScreen =
-        currentLockState.enabled &&
-            !unlocked &&
-            (currentLockState.hasPin || deviceUnlockAvailable)
 
-    if (showLockScreen) {
-        LockScreen(
-            biometricEnabled = currentLockState.biometric,
-            hasPin = currentLockState.hasPin,
-            pinLength = currentLockState.pinLength,
-            onUnlocked = appLockSession::unlock,
-            verify = { pin -> lockPrefs.verify(pin) },
-        )
-    } else {
-        activity?.let { fragmentActivity ->
-            InAppRatingAutoPromptHost(
-                onboardingState = onboardingState,
-                updateState = updatePreferencesState,
-                activity = fragmentActivity,
-                updatePrefs = updatePrefs,
-                appReviewLauncher = appReviewLauncher,
-            )
-        }
-        androidx.compose.runtime.CompositionLocalProvider(
-            three.haddad.smartnotas.ui.theme.LocalSnackbarHostState provides snackbarHostState,
-        ) {
-            val currentUpdateInfo = updateInfo
-            val updateKey = currentUpdateInfo?.notificationDedupeKey()
-            val updateAvailable = BuildConfig.CHECK_UPDATES && currentUpdateInfo != null
-            val updateBarState =
-                when (val currentPlayState = playBannerState) {
-                    is PlayInAppUpdateBannerUiState.Downloading ->
-                        UpdateChromeState.Downloading(
-                            bytesDownloaded = currentPlayState.bytesDownloaded,
-                            totalBytesToDownload = currentPlayState.totalBytesToDownload,
-                            indeterminateProgress = currentPlayState.indeterminateProgress,
-                        )
-                    PlayInAppUpdateBannerUiState.ReadyToInstall -> UpdateChromeState.ReadyToInstall
-                    PlayInAppUpdateBannerUiState.Hidden ->
-                        if (updateAvailable && updateKey != dismissedUpdateBarKey) {
-                            UpdateChromeState.Available
-                        } else {
-                            UpdateChromeState.Hidden
-                        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (currentLockState != null) {
+            val deviceUnlockAvailable =
+                remember(context) {
+                    BiometricManager
+                        .from(context)
+                        .canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) ==
+                        BiometricManager.BIOMETRIC_SUCCESS
                 }
-            RememberNavGraph(
-                repository = noteRepository,
-                onboardingPrefs = onboardingPrefs,
-                interactionPrefs = interactionPrefs,
-                appScope = appScope,
-                launchFlow = launchFlow,
-                openSettingsRequest = openSettingsRequest,
-                updateVm = updateVm,
-                onUpdateCheckStarted = { dismissedUpdateBarKey = null },
-                updateBarState = updateBarState,
-                updateSignalEpoch = updateSignalEpoch,
-                onUpdateClick = {
-                    if (updateBarState == UpdateChromeState.Available) {
-                        dismissedUpdateBarKey = updateKey
-                    }
-                    // Check only surfaces the update sheet; starting the actual
-                    // download is the sheet's job.
-                    openSettingsRequest += 1
-                    updateVm.requestOpenSheet()
-                },
-                onDismissUpdateAvailable = { dismissedUpdateBarKey = updateKey },
-                onInstallUpdate = {
-                    if (!rememberUpdateState.devReleaseCompletePlayUpdateIfReady()) {
-                        val activity = context as? Activity
-                        if (activity != null) {
-                            playInAppUpdateProgressController.completeFlexibleUpdateIfReady(activity)
+            val deviceUnlockRequired = currentLockState.enabled && !currentLockState.hasPin
+            LaunchedEffect(deviceUnlockRequired, deviceUnlockAvailable) {
+                if (deviceUnlockRequired && !deviceUnlockAvailable) {
+                    lockPrefs.disable()
+                }
+            }
+            val showLockScreen =
+                currentLockState.enabled &&
+                    !unlocked &&
+                    (currentLockState.hasPin || deviceUnlockAvailable)
+
+            if (showLockScreen) {
+                LockScreen(
+                    biometricEnabled = currentLockState.biometric,
+                    hasPin = currentLockState.hasPin,
+                    pinLength = currentLockState.pinLength,
+                    onUnlocked = appLockSession::unlock,
+                    verify = { pin -> lockPrefs.verify(pin) },
+                )
+            } else {
+                activity?.let { fragmentActivity ->
+                    InAppRatingAutoPromptHost(
+                        onboardingState = onboardingState,
+                        updateState = updatePreferencesState,
+                        activity = fragmentActivity,
+                        updatePrefs = updatePrefs,
+                        appReviewLauncher = appReviewLauncher,
+                    )
+                }
+                CompositionLocalProvider(
+                    three.haddad.smartnotas.ui.theme.LocalSnackbarHostState provides snackbarHostState,
+                ) {
+                    val currentUpdateInfo = updateInfo
+                    val updateKey = currentUpdateInfo?.notificationDedupeKey()
+                    val updateAvailable = BuildConfig.CHECK_UPDATES && currentUpdateInfo != null
+                    val updateBarState =
+                        when (val currentPlayState = playBannerState) {
+                            is PlayInAppUpdateBannerUiState.Downloading ->
+                                UpdateChromeState.Downloading(
+                                    bytesDownloaded = currentPlayState.bytesDownloaded,
+                                    totalBytesToDownload = currentPlayState.totalBytesToDownload,
+                                    indeterminateProgress = currentPlayState.indeterminateProgress,
+                                )
+                            PlayInAppUpdateBannerUiState.ReadyToInstall -> UpdateChromeState.ReadyToInstall
+                            PlayInAppUpdateBannerUiState.Hidden ->
+                                if (updateAvailable && updateKey != dismissedUpdateBarKey) {
+                                    UpdateChromeState.Available
+                                } else {
+                                    UpdateChromeState.Hidden
+                                }
                         }
-                    }
-                },
-            )
+                    RememberNavGraph(
+                        repository = noteRepository,
+                        onboardingPrefs = onboardingPrefs,
+                        interactionPrefs = interactionPrefs,
+                        appScope = appScope,
+                        launchFlow = launchFlow,
+                        openSettingsRequest = openSettingsRequest,
+                        updateVm = updateVm,
+                        onUpdateCheckStarted = { dismissedUpdateBarKey = null },
+                        updateBarState = updateBarState,
+                        updateSignalEpoch = updateSignalEpoch,
+                        onUpdateClick = {
+                            if (updateBarState == UpdateChromeState.Available) {
+                                dismissedUpdateBarKey = updateKey
+                            }
+                            // Check only surfaces the update sheet; starting the actual
+                            // download is the sheet's job.
+                            openSettingsRequest += 1
+                            updateVm.requestOpenSheet()
+                        },
+                        onDismissUpdateAvailable = { dismissedUpdateBarKey = updateKey },
+                        onInstallUpdate = {
+                            if (!rememberUpdateState.devReleaseCompletePlayUpdateIfReady()) {
+                                val activity = context as? Activity
+                                if (activity != null) {
+                                    playInAppUpdateProgressController.completeFlexibleUpdateIfReady(activity)
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = splashActive,
+            enter = EnterTransition.None,
+            exit = fadeOut(animationSpec = tween(durationMillis = 350)),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            SplashScreen()
         }
     }
 }

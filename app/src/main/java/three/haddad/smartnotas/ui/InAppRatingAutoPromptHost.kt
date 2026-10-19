@@ -5,13 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.data.OnboardingState
 import three.haddad.smartnotas.data.UpdatePreferencesState
 import three.haddad.smartnotas.data.UpdatePrefs
 import three.haddad.smartnotas.update.AppReviewLauncher
 import three.haddad.smartnotas.update.InAppRatingAutoPrompt
-import kotlinx.coroutines.launch
 
 /**
  * Play flavor: when eligible, requests Google's in-app review flow without a custom pre-prompt.

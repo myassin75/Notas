@@ -67,20 +67,22 @@ internal fun NotesEmptyState(
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.home_no_notes_title),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
-                        color = Color(0xFF32313F),
-                    ),
+                    style =
+                        MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                            color = Color(0xFF32313F),
+                        ),
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.home_no_notes_subtitle),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
-                        color = Color(0xFF89899C),
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            color = Color(0xFF89899C),
+                        ),
                     textAlign = TextAlign.Center,
                     modifier =
                         Modifier
@@ -93,24 +95,27 @@ internal fun NotesEmptyState(
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
                 ) {
                     Column(modifier = Modifier.padding(vertical = 6.dp)) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable { onCreateNote() }
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { onCreateNote() }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF4EAF6)),
+                                modifier =
+                                    Modifier
+                                        .size(42.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFFF4EAF6)),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
@@ -125,18 +130,20 @@ internal fun NotesEmptyState(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.home_create_note),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = Color(0xFF32313F),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = Color(0xFF32313F),
+                                        ),
                                 )
                                 Text(
                                     text = stringResource(R.string.home_create_note_subtitle),
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF89899C),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 13.sp,
+                                            color = Color(0xFF89899C),
+                                        ),
                                 )
                             }
                             RememberMaterialRoundedSymbol(
@@ -155,18 +162,20 @@ internal fun NotesEmptyState(
                         )
 
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable { onCreateList() }
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { onCreateList() }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF4EAF6)),
+                                modifier =
+                                    Modifier
+                                        .size(42.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFFF4EAF6)),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
@@ -181,18 +190,20 @@ internal fun NotesEmptyState(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.home_create_list),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = Color(0xFF32313F),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = Color(0xFF32313F),
+                                        ),
                                 )
                                 Text(
                                     text = stringResource(R.string.home_create_list_subtitle),
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF89899C),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 13.sp,
+                                            color = Color(0xFF89899C),
+                                        ),
                                 )
                             }
                             RememberMaterialRoundedSymbol(
@@ -229,18 +240,20 @@ internal fun NotesEmptyState(
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = titleText,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF32313F),
-                    ),
+                    style =
+                        MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF32313F),
+                        ),
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = hintText,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color(0xFF89899C),
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFF89899C),
+                        ),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )

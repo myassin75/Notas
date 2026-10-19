@@ -270,9 +270,11 @@ internal class NoteContentWriter(
             } else {
                 applyUpdates()
             }
-        if (didUpdate) if (didUpdate) {
-            val noteEntity = noteDao.get(id)?.note
-            reminderCoordinator.rescheduleReminder(id, noteEntity?.reminderAt)
+        if (didUpdate) {
+            if (didUpdate) {
+                val noteEntity = noteDao.get(id)?.note
+                reminderCoordinator.rescheduleReminder(id, noteEntity?.reminderAt)
+            }
         }
         if (didUpdate) reminderCoordinator.refreshNotificationIfActive(id)
         if (didUpdate) {

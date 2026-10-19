@@ -1,12 +1,5 @@
 package three.haddad.smartnotas.reminders
 
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ReminderPreferencesState
-import three.haddad.smartnotas.data.Visibility
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -18,6 +11,13 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.data.ChecklistItemEntity
+import three.haddad.smartnotas.data.Importance
+import three.haddad.smartnotas.data.NoteEntity
+import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.ReminderPreferencesState
+import three.haddad.smartnotas.data.Visibility
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NoteRefreshObserverTest {

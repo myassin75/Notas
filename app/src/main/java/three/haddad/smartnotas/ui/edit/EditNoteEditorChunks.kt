@@ -75,6 +75,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteReminder
@@ -89,14 +97,6 @@ import three.haddad.smartnotas.ui.components.RememberIconButton
 import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 /**
  * Bridges the editor's [MarkdownEditorState] with [EditNoteViewModel.body]. Owns the "last
@@ -562,6 +562,7 @@ internal fun EditNoteScrollableContent(
     autoFocusBodyOnEdit: Boolean,
     shelfState: NoteShelfState,
     pictureViewerOpen: Boolean,
+    onOpenIconColor: () -> Unit = {},
     onOpenShoulders: () -> Unit = {},
     onOpenReminder: () -> Unit,
     notificationsAllowed: Boolean,
@@ -613,6 +614,7 @@ internal fun EditNoteScrollableContent(
             OptionsPanelSection(
                 vm = vm,
                 readOnly = readOnly,
+                onOpenIconColor = if (readOnly) ({}) else onOpenIconColor,
                 onOpenShoulders = if (readOnly) ({}) else onOpenShoulders,
                 onOpenReminder = if (readOnly) ({}) else onOpenReminder,
                 notificationsAllowed = notificationsAllowed,
@@ -654,6 +656,7 @@ private fun PictureHeroSection(
 private fun OptionsPanelSection(
     vm: EditNoteViewModel,
     readOnly: Boolean,
+    onOpenIconColor: () -> Unit,
     onOpenShoulders: () -> Unit,
     onOpenReminder: () -> Unit,
     notificationsAllowed: Boolean,
@@ -662,6 +665,8 @@ private fun OptionsPanelSection(
     onOpenActions: () -> Unit,
     onOpenAttachments: () -> Unit,
 ) {
+    val colorIndex by vm.colorIndex.collectAsStateWithLifecycle()
+    val iconKey by vm.iconKey.collectAsStateWithLifecycle()
     val shoulder by vm.shoulder.collectAsStateWithLifecycle()
     val reminders by vm.reminders.collectAsStateWithLifecycle()
     val importance by vm.importance.collectAsStateWithLifecycle()
@@ -671,6 +676,16 @@ private fun OptionsPanelSection(
     val attachments by vm.attachments.collectAsStateWithLifecycle()
     val createdAt by vm.createdAt.collectAsStateWithLifecycle()
     val updatedAt by vm.updatedAt.collectAsStateWithLifecycle()
+
+    NoteIconAndColorCard(
+        colorIndex = colorIndex,
+        iconKey = iconKey,
+        enabled = !readOnly,
+        onClick = onOpenIconColor,
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    Spacer(Modifier.height(16.dp))
 
     EditorOptionsPanel(
         shoulder = shoulder,

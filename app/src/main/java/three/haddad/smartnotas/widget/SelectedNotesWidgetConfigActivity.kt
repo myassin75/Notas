@@ -51,14 +51,14 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.ShoulderRepository
+import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.RememberTheme
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -91,7 +91,7 @@ class SelectedNotesWidgetConfigActivity : ComponentActivity() {
 
         setContent {
             val themeState by themePrefs.state.collectAsStateWithLifecycle(initialValue = ThemeState())
-            
+
             // Map the Flow<List<ShoulderEntity>> to Flow<List<String>> to match the UI expectation
             val availableShoulders by remember {
                 shoulderRepository.getAllShoulders().map { list ->

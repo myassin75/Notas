@@ -1,13 +1,6 @@
 package three.haddad.smartnotas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.RecurrenceUnit
-import three.haddad.smartnotas.data.withSyncedPrimaryReminder
-import three.haddad.smartnotas.ui.nav.Routes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -19,6 +12,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import three.haddad.smartnotas.data.NoteEntity
+import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteReminder
+import three.haddad.smartnotas.data.RecurrenceRule
+import three.haddad.smartnotas.data.RecurrenceUnit
+import three.haddad.smartnotas.data.withSyncedPrimaryReminder
+import three.haddad.smartnotas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(Parameterized::class)

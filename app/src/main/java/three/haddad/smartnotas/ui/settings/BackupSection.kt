@@ -30,6 +30,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.backup.RememberBackupWork
 import three.haddad.smartnotas.data.BackupIo
@@ -43,10 +47,6 @@ import three.haddad.smartnotas.ui.components.settings.GroupPosition
 import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
 import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 import three.haddad.smartnotas.ui.feedback.appClickable
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Backup section: local and cloud folder pickers (long-click to clear), three

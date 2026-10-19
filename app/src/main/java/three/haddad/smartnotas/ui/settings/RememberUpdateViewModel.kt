@@ -11,6 +11,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.UpdatePrefs
@@ -26,12 +32,6 @@ import three.haddad.smartnotas.update.RememberUpdateInfo
 import three.haddad.smartnotas.update.RememberUpdateState
 import three.haddad.smartnotas.update.UpdateAvailableNotifier
 import three.haddad.smartnotas.update.notificationDedupeKey
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL

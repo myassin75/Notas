@@ -7,9 +7,9 @@ import android.content.Intent
 import android.util.Log
 import androidx.glance.appwidget.updateAll
 import dagger.hilt.android.qualifiers.ApplicationContext
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
+import three.haddad.smartnotas.diagnostics.DiagnosticLog
 import javax.inject.Inject
 import javax.inject.Singleton
 

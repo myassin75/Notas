@@ -4,10 +4,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextStyle
-import three.haddad.smartnotas.ui.common.MarkdownStyler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.ui.common.MarkdownStyler
 
 class MarkdownVisualTransformationTest {
     @Test

@@ -18,6 +18,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -34,16 +35,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -66,6 +73,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -73,6 +81,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.graphics.shapes.Morph
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.notifications.appNotificationSettingsIntent
@@ -97,17 +106,7 @@ import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
 import three.haddad.smartnotas.ui.theme.MorphPolygonShape
 import three.haddad.smartnotas.ui.theme.RoundedPolygonShape
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Divider
-import androidx.compose.foundation.layout.Column
-import androidx.compose.ui.res.painterResource
 
 enum class MainTab(
     @param:androidx.annotation.StringRes val labelRes: Int,
@@ -160,7 +159,7 @@ fun MainTabScaffold(
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surface,
                         tonalElevation = 0.dp,
-                        windowInsets = WindowInsets.navigationBars
+                        windowInsets = WindowInsets.navigationBars,
                     ) {
                         MainTab.entries.forEach { tabItem ->
                             val selected = currentTab == tabItem
@@ -175,7 +174,7 @@ fun MainTabScaffold(
                                         Icon(
                                             painter = painterResource(R.drawable.ic_home_outlined),
                                             contentDescription = null,
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(24.dp),
                                         )
                                     } else {
                                         RememberMaterialRoundedSymbol(
@@ -188,23 +187,24 @@ fun MainTabScaffold(
                                 label = {
                                     Text(
                                         text = stringResource(tabItem.labelRes),
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                     )
                                 },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                colors =
+                                    NavigationBarItemDefaults.colors(
+                                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
                             )
                         }
                     }
                 }
             }
         },
-        contentWindowInsets = WindowInsets(0.dp)
+        contentWindowInsets = WindowInsets(0.dp),
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             content(closeNotesRevealRequest)

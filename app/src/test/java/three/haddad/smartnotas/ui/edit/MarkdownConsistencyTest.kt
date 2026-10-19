@@ -11,6 +11,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import three.haddad.smartnotas.ui.common.MarkdownBlockKind
 import three.haddad.smartnotas.ui.common.MarkdownInlineInteraction
 import three.haddad.smartnotas.ui.common.MarkdownInlineInteractionBuilder
@@ -18,11 +23,6 @@ import three.haddad.smartnotas.ui.common.MarkdownInlineProjection
 import three.haddad.smartnotas.ui.common.MarkdownStyler
 import three.haddad.smartnotas.ui.common.markdownCardPreview
 import three.haddad.smartnotas.ui.common.parseMarkdownDocument
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class MarkdownConsistencyTest {
     private val styler =

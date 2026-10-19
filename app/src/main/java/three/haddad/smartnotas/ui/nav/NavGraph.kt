@@ -46,6 +46,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteRepository
@@ -77,15 +86,6 @@ import three.haddad.smartnotas.ui.settings.RememberUpdateViewModel
 import three.haddad.smartnotas.ui.settings.SettingsRoute
 import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
 object Routes {
     const val ONBOARDING_TITLE = "onboardingTitle"
@@ -127,6 +127,9 @@ object Routes {
     const val TYPE_NOTE = "note"
     const val TYPE_LIST = "checklist"
     const val EDIT_EVENT = "editEvent"
+    const val CALENDAR_DETAILS = "calendarDetails"
+    const val ARG_ITEM_ID = "itemId"
+    const val ARG_IS_TASK = "isTask"
 
     /**
      * Help, optionally opened at the subsection a HELP_FOCUS_* id names. Same shape as FilePipe's
@@ -182,9 +185,15 @@ object Routes {
     fun editEvent(
         id: Long? = null,
         dateMillis: Long? = null,
+    ): String = editNote(id = id, initialDateMillis = dateMillis)
+
+    fun calendarDetails(
+        id: Long,
+        isTask: Boolean = false,
+        dateMillis: Long? = null,
     ): String {
         val d = if (dateMillis != null && dateMillis > 0L) "&$ARG_DATE_MILLIS=$dateMillis" else ""
-        return "$EDIT_EVENT?${ARG_ID}=${id ?: -1L}$d"
+        return "$CALENDAR_DETAILS?$ARG_ITEM_ID=$id&$ARG_IS_TASK=$isTask$d"
     }
 
     fun noteKindFor(type: String?): NoteKind? =
@@ -230,6 +239,7 @@ private fun crossFadesWithTab(route: String?): Boolean =
                 route.startsWith(Routes.EDIT_NOTE) ||
                 route.startsWith(Routes.EDIT_LIST) ||
                 route.startsWith(Routes.EDIT_EVENT) ||
+                route.startsWith(Routes.CALENDAR_DETAILS) ||
                 route == Routes.DEV_OPTIONS
         )
 
@@ -745,7 +755,7 @@ fun RememberNavGraph(
                     enterTransition = { slideInHorizontally { it } + fadeIn() },
                     exitTransition = { slideOutHorizontally { -it / 3 } + fadeOut() },
                     popEnterTransition = { slideInHorizontally { -it / 3 } + fadeIn() },
-                    popExitTransition = { slideOutHorizontally { it } + fadeOut() }
+                    popExitTransition = { slideOutHorizontally { it } + fadeOut() },
                 ) {
                     androidx.compose.runtime.CompositionLocalProvider(
                         LocalNavAnimatedVisibilityScope provides this,
@@ -764,6 +774,7 @@ fun RememberNavGraph(
                                 onOpenNoteInSinglePane = { note, forceEdit ->
                                     navController.openEditRouteFor(note, forceEdit)
                                 },
+                                onBack = { navController.popBackStack() },
                             )
                         } else {
                             HistoryRoute(
@@ -774,11 +785,11 @@ fun RememberNavGraph(
                                     historyVisibleItemCount = visibleItemCount
                                 },
                                 onOpenNote = { note, forceEdit -> navController.openEditRouteFor(note, forceEdit) },
+                                onBack = { navController.popBackStack() },
                             )
                         }
                     }
                 }
-
 
                 mainTabComposable(
                     route = Routes.CALENDAR,
@@ -789,16 +800,18 @@ fun RememberNavGraph(
                     fadeOutSpec = navFadeOutSpec,
                 ) {
                     three.haddad.smartnotas.ui.calendar.CalendarRoute(
-                        onOpenNote = { noteId ->
-                            navController.navigate(Routes.editEvent(id = noteId)) {
+                        onOpenItemDetails = { itemId, isTask ->
+                            navController.navigate(Routes.calendarDetails(id = itemId, isTask = isTask)) {
                                 launchSingleTop = true
                             }
                         },
                         onCreateEvent = { selectedDate ->
-                            val initialMillis = selectedDate.atStartOfDay(java.time.ZoneId.systemDefault())
-                                .toInstant()
-                                .toEpochMilli()
-                            navController.navigate(Routes.editEvent(dateMillis = initialMillis)) {
+                            val initialMillis =
+                                selectedDate
+                                    .atStartOfDay(java.time.ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli()
+                            navController.navigate(Routes.editNote(id = null, initialDateMillis = initialMillis)) {
                                 launchSingleTop = true
                             }
                         },
@@ -815,13 +828,7 @@ fun RememberNavGraph(
                 ) {
                     three.haddad.smartnotas.ui.search.SearchRoute(
                         onOpenNote = { item ->
-                            if (three.haddad.smartnotas.ui.search.SearchViewModel.isEvent(item)) {
-                                navController.navigate(Routes.editEvent(id = item.note.id)) {
-                                    launchSingleTop = true
-                                }
-                            } else {
-                                navController.openEditRouteFor(item)
-                            }
+                            navController.openEditRouteFor(item)
                         },
                     )
                 }
@@ -1140,12 +1147,16 @@ fun RememberNavGraph(
                 }
 
                 composable(
-                    route = "${Routes.EDIT_EVENT}?${Routes.ARG_ID}={${Routes.ARG_ID}}&${Routes.ARG_DATE_MILLIS}={${Routes.ARG_DATE_MILLIS}}",
+                    route = "${Routes.CALENDAR_DETAILS}?${Routes.ARG_ITEM_ID}={${Routes.ARG_ITEM_ID}}&${Routes.ARG_IS_TASK}={${Routes.ARG_IS_TASK}}&${Routes.ARG_DATE_MILLIS}={${Routes.ARG_DATE_MILLIS}}",
                     arguments =
                         listOf(
-                            navArgument(Routes.ARG_ID) {
+                            navArgument(Routes.ARG_ITEM_ID) {
                                 type = NavType.LongType
                                 defaultValue = -1L
+                            },
+                            navArgument(Routes.ARG_IS_TASK) {
+                                type = NavType.BoolType
+                                defaultValue = false
                             },
                             navArgument(Routes.ARG_DATE_MILLIS) {
                                 type = NavType.LongType
@@ -1153,18 +1164,20 @@ fun RememberNavGraph(
                             },
                         ),
                 ) {
-                    val leaveEditor = {
-                        navController.popBackStack()
-                        Unit
-                    }
-                    androidx.compose.runtime.CompositionLocalProvider(
-                        LocalSharedTransitionScope provides this@SharedTransitionLayout,
-                        LocalNavAnimatedVisibilityScope provides this@composable,
-                    ) {
-                        three.haddad.smartnotas.ui.event.EditEventScreen(
-                            onBack = leaveEditor,
-                        )
-                    }
+                    three.haddad.smartnotas.ui.calendar.details.CalendarDetailsRoute(
+                        onBack = { navController.popBackStack() },
+                        onEditItem = { noteWithItems ->
+                            if (noteWithItems.note.kind == NoteKind.LIST) {
+                                navController.navigate(Routes.editList(noteWithItems.note.id, forceEdit = true)) {
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                navController.navigate(Routes.editNote(noteWithItems.note.id, forceEdit = true)) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                    )
                 }
             }
         }

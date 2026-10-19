@@ -22,8 +22,6 @@ import three.haddad.smartnotas.ui.components.settings.GroupPosition
 import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
 import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 
-
-
 @Composable
 fun NotesUiSection(
     prefs: NotesUiPrefs,
@@ -60,7 +58,6 @@ fun NotesUiSection(
     }
 }
 
-
 @Composable
 fun AppearanceSettingsToggleItem(
     title: String,
@@ -69,12 +66,13 @@ fun AppearanceSettingsToggleItem(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { onCheckedChange(!checked) }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge)

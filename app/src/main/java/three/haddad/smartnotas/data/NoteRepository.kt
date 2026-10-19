@@ -1,15 +1,15 @@
 package three.haddad.smartnotas.data
 
 import androidx.room.withTransaction
-import three.haddad.smartnotas.di.DefaultDispatcher
-import three.haddad.smartnotas.di.IoDispatcher
-import three.haddad.smartnotas.reminders.ReminderScheduler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import three.haddad.smartnotas.di.DefaultDispatcher
+import three.haddad.smartnotas.di.IoDispatcher
+import three.haddad.smartnotas.reminders.ReminderScheduler
 import java.util.Locale
 
 data class NoteOptions(
@@ -205,7 +205,6 @@ class NoteRepository(
         options: NoteOptions,
     ) = contentWriter.updateList(id, title, colorIndex, items, options)
 
-
     /**
      * Pins or unpins [id]. Pinning only affects placement on Home (the top "Pinned" section).
      *
@@ -267,7 +266,6 @@ class NoteRepository(
                 locked = note.locked,
                 iconKey = note.iconKey,
                 actions = note.actions,
-
                 recurrence = note.recurrence,
                 reminders = updatedReminders,
             )
@@ -361,7 +359,6 @@ class NoteRepository(
         ids: Collection<Long>,
         pinned: Boolean,
     ): Set<Long> = bulkOperations.setPinned(ids, pinned)
-
 
     suspend fun archiveNotes(ids: Collection<Long>) = bulkOperations.archiveNotes(ids)
 
@@ -504,7 +501,6 @@ class NoteRepository(
                 locked = note.locked,
                 iconKey = note.iconKey,
                 actions = note.actions,
-
                 recurrence = null,
             )
         val newId =

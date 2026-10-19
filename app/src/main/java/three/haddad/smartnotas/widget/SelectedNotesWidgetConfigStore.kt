@@ -12,7 +12,6 @@ enum class SelectedNotesFilterType {
     ALL,
     SHOULDER,
     PINNED,
-    
 }
 
 data class SelectedNotesWidgetConfig(

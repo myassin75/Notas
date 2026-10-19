@@ -45,14 +45,16 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.InteractionState
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.ReminderPreferencesState
 import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.SnoozeType
 import three.haddad.smartnotas.data.ShoulderRepository
+import three.haddad.smartnotas.data.SnoozeType
 import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.di.ApplicationScope
@@ -66,8 +68,6 @@ import three.haddad.smartnotas.ui.edit.CalendarPickerDialog
 import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
 import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.theme.RememberTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant
@@ -127,26 +127,26 @@ class SnoozeActivity : ComponentActivity() {
             val reminderState by reminderPrefs.state.collectAsStateWithLifecycle(
                 initialValue = ReminderPreferencesState(),
             )
-            
-                RememberTheme(
-                    themeState = themeState,
-                    paintBackground = false,
-                    hapticFeedbackEnabled = interactionState.hapticFeedbackEnabled,
+
+            RememberTheme(
+                themeState = themeState,
+                paintBackground = false,
+                hapticFeedbackEnabled = interactionState.hapticFeedbackEnabled,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            // Scrim so the home / caller activity behind the snooze dialog
+                            // is dimmed and the user's focus lands on the floating window.
+                            .background(Color.Black.copy(alpha = 0.55f))
+                            .clickable { finish() },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                // Scrim so the home / caller activity behind the snooze dialog
-                                // is dimmed and the user's focus lands on the floating window.
-                                .background(Color.Black.copy(alpha = 0.55f))
-                                .clickable { finish() },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        SnoozeDialogContent(
-                            snoozeType = reminderState.snoozeType,
-                            onSnooze = { timeMillis -> snoozeAndFinish(noteId, timeMillis) },
-                            onDismiss = { finish() },
+                    SnoozeDialogContent(
+                        snoozeType = reminderState.snoozeType,
+                        onSnooze = { timeMillis -> snoozeAndFinish(noteId, timeMillis) },
+                        onDismiss = { finish() },
                     )
                 }
             }

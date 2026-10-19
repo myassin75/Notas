@@ -8,8 +8,6 @@ import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-
-
 data class NoteWithItems(
     @androidx.room.Embedded val note: NoteEntity,
     @androidx.room.Relation(parentColumn = "id", entityColumn = "noteId")
@@ -227,5 +225,3 @@ interface AttachmentDao {
     @Query("DELETE FROM attachments WHERE noteId = :noteId")
     suspend fun deleteForNote(noteId: Long)
 }
-
-

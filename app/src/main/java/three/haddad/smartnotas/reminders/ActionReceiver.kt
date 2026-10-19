@@ -9,14 +9,14 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.core.net.toUri
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.ActionType
 import three.haddad.smartnotas.data.NoteAction
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.di.ApplicationScope
 import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint

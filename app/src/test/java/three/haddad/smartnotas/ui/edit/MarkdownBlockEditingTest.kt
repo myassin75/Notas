@@ -2,12 +2,12 @@ package three.haddad.smartnotas.ui.edit
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.parseMarkdownLines
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.ui.common.MarkdownBlockKind
+import three.haddad.smartnotas.ui.common.parseMarkdownLines
 
 class MarkdownBlockEditingTest {
     @Test

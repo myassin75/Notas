@@ -75,11 +75,17 @@ object CalendarDesignTokens {
 
     // Theme Helpers
     fun resolveScreenBg(isDark: Boolean): Color = if (isDark) ScreenBgDark else ScreenBgLight
+
     fun resolveCardBg(isDark: Boolean): Color = if (isDark) CardBgDark else CardBgLight
+
     fun resolveCardBorder(isDark: Boolean): Color = if (isDark) CardBorderDark else CardBorderLight
+
     fun resolveTextPrimary(isDark: Boolean): Color = if (isDark) TextPrimaryDark else TextPrimaryLight
+
     fun resolveTextSecondary(isDark: Boolean): Color = if (isDark) TextSecondaryDark else TextSecondaryLight
+
     fun resolveTextMuted(isDark: Boolean): Color = if (isDark) TextMutedDark else TextMutedLight
+
     fun resolveOutOfMonthText(isDark: Boolean): Color = if (isDark) OutOfMonthTextDark else OutOfMonthTextLight
 
     /**
@@ -87,7 +93,8 @@ object CalendarDesignTokens {
      * down to the raw Material Symbols ligature name.
      */
     fun cleanIconName(raw: String): String =
-        raw.removePrefix("symbol_filled:")
+        raw
+            .removePrefix("symbol_filled:")
             .removePrefix("symbol_outlined:")
             .removePrefix("symbol:")
             .removePrefix("sym:")

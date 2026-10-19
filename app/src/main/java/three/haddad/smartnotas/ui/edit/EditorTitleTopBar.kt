@@ -24,9 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,10 +33,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,15 +61,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.rememberLocalTextFieldValueState
 import three.haddad.smartnotas.ui.components.RememberIconButton
 import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
+import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
 import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 private const val EDITOR_TITLE_MAX_LINES = 2
@@ -94,6 +94,7 @@ internal fun EditorTitleTopBar(
     onOpenIcon: () -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
+    colorIndex: Int = 0,
     onTitleFocusChanged: (Boolean) -> Unit = {},
     showNavigateBack: Boolean = true,
     allowInitialTitleFocus: Boolean = true,
@@ -184,11 +185,12 @@ internal fun EditorTitleTopBar(
                         Surface(
                             shape = CircleShape,
                             color = Color.White,
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .clickable { onBack() },
+                            modifier =
+                                Modifier
+                                    .padding(start = 8.dp)
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .clickable { onBack() },
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 RememberMaterialRoundedSymbol(
@@ -238,10 +240,11 @@ internal fun EditorTitleTopBar(
                         Surface(
                             shape = CircleShape,
                             color = SettingsDesignTokens.PrimaryPurple,
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .clip(CircleShape)
-                                .clickable { onSave() },
+                            modifier =
+                                Modifier
+                                    .padding(end = 8.dp)
+                                    .clip(CircleShape)
+                                    .clickable { onSave() },
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -257,11 +260,12 @@ internal fun EditorTitleTopBar(
                                 )
                                 Text(
                                     text = "Save",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 15.sp,
-                                        color = Color.White,
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 15.sp,
+                                            color = Color.White,
+                                        ),
                                 )
                             }
                         }
@@ -286,6 +290,7 @@ internal fun EditorTitleTopBar(
                     iconKey = iconKey,
                     kind = contentKind,
                     iconSize = 28.dp,
+                    colorIndex = colorIndex,
                     showBoundary = isEditMode && !readOnly,
                     onClick = if (readOnly) null else onOpenIcon,
                 )

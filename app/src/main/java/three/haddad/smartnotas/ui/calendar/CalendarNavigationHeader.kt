@@ -13,30 +13,29 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
-
-import androidx.compose.runtime.remember
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 
 /**
  * Calendar navigation header matching the reference design:
@@ -59,52 +58,54 @@ fun CalendarNavigationHeader(
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
     val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
 
-    val annotatedTitle = remember(title, textPrimary, textSecondary) {
-        val trimmed = title.trim()
-        val parts = trimmed.split(" ")
-        if (parts.size >= 2 && parts.last().all { it.isDigit() }) {
-            val mainText = parts.dropLast(1).joinToString(" ")
-            val yearText = parts.last()
-            buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        fontSize = 18.sp,
-                    )
-                ) {
-                    append(mainText)
-                    append(" ")
+    val annotatedTitle =
+        remember(title, textPrimary, textSecondary) {
+            val trimmed = title.trim()
+            val parts = trimmed.split(" ")
+            if (parts.size >= 2 && parts.last().all { it.isDigit() }) {
+                val mainText = parts.dropLast(1).joinToString(" ")
+                val yearText = parts.last()
+                buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            fontSize = 18.sp,
+                        ),
+                    ) {
+                        append(mainText)
+                        append(" ")
+                    }
+                    withStyle(
+                        SpanStyle(
+                            fontWeight = FontWeight.Normal,
+                            color = textSecondary,
+                            fontSize = 18.sp,
+                        ),
+                    ) {
+                        append(yearText)
+                    }
                 }
-                withStyle(
-                    SpanStyle(
-                        fontWeight = FontWeight.Normal,
-                        color = textSecondary,
-                        fontSize = 18.sp,
-                    )
-                ) {
-                    append(yearText)
-                }
-            }
-        } else {
-            buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        fontSize = 18.sp,
-                    )
-                ) {
-                    append(trimmed)
+            } else {
+                buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            fontSize = 18.sp,
+                        ),
+                    ) {
+                        append(trimmed)
+                    }
                 }
             }
         }
-    }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -124,10 +125,11 @@ fun CalendarNavigationHeader(
                     text = subtitle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            color = textSecondary,
+                        ),
                 )
             }
         }
@@ -168,9 +170,10 @@ fun CalendarNavigationHeader(
                     onClick = onToday,
                     shape = RoundedCornerShape(12.dp),
                     color = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
-                    modifier = Modifier
-                        .height(32.dp)
-                        .defaultMinSize(minWidth = 48.dp),
+                    modifier =
+                        Modifier
+                            .height(32.dp)
+                            .defaultMinSize(minWidth = 48.dp),
                 ) {
                     Box(
                         modifier = Modifier.padding(horizontal = 12.dp),
@@ -179,11 +182,12 @@ fun CalendarNavigationHeader(
                         Text(
                             text = stringResource(R.string.calendar_today),
                             maxLines = 1,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.5.sp,
-                                color = CalendarDesignTokens.PrimaryPurple,
-                            ),
+                            style =
+                                MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.5.sp,
+                                    color = CalendarDesignTokens.PrimaryPurple,
+                                ),
                         )
                     }
                 }

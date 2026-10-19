@@ -80,6 +80,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.InteractionState
@@ -88,6 +90,7 @@ import three.haddad.smartnotas.data.NoteLayoutMode
 import three.haddad.smartnotas.data.NoteSwipeAction
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.NotesFilter
+import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.ViewOptions
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.bulkActionSnackbarMessage
@@ -108,11 +111,8 @@ import three.haddad.smartnotas.ui.modifiers.rememberContentOverflowScrollEnabled
 import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
 import three.haddad.smartnotas.ui.nav.LocalNavAnimatedVisibilityScope
 import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
-import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
 
 private object HomeScreenSessionState {
     var archiveSectionExpanded: Boolean = false

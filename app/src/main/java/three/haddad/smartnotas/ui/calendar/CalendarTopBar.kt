@@ -35,13 +35,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
-import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * Top bar for the Calendar screen matching the reference design:
@@ -69,9 +69,10 @@ fun CalendarTopBar(
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -84,10 +85,11 @@ fun CalendarTopBar(
                 onClick = { menuExpanded = true },
                 shape = CalendarDesignTokens.MenuButtonShape,
                 color = if (isDark) CalendarDesignTokens.CardBgDark else Color.White,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = CalendarDesignTokens.resolveCardBorder(isDark),
-                ),
+                border =
+                    BorderStroke(
+                        width = 1.dp,
+                        color = CalendarDesignTokens.resolveCardBorder(isDark),
+                    ),
                 modifier = Modifier.size(42.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -122,21 +124,23 @@ fun CalendarTopBar(
                 text = title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = textPrimary,
-                ),
+                style =
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = textPrimary,
+                    ),
             )
             if (subtitle.isNotBlank()) {
                 Text(
                     text = subtitle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 13.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 13.sp,
+                            color = textSecondary,
+                        ),
                 )
             }
         }
@@ -195,33 +199,36 @@ fun CalendarViewDropdown(
         // Dropdown Header Label
         Text(
             text = stringResource(R.string.calendar_view_selector_title),
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 12.sp,
-                color = textSecondary,
-                fontWeight = FontWeight.Medium,
-            ),
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 12.sp,
+                    color = textSecondary,
+                    fontWeight = FontWeight.Medium,
+                ),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
         // View Mode Options
         CalendarViewMode.entries.forEach { mode ->
             val isSelected = mode == currentViewMode
-            val itemBg = if (isSelected) {
-                if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender
-            } else {
-                Color.Transparent
-            }
+            val itemBg =
+                if (isSelected) {
+                    if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender
+                } else {
+                    Color.Transparent
+                }
             val contentColor = if (isSelected) CalendarDesignTokens.PrimaryPurple else textPrimary
 
             DropdownMenuItem(
                 text = {
                     Text(
                         text = stringResource(mode.labelRes),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = contentColor,
-                            fontSize = 14.sp,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = contentColor,
+                                fontSize = 14.sp,
+                            ),
                     )
                 },
                 leadingIcon = {
@@ -231,28 +238,33 @@ fun CalendarViewDropdown(
                         tint = contentColor,
                     )
                 },
-                trailingIcon = if (isSelected) {
-                    {
-                        RememberMaterialRoundedSymbol(
-                            name = "check",
-                            size = 18.dp,
-                            tint = CalendarDesignTokens.PrimaryPurple,
-                        )
-                    }
-                } else null,
+                trailingIcon =
+                    if (isSelected) {
+                        {
+                            RememberMaterialRoundedSymbol(
+                                name = "check",
+                                size = 18.dp,
+                                tint = CalendarDesignTokens.PrimaryPurple,
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 onClick = {
                     onDismiss()
                     onSelectViewMode(mode)
                 },
-                colors = MenuDefaults.itemColors(
-                    textColor = contentColor,
-                    leadingIconColor = contentColor,
-                    trailingIconColor = CalendarDesignTokens.PrimaryPurple,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                    .background(itemBg, RoundedCornerShape(12.dp)),
+                colors =
+                    MenuDefaults.itemColors(
+                        textColor = contentColor,
+                        leadingIconColor = contentColor,
+                        trailingIconColor = CalendarDesignTokens.PrimaryPurple,
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .background(itemBg, RoundedCornerShape(12.dp)),
             )
         }
     }

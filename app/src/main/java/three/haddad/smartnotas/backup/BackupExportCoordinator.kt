@@ -3,9 +3,6 @@ package three.haddad.smartnotas.backup
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.BackupPrefs
-import three.haddad.smartnotas.data.NoteRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -13,6 +10,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import three.haddad.smartnotas.data.BackupIo
+import three.haddad.smartnotas.data.BackupPrefs
+import three.haddad.smartnotas.data.NoteRepository
 
 /**
  * When "auto-export on app exit" is enabled, writes at most one ZIP per time the app goes to

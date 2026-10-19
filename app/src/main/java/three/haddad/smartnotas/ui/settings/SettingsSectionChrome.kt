@@ -88,9 +88,10 @@ fun SettingsSectionTitle(
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -103,11 +104,12 @@ fun SettingsSectionTitle(
         )
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
-                color = SettingsDesignTokens.TextPrimary,
-            ),
+            style =
+                MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = SettingsDesignTokens.TextPrimary,
+                ),
             modifier = Modifier.weight(1f),
         )
         trailingContent?.invoke()
@@ -124,24 +126,27 @@ fun SettingsRowItem(
     onClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    val clickableModifier = if (enabled && onClick != null) {
-        Modifier.appClickable { onClick() }
-    } else {
-        Modifier
-    }
+    val clickableModifier =
+        if (enabled && onClick != null) {
+            Modifier.appClickable { onClick() }
+        } else {
+            Modifier
+        }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(clickableModifier)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .then(clickableModifier)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (materialSymbolName != null) {
             Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(SettingsDesignTokens.IconBoxShape)
-                    .background(if (enabled) SettingsDesignTokens.SoftLavender else SettingsDesignTokens.DisabledBg),
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clip(SettingsDesignTokens.IconBoxShape)
+                        .background(if (enabled) SettingsDesignTokens.SoftLavender else SettingsDesignTokens.DisabledBg),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -160,20 +165,22 @@ fun SettingsRowItem(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
-                    color = titleColor ?: (if (enabled) SettingsDesignTokens.TextPrimary else SettingsDesignTokens.DisabledText),
-                ),
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp,
+                        color = titleColor ?: (if (enabled) SettingsDesignTokens.TextPrimary else SettingsDesignTokens.DisabledText),
+                    ),
             )
             if (!subtitle.isNullOrEmpty()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.5.sp,
-                        color = SettingsDesignTokens.TextSecondary,
-                        lineHeight = 16.sp,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.5.sp,
+                            color = SettingsDesignTokens.TextSecondary,
+                            lineHeight = 16.sp,
+                        ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -193,19 +200,21 @@ fun SettingsValuePill(
 ) {
     val clickableModifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier
     Surface(
-        modifier = Modifier
-            .clip(SettingsDesignTokens.PillShape)
-            .then(clickableModifier),
+        modifier =
+            Modifier
+                .clip(SettingsDesignTokens.PillShape)
+                .then(clickableModifier),
         shape = SettingsDesignTokens.PillShape,
         color = SettingsDesignTokens.SoftLavender,
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
-                color = SettingsDesignTokens.PrimaryPurple,
-            ),
+            style =
+                MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = SettingsDesignTokens.PrimaryPurple,
+                ),
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
         )
     }
@@ -221,26 +230,30 @@ fun SettingsCustomSwitch(
         checked = checked,
         onCheckedChange = if (enabled) onCheckedChange else null,
         enabled = enabled,
-        colors = SwitchDefaults.colors(
-            checkedThumbColor = Color.White,
-            checkedTrackColor = SettingsDesignTokens.PrimaryPurple,
-            checkedIconColor = SettingsDesignTokens.PrimaryPurple,
-            uncheckedThumbColor = Color.White,
-            uncheckedTrackColor = SettingsDesignTokens.DisabledSwitchTrack,
-            uncheckedBorderColor = Color.Transparent,
-            disabledUncheckedTrackColor = SettingsDesignTokens.DisabledSwitchTrack,
-            disabledUncheckedThumbColor = Color.White,
-        ),
-        thumbContent = if (checked) {
-            {
-                RememberMaterialRoundedSymbol(
-                    name = "check",
-                    size = SwitchDefaults.IconSize,
-                    tint = SettingsDesignTokens.PrimaryPurple,
-                    weight = FontWeight.Bold,
-                )
-            }
-        } else null,
+        colors =
+            SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = SettingsDesignTokens.PrimaryPurple,
+                checkedIconColor = SettingsDesignTokens.PrimaryPurple,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = SettingsDesignTokens.DisabledSwitchTrack,
+                uncheckedBorderColor = Color.Transparent,
+                disabledUncheckedTrackColor = SettingsDesignTokens.DisabledSwitchTrack,
+                disabledUncheckedThumbColor = Color.White,
+            ),
+        thumbContent =
+            if (checked) {
+                {
+                    RememberMaterialRoundedSymbol(
+                        name = "check",
+                        size = SwitchDefaults.IconSize,
+                        tint = SettingsDesignTokens.PrimaryPurple,
+                        weight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                null
+            },
     )
 }
 
@@ -275,12 +288,13 @@ internal fun SettingsExpandableSection(
     val fadeOutSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .pulsingSectionHighlightOutline(
-                active = highlighted,
-                outlineColor = MaterialTheme.colorScheme.primary.copy(alpha = highlightAlpha),
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .pulsingSectionHighlightOutline(
+                    active = highlighted,
+                    outlineColor = MaterialTheme.colorScheme.primary.copy(alpha = highlightAlpha),
+                ),
     ) {
         if (showHeader) {
             SettingsSectionTitle(
@@ -291,14 +305,16 @@ internal fun SettingsExpandableSection(
         }
         AnimatedVisibility(
             visible = !showHeader || !collapsed,
-            enter = expandVertically(
-                animationSpec = spatialSpec,
-                expandFrom = Alignment.Top,
-            ) + fadeIn(fadeInSpec),
-            exit = shrinkVertically(
-                animationSpec = spatialSpec,
-                shrinkTowards = Alignment.Top,
-            ) + fadeOut(fadeOutSpec),
+            enter =
+                expandVertically(
+                    animationSpec = spatialSpec,
+                    expandFrom = Alignment.Top,
+                ) + fadeIn(fadeInSpec),
+            exit =
+                shrinkVertically(
+                    animationSpec = spatialSpec,
+                    shrinkTowards = Alignment.Top,
+                ) + fadeOut(fadeOutSpec),
         ) {
             Column {
                 content()
@@ -385,7 +401,12 @@ internal fun ToggleRow(
         title = title,
         subtitle = subtitle,
         enabled = enabled,
-        onClick = if (enabled) { { onChange(!checked) } } else null,
+        onClick =
+            if (enabled) {
+                { onChange(!checked) }
+            } else {
+                null
+            },
         trailingContent = {
             SettingsCustomSwitch(
                 checked = checked,

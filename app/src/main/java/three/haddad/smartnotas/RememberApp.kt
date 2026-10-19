@@ -9,6 +9,13 @@ import android.media.RingtoneManager
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.backup.BackupExportCoordinator
 import three.haddad.smartnotas.backup.RememberBackupWork
 import three.haddad.smartnotas.data.BackupPrefs
@@ -32,13 +39,6 @@ import three.haddad.smartnotas.update.RememberUpdateState
 import three.haddad.smartnotas.update.UpdateAvailableNotifier
 import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
 import three.haddad.smartnotas.widget.NotesWidgetUpdater
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltAndroidApp

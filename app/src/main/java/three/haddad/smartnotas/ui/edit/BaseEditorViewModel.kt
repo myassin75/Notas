@@ -5,6 +5,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.AppMediaStorage
 import three.haddad.smartnotas.data.DefaultNotePreferencesState
 import three.haddad.smartnotas.data.DefaultNotePrefs
@@ -16,18 +22,12 @@ import three.haddad.smartnotas.data.NoteReminder
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceRule
+import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.getActiveReminders
 import three.haddad.smartnotas.data.pinned
 import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
 import three.haddad.smartnotas.ui.common.HeroFraming
 import three.haddad.smartnotas.ui.nav.Routes
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.Visibility as NoteVisibility
 
 /**
@@ -59,7 +59,6 @@ abstract class BaseEditorViewModel(
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
-
 
     /**
      * Snapshot of the underlying note's [three.haddad.smartnotas.data.NoteEntity.completedAt] as a
@@ -113,7 +112,10 @@ abstract class BaseEditorViewModel(
     private val _pictureHeroFraming = MutableStateFlow<String?>(null)
     val pictureHeroFraming: StateFlow<String?> = _pictureHeroFraming.asStateFlow()
 
-    private val _iconKey = MutableStateFlow<String?>(null)
+    private val _colorIndex = MutableStateFlow(8)
+    val colorIndex: StateFlow<Int> = _colorIndex.asStateFlow()
+
+    private val _iconKey = MutableStateFlow<String?>("${ICON_SYMBOL_PREFIX}calendar_month")
     val iconKey: StateFlow<String?> = _iconKey.asStateFlow()
 
     private val _actions = MutableStateFlow<List<NoteAction>>(emptyList())
@@ -244,6 +246,7 @@ abstract class BaseEditorViewModel(
         _locked.value = n.locked
         _pictureUri.value = n.pictureUri
         _pictureHeroFraming.value = n.pictureHeroFraming
+        _colorIndex.value = n.colorIndex
         _iconKey.value = n.iconKey
         _actions.value = n.actions
         _attachments.value = existing.attachments
@@ -384,6 +387,13 @@ abstract class BaseEditorViewModel(
         markDirty()
     }
 
+    fun setColorIndex(value: Int) {
+        val sanitized = value.coerceIn(0, 9)
+        if (_colorIndex.value == sanitized) return
+        _colorIndex.value = sanitized
+        markDirty()
+    }
+
     fun setIconKey(value: String?) {
         if (_iconKey.value == value) return
         _iconKey.value = value
@@ -455,7 +465,10 @@ abstract class BaseEditorViewModel(
             initialValue = emptyList(),
         ) ?: MutableStateFlow(emptyList())
 
-    fun createShoulder(name: String, colorHex: String) {
+    fun createShoulder(
+        name: String,
+        colorHex: String,
+    ) {
         viewModelScope.launch {
             val id = repository.shoulderRepository?.createShoulder(name, colorHex)
             setShoulderId(id)

@@ -62,6 +62,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.flow.first
 import three.haddad.smartnotas.MainActivity
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
@@ -75,7 +76,6 @@ import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
 import three.haddad.smartnotas.ui.edit.NoteIcon
 import three.haddad.smartnotas.ui.edit.resolveNoteIcon
 import three.haddad.smartnotas.ui.home.sortNotes
-import kotlinx.coroutines.flow.first
 import java.util.Calendar
 
 /**

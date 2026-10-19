@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DropdownMenu
@@ -126,53 +126,58 @@ private fun SwipeGestureModeSegmentedControl(
     onSelect: (SwipeGestureMode) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(CircleShape)
-            .background(Color(0xFFF5F4F9))
-            .padding(4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(CircleShape)
+                .background(Color(0xFFF5F4F9))
+                .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         val revealSelected = current == SwipeGestureMode.REVEAL_ACTIONS
         val executeSelected = current == SwipeGestureMode.EXECUTE_ONE
 
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .clip(CircleShape)
-                .background(if (revealSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
-                .clickable { onSelect(SwipeGestureMode.REVEAL_ACTIONS) }
-                .padding(vertical = 10.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .background(if (revealSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
+                    .clickable { onSelect(SwipeGestureMode.REVEAL_ACTIONS) }
+                    .padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.settings_swipe_reveal_title),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    color = if (revealSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
-                    fontWeight = if (revealSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 14.sp,
-                ),
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        color = if (revealSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
+                        fontWeight = if (revealSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 14.sp,
+                    ),
             )
         }
 
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .clip(CircleShape)
-                .background(if (executeSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
-                .clickable { onSelect(SwipeGestureMode.EXECUTE_ONE) }
-                .padding(vertical = 10.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .background(if (executeSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
+                    .clickable { onSelect(SwipeGestureMode.EXECUTE_ONE) }
+                    .padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.settings_swipe_execute_title),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    color = if (executeSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
-                    fontWeight = if (executeSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 14.sp,
-                ),
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        color = if (executeSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
+                        fontWeight = if (executeSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 14.sp,
+                    ),
             )
         }
     }

@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.isSmallLandscape
@@ -54,7 +55,6 @@ import three.haddad.smartnotas.ui.components.AppIconImage
 import three.haddad.smartnotas.ui.components.RememberButton
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import three.haddad.smartnotas.ui.theme.reducedMotionEnterTransition
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -106,7 +106,7 @@ fun OnboardingTitleScreen(
             buttonVisible = buttonVisible,
             iconEnter = reducedMotionEnterTransition(iconEnter),
             blockEnter = reducedMotionEnterTransition(blockEnter),
-            onLetsBegin = onLetsBegin
+            onLetsBegin = onLetsBegin,
         )
     } else {
         PortraitLayout(
@@ -116,7 +116,7 @@ fun OnboardingTitleScreen(
             buttonVisible = buttonVisible,
             iconEnter = reducedMotionEnterTransition(iconEnter),
             blockEnter = reducedMotionEnterTransition(blockEnter),
-            onLetsBegin = onLetsBegin
+            onLetsBegin = onLetsBegin,
         )
     }
 }
@@ -129,35 +129,37 @@ private fun PortraitLayout(
     buttonVisible: Boolean,
     iconEnter: EnterTransition,
     blockEnter: EnterTransition,
-    onLetsBegin: () -> Unit
+    onLetsBegin: () -> Unit,
 ) {
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F8))
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F8)),
     ) {
         val screenW = maxWidth
         val horizontalMargin = screenW * 0.05f
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Top spacing: ~10.5% of total height
             Spacer(modifier = Modifier.weight(0.105f))
 
             // Main Card: ~60% of total height
             Surface(
-                modifier = Modifier
-                    .weight(0.60f)
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalMargin),
+                modifier =
+                    Modifier
+                        .weight(0.60f)
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalMargin),
                 shape = RoundedCornerShape(screenW * 0.06f),
-                color = Color(0xFFFFFFFF)
+                color = Color(0xFFFFFFFF),
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     // Logo top padding: ~19.6% of card height
                     Spacer(modifier = Modifier.weight(0.196f))
@@ -166,7 +168,7 @@ private fun PortraitLayout(
                     val logoSize = screenW * 0.4f
                     Box(
                         modifier = Modifier.size(logoSize),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         androidx.compose.animation.AnimatedVisibility(visible = iconVisible, enter = iconEnter) {
                             LogoComposition(logoSize = logoSize)
@@ -184,13 +186,13 @@ private fun PortraitLayout(
                                     text = stringResource(R.string.app_name),
                                     fontSize = 38.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF383743)
+                                    color = Color(0xFF383743),
                                 )
                                 Spacer(modifier = Modifier.height(screenW * 0.0375f))
                                 Text(
                                     text = stringResource(R.string.app_tagline),
                                     fontSize = 16.sp,
-                                    color = Color(0xFF8A879B)
+                                    color = Color(0xFF8A879B),
                                 )
                             }
                         }
@@ -210,7 +212,7 @@ private fun PortraitLayout(
                         text = stringResource(R.string.onboarding_byline),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF858296)
+                        color = Color(0xFF858296),
                     )
                 }
             }
@@ -220,31 +222,33 @@ private fun PortraitLayout(
 
             Box(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalMargin),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 androidx.compose.animation.AnimatedVisibility(visible = buttonVisible, enter = blockEnter, modifier = Modifier.fillMaxWidth()) {
                     RememberButton(
                         onClick = onLetsBegin,
                         shape = RoundedCornerShape(screenW * 0.045f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFA64FA8),
-                            contentColor = Color(0xFFFFFFFF)
-                        ),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFA64FA8),
+                                contentColor = Color(0xFFFFFFFF),
+                            ),
                         contentPadding = PaddingValues(horizontal = horizontalMargin * 1.5f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(screenW * 0.141f)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(screenW * 0.141f),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = stringResource(R.string.onboarding_lets_begin),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFFFFF)
+                                color = Color(0xFFFFFFFF),
                             )
                             RememberMaterialRoundedSymbol(
                                 name = "arrow_forward",
@@ -266,7 +270,7 @@ private fun PortraitLayout(
 private fun LogoComposition(logoSize: androidx.compose.ui.unit.Dp) {
     Box(
         modifier = Modifier.size(logoSize),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         val dot1Size = logoSize * 0.1f
         val dot2Size = logoSize * 0.15f
@@ -274,50 +278,55 @@ private fun LogoComposition(logoSize: androidx.compose.ui.unit.Dp) {
 
         // Large pale circular background
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape)
-                .background(Color(0xFFF0E8F7))
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(Color(0xFFF0E8F7)),
         )
 
         // Upper-right circle
         Box(
-            modifier = Modifier
-                .size(dot1Size)
-                .align(Alignment.Center)
-                .offset(x = logoSize * 0.42f, y = -(logoSize * 0.35f))
-                .clip(CircleShape)
-                .background(Color(0xFFF0E8F7))
+            modifier =
+                Modifier
+                    .size(dot1Size)
+                    .align(Alignment.Center)
+                    .offset(x = logoSize * 0.42f, y = -(logoSize * 0.35f))
+                    .clip(CircleShape)
+                    .background(Color(0xFFF0E8F7)),
         )
 
         // Lower-left circle
         Box(
-            modifier = Modifier
-                .size(dot2Size)
-                .align(Alignment.Center)
-                .offset(x = -(logoSize * 0.4f), y = logoSize * 0.35f)
-                .clip(CircleShape)
-                .background(Color(0xFFF0E8F7))
+            modifier =
+                Modifier
+                    .size(dot2Size)
+                    .align(Alignment.Center)
+                    .offset(x = -(logoSize * 0.4f), y = logoSize * 0.35f)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF0E8F7)),
         )
 
         // Grounding shadow
         Box(
-            modifier = Modifier
-                .size(logoSize * 0.75f, logoSize * 0.125f)
-                .align(Alignment.BottomCenter)
-                .offset(y = logoSize * 0.05f)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(Color.Black.copy(alpha = 0.04f), Color.Transparent)
-                    )
-                )
+            modifier =
+                Modifier
+                    .size(logoSize * 0.75f, logoSize * 0.125f)
+                    .align(Alignment.BottomCenter)
+                    .offset(y = logoSize * 0.05f)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(Color.Black.copy(alpha = 0.04f), Color.Transparent),
+                        ),
+                    ),
         )
 
         // The SmartNotas Logo
         AppIconImage(
-            modifier = Modifier
-                .size(logoIconSize)
-                .clip(RoundedCornerShape(logoIconSize * 0.23f))
+            modifier =
+                Modifier
+                    .size(logoIconSize)
+                    .clip(RoundedCornerShape(logoIconSize * 0.23f)),
         )
     }
 }
@@ -330,31 +339,33 @@ private fun LandscapeLayout(
     buttonVisible: Boolean,
     iconEnter: EnterTransition,
     blockEnter: EnterTransition,
-    onLetsBegin: () -> Unit
+    onLetsBegin: () -> Unit,
 ) {
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F8))
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F8)),
     ) {
         val screenW = maxWidth
         val screenH = maxHeight
 
         Row(
             modifier = Modifier.fillMaxSize().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                modifier = Modifier
-                    .weight(1.1f)
-                    .fillMaxHeight(),
+                modifier =
+                    Modifier
+                        .weight(1.1f)
+                        .fillMaxHeight(),
                 shape = RoundedCornerShape(screenH * 0.06f),
-                color = Color(0xFFFFFFFF)
+                color = Color(0xFFFFFFFF),
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
                 ) {
                     val logoSize = screenH * 0.4f
                     Box(modifier = Modifier.size(logoSize), contentAlignment = Alignment.Center) {
@@ -371,13 +382,13 @@ private fun LandscapeLayout(
                                 text = stringResource(R.string.app_name),
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF383743)
+                                color = Color(0xFF383743),
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = stringResource(R.string.app_tagline),
                                 fontSize = 14.sp,
-                                color = Color(0xFF8A879B)
+                                color = Color(0xFF8A879B),
                             )
                         }
                     }
@@ -385,19 +396,20 @@ private fun LandscapeLayout(
             }
 
             Column(
-                modifier = Modifier
-                    .weight(0.9f)
-                    .fillMaxHeight()
-                    .padding(horizontal = 32.dp),
+                modifier =
+                    Modifier
+                        .weight(0.9f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 androidx.compose.animation.AnimatedVisibility(visible = bylineVisible, enter = blockEnter) {
                     Text(
                         text = stringResource(R.string.onboarding_byline),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF858296)
+                        color = Color(0xFF858296),
                     )
                 }
 
@@ -407,25 +419,27 @@ private fun LandscapeLayout(
                     RememberButton(
                         onClick = onLetsBegin,
                         shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFA64FA8),
-                            contentColor = Color(0xFFFFFFFF)
-                        ),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFA64FA8),
+                                contentColor = Color(0xFFFFFFFF),
+                            ),
                         contentPadding = PaddingValues(horizontal = 24.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = stringResource(R.string.onboarding_lets_begin),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFFFFF)
+                                color = Color(0xFFFFFFFF),
                             )
                             RememberMaterialRoundedSymbol(
                                 name = "arrow_forward",

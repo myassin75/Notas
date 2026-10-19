@@ -101,6 +101,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.withTimeoutOrNull
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
@@ -119,7 +120,6 @@ import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import three.haddad.smartnotas.ui.theme.transparentTopAppBarColors
-import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

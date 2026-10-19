@@ -16,6 +16,9 @@ import android.os.storage.StorageManager
 import android.util.DisplayMetrics
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.BackupPrefs
@@ -32,9 +35,6 @@ import three.haddad.smartnotas.ui.common.MIN_MULTI_PANE_WIDTH_DP
 import three.haddad.smartnotas.widget.NotesWidgetReceiver
 import three.haddad.smartnotas.widget.QuickCaptureWidgetReceiver
 import three.haddad.smartnotas.widget.SelectedWidgetReceiver
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter

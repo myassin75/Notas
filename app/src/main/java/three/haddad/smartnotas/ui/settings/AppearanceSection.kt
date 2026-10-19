@@ -41,11 +41,12 @@ fun AppearanceSection(
     SettingsSectionCard {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CircleShape)
-                    .background(Color(0xFFF5F4F9))
-                    .padding(4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(CircleShape)
+                        .background(Color(0xFFF5F4F9))
+                        .padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 SegmentOption(
@@ -73,20 +74,22 @@ fun AppearanceSection(
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { scope.launch { prefs.setUseBlackTheme(!state.useBlackTheme) } }
-                    .padding(vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { scope.launch { prefs.setUseBlackTheme(!state.useBlackTheme) } }
+                        .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = stringResource(R.string.appearance_use_black_theme),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = SettingsDesignTokens.TextPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyLarge.copy(
+                            color = SettingsDesignTokens.TextPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
                 )
                 SettingsCustomSwitch(
                     checked = state.useBlackTheme,
@@ -111,21 +114,23 @@ private fun SegmentOption(
     val fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
 
     Row(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(bg)
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
+        modifier =
+            modifier
+                .clip(CircleShape)
+                .background(bg)
+                .clickable(onClick = onClick)
+                .padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelLarge.copy(
-                color = textColor,
-                fontWeight = fontWeight,
-                fontSize = 14.sp,
-            ),
+            style =
+                MaterialTheme.typography.labelLarge.copy(
+                    color = textColor,
+                    fontWeight = fontWeight,
+                    fontSize = 14.sp,
+                ),
         )
     }
 }

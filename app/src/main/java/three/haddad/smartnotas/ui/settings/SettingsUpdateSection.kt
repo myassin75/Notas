@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.UpdateCheckSchedule
@@ -78,7 +79,6 @@ import three.haddad.smartnotas.update.RememberUpdateInfo
 import three.haddad.smartnotas.update.isObtainXInstalled
 import three.haddad.smartnotas.update.supportsObtainXTracking
 import three.haddad.smartnotas.update.trackUpdatesViaObtainX
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -805,11 +805,12 @@ internal fun CheckForUpdatesRow(
 ) {
     SettingsRowItem(
         materialSymbolName = "verified",
-        title = if (availableUpdate != null) {
-            stringResource(R.string.settings_update_available_button, availableUpdate.versionName)
-        } else {
-            stringResource(R.string.settings_check_for_updates)
-        },
+        title =
+            if (availableUpdate != null) {
+                stringResource(R.string.settings_update_available_button, availableUpdate.versionName)
+            } else {
+                stringResource(R.string.settings_check_for_updates)
+            },
         titleColor = SettingsDesignTokens.PrimaryPurple,
         subtitle = "Current version: ${BuildConfig.VERSION_NAME}",
         onClick = onClick,

@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import three.haddad.smartnotas.BuildConfig
+import three.haddad.smartnotas.R
 
 /** ObtainX, the author's Obtainium fork. Its GitHub and F-Droid builds share this package id. */
 internal const val OBTAINX_PACKAGE_ID = "dev.bikram.obtainx"

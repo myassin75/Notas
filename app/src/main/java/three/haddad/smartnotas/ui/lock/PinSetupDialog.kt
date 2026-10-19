@@ -22,10 +22,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.distinctUntilChanged
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.AppBottomSheet
 import three.haddad.smartnotas.ui.components.RememberTextButton
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 private val PinInputTransformation =
     InputTransformation {

@@ -3,16 +3,16 @@ package three.haddad.smartnotas.ui.home
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.toPersistentSet
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.FilterType
 import three.haddad.smartnotas.data.GroupBy
@@ -41,7 +42,6 @@ import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberCheckbox
 import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
 import three.haddad.smartnotas.ui.components.RememberInputChip
-import kotlinx.collections.immutable.toPersistentSet
 
 private val ActiveChipHeight = 32.dp
 
@@ -59,16 +59,18 @@ internal fun ActiveFilterChips(
     onExpandedDropdownChange: (ActiveFilterDropdown?) -> Unit = {},
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .horizontalScroll(scrollState),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .horizontalScroll(scrollState),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -78,9 +80,10 @@ internal fun ActiveFilterChips(
                 shape = CircleShape,
                 color = if (allSelected) Color(0xFFF4EAF6) else Color.Transparent,
                 border = if (allSelected) null else BorderStroke(1.dp, Color(0xFFE9E3EF)),
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable { onChange(filter.copy(shoulderId = null)) },
+                modifier =
+                    Modifier
+                        .clip(CircleShape)
+                        .clickable { onChange(filter.copy(shoulderId = null)) },
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -89,20 +92,22 @@ internal fun ActiveFilterChips(
                 ) {
                     Text(
                         text = "All",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 14.sp,
-                            color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
-                        ),
+                        style =
+                            MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp,
+                                color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
+                            ),
                     )
                     if (totalActiveCount > 0) {
                         Text(
                             text = totalActiveCount.toString(),
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 13.sp,
-                                color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
-                            ),
+                            style =
+                                MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 13.sp,
+                                    color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
+                                ),
                         )
                     }
                 }
@@ -120,19 +125,21 @@ internal fun ActiveFilterChips(
                     shape = CircleShape,
                     color = chipBg,
                     border = BorderStroke(1.dp, chipBorderColor),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable {
-                            onChange(filter.copy(shoulderId = if (selected) null else shoulder.id))
-                        },
+                    modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .clickable {
+                                onChange(filter.copy(shoulderId = if (selected) null else shoulder.id))
+                            },
                 ) {
                     Text(
                         text = shoulder.name,
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 14.sp,
-                            color = chipTextColor,
-                        ),
+                        style =
+                            MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp,
+                                color = chipTextColor,
+                            ),
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                     )
                 }
@@ -142,12 +149,13 @@ internal fun ActiveFilterChips(
         // Sort button on the right
         Box {
             Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        onExpandedDropdownChange(if (expandedDropdown == ActiveFilterDropdown.SORT) null else ActiveFilterDropdown.SORT)
-                    },
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable {
+                            onExpandedDropdownChange(if (expandedDropdown == ActiveFilterDropdown.SORT) null else ActiveFilterDropdown.SORT)
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -180,7 +188,10 @@ internal fun ActiveFilterChips(
     }
 }
 
-private fun parseColorHex(hex: String?, fallback: Color): Color {
+private fun parseColorHex(
+    hex: String?,
+    fallback: Color,
+): Color {
     if (hex.isNullOrBlank()) return fallback
     return try {
         Color(android.graphics.Color.parseColor(if (hex.startsWith("#")) hex else "#$hex"))
@@ -232,7 +243,6 @@ private fun FilterDropdownChip(
         }
     }
 }
-
 
 @Composable
 private fun CheckableMenuItem(

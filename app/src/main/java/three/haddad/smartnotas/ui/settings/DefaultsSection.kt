@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.DefaultNotePreferencesState
 import three.haddad.smartnotas.data.DefaultNotePrefs
@@ -21,8 +23,6 @@ import three.haddad.smartnotas.data.labelRes
 import three.haddad.smartnotas.domain.formatTimeOfDay
 import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
 import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.Visibility as NoteVisibility
 
 @Composable

@@ -1,8 +1,8 @@
 package three.haddad.smartnotas.ui.event
 
-import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,14 +27,19 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,30 +66,17 @@ import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.Importance
 import three.haddad.smartnotas.data.NoteAttachmentEntity
+import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
 import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.Visibility
+import three.haddad.smartnotas.domain.formatTimeOfDay
 import three.haddad.smartnotas.ui.calendar.CalendarDesignTokens
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.edit.ActionPicker
 import three.haddad.smartnotas.ui.edit.AttachmentsSheet
 import three.haddad.smartnotas.ui.edit.CalendarPickerDialog
-import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
-import three.haddad.smartnotas.ui.edit.ShoulderPickerSheet
-import three.haddad.smartnotas.ui.edit.rememberHeroImagePickThenCopy
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import androidx.compose.foundation.border
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.res.painterResource
-import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.ui.edit.ICON_DRAWABLE_PREFIX
 import three.haddad.smartnotas.ui.edit.ICON_EMOJI_PREFIX
 import three.haddad.smartnotas.ui.edit.ICON_SYMBOL_FILLED_PREFIX
@@ -88,14 +84,17 @@ import three.haddad.smartnotas.ui.edit.ICON_SYMBOL_OUTLINED_PREFIX
 import three.haddad.smartnotas.ui.edit.ICON_SYMBOL_PREFIX
 import three.haddad.smartnotas.ui.edit.IconPicker
 import three.haddad.smartnotas.ui.edit.NoteIcon
+import three.haddad.smartnotas.ui.edit.ReminderPickerSheet
+import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
+import three.haddad.smartnotas.ui.edit.ShoulderPickerSheet
 import three.haddad.smartnotas.ui.edit.humanizeIconKey
 import three.haddad.smartnotas.ui.edit.iconDrawableRes
 import three.haddad.smartnotas.ui.edit.iconEmojiPayload
 import three.haddad.smartnotas.ui.edit.iconLabelFor
+import three.haddad.smartnotas.ui.edit.rememberHeroImagePickThenCopy
 import three.haddad.smartnotas.ui.edit.resolveNoteIcon
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.NoteColors
-import three.haddad.smartnotas.domain.formatTimeOfDay
-import three.haddad.smartnotas.ui.edit.ReminderPickerSheet
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -106,6 +105,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import android.graphics.Color as AndroidColor
 
 @Composable
 fun EditEventScreen(
@@ -153,11 +153,12 @@ fun EditEventScreen(
     var showImportanceDialog by remember { mutableStateOf(false) }
     var showAttachmentsSheet by remember { mutableStateOf(false) }
 
-    val heroPicker = rememberHeroImagePickThenCopy(
-        onImageReady = { uriString, _ ->
-            viewModel.setPictureUri(uriString)
-        },
-    )
+    val heroPicker =
+        rememberHeroImagePickThenCopy(
+            onImageReady = { uriString, _ ->
+                viewModel.setPictureUri(uriString)
+            },
+        )
 
     val screenBg = CalendarDesignTokens.resolveScreenBg(isDark)
     val cardBg = CalendarDesignTokens.resolveCardBg(isDark)
@@ -170,52 +171,59 @@ fun EditEventScreen(
     val dateFormatter = remember { DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault()) }
     val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()) }
 
-    val recurrenceSummary = remember(recurrence, selectedDate) {
-        when {
-            recurrence == null -> "Does not repeat"
-            recurrence?.unit == RecurrenceUnit.DAY -> "Daily"
-            recurrence?.unit == RecurrenceUnit.WEEK -> {
-                val dayName = selectedDate.format(DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()))
-                "Weekly on $dayName"
+    val recurrenceSummary =
+        remember(recurrence, selectedDate) {
+            when {
+                recurrence == null -> "Does not repeat"
+                recurrence?.unit == RecurrenceUnit.DAY -> "Daily"
+                recurrence?.unit == RecurrenceUnit.WEEK -> {
+                    val dayName = selectedDate.format(DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()))
+                    "Weekly on $dayName"
+                }
+                recurrence?.unit == RecurrenceUnit.MONTH -> "Monthly"
+                recurrence?.unit == RecurrenceUnit.YEAR -> "Yearly"
+                else -> "Repeats"
             }
-            recurrence?.unit == RecurrenceUnit.MONTH -> "Monthly"
-            recurrence?.unit == RecurrenceUnit.YEAR -> "Yearly"
-            else -> "Repeats"
         }
-    }
 
-    val reminderSubtitle = remember(reminders, reminderAtStart, context) {
-        if (reminders.isNotEmpty()) {
-            val soonest = reminders.minByOrNull { it.reminderAt }
-            if (soonest != null) {
-                val baseTime = soonest.originalReminderAt ?: soonest.reminderAt
-                val datePart = android.text.format.DateFormat.getMediumDateFormat(context).format(Date(baseTime))
-                val timePart = formatTimeOfDay(context, baseTime)
-                val moreText = if (reminders.size > 1) " (+${reminders.size - 1} more)" else ""
-                "$datePart, $timePart$moreText"
+    val reminderSubtitle =
+        remember(reminders, reminderAtStart, context) {
+            if (reminders.isNotEmpty()) {
+                val soonest = reminders.minByOrNull { it.reminderAt }
+                if (soonest != null) {
+                    val baseTime = soonest.originalReminderAt ?: soonest.reminderAt
+                    val datePart =
+                        android.text.format.DateFormat
+                            .getMediumDateFormat(context)
+                            .format(Date(baseTime))
+                    val timePart = formatTimeOfDay(context, baseTime)
+                    val moreText = if (reminders.size > 1) " (+${reminders.size - 1} more)" else ""
+                    "$datePart, $timePart$moreText"
+                } else {
+                    null
+                }
+            } else if (reminderAtStart) {
+                context.getString(R.string.event_reminder_at_start)
             } else {
-                null
+                context.getString(R.string.event_reminder_none)
             }
-        } else if (reminderAtStart) {
-            context.getString(R.string.event_reminder_at_start)
-        } else {
-            context.getString(R.string.event_reminder_none)
         }
-    }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(screenBg)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .verticalScroll(rememberScrollState()),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(screenBg)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState()),
     ) {
         // 1. Top App Bar
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -223,10 +231,11 @@ fun EditEventScreen(
                 shape = RoundedCornerShape(12.dp),
                 color = cardBg,
                 border = BorderStroke(1.dp, cardBorder),
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable(onClick = onBack),
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onBack),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     RememberMaterialRoundedSymbol(
@@ -238,16 +247,18 @@ fun EditEventScreen(
             }
 
             Text(
-                text = if (viewModel.isEditMode) {
-                    stringResource(R.string.event_edit_title)
-                } else {
-                    stringResource(R.string.event_add_title)
-                },
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = textPrimary,
-                    fontSize = 20.sp,
-                ),
+                text =
+                    if (viewModel.isEditMode) {
+                        stringResource(R.string.event_edit_title)
+                    } else {
+                        stringResource(R.string.event_add_title)
+                    },
+                style =
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = textPrimary,
+                        fontSize = 20.sp,
+                    ),
             )
 
             Button(
@@ -260,19 +271,21 @@ fun EditEventScreen(
                     }
                 },
                 enabled = !isSaving && title.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = CalendarDesignTokens.PrimaryPurple,
-                    disabledContainerColor = CalendarDesignTokens.PrimaryPurple.copy(alpha = 0.4f),
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = CalendarDesignTokens.PrimaryPurple,
+                        disabledContainerColor = CalendarDesignTokens.PrimaryPurple.copy(alpha = 0.4f),
+                    ),
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp),
             ) {
                 Text(
                     text = stringResource(R.string.calendar_event_save),
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                        ),
                 )
             }
         }
@@ -284,9 +297,10 @@ fun EditEventScreen(
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.errorContainer,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
             ) {
                 Text(
                     text = saveError.orEmpty(),
@@ -303,42 +317,47 @@ fun EditEventScreen(
             shape = RoundedCornerShape(20.dp),
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
                     text = stringResource(R.string.calendar_event_title_placeholder),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 12.sp,
+                            color = textSecondary,
+                        ),
                 )
 
                 BasicTextField(
                     value = title,
                     onValueChange = viewModel::setTitle,
-                    textStyle = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = textPrimary,
-                    ),
+                    textStyle =
+                        MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = textPrimary,
+                        ),
                     cursorBrush = SolidColor(CalendarDesignTokens.PrimaryPurple),
                     decorationBox = { innerTextField ->
                         if (title.isBlank()) {
                             Text(
                                 text = stringResource(R.string.calendar_event_title_placeholder),
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = textMuted,
-                                ),
+                                style =
+                                    MaterialTheme.typography.titleLarge.copy(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = textMuted,
+                                    ),
                             )
                         }
                         innerTextField()
@@ -348,27 +367,30 @@ fun EditEventScreen(
 
                 // Shoulder category row beneath title
                 Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { showShoulderPicker = true }
-                        .padding(vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showShoulderPicker = true }
+                            .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     if (selectedShoulder != null) {
                         val shoulderColor = parseHexColor(selectedShoulder?.colorHex)
                         Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(shoulderColor),
+                            modifier =
+                                Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(shoulderColor),
                         )
                         Text(
                             text = selectedShoulder?.name.orEmpty(),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = textSecondary,
-                                fontWeight = FontWeight.Medium,
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    color = textSecondary,
+                                    fontWeight = FontWeight.Medium,
+                                ),
                         )
                     } else {
                         RememberMaterialRoundedSymbol(
@@ -378,10 +400,11 @@ fun EditEventScreen(
                         )
                         Text(
                             text = stringResource(R.string.event_no_shoulder),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = textSecondary,
-                                fontWeight = FontWeight.Normal,
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    color = textSecondary,
+                                    fontWeight = FontWeight.Normal,
+                                ),
                         )
                     }
                 }
@@ -390,19 +413,21 @@ fun EditEventScreen(
 
                 Text(
                     text = stringResource(R.string.event_notes_label),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 12.sp,
+                            color = textSecondary,
+                        ),
                 )
 
                 BasicTextField(
                     value = notes,
                     onValueChange = viewModel::setNotes,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 15.sp,
-                        color = textPrimary,
-                    ),
+                    textStyle =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 15.sp,
+                            color = textPrimary,
+                        ),
                     cursorBrush = SolidColor(CalendarDesignTokens.PrimaryPurple),
                     minLines = 2,
                     maxLines = 8,
@@ -410,10 +435,11 @@ fun EditEventScreen(
                         if (notes.isBlank()) {
                             Text(
                                 text = stringResource(R.string.event_notes_placeholder),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 15.sp,
-                                    color = textMuted,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 15.sp,
+                                        color = textMuted,
+                                    ),
                             )
                         }
                         innerTextField()
@@ -430,9 +456,10 @@ fun EditEventScreen(
             shape = RoundedCornerShape(20.dp),
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             EventIconAndColorRow(
                 colorIndex = colorIndex,
@@ -459,9 +486,10 @@ fun EditEventScreen(
             shape = RoundedCornerShape(20.dp),
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Date Row
@@ -479,19 +507,21 @@ fun EditEventScreen(
                     HorizontalDivider(color = cardBorder, thickness = 1.dp)
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         // Starts Card
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = innerCardBg,
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { showStartTimePicker = true },
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { showStartTimePicker = true },
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -501,19 +531,21 @@ fun EditEventScreen(
                                 Column {
                                     Text(
                                         text = stringResource(R.string.event_starts_label),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 11.sp,
-                                            color = textSecondary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 11.sp,
+                                                color = textSecondary,
+                                            ),
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = startTime.format(timeFormatter),
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyMedium.copy(
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 }
                                 RememberMaterialRoundedSymbol(
@@ -528,10 +560,11 @@ fun EditEventScreen(
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = innerCardBg,
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { showEndTimePicker = true },
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { showEndTimePicker = true },
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -541,19 +574,21 @@ fun EditEventScreen(
                                 Column {
                                     Text(
                                         text = stringResource(R.string.event_ends_label),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 11.sp,
-                                            color = textSecondary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 11.sp,
+                                                color = textSecondary,
+                                            ),
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = endTime.format(timeFormatter),
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyMedium.copy(
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 }
                                 RememberMaterialRoundedSymbol(
@@ -578,10 +613,11 @@ fun EditEventScreen(
                         Switch(
                             checked = isAllDay,
                             onCheckedChange = viewModel::setAllDay,
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = CalendarDesignTokens.PrimaryPurple,
-                            ),
+                            colors =
+                                SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = CalendarDesignTokens.PrimaryPurple,
+                                ),
                         )
                     },
                     textPrimary = textPrimary,
@@ -609,9 +645,10 @@ fun EditEventScreen(
             shape = RoundedCornerShape(20.dp),
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Shoulders Row
@@ -639,11 +676,17 @@ fun EditEventScreen(
                 HorizontalDivider(color = cardBorder, thickness = 1.dp)
 
                 // Notification action Row
-                val actionLabel = if (actions.isNotEmpty()) {
-                    actions.first().type.name.lowercase().replace('_', ' ').replaceFirstChar { it.titlecase() }
-                } else {
-                    stringResource(R.string.event_notification_action_default)
-                }
+                val actionLabel =
+                    if (actions.isNotEmpty()) {
+                        actions
+                            .first()
+                            .type.name
+                            .lowercase()
+                            .replace('_', ' ')
+                            .replaceFirstChar { it.titlecase() }
+                    } else {
+                        stringResource(R.string.event_notification_action_default)
+                    }
                 SettingRow(
                     iconName = "notifications",
                     title = stringResource(R.string.event_notification_action_label),
@@ -670,16 +713,18 @@ fun EditEventScreen(
             shape = RoundedCornerShape(20.dp),
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                val visibilityLabel = when (visibility) {
-                    Visibility.DEFAULT -> "Visible"
-                    Visibility.PRIVATE -> "Private"
-                    Visibility.SECRET -> "Secret"
-                }
+                val visibilityLabel =
+                    when (visibility) {
+                        Visibility.DEFAULT -> "Visible"
+                        Visibility.PRIVATE -> "Private"
+                        Visibility.SECRET -> "Secret"
+                    }
                 SettingRow(
                     iconName = "visibility",
                     title = stringResource(R.string.event_visibility_label),
@@ -691,12 +736,13 @@ fun EditEventScreen(
 
                 HorizontalDivider(color = cardBorder, thickness = 1.dp)
 
-                val importanceLabel = when (importance) {
-                    Importance.LOW -> "Low"
-                    Importance.DEFAULT -> "Normal"
-                    Importance.HIGH -> "High"
-                    Importance.CRITICAL -> "Critical"
-                }
+                val importanceLabel =
+                    when (importance) {
+                        Importance.LOW -> "Low"
+                        Importance.DEFAULT -> "Normal"
+                        Importance.HIGH -> "High"
+                        Importance.CRITICAL -> "Critical"
+                    }
                 SettingRow(
                     iconName = "flag",
                     title = stringResource(R.string.event_importance_label),
@@ -715,9 +761,10 @@ fun EditEventScreen(
             shape = RoundedCornerShape(20.dp),
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Picture Row
@@ -734,11 +781,12 @@ fun EditEventScreen(
 
                 // Attachments Row
                 val totalAttachments = attachments.size + pendingAttachments.size
-                val attachmentsSubtitle = if (totalAttachments > 0) {
-                    "$totalAttachments attachment${if (totalAttachments > 1) "s" else ""}"
-                } else {
-                    stringResource(R.string.event_add_attachment)
-                }
+                val attachmentsSubtitle =
+                    if (totalAttachments > 0) {
+                        "$totalAttachments attachment${if (totalAttachments > 1) "s" else ""}"
+                    } else {
+                        stringResource(R.string.event_add_attachment)
+                    }
                 SettingRow(
                     iconName = "attach_file",
                     title = stringResource(R.string.event_attachments_label),
@@ -757,9 +805,10 @@ fun EditEventScreen(
 
     // 1. Date Picker Dialog
     if (showDatePicker) {
-        val initialUtcMillis = remember(selectedDate) {
-            selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        }
+        val initialUtcMillis =
+            remember(selectedDate) {
+                selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            }
         CalendarPickerDialog(
             initial = initialUtcMillis,
             onConfirm = { pickedUtcMillis ->
@@ -836,14 +885,23 @@ fun EditEventScreen(
 
     // 6. Reminder Picker Sheet (Exact same sheet as in Tasks/Notes)
     if (showReminderSheet) {
-        val initialSheetReminders = if (reminders.isEmpty() && reminderAtStart) {
-            val date = selectedDate
-            val time = startTime
-            val epoch = date.atTime(time).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            listOf(three.haddad.smartnotas.data.NoteReminder(reminderAt = epoch, recurrence = recurrence))
-        } else {
-            reminders
-        }
+        val initialSheetReminders =
+            if (reminders.isEmpty() && reminderAtStart) {
+                val date = selectedDate
+                val time = startTime
+                val epoch =
+                    date
+                        .atTime(time)
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli()
+                listOf(
+                    three.haddad.smartnotas.data
+                        .NoteReminder(reminderAt = epoch, recurrence = recurrence),
+                )
+            } else {
+                reminders
+            }
         ReminderPickerSheet(
             initialReminders = initialSheetReminders,
             defaultReminderMinutesOfDay = startTime.hour * 60 + startTime.minute,
@@ -872,11 +930,12 @@ fun EditEventScreen(
     if (showVisibilityDialog) {
         SelectionOptionDialog(
             title = stringResource(R.string.event_visibility_label),
-            options = listOf(
-                "Visible" to Visibility.DEFAULT,
-                "Private" to Visibility.PRIVATE,
-                "Secret" to Visibility.SECRET,
-            ),
+            options =
+                listOf(
+                    "Visible" to Visibility.DEFAULT,
+                    "Private" to Visibility.PRIVATE,
+                    "Secret" to Visibility.SECRET,
+                ),
             selected = visibility,
             onSelect = {
                 viewModel.setVisibility(it)
@@ -890,12 +949,13 @@ fun EditEventScreen(
     if (showImportanceDialog) {
         SelectionOptionDialog(
             title = stringResource(R.string.event_importance_label),
-            options = listOf(
-                "Low" to Importance.LOW,
-                "Normal" to Importance.DEFAULT,
-                "High" to Importance.HIGH,
-                "Critical" to Importance.CRITICAL,
-            ),
+            options =
+                listOf(
+                    "Low" to Importance.LOW,
+                    "Normal" to Importance.DEFAULT,
+                    "High" to Importance.HIGH,
+                    "Critical" to Importance.CRITICAL,
+                ),
             selected = importance,
             onSelect = {
                 viewModel.setImportance(it)
@@ -907,17 +967,19 @@ fun EditEventScreen(
 
     // 10. Attachments Sheet
     if (showAttachmentsSheet) {
-        val allAttachmentEntities = remember(attachments, pendingAttachments) {
-            attachments + pendingAttachments.map { pending ->
-                NoteAttachmentEntity(
-                    id = pending.id,
-                    noteId = viewModel.eventId ?: 0L,
-                    uri = pending.uriString,
-                    displayName = pending.displayName,
-                    mimeType = pending.mimeType,
-                )
+        val allAttachmentEntities =
+            remember(attachments, pendingAttachments) {
+                attachments +
+                    pendingAttachments.map { pending ->
+                        NoteAttachmentEntity(
+                            id = pending.id,
+                            noteId = viewModel.eventId ?: 0L,
+                            uri = pending.uriString,
+                            displayName = pending.displayName,
+                            mimeType = pending.mimeType,
+                        )
+                    }
             }
-        }
         AttachmentsSheet(
             attachments = allAttachmentEntities,
             onDismiss = { showAttachmentsSheet = false },
@@ -967,11 +1029,12 @@ private fun SectionHeader(
 ) {
     Text(
         text = title,
-        style = MaterialTheme.typography.labelLarge.copy(
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            color = color,
-        ),
+        style =
+            MaterialTheme.typography.labelLarge.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = color,
+            ),
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp),
     )
 }
@@ -989,18 +1052,20 @@ private fun SettingRow(
     textSecondary: Color,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(iconBg),
+            modifier =
+                Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(iconBg),
             contentAlignment = Alignment.Center,
         ) {
             RememberMaterialRoundedSymbol(
@@ -1016,20 +1081,22 @@ private fun SettingRow(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = textPrimary,
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = textPrimary,
+                    ),
             )
             if (subtitle.isNotBlank()) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 13.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 13.sp,
+                            color = textSecondary,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1055,27 +1122,31 @@ private fun RecurrenceSelectionDialog(
     onSelect: (RecurrenceRule?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val dayOfWeekName = remember(selectedDate) {
-        selectedDate.format(DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()))
-    }
-    val calWeekday = remember(selectedDate) {
-        when (selectedDate.dayOfWeek) {
-            DayOfWeek.SUNDAY -> Calendar.SUNDAY
-            else -> selectedDate.dayOfWeek.value + 1
+    val dayOfWeekName =
+        remember(selectedDate) {
+            selectedDate.format(DateTimeFormatter.ofPattern("EEEE", Locale.getDefault()))
         }
-    }
+    val calWeekday =
+        remember(selectedDate) {
+            when (selectedDate.dayOfWeek) {
+                DayOfWeek.SUNDAY -> Calendar.SUNDAY
+                else -> selectedDate.dayOfWeek.value + 1
+            }
+        }
 
-    val options = listOf(
-        "Does not repeat" to null,
-        "Daily" to RecurrenceRule(unit = RecurrenceUnit.DAY, interval = 1),
-        "Weekly on $dayOfWeekName" to RecurrenceRule(
-            unit = RecurrenceUnit.WEEK,
-            interval = 1,
-            daysOfWeek = setOf(calWeekday),
-        ),
-        "Monthly" to RecurrenceRule(unit = RecurrenceUnit.MONTH, interval = 1),
-        "Yearly" to RecurrenceRule(unit = RecurrenceUnit.YEAR, interval = 1),
-    )
+    val options =
+        listOf(
+            "Does not repeat" to null,
+            "Daily" to RecurrenceRule(unit = RecurrenceUnit.DAY, interval = 1),
+            "Weekly on $dayOfWeekName" to
+                RecurrenceRule(
+                    unit = RecurrenceUnit.WEEK,
+                    interval = 1,
+                    daysOfWeek = setOf(calWeekday),
+                ),
+            "Monthly" to RecurrenceRule(unit = RecurrenceUnit.MONTH, interval = 1),
+            "Yearly" to RecurrenceRule(unit = RecurrenceUnit.YEAR, interval = 1),
+        )
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -1084,9 +1155,10 @@ private fun RecurrenceSelectionDialog(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
             ) {
                 Text(
                     text = stringResource(R.string.event_repeat_label),
@@ -1095,27 +1167,30 @@ private fun RecurrenceSelectionDialog(
                 )
 
                 options.forEach { (label, rule) ->
-                    val isSelected = when {
-                        currentRecurrence == null && rule == null -> true
-                        currentRecurrence != null && rule != null -> currentRecurrence.unit == rule.unit
-                        else -> false
-                    }
+                    val isSelected =
+                        when {
+                            currentRecurrence == null && rule == null -> true
+                            currentRecurrence != null && rule != null -> currentRecurrence.unit == rule.unit
+                            else -> false
+                        }
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onSelect(rule) }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { onSelect(rule) }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (isSelected) CalendarDesignTokens.PrimaryPurple else MaterialTheme.colorScheme.onSurface,
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) CalendarDesignTokens.PrimaryPurple else MaterialTheme.colorScheme.onSurface,
+                                ),
                         )
                         RadioButton(
                             selected = isSelected,
@@ -1144,9 +1219,10 @@ private fun <T> SelectionOptionDialog(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
             ) {
                 Text(
                     text = title,
@@ -1157,20 +1233,22 @@ private fun <T> SelectionOptionDialog(
                 options.forEach { (label, value) ->
                     val isSelected = selected == value
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onSelect(value) }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { onSelect(value) }
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (isSelected) CalendarDesignTokens.PrimaryPurple else MaterialTheme.colorScheme.onSurface,
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) CalendarDesignTokens.PrimaryPurple else MaterialTheme.colorScheme.onSurface,
+                                ),
                         )
                         RadioButton(
                             selected = isSelected,
@@ -1184,7 +1262,10 @@ private fun <T> SelectionOptionDialog(
     }
 }
 
-private fun parseHexColor(colorHex: String?, fallback: Color = CalendarDesignTokens.PrimaryPurple): Color {
+private fun parseHexColor(
+    colorHex: String?,
+    fallback: Color = CalendarDesignTokens.PrimaryPurple,
+): Color {
     if (colorHex.isNullOrBlank()) return fallback
     return try {
         Color(AndroidColor.parseColor(if (colorHex.startsWith("#")) colorHex else "#$colorHex"))
@@ -1203,30 +1284,38 @@ private fun EventIconAndColorRow(
     onClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         val accent = NoteColors.at(colorIndex)
-        val resolvedColor = if (NoteColors.isNone(colorIndex)) {
-            CalendarDesignTokens.PrimaryPurple
-        } else if (isDark) accent.dark else accent.light
+        val resolvedColor =
+            if (NoteColors.isNone(colorIndex)) {
+                CalendarDesignTokens.PrimaryPurple
+            } else if (isDark) {
+                accent.dark
+            } else {
+                accent.light
+            }
 
-        val boxBg = if (NoteColors.isNone(colorIndex)) {
-            if (isDark) Color(0xFF382942) else CalendarDesignTokens.SoftLavender
-        } else {
-            resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)
-        }
+        val boxBg =
+            if (NoteColors.isNone(colorIndex)) {
+                if (isDark) Color(0xFF382942) else CalendarDesignTokens.SoftLavender
+            } else {
+                resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)
+            }
 
         Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(boxBg),
+            modifier =
+                Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(boxBg),
             contentAlignment = Alignment.Center,
         ) {
             EventSmallIconRenderer(
@@ -1242,11 +1331,12 @@ private fun EventIconAndColorRow(
         ) {
             Text(
                 text = stringResource(R.string.event_icon_and_color_title),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = textPrimary,
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = textPrimary,
+                    ),
             )
 
             Spacer(modifier = Modifier.height(3.dp))
@@ -1256,17 +1346,19 @@ private fun EventIconAndColorRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(11.dp)
-                        .clip(CircleShape)
-                        .background(resolvedColor),
+                    modifier =
+                        Modifier
+                            .size(11.dp)
+                            .clip(CircleShape)
+                            .background(resolvedColor),
                 )
 
                 Box(
-                    modifier = Modifier
-                        .size(18.dp)
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)),
+                    modifier =
+                        Modifier
+                            .size(18.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     EventSmallIconRenderer(
@@ -1275,19 +1367,21 @@ private fun EventIconAndColorRow(
                     )
                 }
 
-                val colorDisplayName = when {
-                    NoteColors.isNone(colorIndex) -> stringResource(R.string.color_none)
-                    accent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_purple)
-                    else -> accent.name
-                }
+                val colorDisplayName =
+                    when {
+                        NoteColors.isNone(colorIndex) -> stringResource(R.string.color_none)
+                        accent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_purple)
+                        else -> accent.name
+                    }
                 val iconDisplayName = getEventIconDisplayName(iconKey)
 
                 Text(
                     text = "$colorDisplayName · $iconDisplayName",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 13.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 13.sp,
+                            color = textSecondary,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1435,28 +1529,34 @@ private fun IconAndColorSheet(
     val innerCardBg = if (isDark) Color(0xFF282834) else Color(0xFFF7F7FA)
 
     val currentAccent = NoteColors.at(currentColorIndex)
-    val currentColor = if (NoteColors.isNone(currentColorIndex)) {
-        CalendarDesignTokens.PrimaryPurple
-    } else if (isDark) currentAccent.dark else currentAccent.light
+    val currentColor =
+        if (NoteColors.isNone(currentColorIndex)) {
+            CalendarDesignTokens.PrimaryPurple
+        } else if (isDark) {
+            currentAccent.dark
+        } else {
+            currentAccent.light
+        }
 
-    val presetIcons = remember {
-        listOf(
-            "calendar_month",
-            "event",
-            "celebration",
-            "cake",
-            "star",
-            "sports_soccer",
-            "flight",
-            "fitness_center",
-            "restaurant",
-            "school",
-            "computer",
-            "medical_services",
-            "shopping_cart",
-            "pets",
-        )
-    }
+    val presetIcons =
+        remember {
+            listOf(
+                "calendar_month",
+                "event",
+                "celebration",
+                "cake",
+                "star",
+                "sports_soccer",
+                "flight",
+                "fitness_center",
+                "restaurant",
+                "school",
+                "computer",
+                "medical_services",
+                "shopping_cart",
+                "pets",
+            )
+        }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1465,12 +1565,13 @@ private fun IconAndColorSheet(
         tonalElevation = 0.dp,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .navigationBarsPadding()
-                .padding(bottom = 32.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+                    .navigationBarsPadding()
+                    .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Header
@@ -1481,18 +1582,20 @@ private fun IconAndColorSheet(
             ) {
                 Text(
                     text = stringResource(R.string.event_icon_and_color_title),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                    ),
+                    style =
+                        MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                        ),
                 )
                 TextButton(onClick = onDismiss) {
                     Text(
                         text = stringResource(R.string.calendar_event_save),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = CalendarDesignTokens.PrimaryPurple,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = CalendarDesignTokens.PrimaryPurple,
+                            ),
                     )
                 }
             }
@@ -1505,17 +1608,19 @@ private fun IconAndColorSheet(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(currentColor),
+                        modifier =
+                            Modifier
+                                .size(54.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(currentColor),
                         contentAlignment = Alignment.Center,
                     ) {
                         EventMediumIconRenderer(
@@ -1525,26 +1630,29 @@ private fun IconAndColorSheet(
                     }
 
                     Column(verticalArrangement = Arrangement.Center) {
-                        val colorDisplayName = when {
-                            NoteColors.isNone(currentColorIndex) -> stringResource(R.string.color_none)
-                            currentAccent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_purple)
-                            else -> currentAccent.name
-                        }
+                        val colorDisplayName =
+                            when {
+                                NoteColors.isNone(currentColorIndex) -> stringResource(R.string.color_none)
+                                currentAccent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_purple)
+                                else -> currentAccent.name
+                            }
                         val iconDisplayName = getEventIconDisplayName(currentIconKey)
 
                         Text(
                             text = "$colorDisplayName · $iconDisplayName",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = textPrimary,
-                            ),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = textPrimary,
+                                ),
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = stringResource(R.string.event_icon_and_color_title),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = textSecondary,
-                            ),
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    color = textSecondary,
+                                ),
                         )
                     }
                 }
@@ -1554,10 +1662,11 @@ private fun IconAndColorSheet(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = stringResource(R.string.event_icon_and_color_color_label),
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = textSecondary,
+                        ),
                 )
 
                 LazyRow(
@@ -1566,24 +1675,31 @@ private fun IconAndColorSheet(
                 ) {
                     itemsIndexed(NoteColors.palette) { index, accent ->
                         val isSelected = index == currentColorIndex
-                        val dotColor = if (index == 0) {
-                            if (isDark) Color(0xFF4A4A58) else Color(0xFFD4D4DC)
-                        } else if (isDark) accent.dark else accent.light
+                        val dotColor =
+                            if (index == 0) {
+                                if (isDark) Color(0xFF4A4A58) else Color(0xFFD4D4DC)
+                            } else if (isDark) {
+                                accent.dark
+                            } else {
+                                accent.light
+                            }
 
                         Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(dotColor)
-                                .then(
-                                    if (isSelected) {
-                                        Modifier.border(
-                                            BorderStroke(3.dp, if (isDark) Color.White else Color(0xFF202028)),
-                                            CircleShape,
-                                        )
-                                    } else Modifier,
-                                )
-                                .clickable { onColorSelected(index) },
+                            modifier =
+                                Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(dotColor)
+                                    .then(
+                                        if (isSelected) {
+                                            Modifier.border(
+                                                BorderStroke(3.dp, if (isDark) Color.White else Color(0xFF202028)),
+                                                CircleShape,
+                                            )
+                                        } else {
+                                            Modifier
+                                        },
+                                    ).clickable { onColorSelected(index) },
                             contentAlignment = Alignment.Center,
                         ) {
                             if (isSelected) {
@@ -1608,10 +1724,11 @@ private fun IconAndColorSheet(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = stringResource(R.string.event_icon_and_color_icon_label),
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = textSecondary,
+                        ),
                 )
 
                 LazyRow(
@@ -1625,13 +1742,15 @@ private fun IconAndColorSheet(
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (isSelected) currentColor.copy(alpha = 0.18f) else innerCardBg,
-                            border = BorderStroke(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) currentColor else cardBorder,
-                            ),
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clickable { onIconSelected("${ICON_SYMBOL_PREFIX}$iconName") },
+                            border =
+                                BorderStroke(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) currentColor else cardBorder,
+                                ),
+                            modifier =
+                                Modifier
+                                    .size(44.dp)
+                                    .clickable { onIconSelected("${ICON_SYMBOL_PREFIX}$iconName") },
                         ) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -1654,14 +1773,16 @@ private fun IconAndColorSheet(
                     shape = RoundedCornerShape(14.dp),
                     color = innerCardBg,
                     border = BorderStroke(1.dp, cardBorder),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onRequestMoreIcons() },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onRequestMoreIcons() },
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
@@ -1672,10 +1793,11 @@ private fun IconAndColorSheet(
                         )
                         Text(
                             text = stringResource(R.string.event_icon_and_color_more_icons),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                color = textPrimary,
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    color = textPrimary,
+                                ),
                             modifier = Modifier.weight(1f),
                         )
                         RememberMaterialRoundedSymbol(
@@ -1689,4 +1811,3 @@ private fun IconAndColorSheet(
         }
     }
 }
-

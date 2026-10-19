@@ -7,11 +7,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import three.haddad.smartnotas.ui.common.MarkdownStyler
-import three.haddad.smartnotas.ui.common.markdownCardPreview
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.ui.common.MarkdownStyler
+import three.haddad.smartnotas.ui.common.markdownCardPreview
 import kotlin.random.Random
 
 class MarkdownGeneratedSequenceTest {

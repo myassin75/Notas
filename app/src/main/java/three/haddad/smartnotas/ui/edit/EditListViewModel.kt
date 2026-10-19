@@ -3,6 +3,10 @@ package three.haddad.smartnotas.ui.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.AppMediaStorage
 import three.haddad.smartnotas.data.ChecklistItemEntity
 import three.haddad.smartnotas.data.DefaultNotePrefs
@@ -12,10 +16,6 @@ import three.haddad.smartnotas.data.getActiveReminders
 import three.haddad.smartnotas.domain.checklist.ChecklistEditResult
 import three.haddad.smartnotas.domain.checklist.ChecklistEditor
 import three.haddad.smartnotas.domain.checklist.EditableItem
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**

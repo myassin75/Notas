@@ -61,7 +61,6 @@ import three.haddad.smartnotas.ui.common.HeroFramedImage
 import three.haddad.smartnotas.ui.common.HeroFraming
 import three.haddad.smartnotas.ui.common.MarkdownText
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-
 import three.haddad.smartnotas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
 import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
 import three.haddad.smartnotas.ui.edit.NoteIcon
@@ -268,7 +267,6 @@ fun NoteCard(
                     renderEffect = completedRenderEffect
                 }.then(sharedModifier)
                 .clip(cardShape)
-
                 .then(activePaneBorder)
                 .then(selectionBorder)
                 .then(clickableModifier)
@@ -310,36 +308,43 @@ fun NoteCard(
             // declares mergeDescendants and contentDescription includes "Starred".
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
-            val stripeColor = remember(model.shoulderColorHex) {
-                if (model.shoulderColorHex.isNullOrBlank()) Color(0xFF2454E8) else try {
-                    Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
-                } catch (_: Throwable) {
-                    Color(0xFF2454E8)
+            val stripeColor =
+                remember(model.shoulderColorHex) {
+                    if (model.shoulderColorHex.isNullOrBlank()) {
+                        Color(0xFF2454E8)
+                    } else {
+                        try {
+                            Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
+                        } catch (_: Throwable) {
+                            Color(0xFF2454E8)
+                        }
+                    }
                 }
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (model.shoulderName != null) {
                     Box(
-                        modifier = Modifier
-                            .padding(start = 14.dp, top = 16.dp, bottom = 16.dp)
-                            .width(4.dp)
-                            .height(48.dp)
-                            .clip(CircleShape)
-                            .background(stripeColor),
+                        modifier =
+                            Modifier
+                                .padding(start = 14.dp, top = 16.dp, bottom = 16.dp)
+                                .width(4.dp)
+                                .height(48.dp)
+                                .clip(CircleShape)
+                                .background(stripeColor),
                     )
                 }
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(
-                            start = if (model.shoulderName != null) 12.dp else 20.dp,
-                            end = 20.dp,
-                            top = 18.dp,
-                            bottom = 18.dp,
-                        ),
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(
+                                start = if (model.shoulderName != null) 12.dp else 20.dp,
+                                end = 20.dp,
+                                top = 18.dp,
+                                bottom = 18.dp,
+                            ),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -519,7 +524,6 @@ fun NoteCard(
     }
 }
 
-
 @Composable
 private fun MetadataRow(
     model: NoteCardUiModel,
@@ -538,13 +542,18 @@ private fun MetadataRow(
     ) {
         // Left side: Shoulder chip OR completed count for list
         if (model.shoulderName != null) {
-            val chipColor = remember(model.shoulderColorHex) {
-                if (model.shoulderColorHex.isNullOrBlank()) Color(0xFF2454E8) else try {
-                    Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
-                } catch (_: Throwable) {
-                    Color(0xFF2454E8)
+            val chipColor =
+                remember(model.shoulderColorHex) {
+                    if (model.shoulderColorHex.isNullOrBlank()) {
+                        Color(0xFF2454E8)
+                    } else {
+                        try {
+                            Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
+                        } catch (_: Throwable) {
+                            Color(0xFF2454E8)
+                        }
+                    }
                 }
-            }
             Surface(
                 shape = CircleShape,
                 color = Color(0xFFEAEFFE),
@@ -563,11 +572,12 @@ private fun MetadataRow(
                     )
                     Text(
                         text = model.shoulderName,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = chipColor,
-                        ),
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = chipColor,
+                            ),
                     )
                 }
             }
@@ -576,10 +586,11 @@ private fun MetadataRow(
             val checkedCount = model.checklistPreviewItems.count { it.checked }
             Text(
                 text = "$checkedCount of $totalCount complete",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 12.sp,
-                    color = Color(0xFF89899C),
-                ),
+                style =
+                    MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        color = Color(0xFF89899C),
+                    ),
             )
         } else {
             Spacer(Modifier.width(1.dp))
@@ -600,11 +611,12 @@ private fun MetadataRow(
                 )
                 Text(
                     text = formatShortReminderDate(reminderAt),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 13.sp,
-                        color = reminderColor,
-                        fontWeight = FontWeight.Medium,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 13.sp,
+                            color = reminderColor,
+                            fontWeight = FontWeight.Medium,
+                        ),
                 )
             }
         }
@@ -647,10 +659,13 @@ private fun ChecklistPreview(
                     if (item.depth > 0) Spacer(Modifier.width(16.dp))
                     if (item.checked) {
                         Box(
-                            modifier = Modifier
-                                .size(18.dp)
-                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(5.dp))
-                                .background(Color(0xFF98549C)),
+                            modifier =
+                                Modifier
+                                    .size(18.dp)
+                                    .clip(
+                                        androidx.compose.foundation.shape
+                                            .RoundedCornerShape(5.dp),
+                                    ).background(Color(0xFF98549C)),
                             contentAlignment = Alignment.Center,
                         ) {
                             RememberMaterialRoundedSymbol(
@@ -662,18 +677,24 @@ private fun ChecklistPreview(
                         }
                     } else {
                         Box(
-                            modifier = Modifier
-                                .size(18.dp)
-                                .border(BorderStroke(1.5.dp, Color(0xFF89899C)), androidx.compose.foundation.shape.RoundedCornerShape(5.dp)),
+                            modifier =
+                                Modifier
+                                    .size(18.dp)
+                                    .border(
+                                        BorderStroke(1.5.dp, Color(0xFF89899C)),
+                                        androidx.compose.foundation.shape
+                                            .RoundedCornerShape(5.dp),
+                                    ),
                         )
                     }
                     Spacer(Modifier.width(10.dp))
                     Text(
                         text = item.text,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = if (item.checked) Color(0xFF89899C) else Color(0xFF32313F),
-                            fontSize = 14.sp,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                color = if (item.checked) Color(0xFF89899C) else Color(0xFF32313F),
+                                fontSize = 14.sp,
+                            ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textDecoration = if (item.checked) TextDecoration.LineThrough else TextDecoration.None,
@@ -684,15 +705,17 @@ private fun ChecklistPreview(
         if (hiddenCount > 0) {
             Text(
                 text = "+$hiddenCount more",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color(0xFF89899C),
-                    fontSize = 13.sp,
-                ),
+                style =
+                    MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF89899C),
+                        fontSize = 13.sp,
+                    ),
                 modifier = Modifier.padding(start = 28.dp, top = 2.dp),
             )
         }
     }
 }
+
 @Composable
 private fun BoxScope.HeroBackground(
     uri: String,
@@ -724,4 +747,3 @@ private fun BoxScope.HeroBackground(
         )
     }
 }
-

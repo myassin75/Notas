@@ -1,10 +1,5 @@
 package three.haddad.smartnotas.ui.home
 
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.matches
-import three.haddad.smartnotas.ui.components.NoteCardUiModel
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineDispatcher
@@ -14,6 +9,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.NotesFilter
+import three.haddad.smartnotas.data.ViewOptions
+import three.haddad.smartnotas.data.matches
+import three.haddad.smartnotas.ui.components.NoteCardUiModel
 
 internal fun homeStateFlow(
     filter: Flow<NotesFilter>,

@@ -6,8 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Fts4
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import three.haddad.smartnotas.R
 import kotlinx.serialization.Serializable
+import three.haddad.smartnotas.R
 
 @Serializable
 enum class NoteKind { NOTE, LIST }

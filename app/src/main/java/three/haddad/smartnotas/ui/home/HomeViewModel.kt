@@ -3,15 +3,6 @@ package three.haddad.smartnotas.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteSwipeAction
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.data.pinned
-import three.haddad.smartnotas.ui.common.BulkUndoableAction
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.FlowPreview
@@ -28,7 +19,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import three.haddad.smartnotas.data.NoteOptions
+import three.haddad.smartnotas.data.NoteRepository
+import three.haddad.smartnotas.data.NoteSwipeAction
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.NotesFilter
 import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.data.ViewOptions
+import three.haddad.smartnotas.data.ViewOptionsPrefs
+import three.haddad.smartnotas.data.pinned
+import three.haddad.smartnotas.ui.common.BulkUndoableAction
 import javax.inject.Inject
 
 sealed interface HomeEvent {
@@ -123,7 +123,6 @@ class HomeViewModel
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList(),
             ) ?: MutableStateFlow(emptyList())
-
 
         fun setFilter(value: NotesFilter) {
             filter.value = value
@@ -346,7 +345,6 @@ class HomeViewModel
                 }
             }
         }
-
 
         private companion object {
             /** Wait this long after the last keystroke before re-running FTS. Tuned to feel instant

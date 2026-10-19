@@ -52,9 +52,10 @@ fun WeekDaySelectorRow(
     val textMuted = CalendarDesignTokens.resolveTextMuted(isDark)
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -69,10 +70,11 @@ fun WeekDaySelectorRow(
                         onClick = { onDateSelected(day.date) },
                         shape = RoundedCornerShape(18.dp),
                         color = CalendarDesignTokens.PrimaryPurple,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .widthIn(max = 42.dp)
-                            .height(68.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = 42.dp)
+                                .height(68.dp),
                     ) {
                         Column(
                             modifier = Modifier.padding(vertical = 6.dp),
@@ -81,21 +83,23 @@ fun WeekDaySelectorRow(
                         ) {
                             Text(
                                 text = day.dayOfWeekLetter,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color.White.copy(alpha = 0.85f),
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp,
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        color = Color.White.copy(alpha = 0.85f),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 12.sp,
+                                    ),
                                 textAlign = TextAlign.Center,
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = day.dayNumber.toString(),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                    ),
                                 textAlign = TextAlign.Center,
                             )
                             Spacer(modifier = Modifier.height(2.dp))
@@ -107,9 +111,10 @@ fun WeekDaySelectorRow(
                                 ) {
                                     day.dots.take(3).forEach {
                                         Box(
-                                            modifier = Modifier
-                                                .size(4.dp)
-                                                .background(Color.White, shape = CircleShape),
+                                            modifier =
+                                                Modifier
+                                                    .size(4.dp)
+                                                    .background(Color.White, shape = CircleShape),
                                         )
                                     }
                                 }
@@ -125,10 +130,11 @@ fun WeekDaySelectorRow(
                         onClick = { onDateSelected(day.date) },
                         shape = RoundedCornerShape(16.dp),
                         color = Color.Transparent,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .widthIn(max = 42.dp)
-                            .height(68.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = 42.dp)
+                                .height(68.dp),
                     ) {
                         Column(
                             modifier = Modifier.padding(vertical = 6.dp),
@@ -137,21 +143,23 @@ fun WeekDaySelectorRow(
                         ) {
                             Text(
                                 text = day.dayOfWeekLetter,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = textSecondary,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        color = textSecondary,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.sp,
+                                    ),
                                 textAlign = TextAlign.Center,
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = day.dayNumber.toString(),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = dayTextColor,
-                                    fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        color = dayTextColor,
+                                        fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                    ),
                                 textAlign = TextAlign.Center,
                             )
                             Spacer(modifier = Modifier.height(2.dp))
@@ -162,9 +170,10 @@ fun WeekDaySelectorRow(
                                 ) {
                                     day.dots.take(3).forEach { dot ->
                                         Box(
-                                            modifier = Modifier
-                                                .size(4.dp)
-                                                .background(dot.color, shape = CircleShape),
+                                            modifier =
+                                                Modifier
+                                                    .size(4.dp)
+                                                    .background(dot.color, shape = CircleShape),
                                         )
                                     }
                                 }
@@ -188,7 +197,8 @@ fun WeekDaySelectorRow(
 fun WeekAgendaCard(
     weekDays: List<CalendarWeekDayUiModel>,
     onDateSelected: (LocalDate) -> Unit,
-    onOpenNote: (Long) -> Unit,
+    onOpenNote: (Long) -> Unit = {},
+    onOpenItemDetails: (id: Long, isTask: Boolean) -> Unit = { id, _ -> onOpenNote(id) },
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
@@ -202,24 +212,27 @@ fun WeekAgendaCard(
         shape = CalendarDesignTokens.CardShape,
         color = cardBg,
         border = BorderStroke(1.dp, cardBorder),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp, horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             weekDays.forEach { day ->
                 if (day.isSelected) {
                     // Highlighted Selected Day Container
-                    val highlightBg = if (isDark) {
-                        CalendarDesignTokens.DarkPurpleSelected
-                    } else {
-                        CalendarDesignTokens.SoftLavender
-                    }
+                    val highlightBg =
+                        if (isDark) {
+                            CalendarDesignTokens.DarkPurpleSelected
+                        } else {
+                            CalendarDesignTokens.SoftLavender
+                        }
 
                     Surface(
                         shape = RoundedCornerShape(16.dp),
@@ -227,9 +240,10 @@ fun WeekAgendaCard(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
                         ) {
                             // Day header row: "Saturday, October 3" + optional "Today" badge
                             Row(
@@ -239,20 +253,22 @@ fun WeekAgendaCard(
                             ) {
                                 Text(
                                     text = day.fullDateLabel,
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.5.sp,
-                                        color = CalendarDesignTokens.PrimaryPurple,
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.5.sp,
+                                            color = CalendarDesignTokens.PrimaryPurple,
+                                        ),
                                 )
                                 if (day.isToday) {
                                     Text(
                                         text = stringResource(R.string.calendar_today),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.5.sp,
-                                            color = CalendarDesignTokens.PrimaryPurple,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.5.sp,
+                                                color = CalendarDesignTokens.PrimaryPurple,
+                                            ),
                                     )
                                 }
                             }
@@ -263,10 +279,11 @@ fun WeekAgendaCard(
                             if (day.events.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.calendar_no_events),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        fontSize = 13.sp,
-                                        color = textSecondary,
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.bodySmall.copy(
+                                            fontSize = 13.sp,
+                                            color = textSecondary,
+                                        ),
                                     modifier = Modifier.padding(vertical = 6.dp),
                                 )
                             } else {
@@ -274,7 +291,7 @@ fun WeekAgendaCard(
                                     day.events.forEach { event ->
                                         WeekEventItemCard(
                                             event = event,
-                                            onClick = { onOpenNote(event.id) },
+                                            onClick = { onOpenItemDetails(event.id, event.isTask) },
                                         )
                                     }
                                 }
@@ -284,11 +301,12 @@ fun WeekAgendaCard(
                 } else {
                     // Compact unselected day row: "Mon 28     No events"
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onDateSelected(day.date) }
-                            .padding(horizontal = 8.dp, vertical = 9.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { onDateSelected(day.date) }
+                                .padding(horizontal = 8.dp, vertical = 9.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -298,43 +316,48 @@ fun WeekAgendaCard(
                         ) {
                             Text(
                                 text = day.dayShortName,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 13.5.sp,
-                                    color = textSecondary,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 13.5.sp,
+                                        color = textSecondary,
+                                    ),
                             )
                             Text(
                                 text = day.dayNumber.toString(),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.5.sp,
-                                    color = textPrimary,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.5.sp,
+                                        color = textPrimary,
+                                    ),
                             )
                         }
 
                         if (day.events.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.calendar_no_events),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 13.sp,
-                                    color = textMuted,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 13.sp,
+                                        color = textMuted,
+                                    ),
                             )
                         } else {
                             val count = day.events.size
                             Text(
-                                text = if (count == 1) {
-                                    stringResource(R.string.calendar_event_count_single)
-                                } else {
-                                    stringResource(R.string.calendar_events_count, count)
-                                },
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = CalendarDesignTokens.PrimaryPurple,
-                                ),
+                                text =
+                                    if (count == 1) {
+                                        stringResource(R.string.calendar_event_count_single)
+                                    } else {
+                                        stringResource(R.string.calendar_events_count, count)
+                                    },
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = CalendarDesignTokens.PrimaryPurple,
+                                    ),
                             )
                         }
                     }
@@ -367,16 +390,18 @@ private fun WeekEventItemCard(
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Category Icon Box
             Box(
-                modifier = Modifier
-                    .size(CalendarDesignTokens.IconBoxSize)
-                    .background(event.iconBgColor, shape = CalendarDesignTokens.IconBoxShape),
+                modifier =
+                    Modifier
+                        .size(CalendarDesignTokens.IconBoxSize)
+                        .background(event.iconBgColor, shape = CalendarDesignTokens.IconBoxShape),
                 contentAlignment = Alignment.Center,
             ) {
                 CalendarEventIcon(
@@ -392,21 +417,23 @@ private fun WeekEventItemCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = event.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = textPrimary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = textPrimary,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = event.subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            color = textSecondary,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -415,9 +442,10 @@ private fun WeekEventItemCard(
             if (event.isDone) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.15f), shape = CircleShape),
+                    modifier =
+                        Modifier
+                            .size(22.dp)
+                            .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.15f), shape = CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     RememberMaterialRoundedSymbol(

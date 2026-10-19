@@ -1,18 +1,6 @@
 package three.haddad.smartnotas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.ui.nav.Routes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +20,18 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import three.haddad.smartnotas.data.AttachmentDao
+import three.haddad.smartnotas.data.ChecklistItemDao
+import three.haddad.smartnotas.data.ChecklistItemEntity
+import three.haddad.smartnotas.data.Importance
+import three.haddad.smartnotas.data.NoteAttachmentEntity
+import three.haddad.smartnotas.data.NoteDao
+import three.haddad.smartnotas.data.NoteEntity
+import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteRepository
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.Visibility
+import three.haddad.smartnotas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditListViewModelTest {
@@ -418,8 +418,6 @@ private class FakeNoteDao(
 
     override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
 
-
-
     override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
     override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
@@ -439,10 +437,6 @@ private class FakeNoteDao(
         store.publishNote(note.id)
         store.afterNoteUpdate()
     }
-
-
-
-
 
     override suspend fun setTrashed(
         id: Long,
@@ -473,8 +467,6 @@ private class FakeNoteDao(
     }
 
     override suspend fun allNoteIds(): List<Long> = store.notes.keys.toList()
-
-
 
     override suspend fun countPictureUri(uri: String): Int = 0
 

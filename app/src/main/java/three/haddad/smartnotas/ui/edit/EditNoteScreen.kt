@@ -33,6 +33,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteReminder
@@ -43,8 +45,6 @@ import three.haddad.smartnotas.ui.components.NoteShelfState
 import three.haddad.smartnotas.ui.modifiers.applyToFullBleedLayer
 import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
 import three.haddad.smartnotas.ui.theme.LocalAdaptiveNoteThemes
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
@@ -150,6 +150,7 @@ fun EditNoteScreen(
     var shoulderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var reminderPickerOpen by rememberSaveable { mutableStateOf(false) }
     var iconPickerOpen by rememberSaveable { mutableStateOf(false) }
+    var iconColorSheetOpen by rememberSaveable { mutableStateOf(false) }
     var actionsPickerOpen by rememberSaveable { mutableStateOf(false) }
     var attachmentsPickerOpen by rememberSaveable { mutableStateOf(false) }
     var notificationPermissionSheetOpen by rememberSaveable { mutableStateOf(false) }
@@ -354,236 +355,253 @@ fun EditNoteScreen(
     val imageDerivedColors = null
     val imageResolution: Any? = null
 
-        Box(Modifier.fillMaxSize()) {
-
-            Scaffold(
-                // This nested scroll hides/shows the bottom action bar with a source filter so
-                // overscroll spring-back doesn't flash it back in.
-                modifier =
-                    Modifier
-                        .nestedScroll(barVisibilityNestedScroll),
-                containerColor = Color.Transparent,
-                topBar = {
-                    val title by vm.title.collectAsStateWithLifecycle()
-                    val iconKey by vm.iconKey.collectAsStateWithLifecycle()
-                    EditorTitleTopBar(
-                        contentKind = NoteKind.NOTE,
-                        title = title,
-                        titlePlaceholder = titlePlaceholder,
-                        iconKey = iconKey,
-                        existing = hasPersistedEditorRow,
-                        isEditMode = isEditMode,
-                        readOnly = readOnly,
-                        hasUnsavedChanges = hasUnsavedChanges,
-                        titleFocusOffset = pendingTitleFocusOffset,
-                        onTitleChange = vm::setTitle,
-                        onBack = editorActions.saveAndNavigateUp,
-                        onTitleTappedInViewMode = { titleOffset ->
-                            suppressBodyAutoFocusOnEdit = true
-                            pendingTitleFocusOffset = titleOffset
-                            isEditMode = true
-                        },
-                        onTitleFocusOffsetConsumed = {
-                            pendingTitleFocusOffset = null
-                        },
-                        onTitleFocusChanged = { focused ->
-                            titleFocused = focused
-                            if (focused) bodyFocused = false
-                        },
-                        showNavigateBack = showNavigateBack,
-                        allowInitialTitleFocus = allowInitialTitleFocus,
-                        titleCollapseProgress = titleCollapseProgress,
-                        onSave = saveAndExitEditMode,
-                        onOpenIcon = { iconPickerOpen = true },
-                        markdownDisplayMode = if (bodyEditorFocused) markdownDisplayMode else null,
-                        onToggleMarkdownDisplayMode = {
-                            markdownDisplayMode =
-                                if (markdownDisplayMode == MarkdownEditorDisplayMode.MarkdownCode) {
-                                    MarkdownEditorDisplayMode.LivePreview
-                                } else {
-                                    MarkdownEditorDisplayMode.MarkdownCode
-                                }
-                        },
-                    )
-                },
-                bottomBar = {
-                    // Previously this slot rendered as:
-                    //     Column {
-                    //         EditNoteBottomBarSection(... AnimatedVisibility(isEditMode) ...)
-                    //         NoteActionBottomBar(... AnimatedVisibility(actionBarVisible) ...)
-                    //     }
-                    // which meant when the user tapped Edit, BOTH bars' visibility animations ran
-                    // at the same time. The format bar expanded in above the (still visible) action
-                    // bar, which then collapsed, leaving the format bar to drop into the now-empty
-                    // space - a multi-phase transition that reads as a glitch.
-                    //
-                    // AnimatedContent gives us a single-slot swap: whichever of Format / Action /
-                    // None is the target, only that one is mounted. The enter/exit animations run
-                    // against one another on the same surface, driven by the M3E default spatial
-                    // spring, so the swap is one smooth vertical cross-fade instead of two
-                    // overlapping vertical expand/collapse passes.
-                    // Stable callbacks - the MarkdownToolbar / action item rows are lambda-heavy
-                    // and re-allocating on every recomposition defeats their skippable-composable
-                    // optimization.
-                    val onUndo =
-                        remember(markdownEditorState, bridge) {
-                            {
-                                markdownEditorState.undo()
-                                bridge.flush()
-                                Unit
-                            }
-                        }
-                    val onRedo =
-                        remember(markdownEditorState, bridge) {
-                            {
-                                markdownEditorState.redo()
-                                bridge.flush()
-                                Unit
-                            }
-                        }
-                    EditorBottomBarSlot(
-                        isEditMode = bodyEditorFocused,
-                        actionBarVisible = actionBarVisible,
-                        formatContent = {
-                            EditNoteFormatBarContent(
-                                markdownEditorState = markdownEditorState,
-                                onUndo = onUndo,
-                                onRedo = onRedo,
-                                imeVisible = imeVisible,
-                            )
-                        },
-                        actionContent = {
-                            NoteActionBottomBarContent(
-                                shelfState = shelfState,
-                                existing = persistedForToolbar,
-                                isEditMode = isEditMode,
-                                pinned = pinned,
-                                completed = completed,
-                                onToggleEdit = {
-                                    // Outside edit mode this turns edit mode ON. The SAVE path is
-                                    // owned by the top-bar Save icon (edit mode) or by
-                                    // back/lifecycle (view mode flush), so there's no save
-                                    // side-effect to run here.
-                                    if (!isEditMode) isEditMode = true else saveAndExitEditMode()
-                                },
-                                onTogglePin = {
-                                    appScope.launch { vm.togglePinned() }
-                                },
-                                onToggleCompleted = {
-                                    appScope.launch { vm.toggleCompleted() }
-                                },
-                                onArchive = editorActions.archiveAndBack,
-                                onNotification = editorActions.notifyOrRequestPermission,
-                                onUnarchive = editorActions.unarchive,
-                                onTrash = editorActions.trashAndBack,
-                                onRestore = editorActions.restore,
-                                onDeleteForever = { deleteForeverConfirmOpen = true },
-                                showEditAction = false,
-                            )
-                        },
-                    )
-                },
-            ) { padding ->
-
-                EditNoteScrollableContent(
-                    vm = vm,
-                    modifier = blurMod,
-                    horizontalPadding = EditorContentBodyDefaults.HorizontalPadding,
-                    padding = padding,
-                    markdownEditorState = markdownEditorState,
-                    bodyPlaceholder = bodyPlaceholder,
-                    isEditMode = isEditMode,
-                    markdownDisplayMode = markdownDisplayMode,
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            // This nested scroll hides/shows the bottom action bar with a source filter so
+            // overscroll spring-back doesn't flash it back in.
+            modifier =
+                Modifier
+                    .nestedScroll(barVisibilityNestedScroll),
+            containerColor = Color.Transparent,
+            topBar = {
+                val title by vm.title.collectAsStateWithLifecycle()
+                val iconKey by vm.iconKey.collectAsStateWithLifecycle()
+                val colorIndex by vm.colorIndex.collectAsStateWithLifecycle()
+                EditorTitleTopBar(
+                    contentKind = NoteKind.NOTE,
+                    title = title,
+                    titlePlaceholder = titlePlaceholder,
+                    iconKey = iconKey,
+                    colorIndex = colorIndex,
                     existing = hasPersistedEditorRow,
-                    autoFocusBodyOnEdit = hasPersistedEditorRow && !suppressBodyAutoFocusOnEdit,
-                    shelfState = shelfState,
-                    pictureViewerOpen = pictureViewer != null,
-                    onOpenShoulders = { shoulderPickerOpen = true },
-                    onOpenReminder = {
-                        reminderPickerOpen = true
-                    },
-                    notificationsAllowed = notificationsAllowed,
-                    onOpenPicture = heroImagePicker.pickWithPhotoPicker,
-                    onBrowsePictureWithApp = heroImagePicker.browseWithApp,
-                    onViewPictureFull = { uri, revision ->
-                        pictureViewer = uri to revision
-                    },
-                    onOpenActions = { actionsPickerOpen = true },
-                    onOpenAttachments = {
-                        if (attachments.isEmpty()) {
-                            launchAttachmentPicker()
-                        } else {
-                            attachmentsPickerOpen = true
-                        }
-                    },
-                    onEnterEditModeAtOffset = { markdownOffset ->
+                    isEditMode = isEditMode,
+                    readOnly = readOnly,
+                    hasUnsavedChanges = hasUnsavedChanges,
+                    titleFocusOffset = pendingTitleFocusOffset,
+                    onTitleChange = vm::setTitle,
+                    onBack = editorActions.saveAndNavigateUp,
+                    onTitleTappedInViewMode = { titleOffset ->
                         suppressBodyAutoFocusOnEdit = true
-                        pendingTitleFocusOffset = null
-                        markdownEditorState.focusAtOffsetAndShowKeyboard(markdownOffset)
+                        pendingTitleFocusOffset = titleOffset
                         isEditMode = true
                     },
-                    onEnterEditModeSelectingRange = { startOffset, endOffset ->
-                        suppressBodyAutoFocusOnEdit = true
+                    onTitleFocusOffsetConsumed = {
                         pendingTitleFocusOffset = null
-                        markdownEditorState.focusRangeAndShowKeyboard(startOffset, endOffset)
-                        isEditMode = true
                     },
-                    onBodyFocusChanged = { focused ->
-                        bodyFocused = focused
-                        if (focused) titleFocused = false
+                    onTitleFocusChanged = { focused ->
+                        titleFocused = focused
+                        if (focused) bodyFocused = false
                     },
-                    scrollState = contentScrollState,
-                    scrollEnabled = !markdownSelectionActive,
+                    showNavigateBack = showNavigateBack,
+                    allowInitialTitleFocus = allowInitialTitleFocus,
+                    titleCollapseProgress = titleCollapseProgress,
+                    onSave = saveAndExitEditMode,
+                    onOpenIcon = { iconColorSheetOpen = true },
+                    markdownDisplayMode = if (bodyEditorFocused) markdownDisplayMode else null,
+                    onToggleMarkdownDisplayMode = {
+                        markdownDisplayMode =
+                            if (markdownDisplayMode == MarkdownEditorDisplayMode.MarkdownCode) {
+                                MarkdownEditorDisplayMode.LivePreview
+                            } else {
+                                MarkdownEditorDisplayMode.MarkdownCode
+                            }
+                    },
                 )
-            }
+            },
+            bottomBar = {
+                // Previously this slot rendered as:
+                //     Column {
+                //         EditNoteBottomBarSection(... AnimatedVisibility(isEditMode) ...)
+                //         NoteActionBottomBar(... AnimatedVisibility(actionBarVisible) ...)
+                //     }
+                // which meant when the user tapped Edit, BOTH bars' visibility animations ran
+                // at the same time. The format bar expanded in above the (still visible) action
+                // bar, which then collapsed, leaving the format bar to drop into the now-empty
+                // space - a multi-phase transition that reads as a glitch.
+                //
+                // AnimatedContent gives us a single-slot swap: whichever of Format / Action /
+                // None is the target, only that one is mounted. The enter/exit animations run
+                // against one another on the same surface, driven by the M3E default spatial
+                // spring, so the swap is one smooth vertical cross-fade instead of two
+                // overlapping vertical expand/collapse passes.
+                // Stable callbacks - the MarkdownToolbar / action item rows are lambda-heavy
+                // and re-allocating on every recomposition defeats their skippable-composable
+                // optimization.
+                val onUndo =
+                    remember(markdownEditorState, bridge) {
+                        {
+                            markdownEditorState.undo()
+                            bridge.flush()
+                            Unit
+                        }
+                    }
+                val onRedo =
+                    remember(markdownEditorState, bridge) {
+                        {
+                            markdownEditorState.redo()
+                            bridge.flush()
+                            Unit
+                        }
+                    }
+                EditorBottomBarSlot(
+                    isEditMode = bodyEditorFocused,
+                    actionBarVisible = actionBarVisible,
+                    formatContent = {
+                        EditNoteFormatBarContent(
+                            markdownEditorState = markdownEditorState,
+                            onUndo = onUndo,
+                            onRedo = onRedo,
+                            imeVisible = imeVisible,
+                        )
+                    },
+                    actionContent = {
+                        NoteActionBottomBarContent(
+                            shelfState = shelfState,
+                            existing = persistedForToolbar,
+                            isEditMode = isEditMode,
+                            pinned = pinned,
+                            completed = completed,
+                            onToggleEdit = {
+                                // Outside edit mode this turns edit mode ON. The SAVE path is
+                                // owned by the top-bar Save icon (edit mode) or by
+                                // back/lifecycle (view mode flush), so there's no save
+                                // side-effect to run here.
+                                if (!isEditMode) isEditMode = true else saveAndExitEditMode()
+                            },
+                            onTogglePin = {
+                                appScope.launch { vm.togglePinned() }
+                            },
+                            onToggleCompleted = {
+                                appScope.launch { vm.toggleCompleted() }
+                            },
+                            onArchive = editorActions.archiveAndBack,
+                            onNotification = editorActions.notifyOrRequestPermission,
+                            onUnarchive = editorActions.unarchive,
+                            onTrash = editorActions.trashAndBack,
+                            onRestore = editorActions.restore,
+                            onDeleteForever = { deleteForeverConfirmOpen = true },
+                            showEditAction = false,
+                        )
+                    },
+                )
+            },
+        ) { padding ->
 
-            val shoulders by vm.allShoulders.collectAsStateWithLifecycle()
-            val currentShoulderId by vm.shoulderId.collectAsStateWithLifecycle()
-            val titleText by vm.title.collectAsStateWithLifecycle()
+            EditNoteScrollableContent(
+                vm = vm,
+                modifier = blurMod,
+                horizontalPadding = EditorContentBodyDefaults.HorizontalPadding,
+                padding = padding,
+                markdownEditorState = markdownEditorState,
+                bodyPlaceholder = bodyPlaceholder,
+                isEditMode = isEditMode,
+                markdownDisplayMode = markdownDisplayMode,
+                existing = hasPersistedEditorRow,
+                autoFocusBodyOnEdit = hasPersistedEditorRow && !suppressBodyAutoFocusOnEdit,
+                shelfState = shelfState,
+                pictureViewerOpen = pictureViewer != null,
+                onOpenIconColor = { iconColorSheetOpen = true },
+                onOpenShoulders = { shoulderPickerOpen = true },
+                onOpenReminder = {
+                    reminderPickerOpen = true
+                },
+                notificationsAllowed = notificationsAllowed,
+                onOpenPicture = heroImagePicker.pickWithPhotoPicker,
+                onBrowsePictureWithApp = heroImagePicker.browseWithApp,
+                onViewPictureFull = { uri, revision ->
+                    pictureViewer = uri to revision
+                },
+                onOpenActions = { actionsPickerOpen = true },
+                onOpenAttachments = {
+                    if (attachments.isEmpty()) {
+                        launchAttachmentPicker()
+                    } else {
+                        attachmentsPickerOpen = true
+                    }
+                },
+                onEnterEditModeAtOffset = { markdownOffset ->
+                    suppressBodyAutoFocusOnEdit = true
+                    pendingTitleFocusOffset = null
+                    markdownEditorState.focusAtOffsetAndShowKeyboard(markdownOffset)
+                    isEditMode = true
+                },
+                onEnterEditModeSelectingRange = { startOffset, endOffset ->
+                    suppressBodyAutoFocusOnEdit = true
+                    pendingTitleFocusOffset = null
+                    markdownEditorState.focusRangeAndShowKeyboard(startOffset, endOffset)
+                    isEditMode = true
+                },
+                onBodyFocusChanged = { focused ->
+                    bodyFocused = focused
+                    if (focused) titleFocused = false
+                },
+                scrollState = contentScrollState,
+                scrollEnabled = !markdownSelectionActive,
+            )
+        }
 
-            EditorOptionSheets(
-                contentKind = NoteKind.NOTE,
-                shoulderPickerOpen = shoulderPickerOpen,
-                reminderPickerOpen = reminderPickerOpen,
-                iconPickerOpen = iconPickerOpen,
-                actionsPickerOpen = actionsPickerOpen,
-                attachmentsPickerOpen = attachmentsPickerOpen,
-                notificationPermissionSheetOpen = notificationPermissionSheetOpen,
-                deleteForeverConfirmOpen = deleteForeverConfirmOpen,
-                heroImagePicker = heroImagePicker,
-                pendingHeroSession = pendingHeroSession,
-                pictureViewer = pictureViewer,
-                currentPictureHeroFraming = pictureHeroFraming,
-                readOnly = readOnly,
-                shoulders = shoulders,
-                currentShoulderId = currentShoulderId,
-                noteTitle = titleText,
-                attachments = attachments,
-                currentReminders = reminders,
+        val shoulders by vm.allShoulders.collectAsStateWithLifecycle()
+        val currentShoulderId by vm.shoulderId.collectAsStateWithLifecycle()
+        val titleText by vm.title.collectAsStateWithLifecycle()
+
+        EditorOptionSheets(
+            contentKind = NoteKind.NOTE,
+            shoulderPickerOpen = shoulderPickerOpen,
+            reminderPickerOpen = reminderPickerOpen,
+            iconPickerOpen = iconPickerOpen,
+            actionsPickerOpen = actionsPickerOpen,
+            attachmentsPickerOpen = attachmentsPickerOpen,
+            notificationPermissionSheetOpen = notificationPermissionSheetOpen,
+            deleteForeverConfirmOpen = deleteForeverConfirmOpen,
+            heroImagePicker = heroImagePicker,
+            pendingHeroSession = pendingHeroSession,
+            pictureViewer = pictureViewer,
+            currentPictureHeroFraming = pictureHeroFraming,
+            readOnly = readOnly,
+            shoulders = shoulders,
+            currentShoulderId = currentShoulderId,
+            noteTitle = titleText,
+            attachments = attachments,
+            currentReminders = reminders,
+            currentIconKey = iconKey,
+            currentActions = actions,
+            heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
+            onSelectShoulder = vm::setShoulder,
+            onCreateShoulder = vm::createShoulder,
+            onUpdateShoulder = vm::updateShoulder,
+            onDeleteShoulder = vm::deleteShoulder,
+            onDismissShoulders = { shoulderPickerOpen = false },
+            onReminderChange = vm::setReminders,
+            onIconKeyChange = vm::setIconKey,
+            onActionsChange = vm::setActions,
+            onAddAttachment = vm::addAttachment,
+            onRemoveAttachment = vm::removeAttachment,
+            onHeroCommitted = vm::setHeroWithFraming,
+            onPictureChange = vm::setPictureUri,
+            onDeleteForever = editorActions.deleteForeverAndBack,
+            onDismissReminder = { reminderPickerOpen = false },
+            onDismissIcon = { iconPickerOpen = false },
+            onDismissActions = { actionsPickerOpen = false },
+            onDismissAttachments = { attachmentsPickerOpen = false },
+            onDismissNotificationPermission = { notificationPermissionSheetOpen = false },
+            onDismissPendingHero = { pendingHeroSession = null },
+            onDismissDeleteForever = { deleteForeverConfirmOpen = false },
+            onDismissPictureViewer = { pictureViewer = null },
+        )
+
+        if (iconColorSheetOpen) {
+            val colorIndex by vm.colorIndex.collectAsStateWithLifecycle()
+            IconAndColorSheet(
+                currentColorIndex = colorIndex,
                 currentIconKey = iconKey,
-                currentActions = actions,
-                heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
-                onSelectShoulder = vm::setShoulder,
-                onCreateShoulder = vm::createShoulder,
-                onUpdateShoulder = vm::updateShoulder,
-                onDeleteShoulder = vm::deleteShoulder,
-                onDismissShoulders = { shoulderPickerOpen = false },
-                onReminderChange = vm::setReminders,
-                onIconKeyChange = vm::setIconKey,
-                onActionsChange = vm::setActions,
-                onAddAttachment = vm::addAttachment,
-                onRemoveAttachment = vm::removeAttachment,
-                onHeroCommitted = vm::setHeroWithFraming,
-                onPictureChange = vm::setPictureUri,
-                onDeleteForever = editorActions.deleteForeverAndBack,
-                onDismissReminder = { reminderPickerOpen = false },
-                onDismissIcon = { iconPickerOpen = false },
-                onDismissActions = { actionsPickerOpen = false },
-                onDismissAttachments = { attachmentsPickerOpen = false },
-                onDismissNotificationPermission = { notificationPermissionSheetOpen = false },
-                onDismissPendingHero = { pendingHeroSession = null },
-                onDismissDeleteForever = { deleteForeverConfirmOpen = false },
-                onDismissPictureViewer = { pictureViewer = null },
+                onColorSelected = vm::setColorIndex,
+                onIconSelected = vm::setIconKey,
+                onRequestMoreIcons = {
+                    iconColorSheetOpen = false
+                    iconPickerOpen = true
+                },
+                onDismiss = { iconColorSheetOpen = false },
             )
         }
     }
+}

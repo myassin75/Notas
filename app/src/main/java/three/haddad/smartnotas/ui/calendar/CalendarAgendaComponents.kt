@@ -37,13 +37,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.edit.NoteIcon
 import three.haddad.smartnotas.ui.edit.resolveNoteIcon
-import java.time.LocalDate
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.theme.LocalIsDark
+import java.time.LocalDate
 
 /**
  * Section header for agenda items with an optional "+ New event" action button.
@@ -61,9 +61,10 @@ fun AgendaSectionHeader(
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -75,21 +76,23 @@ fun AgendaSectionHeader(
                 text = title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = textPrimary,
-                ),
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = textPrimary,
+                    ),
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            color = textSecondary,
+                        ),
                 )
             }
         }
@@ -118,11 +121,12 @@ fun AgendaSectionHeader(
                         text = stringResource(R.string.calendar_new_event),
                         maxLines = 1,
                         softWrap = false,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.5.sp,
-                            color = Color.White,
-                        ),
+                        style =
+                            MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.5.sp,
+                                color = Color.White,
+                            ),
                     )
                 }
             }
@@ -150,9 +154,10 @@ fun AgendaEventCard(
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Time label column (e.g. "09:00" above "AM")
@@ -165,28 +170,31 @@ fun AgendaEventCard(
             if (parts.size >= 2) {
                 Text(
                     text = parts[0],
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                        ),
                 )
                 Text(
                     text = parts[1],
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = textSecondary,
+                        ),
                 )
             } else {
                 Text(
                     text = event.timeDisplay,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = textSecondary,
+                        ),
                 )
             }
         }
@@ -200,16 +208,18 @@ fun AgendaEventCard(
             modifier = Modifier.weight(1f),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Category Icon Squircle
                 Box(
-                    modifier = Modifier
-                        .size(CalendarDesignTokens.IconBoxSize)
-                        .background(event.iconBgColor, shape = CalendarDesignTokens.IconBoxShape),
+                    modifier =
+                        Modifier
+                            .size(CalendarDesignTokens.IconBoxSize)
+                            .background(event.iconBgColor, shape = CalendarDesignTokens.IconBoxShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     CalendarEventIcon(
@@ -225,22 +235,24 @@ fun AgendaEventCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = event.title,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.5.sp,
-                            color = if (event.isDone && event.isTask) textSecondary else textPrimary,
-                            textDecoration = if (event.isDone && event.isTask) TextDecoration.LineThrough else null,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.5.sp,
+                                color = if (event.isDone && event.isTask) textSecondary else textPrimary,
+                                textDecoration = if (event.isDone && event.isTask) TextDecoration.LineThrough else null,
+                            ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = event.subtitle,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 12.5.sp,
-                            color = textSecondary,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.5.sp,
+                                color = textSecondary,
+                            ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -250,17 +262,19 @@ fun AgendaEventCard(
                 if (event.isTask && onToggleDone != null) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .clickable { onToggleDone(event.id, !event.isDone) },
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .clickable { onToggleDone(event.id, !event.isDone) },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (event.isDone) {
                             Box(
-                                modifier = Modifier
-                                    .size(26.dp)
-                                    .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.2f), shape = CircleShape),
+                                modifier =
+                                    Modifier
+                                        .size(26.dp)
+                                        .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.2f), shape = CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
@@ -271,22 +285,24 @@ fun AgendaEventCard(
                             }
                         } else {
                             Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .border(
-                                        width = 1.5.dp,
-                                        color = textSecondary.copy(alpha = 0.5f),
-                                        shape = CircleShape,
-                                    ),
+                                modifier =
+                                    Modifier
+                                        .size(24.dp)
+                                        .border(
+                                            width = 1.5.dp,
+                                            color = textSecondary.copy(alpha = 0.5f),
+                                            shape = CircleShape,
+                                        ),
                             )
                         }
                     }
                 } else if (event.isDone) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.15f), shape = CircleShape),
+                        modifier =
+                            Modifier
+                                .size(24.dp)
+                                .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.15f), shape = CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         RememberMaterialRoundedSymbol(
@@ -311,12 +327,13 @@ fun CalendarEventIcon(
     modifier: Modifier = Modifier,
     size: Dp = 20.dp,
 ) {
-    val noteIcon = remember(iconName) {
-        resolveNoteIcon(
-            iconKey = iconName,
-            kind = NoteKind.NOTE,
-        )
-    }
+    val noteIcon =
+        remember(iconName) {
+            resolveNoteIcon(
+                iconKey = iconName,
+                kind = NoteKind.NOTE,
+            )
+        }
     when (noteIcon) {
         is NoteIcon.Symbol -> {
             RememberMaterialRoundedSymbol(
@@ -375,21 +392,24 @@ fun BirthdayCard(
         shape = CalendarDesignTokens.ItemCardShape,
         color = cardBg,
         border = BorderStroke(1.dp, cardBorder),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Cake icon squircle
             Box(
-                modifier = Modifier
-                    .size(CalendarDesignTokens.IconBoxSize)
-                    .background(CalendarDesignTokens.BirthdayBoxBg, shape = CalendarDesignTokens.IconBoxShape),
+                modifier =
+                    Modifier
+                        .size(CalendarDesignTokens.IconBoxSize)
+                        .background(CalendarDesignTokens.BirthdayBoxBg, shape = CalendarDesignTokens.IconBoxShape),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -405,21 +425,23 @@ fun BirthdayCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = birthday.name,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.5.sp,
-                        color = textPrimary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.5.sp,
+                            color = textPrimary,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = birthday.subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.5.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.5.sp,
+                            color = textSecondary,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -455,9 +477,10 @@ fun CalendarEmptyIllustration(
     val dayNumberColor = if (isDark) Color(0xFFD6B5EB) else CalendarDesignTokens.PrimaryPurple
 
     Box(
-        modifier = modifier
-            .size(116.dp)
-            .background(circleBg, CircleShape),
+        modifier =
+            modifier
+                .size(116.dp)
+                .background(circleBg, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -466,38 +489,42 @@ fun CalendarEmptyIllustration(
         ) {
             // 1. Calendar Pad Body
             Box(
-                modifier = Modifier
-                    .padding(top = 3.5.dp)
-                    .size(width = 62.dp, height = 62.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(padBg)
-                    .border(
-                        BorderStroke(1.5.dp, padBorder),
-                        RoundedCornerShape(12.dp),
-                    ),
+                modifier =
+                    Modifier
+                        .padding(top = 3.5.dp)
+                        .size(width = 62.dp, height = 62.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(padBg)
+                        .border(
+                            BorderStroke(1.5.dp, padBorder),
+                            RoundedCornerShape(12.dp),
+                        ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Mauve header strip
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(16.dp)
-                            .background(headerStripBg),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(16.dp)
+                                .background(headerStripBg),
                     )
                     // Day number body
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "$dayNumber",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = dayNumberColor,
-                            ),
+                            style =
+                                MaterialTheme.typography.titleLarge.copy(
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = dayNumberColor,
+                                ),
                         )
                     }
                 }
@@ -505,20 +532,23 @@ fun CalendarEmptyIllustration(
 
             // 2. Two top binder rings threading into the header
             Row(
-                modifier = Modifier
-                    .width(62.dp)
-                    .padding(horizontal = 15.dp),
+                modifier =
+                    Modifier
+                        .width(62.dp)
+                        .padding(horizontal = 15.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(width = 3.5.dp, height = 8.5.dp)
-                        .background(pegColor, RoundedCornerShape(2.dp)),
+                    modifier =
+                        Modifier
+                            .size(width = 3.5.dp, height = 8.5.dp)
+                            .background(pegColor, RoundedCornerShape(2.dp)),
                 )
                 Box(
-                    modifier = Modifier
-                        .size(width = 3.5.dp, height = 8.5.dp)
-                        .background(pegColor, RoundedCornerShape(2.dp)),
+                    modifier =
+                        Modifier
+                            .size(width = 3.5.dp, height = 8.5.dp)
+                            .background(pegColor, RoundedCornerShape(2.dp)),
                 )
             }
         }
@@ -551,14 +581,16 @@ fun CalendarEmptyState(
         shape = RoundedCornerShape(28.dp),
         color = cardBg,
         border = BorderStroke(1.dp, cardBorder),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -572,12 +604,13 @@ fun CalendarEmptyState(
             // Prominent heading
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp,
-                    color = textPrimary,
-                    textAlign = TextAlign.Center,
-                ),
+                style =
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        color = textPrimary,
+                        textAlign = TextAlign.Center,
+                    ),
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -585,20 +618,22 @@ fun CalendarEmptyState(
             // Two lines of supporting text
             Text(
                 text = stringResource(R.string.calendar_empty_no_events_desc),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 15.sp,
-                    color = textSecondary,
-                    textAlign = TextAlign.Center,
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 15.sp,
+                        color = textSecondary,
+                        textAlign = TextAlign.Center,
+                    ),
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = stringResource(R.string.calendar_empty_enjoy_space_desc),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 15.sp,
-                    color = textSecondary,
-                    textAlign = TextAlign.Center,
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 15.sp,
+                        color = textSecondary,
+                        textAlign = TextAlign.Center,
+                    ),
             )
 
             if (onCreateEventClick != null) {
@@ -623,11 +658,12 @@ fun CalendarEmptyState(
                         )
                         Text(
                             text = stringResource(R.string.calendar_new_event),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.5.sp,
-                                color = Color.White,
-                            ),
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.5.sp,
+                                    color = Color.White,
+                                ),
                         )
                     }
                 }

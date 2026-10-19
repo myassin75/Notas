@@ -102,10 +102,11 @@ internal fun SearchableTopBarTitle(
             )
             Spacer(Modifier.width(8.dp))
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable { onToggleSearch() },
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onToggleSearch() },
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -119,11 +120,12 @@ internal fun SearchableTopBarTitle(
         } else {
             Text(
                 text = "Notas",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp,
-                    color = Color(0xFF32313F),
-                ),
+                style =
+                    MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp,
+                        color = Color(0xFF32313F),
+                    ),
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -131,10 +133,11 @@ internal fun SearchableTopBarTitle(
             ) {
                 // Search icon button
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable { onToggleSearch() },
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .clickable { onToggleSearch() },
                     contentAlignment = Alignment.Center,
                 ) {
                     RememberMaterialRoundedSymbol(
@@ -150,9 +153,10 @@ internal fun SearchableTopBarTitle(
                 Surface(
                     shape = CircleShape,
                     color = Color(0xFF98549C),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable { onCreateNote() },
+                    modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .clickable { onCreateNote() },
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -168,11 +172,12 @@ internal fun SearchableTopBarTitle(
                         )
                         Text(
                             text = "Add",
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                color = Color.White,
-                            ),
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 15.sp,
+                                    color = Color.White,
+                                ),
                         )
                     }
                 }

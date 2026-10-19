@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import three.haddad.smartnotas.MainActivity
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.ChecklistItemEntity
@@ -23,8 +25,6 @@ import three.haddad.smartnotas.diagnostics.DiagnosticLog
 import three.haddad.smartnotas.notifications.canPostNotifications
 import three.haddad.smartnotas.notifications.postNotificationIfAllowed
 import three.haddad.smartnotas.ui.edit.iconEmojiPayload
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.Calendar
 import java.util.concurrent.atomic.AtomicInteger
 

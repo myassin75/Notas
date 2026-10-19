@@ -6,6 +6,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.backup.BackupExportCoordinator
 import three.haddad.smartnotas.backup.NoteBackupDirtyTracker
 import three.haddad.smartnotas.data.AppMediaStorage
@@ -33,13 +40,6 @@ import three.haddad.smartnotas.googletasks.GoogleTasksRepository
 import three.haddad.smartnotas.reminders.ReminderScheduler
 import three.haddad.smartnotas.ui.lock.AppLockSession
 import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
 @Module
@@ -288,7 +288,6 @@ class AppStartupWarmup(
         // happening, so the first fullscreen Home frame is less likely to render before Room
         // has produced the active notes list.
         applicationScope.launch(ioDispatcher) {
-
             noteRepository.observeActive().first()
         }
     }

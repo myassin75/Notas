@@ -66,6 +66,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteReminder
@@ -82,11 +87,6 @@ import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
 import three.haddad.smartnotas.ui.theme.LocalAdaptiveNoteThemes
 import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.io.File
 
 private enum class FocusField { TITLE, DETAILS }
@@ -511,204 +511,401 @@ fun EditListScreen(
     val imageResolution: Any? = null
     var showChecked by rememberSaveable { mutableStateOf(true) }
 
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier =
+                Modifier
+                    .nestedScroll(barVisibilityNestedScroll),
+            containerColor = Color.Transparent,
+            topBar = {
+                val colorIndex by vm.colorIndex.collectAsStateWithLifecycle()
+                EditorTitleTopBar(
+                    contentKind = NoteKind.LIST,
+                    title = title,
+                    titlePlaceholder = titlePlaceholder,
+                    iconKey = iconKey,
+                    colorIndex = colorIndex,
+                    existing = existing || persistedForToolbar,
+                    isEditMode = isEditMode,
+                    readOnly = readOnly,
+                    hasUnsavedChanges = hasUnsavedChanges,
+                    titleFocusOffset = pendingTitleFocusOffset,
+                    onTitleChange = vm::setTitle,
+                    onBack = editorActions.saveAndNavigateUp,
+                    onTitleTappedInViewMode = { titleOffset ->
+                        pendingTitleFocusOffset = titleOffset
+                        isEditMode = true
+                    },
+                    onTitleFocusOffsetConsumed = {
+                        pendingTitleFocusOffset = null
+                    },
+                    onTitleFocusChanged = { /* unused */ },
+                    showNavigateBack = showNavigateBack,
+                    allowInitialTitleFocus = allowInitialTitleFocus,
+                    titleCollapseProgress = titleCollapseProgress,
+                    onSave = saveAndExitEditMode,
+                    onOpenIcon = { iconPickerOpen = true },
+                )
+            },
+            bottomBar = {
+                ListEditorBottomBarSlot(
+                    bottomBarVisible = bottomBarVisible,
+                    isEditMode = isEditMode,
+                    imeVisible = imeVisible,
+                    actionContent = {
+                        NoteActionBottomBarContent(
+                            shelfState = shelfState,
+                            existing = persistedForToolbar,
+                            isEditMode = isEditMode,
+                            pinned = pinned,
+                            completed = completed,
+                            onToggleEdit = {
+                                if (!isEditMode) isEditMode = true else saveAndExitEditMode()
+                            },
+                            onTogglePin = {
+                                appScope.launch { vm.togglePinned() }
+                            },
+                            onToggleCompleted = {
+                                appScope.launch { vm.toggleCompleted() }
+                            },
+                            onArchive = editorActions.archiveAndBack,
+                            onNotification = editorActions.notifyOrRequestPermission,
+                            onUnarchive = editorActions.unarchive,
+                            onTrash = editorActions.trashAndBack,
+                            onRestore = editorActions.restore,
+                            onDeleteForever = { deleteForeverConfirmOpen = true },
+                            showEditAction = false,
+                        )
+                    },
+                )
+            },
+        ) { padding ->
+            val activeIds = visibleActiveEntries.filterIsInstance<ActiveEntry.Row>().map { it.item.localId }
+            val reorderState =
+                rememberReorderableLazyListState(lazyListState) { from, to ->
+                    // Reorder only the rows currently rendered in the active section.
+                    val fromId = from.key as? Long ?: return@rememberReorderableLazyListState
+                    val toId = to.key as? Long ?: return@rememberReorderableLazyListState
+                    val fromIdx = activeIds.indexOf(fromId)
+                    val toIdx = activeIds.indexOf(toId)
+                    if (fromIdx >= 0 && toIdx >= 0) vm.reorderWithin(activeIds, fromIdx, toIdx)
+                }
 
-        Box(Modifier.fillMaxSize()) {
-
-            Scaffold(
+            androidx.compose.foundation.lazy.LazyColumn(
+                state = lazyListState,
                 modifier =
                     Modifier
-                        .nestedScroll(barVisibilityNestedScroll),
-                containerColor = Color.Transparent,
-                topBar = {
-                    EditorTitleTopBar(
-                        contentKind = NoteKind.LIST,
-                        title = title,
-                        titlePlaceholder = titlePlaceholder,
-                        iconKey = iconKey,
-                        existing = existing || persistedForToolbar,
-                        isEditMode = isEditMode,
-                        readOnly = readOnly,
-                        hasUnsavedChanges = hasUnsavedChanges,
-                        titleFocusOffset = pendingTitleFocusOffset,
-                        onTitleChange = vm::setTitle,
-                        onBack = editorActions.saveAndNavigateUp,
-                        onTitleTappedInViewMode = { titleOffset ->
-                            pendingTitleFocusOffset = titleOffset
-                            isEditMode = true
-                        },
-                        onTitleFocusOffsetConsumed = {
-                            pendingTitleFocusOffset = null
-                        },
-                        onTitleFocusChanged = { /* unused */ },
-                        showNavigateBack = showNavigateBack,
-                        allowInitialTitleFocus = allowInitialTitleFocus,
-                        titleCollapseProgress = titleCollapseProgress,
-                        onSave = saveAndExitEditMode,
-                        onOpenIcon = { iconPickerOpen = true },
-                    )
-                },
-                bottomBar = {
-                    ListEditorBottomBarSlot(
-                        bottomBarVisible = bottomBarVisible,
-                        isEditMode = isEditMode,
-                        imeVisible = imeVisible,
-                        actionContent = {
-                            NoteActionBottomBarContent(
-                                shelfState = shelfState,
-                                existing = persistedForToolbar,
-                                isEditMode = isEditMode,
-                                pinned = pinned,
-                                completed = completed,
-                                onToggleEdit = {
-                                    if (!isEditMode) isEditMode = true else saveAndExitEditMode()
-                                },
-                                onTogglePin = {
-                                    appScope.launch { vm.togglePinned() }
-                                },
-                                onToggleCompleted = {
-                                    appScope.launch { vm.toggleCompleted() }
-                                },
-                                onArchive = editorActions.archiveAndBack,
-                                onNotification = editorActions.notifyOrRequestPermission,
-                                onUnarchive = editorActions.unarchive,
-                                onTrash = editorActions.trashAndBack,
-                                onRestore = editorActions.restore,
-                                onDeleteForever = { deleteForeverConfirmOpen = true },
-                                showEditAction = false,
-                            )
-                        },
-                    )
-                },
-            ) { padding ->
-                val activeIds = visibleActiveEntries.filterIsInstance<ActiveEntry.Row>().map { it.item.localId }
-                val reorderState =
-                    rememberReorderableLazyListState(lazyListState) { from, to ->
-                        // Reorder only the rows currently rendered in the active section.
-                        val fromId = from.key as? Long ?: return@rememberReorderableLazyListState
-                        val toId = to.key as? Long ?: return@rememberReorderableLazyListState
-                        val fromIdx = activeIds.indexOf(fromId)
-                        val toIdx = activeIds.indexOf(toId)
-                        if (fromIdx >= 0 && toIdx >= 0) vm.reorderWithin(activeIds, fromIdx, toIdx)
-                    }
-
-                androidx.compose.foundation.lazy.LazyColumn(
-                    state = lazyListState,
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .then(blurMod)
-                            .padding(horizontal = EditorContentBodyDefaults.HorizontalPadding),
-                ) {
-                    // Order: hero image -> shelf banner -> list items. The banner sits right above the
-                    // list body so the "why is this read-only" hint is adjacent to the items it gates.
-                    editorContentHeaderItems(
-                        padding = padding,
-                        shelfState = shelfState,
-                        heroContent =
-                            pictureUri?.let { uri ->
-                                {
-                                    EditorContentPictureHero(
-                                        uri = uri,
-                                        pictureRevision = pictureRevision,
-                                        pictureHeroFraming = pictureHeroFraming,
-                                        viewerOpen = pictureViewer != null,
-                                        onOpenFull = { pictureViewer = uri to pictureRevision },
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .height(220.dp),
-                                    )
-                                }
-                            },
-                        bodyTopSpacing = 12.dp,
-                    )
-
-                    if (existing && !isEditMode && activeEntries.isEmpty() && completedEntries.isEmpty()) {
-                        item(key = "empty_list_view_placeholder") {
-                            Column(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(140.dp)
-                                        .appClickable(
-                                            enabled = !readOnly,
-                                            onClick = {
-                                                isEditMode = true
-                                            },
-                                        ),
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.edit_list_empty_view_title),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        .fillMaxSize()
+                        .then(blurMod)
+                        .padding(horizontal = EditorContentBodyDefaults.HorizontalPadding),
+            ) {
+                // Order: hero image -> shelf banner -> list items. The banner sits right above the
+                // list body so the "why is this read-only" hint is adjacent to the items it gates.
+                editorContentHeaderItems(
+                    padding = padding,
+                    shelfState = shelfState,
+                    heroContent =
+                        pictureUri?.let { uri ->
+                            {
+                                EditorContentPictureHero(
+                                    uri = uri,
+                                    pictureRevision = pictureRevision,
+                                    pictureHeroFraming = pictureHeroFraming,
+                                    viewerOpen = pictureViewer != null,
+                                    onOpenFull = { pictureViewer = uri to pictureRevision },
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(220.dp),
                                 )
-                                Text(
-                                    text = stringResource(R.string.edit_list_empty_view_hint),
-                                    style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            fontStyle = FontStyle.Italic,
-                                        ),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            }
+                        },
+                    bodyTopSpacing = 12.dp,
+                )
+
+                if (existing && !isEditMode && activeEntries.isEmpty() && completedEntries.isEmpty()) {
+                    item(key = "empty_list_view_placeholder") {
+                        Column(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(140.dp)
+                                    .appClickable(
+                                        enabled = !readOnly,
+                                        onClick = {
+                                            isEditMode = true
+                                        },
+                                    ),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.edit_list_empty_view_title),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = stringResource(R.string.edit_list_empty_view_hint),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontStyle = FontStyle.Italic,
+                                    ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+                }
+
+                items(
+                    items = visibleActiveEntries,
+                    key = { entry ->
+                        when (entry) {
+                            is ActiveEntry.Ghost -> "ghost-active-${entry.header.realParentLocalId}"
+                            is ActiveEntry.Row -> entry.item.localId
+                        }
+                    },
+                ) { entry ->
+                    when (entry) {
+                        is ActiveEntry.Ghost ->
+                            GhostParentHeaderRow(
+                                header = entry.header,
+                                isParentChecked = entry.header.parentChecked,
+                                // Active rows draw a drag-handle gutter while in edit mode; the ghost
+                                // has to mirror that so its checkbox lines up with the rows below.
+                                showDragHandleGutter = isEditMode,
+                                showCheckbox = !isEditMode,
+                                childrenExpanded = entry.header.realParentLocalId !in collapsedActiveParentIdSet,
+                                onToggleChildren = {
+                                    toggleActiveParentChildrenCollapsed(entry.header.realParentLocalId)
+                                },
+                                modifier =
+                                    Modifier.animateItem(
+                                        placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
+                                    ),
+                            )
+                        is ActiveEntry.Row -> {
+                            val item = entry.item
+                            ReorderableItem(
+                                state = reorderState,
+                                key = item.localId,
+                                modifier =
+                                    Modifier.animateItem(
+                                        placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
+                                    ),
+                            ) { isDragging ->
+                                DisposableEffect(isDragging, item.localId) {
+                                    val wasDragging = isDragging
+                                    if (wasDragging) {
+                                        vm.startDragging(item.localId)
+                                        if (item.depth == 0) {
+                                            draggingParentLocalId = item.localId
+                                        }
+                                    }
+                                    onDispose {
+                                        if (wasDragging) {
+                                            vm.stopDragging(item.localId)
+                                            if (draggingParentLocalId == item.localId) {
+                                                draggingParentLocalId = null
+                                            }
+                                        }
+                                    }
+                                }
+                                val titleFocusRequester = remember(item.localId) { FocusRequester() }
+                                val detailsFocusRequester = remember(item.localId) { FocusRequester() }
+                                DisposableEffect(item.localId, titleFocusRequester, detailsFocusRequester) {
+                                    titleFocusRequesters[item.localId] = titleFocusRequester
+                                    detailsFocusRequesters[item.localId] = detailsFocusRequester
+                                    onDispose {
+                                        if (titleFocusRequesters[item.localId] === titleFocusRequester) {
+                                            titleFocusRequesters.remove(item.localId)
+                                        }
+                                        if (detailsFocusRequesters[item.localId] === detailsFocusRequester) {
+                                            detailsFocusRequesters.remove(item.localId)
+                                        }
+                                    }
+                                }
+                                ChecklistRow(
+                                    item = item,
+                                    isEditMode = isEditMode && !readOnly,
+                                    focusRequester = titleFocusRequester,
+                                    detailsFocusRequester = detailsFocusRequester,
+                                    initialTitleSelection = if (pendingFocusItemId == item.localId) pendingItemTitleFocusOffset else null,
+                                    initialDetailsSelection = if (pendingFocusItemId == item.localId) pendingItemDetailsFocusOffset else null,
+                                    onTitleFocusOffsetConsumed = { pendingItemTitleFocusOffset = null },
+                                    onDetailsFocusOffsetConsumed = { pendingItemDetailsFocusOffset = null },
+                                    isDragging = isDragging,
+                                    dragHandleModifier = if (readOnly) Modifier else Modifier.draggableHandle(),
+                                    onTextChange = if (readOnly) ({ _ -> }) else ({ vm.updateItemText(item.localId, it) }),
+                                    onDetailsChange = if (readOnly) ({ _ -> }) else ({ vm.updateItemDetails(item.localId, it) }),
+                                    onToggle = if (readOnly) ({}) else ({ vm.toggleChecked(item.localId) }),
+                                    onCheckAll = if (readOnly) null else ({ vm.checkAll() }),
+                                    onUncheckAll = if (readOnly) null else ({ vm.uncheckAll() }),
+                                    onRemove = if (readOnly) ({}) else ({ vm.removeItem(item.localId) }),
+                                    onNext =
+                                        if (readOnly) {
+                                            ({})
+                                        } else {
+                                            (
+                                                {
+                                                    pendingFocusItemId = vm.addItemAfter(item.localId)
+                                                    item.parentLocalId?.let { parentId ->
+                                                        expandActiveParentChildren(parentId)
+                                                    }
+                                                    pendingFocusField = FocusField.TITLE
+                                                    isEditMode = true
+                                                }
+                                            )
+                                        },
+                                    onTextTap =
+                                        if (readOnly) {
+                                            null
+                                        } else {
+                                            { offset ->
+                                                pendingFocusItemId = item.localId
+                                                pendingFocusField = FocusField.TITLE
+                                                pendingItemTitleFocusOffset = offset
+                                                isEditMode = true
+                                            }
+                                        },
+                                    onDetailsTap =
+                                        if (readOnly) {
+                                            null
+                                        } else {
+                                            { offset ->
+                                                pendingFocusItemId = item.localId
+                                                pendingFocusField = FocusField.DETAILS
+                                                pendingItemDetailsFocusOffset = offset
+                                                isEditMode = true
+                                            }
+                                        },
+                                    onIndentChange =
+                                        if (readOnly) {
+                                            null
+                                        } else {
+                                            (
+                                                { deltaDepth ->
+                                                    if (deltaDepth > 0) {
+                                                        val activeUnchecked = items.filter { uncheckedItem -> !uncheckedItem.checked }
+                                                        val itemIndex =
+                                                            activeUnchecked.indexOfFirst { uncheckedItem ->
+                                                                uncheckedItem.localId == item.localId
+                                                            }
+                                                        val indentParent =
+                                                            activeUnchecked
+                                                                .take(itemIndex)
+                                                                .lastOrNull { uncheckedItem -> uncheckedItem.depth == 0 }
+                                                        vm.indent(item.localId)
+                                                        indentParent?.localId?.let { parentId ->
+                                                            expandActiveParentChildren(parentId)
+                                                        }
+                                                    } else if (deltaDepth < 0) {
+                                                        vm.outdent(item.localId)
+                                                    }
+                                                }
+                                            )
+                                        },
+                                    hasChildren = item.localId in parentIdsWithActiveChildren,
+                                    childrenExpanded = item.localId !in collapsedActiveParentIdSet,
+                                    onToggleChildren =
+                                        if (item.localId in parentIdsWithActiveChildren) {
+                                            { toggleActiveParentChildrenCollapsed(item.localId) }
+                                        } else {
+                                            null
+                                        },
                                 )
                             }
                         }
                     }
+                }
 
-                    items(
-                        items = visibleActiveEntries,
-                        key = { entry ->
+                if (isEditMode && !readOnly) {
+                    item(key = "add_item_btn") {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .animateItem(
+                                        placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
+                                    ).appClickable {
+                                        pendingFocusItemId = vm.addItem()
+                                        pendingFocusField = FocusField.TITLE
+                                        isEditMode = true
+                                    }.padding(vertical = 14.dp),
+                        ) {
+                            RememberMaterialRoundedSymbol(
+                                name = "add",
+                                size = 24.dp,
+                                tint = MaterialTheme.colorScheme.primary,
+                                weight = FontWeight.Medium,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                stringResource(R.string.edit_list_add_item),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+
+                if (completedItems.isNotEmpty()) {
+                    item(key = "checked_header") {
+                        Spacer(Modifier.height(16.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .animateItem(
+                                        placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
+                                    ).appClickable { showChecked = !showChecked }
+                                    .padding(vertical = 8.dp),
+                        ) {
+                            Text(
+                                pluralStringResource(R.plurals.checked_items_count, completedItems.size, completedItems.size),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
+                            )
+                            RememberMaterialRoundedSymbol(
+                                name = if (showChecked) "expand_more" else "chevron_right",
+                                size = 24.dp,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                weight = FontWeight.Medium,
+                            )
+                        }
+                    }
+
+                    if (showChecked) {
+                        items(
+                            items = visibleCompletedEntries,
+                            key = { entry ->
+                                when (entry) {
+                                    is CompletedEntry.Ghost -> "ghost-${entry.header.realParentLocalId}"
+                                    is CompletedEntry.Row -> entry.item.localId
+                                }
+                            },
+                        ) { entry ->
                             when (entry) {
-                                is ActiveEntry.Ghost -> "ghost-active-${entry.header.realParentLocalId}"
-                                is ActiveEntry.Row -> entry.item.localId
-                            }
-                        },
-                    ) { entry ->
-                        when (entry) {
-                            is ActiveEntry.Ghost ->
-                                GhostParentHeaderRow(
-                                    header = entry.header,
-                                    isParentChecked = entry.header.parentChecked,
-                                    // Active rows draw a drag-handle gutter while in edit mode; the ghost
-                                    // has to mirror that so its checkbox lines up with the rows below.
-                                    showDragHandleGutter = isEditMode,
-                                    showCheckbox = !isEditMode,
-                                    childrenExpanded = entry.header.realParentLocalId !in collapsedActiveParentIdSet,
-                                    onToggleChildren = {
-                                        toggleActiveParentChildrenCollapsed(entry.header.realParentLocalId)
-                                    },
-                                    modifier =
-                                        Modifier.animateItem(
-                                            placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
-                                        ),
-                                )
-                            is ActiveEntry.Row -> {
-                                val item = entry.item
-                                ReorderableItem(
-                                    state = reorderState,
-                                    key = item.localId,
-                                    modifier =
-                                        Modifier.animateItem(
-                                            placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
-                                        ),
-                                ) { isDragging ->
-                                    DisposableEffect(isDragging, item.localId) {
-                                        val wasDragging = isDragging
-                                        if (wasDragging) {
-                                            vm.startDragging(item.localId)
-                                            if (item.depth == 0) {
-                                                draggingParentLocalId = item.localId
-                                            }
-                                        }
-                                        onDispose {
-                                            if (wasDragging) {
-                                                vm.stopDragging(item.localId)
-                                                if (draggingParentLocalId == item.localId) {
-                                                    draggingParentLocalId = null
-                                                }
-                                            }
-                                        }
-                                    }
+                                is CompletedEntry.Ghost ->
+                                    GhostParentHeaderRow(
+                                        header = entry.header,
+                                        isParentChecked = entry.header.parentChecked,
+                                        // Completed rows never render a drag handle, so the ghost in
+                                        // the checked section never reserves a gutter either.
+                                        showDragHandleGutter = false,
+                                        showCheckbox = !isEditMode,
+                                        childrenExpanded = entry.header.realParentLocalId !in collapsedCompletedParentIdSet,
+                                        onToggleChildren = {
+                                            toggleCompletedParentChildrenCollapsed(entry.header.realParentLocalId)
+                                        },
+                                        modifier =
+                                            Modifier.animateItem(
+                                                placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
+                                            ),
+                                    )
+                                is CompletedEntry.Row -> {
+                                    val item = entry.item
                                     val titleFocusRequester = remember(item.localId) { FocusRequester() }
                                     val detailsFocusRequester = remember(item.localId) { FocusRequester() }
                                     DisposableEffect(item.localId, titleFocusRequester, detailsFocusRequester) {
@@ -732,8 +929,9 @@ fun EditListScreen(
                                         initialDetailsSelection = if (pendingFocusItemId == item.localId) pendingItemDetailsFocusOffset else null,
                                         onTitleFocusOffsetConsumed = { pendingItemTitleFocusOffset = null },
                                         onDetailsFocusOffsetConsumed = { pendingItemDetailsFocusOffset = null },
-                                        isDragging = isDragging,
-                                        dragHandleModifier = if (readOnly) Modifier else Modifier.draggableHandle(),
+                                        isDragging = false,
+                                        dragHandleModifier = Modifier,
+                                        showDragHandle = false,
                                         onTextChange = if (readOnly) ({ _ -> }) else ({ vm.updateItemText(item.localId, it) }),
                                         onDetailsChange = if (readOnly) ({ _ -> }) else ({ vm.updateItemDetails(item.localId, it) }),
                                         onToggle = if (readOnly) ({}) else ({ vm.toggleChecked(item.localId) }),
@@ -748,7 +946,7 @@ fun EditListScreen(
                                                     {
                                                         pendingFocusItemId = vm.addItemAfter(item.localId)
                                                         item.parentLocalId?.let { parentId ->
-                                                            expandActiveParentChildren(parentId)
+                                                            expandCompletedParentChildren(parentId)
                                                         }
                                                         pendingFocusField = FocusField.TITLE
                                                         isEditMode = true
@@ -777,299 +975,101 @@ fun EditListScreen(
                                                     isEditMode = true
                                                 }
                                             },
-                                        onIndentChange =
-                                            if (readOnly) {
-                                                null
-                                            } else {
-                                                (
-                                                    { deltaDepth ->
-                                                        if (deltaDepth > 0) {
-                                                            val activeUnchecked = items.filter { uncheckedItem -> !uncheckedItem.checked }
-                                                            val itemIndex =
-                                                                activeUnchecked.indexOfFirst { uncheckedItem ->
-                                                                    uncheckedItem.localId == item.localId
-                                                                }
-                                                            val indentParent =
-                                                                activeUnchecked
-                                                                    .take(itemIndex)
-                                                                    .lastOrNull { uncheckedItem -> uncheckedItem.depth == 0 }
-                                                            vm.indent(item.localId)
-                                                            indentParent?.localId?.let { parentId ->
-                                                                expandActiveParentChildren(parentId)
-                                                            }
-                                                        } else if (deltaDepth < 0) {
-                                                            vm.outdent(item.localId)
-                                                        }
-                                                    }
-                                                )
-                                            },
-                                        hasChildren = item.localId in parentIdsWithActiveChildren,
-                                        childrenExpanded = item.localId !in collapsedActiveParentIdSet,
+                                        onIndentChange = null,
+                                        hasChildren = item.localId in parentIdsWithCompletedChildren,
+                                        childrenExpanded = item.localId !in collapsedCompletedParentIdSet,
                                         onToggleChildren =
-                                            if (item.localId in parentIdsWithActiveChildren) {
-                                                { toggleActiveParentChildrenCollapsed(item.localId) }
+                                            if (item.localId in parentIdsWithCompletedChildren) {
+                                                { toggleCompletedParentChildrenCollapsed(item.localId) }
                                             } else {
                                                 null
                                             },
+                                        modifier =
+                                            Modifier.animateItem(
+                                                placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
+                                            ),
                                     )
                                 }
                             }
                         }
                     }
+                }
 
-                    if (isEditMode && !readOnly) {
-                        item(key = "add_item_btn") {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .animateItem(
-                                            placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
-                                        ).appClickable {
-                                            pendingFocusItemId = vm.addItem()
-                                            pendingFocusField = FocusField.TITLE
-                                            isEditMode = true
-                                        }.padding(vertical = 14.dp),
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "add",
-                                    size = 24.dp,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    weight = FontWeight.Medium,
-                                )
-                                Spacer(Modifier.width(12.dp))
-                                Text(
-                                    stringResource(R.string.edit_list_add_item),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
-                    }
-
-                    if (completedItems.isNotEmpty()) {
-                        item(key = "checked_header") {
-                            Spacer(Modifier.height(16.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .animateItem(
-                                            placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
-                                        ).appClickable { showChecked = !showChecked }
-                                        .padding(vertical = 8.dp),
-                            ) {
-                                Text(
-                                    pluralStringResource(R.plurals.checked_items_count, completedItems.size, completedItems.size),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                RememberMaterialRoundedSymbol(
-                                    name = if (showChecked) "expand_more" else "chevron_right",
-                                    size = 24.dp,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    weight = FontWeight.Medium,
-                                )
-                            }
-                        }
-
-                        if (showChecked) {
-                            items(
-                                items = visibleCompletedEntries,
-                                key = { entry ->
-                                    when (entry) {
-                                        is CompletedEntry.Ghost -> "ghost-${entry.header.realParentLocalId}"
-                                        is CompletedEntry.Row -> entry.item.localId
-                                    }
-                                },
-                            ) { entry ->
-                                when (entry) {
-                                    is CompletedEntry.Ghost ->
-                                        GhostParentHeaderRow(
-                                            header = entry.header,
-                                            isParentChecked = entry.header.parentChecked,
-                                            // Completed rows never render a drag handle, so the ghost in
-                                            // the checked section never reserves a gutter either.
-                                            showDragHandleGutter = false,
-                                            showCheckbox = !isEditMode,
-                                            childrenExpanded = entry.header.realParentLocalId !in collapsedCompletedParentIdSet,
-                                            onToggleChildren = {
-                                                toggleCompletedParentChildrenCollapsed(entry.header.realParentLocalId)
-                                            },
-                                            modifier =
-                                                Modifier.animateItem(
-                                                    placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
-                                                ),
-                                        )
-                                    is CompletedEntry.Row -> {
-                                        val item = entry.item
-                                        val titleFocusRequester = remember(item.localId) { FocusRequester() }
-                                        val detailsFocusRequester = remember(item.localId) { FocusRequester() }
-                                        DisposableEffect(item.localId, titleFocusRequester, detailsFocusRequester) {
-                                            titleFocusRequesters[item.localId] = titleFocusRequester
-                                            detailsFocusRequesters[item.localId] = detailsFocusRequester
-                                            onDispose {
-                                                if (titleFocusRequesters[item.localId] === titleFocusRequester) {
-                                                    titleFocusRequesters.remove(item.localId)
-                                                }
-                                                if (detailsFocusRequesters[item.localId] === detailsFocusRequester) {
-                                                    detailsFocusRequesters.remove(item.localId)
-                                                }
-                                            }
-                                        }
-                                        ChecklistRow(
-                                            item = item,
-                                            isEditMode = isEditMode && !readOnly,
-                                            focusRequester = titleFocusRequester,
-                                            detailsFocusRequester = detailsFocusRequester,
-                                            initialTitleSelection = if (pendingFocusItemId == item.localId) pendingItemTitleFocusOffset else null,
-                                            initialDetailsSelection = if (pendingFocusItemId == item.localId) pendingItemDetailsFocusOffset else null,
-                                            onTitleFocusOffsetConsumed = { pendingItemTitleFocusOffset = null },
-                                            onDetailsFocusOffsetConsumed = { pendingItemDetailsFocusOffset = null },
-                                            isDragging = false,
-                                            dragHandleModifier = Modifier,
-                                            showDragHandle = false,
-                                            onTextChange = if (readOnly) ({ _ -> }) else ({ vm.updateItemText(item.localId, it) }),
-                                            onDetailsChange = if (readOnly) ({ _ -> }) else ({ vm.updateItemDetails(item.localId, it) }),
-                                            onToggle = if (readOnly) ({}) else ({ vm.toggleChecked(item.localId) }),
-                                            onCheckAll = if (readOnly) null else ({ vm.checkAll() }),
-                                            onUncheckAll = if (readOnly) null else ({ vm.uncheckAll() }),
-                                            onRemove = if (readOnly) ({}) else ({ vm.removeItem(item.localId) }),
-                                            onNext =
-                                                if (readOnly) {
-                                                    ({})
-                                                } else {
-                                                    (
-                                                        {
-                                                            pendingFocusItemId = vm.addItemAfter(item.localId)
-                                                            item.parentLocalId?.let { parentId ->
-                                                                expandCompletedParentChildren(parentId)
-                                                            }
-                                                            pendingFocusField = FocusField.TITLE
-                                                            isEditMode = true
-                                                        }
-                                                    )
-                                                },
-                                            onTextTap =
-                                                if (readOnly) {
-                                                    null
-                                                } else {
-                                                    { offset ->
-                                                        pendingFocusItemId = item.localId
-                                                        pendingFocusField = FocusField.TITLE
-                                                        pendingItemTitleFocusOffset = offset
-                                                        isEditMode = true
-                                                    }
-                                                },
-                                            onDetailsTap =
-                                                if (readOnly) {
-                                                    null
-                                                } else {
-                                                    { offset ->
-                                                        pendingFocusItemId = item.localId
-                                                        pendingFocusField = FocusField.DETAILS
-                                                        pendingItemDetailsFocusOffset = offset
-                                                        isEditMode = true
-                                                    }
-                                                },
-                                            onIndentChange = null,
-                                            hasChildren = item.localId in parentIdsWithCompletedChildren,
-                                            childrenExpanded = item.localId !in collapsedCompletedParentIdSet,
-                                            onToggleChildren =
-                                                if (item.localId in parentIdsWithCompletedChildren) {
-                                                    { toggleCompletedParentChildrenCollapsed(item.localId) }
-                                                } else {
-                                                    null
-                                                },
-                                            modifier =
-                                                Modifier.animateItem(
-                                                    placementSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.slowSpatialSpec()),
-                                                ),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    editorContentOptionsItem(padding = padding) {
-                        val shoulder by vm.shoulder.collectAsStateWithLifecycle()
-                        Spacer(Modifier.height(20.dp))
-                        EditorOptionsPanel(
-                            shoulder = shoulder,
-                            reminders = reminders,
-                            importance = importance,
-                            visibility = visibility,
-                            pictureUri = pictureUri,
-                            actions = actions,
-                            attachments = attachments,
-                            notificationsAllowed = notificationsAllowed,
-                            readOnly = readOnly,
-                            createdAt = createdAt,
-                            updatedAt = updatedAt,
-                            onOpenShoulders = { shoulderPickerOpen = true },
-                            onOpenReminder = { reminderPickerOpen = true },
-                            onImportanceChange = vm::setImportance,
-                            onVisibilityChange = vm::setVisibility,
-                            onOpenPicture = heroImagePicker.pickWithPhotoPicker,
-                            onBrowsePictureWithApp = heroImagePicker.browseWithApp,
-                            onOpenActions = { actionsPickerOpen = true },
-                            onOpenAttachmentsSheet = { attachmentsPickerOpen = true },
-                            onPickAttachment = launchAttachmentPicker,
-                        )
-                    }
+                editorContentOptionsItem(padding = padding) {
+                    val shoulder by vm.shoulder.collectAsStateWithLifecycle()
+                    Spacer(Modifier.height(20.dp))
+                    EditorOptionsPanel(
+                        shoulder = shoulder,
+                        reminders = reminders,
+                        importance = importance,
+                        visibility = visibility,
+                        pictureUri = pictureUri,
+                        actions = actions,
+                        attachments = attachments,
+                        notificationsAllowed = notificationsAllowed,
+                        readOnly = readOnly,
+                        createdAt = createdAt,
+                        updatedAt = updatedAt,
+                        onOpenShoulders = { shoulderPickerOpen = true },
+                        onOpenReminder = { reminderPickerOpen = true },
+                        onImportanceChange = vm::setImportance,
+                        onVisibilityChange = vm::setVisibility,
+                        onOpenPicture = heroImagePicker.pickWithPhotoPicker,
+                        onBrowsePictureWithApp = heroImagePicker.browseWithApp,
+                        onOpenActions = { actionsPickerOpen = true },
+                        onOpenAttachmentsSheet = { attachmentsPickerOpen = true },
+                        onPickAttachment = launchAttachmentPicker,
+                    )
                 }
             }
-
-            val shoulders by vm.allShoulders.collectAsStateWithLifecycle()
-            val currentShoulderId by vm.shoulderId.collectAsStateWithLifecycle()
-
-            EditorOptionSheets(
-                contentKind = NoteKind.LIST,
-                shoulderPickerOpen = shoulderPickerOpen,
-                reminderPickerOpen = reminderPickerOpen,
-                iconPickerOpen = iconPickerOpen,
-                actionsPickerOpen = actionsPickerOpen,
-                attachmentsPickerOpen = attachmentsPickerOpen,
-                notificationPermissionSheetOpen = notificationPermissionSheetOpen,
-                deleteForeverConfirmOpen = deleteForeverConfirmOpen,
-                heroImagePicker = heroImagePicker,
-                pendingHeroSession = pendingHeroSession,
-                pictureViewer = pictureViewer,
-                currentPictureHeroFraming = pictureHeroFraming,
-                readOnly = readOnly,
-                shoulders = shoulders,
-                currentShoulderId = currentShoulderId,
-                noteTitle = title,
-                attachments = attachments,
-                currentReminders = reminders,
-                currentIconKey = iconKey,
-                currentActions = actions,
-                heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
-                onSelectShoulder = vm::setShoulder,
-                onCreateShoulder = vm::createShoulder,
-                onUpdateShoulder = vm::updateShoulder,
-                onDeleteShoulder = vm::deleteShoulder,
-                onDismissShoulders = { shoulderPickerOpen = false },
-                onReminderChange = vm::setReminders,
-                onIconKeyChange = vm::setIconKey,
-                onActionsChange = vm::setActions,
-                onAddAttachment = vm::addAttachment,
-                onRemoveAttachment = vm::removeAttachment,
-                onHeroCommitted = vm::setHeroWithFraming,
-                onPictureChange = vm::setPictureUri,
-                onDeleteForever = editorActions.deleteForeverAndBack,
-                onDismissReminder = { reminderPickerOpen = false },
-                onDismissIcon = { iconPickerOpen = false },
-                onDismissActions = { actionsPickerOpen = false },
-                onDismissAttachments = { attachmentsPickerOpen = false },
-                onDismissNotificationPermission = { notificationPermissionSheetOpen = false },
-                onDismissPendingHero = { pendingHeroSession = null },
-                onDismissDeleteForever = { deleteForeverConfirmOpen = false },
-                onDismissPictureViewer = { pictureViewer = null },
-            )
         }
+
+        val shoulders by vm.allShoulders.collectAsStateWithLifecycle()
+        val currentShoulderId by vm.shoulderId.collectAsStateWithLifecycle()
+
+        EditorOptionSheets(
+            contentKind = NoteKind.LIST,
+            shoulderPickerOpen = shoulderPickerOpen,
+            reminderPickerOpen = reminderPickerOpen,
+            iconPickerOpen = iconPickerOpen,
+            actionsPickerOpen = actionsPickerOpen,
+            attachmentsPickerOpen = attachmentsPickerOpen,
+            notificationPermissionSheetOpen = notificationPermissionSheetOpen,
+            deleteForeverConfirmOpen = deleteForeverConfirmOpen,
+            heroImagePicker = heroImagePicker,
+            pendingHeroSession = pendingHeroSession,
+            pictureViewer = pictureViewer,
+            currentPictureHeroFraming = pictureHeroFraming,
+            readOnly = readOnly,
+            shoulders = shoulders,
+            currentShoulderId = currentShoulderId,
+            noteTitle = title,
+            attachments = attachments,
+            currentReminders = reminders,
+            currentIconKey = iconKey,
+            currentActions = actions,
+            heroImageContentDescription = stringResource(R.string.viewer_cover_image_cd),
+            onSelectShoulder = vm::setShoulder,
+            onCreateShoulder = vm::createShoulder,
+            onUpdateShoulder = vm::updateShoulder,
+            onDeleteShoulder = vm::deleteShoulder,
+            onDismissShoulders = { shoulderPickerOpen = false },
+            onReminderChange = vm::setReminders,
+            onIconKeyChange = vm::setIconKey,
+            onActionsChange = vm::setActions,
+            onAddAttachment = vm::addAttachment,
+            onRemoveAttachment = vm::removeAttachment,
+            onHeroCommitted = vm::setHeroWithFraming,
+            onPictureChange = vm::setPictureUri,
+            onDeleteForever = editorActions.deleteForeverAndBack,
+            onDismissReminder = { reminderPickerOpen = false },
+            onDismissIcon = { iconPickerOpen = false },
+            onDismissActions = { actionsPickerOpen = false },
+            onDismissAttachments = { attachmentsPickerOpen = false },
+            onDismissNotificationPermission = { notificationPermissionSheetOpen = false },
+            onDismissPendingHero = { pendingHeroSession = null },
+            onDismissDeleteForever = { deleteForeverConfirmOpen = false },
+            onDismissPictureViewer = { pictureViewer = null },
+        )
     }
+}

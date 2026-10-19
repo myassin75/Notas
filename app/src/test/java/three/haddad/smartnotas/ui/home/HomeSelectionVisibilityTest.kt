@@ -1,11 +1,11 @@
 package three.haddad.smartnotas.ui.home
 
+import org.junit.Assert.assertEquals
+import org.junit.Test
 import three.haddad.smartnotas.data.NoteEntity
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.ui.components.toNoteCardUiModel
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 class HomeSelectionVisibilityTest {
     @Test

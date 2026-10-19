@@ -2,11 +2,19 @@
 
 package three.haddad.smartnotas.ui.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -35,17 +43,19 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +64,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.isSmallLandscape
@@ -158,29 +170,79 @@ fun NoteActionBottomBarContent(
     showEditAction: Boolean = false,
 ) {
     var overflowMenuOpen by remember { mutableStateOf(false) }
+    val hapticEnabled = LocalHapticEnabled.current
+    val view = LocalView.current
+    val coroutineScope = rememberCoroutineScope()
+    var isPressedAnim by remember { mutableStateOf(false) }
+
+    val buttonScale by animateFloatAsState(
+        targetValue = if (isPressedAnim) 0.88f else 1f,
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium,
+            ),
+        label = "doneButtonScale",
+    )
+
+    val iconScale by animateFloatAsState(
+        targetValue = if (completed) 1.25f else 1f,
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioHighBouncy,
+                stiffness = Spring.StiffnessLow,
+            ),
+        label = "doneIconScale",
+    )
+
+    val iconRotation by animateFloatAsState(
+        targetValue = if (completed) 360f else 0f,
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium,
+            ),
+        label = "doneIconRotation",
+    )
+
+    val targetBackgroundColor = if (completed) Color(0xFF1E8E3E) else Color(0xFF945394)
+    val backgroundColor by animateColorAsState(
+        targetValue = targetBackgroundColor,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "doneButtonColor",
+    )
+
+    val shadowElevation by animateDpAsState(
+        targetValue = if (completed) 4.dp else 1.dp,
+        animationSpec = tween(durationMillis = 250),
+        label = "doneButtonElevation",
+    )
 
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
         color = Color.White,
         shadowElevation = 2.dp,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // 1. Pin
             Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { onTogglePin() }
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onTogglePin() }
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -192,19 +254,21 @@ fun NoteActionBottomBarContent(
                 )
                 Text(
                     text = "Pin",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
-                        color = Color(0xFF272936),
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            color = Color(0xFF272936),
+                        ),
                 )
             }
 
             // 2. Notify
             Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { onNotification() }
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onNotification() }
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -216,20 +280,34 @@ fun NoteActionBottomBarContent(
                 )
                 Text(
                     text = "Notify",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
-                        color = Color(0xFF272936),
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            color = Color(0xFF272936),
+                        ),
                 )
             }
 
-            // 3. Done (Purple Pill Button)
+            // 3. Done (Pill Button with noticeable state change and dynamic spring click feedback)
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFF945394),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onToggleCompleted() },
+                color = backgroundColor,
+                shadowElevation = shadowElevation,
+                modifier =
+                    Modifier
+                        .graphicsLayer {
+                            scaleX = buttonScale
+                            scaleY = buttonScale
+                        }.clip(RoundedCornerShape(16.dp))
+                        .clickable {
+                            if (hapticEnabled) view.performLongPressHaptic()
+                            isPressedAnim = true
+                            coroutineScope.launch {
+                                delay(120)
+                                isPressedAnim = false
+                            }
+                            onToggleCompleted()
+                        },
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
@@ -240,28 +318,57 @@ fun NoteActionBottomBarContent(
                         name = "check_circle",
                         size = 18.dp,
                         tint = Color.White,
-                        weight = FontWeight.Normal,
+                        weight = FontWeight.Medium,
                         filled = completed,
+                        modifier =
+                            Modifier
+                                .graphicsLayer {
+                                    scaleX = iconScale
+                                    scaleY = iconScale
+                                    rotationZ = iconRotation
+                                },
                     )
-                    Text(
-                        text = "Done",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = Color.White,
-                        ),
-                    )
+                    AnimatedContent(
+                        targetState = completed,
+                        transitionSpec = {
+                            (
+                                fadeIn(animationSpec = tween(220)) +
+                                    scaleIn(initialScale = 0.85f)
+                            ) togetherWith
+                                (
+                                    fadeOut(animationSpec = tween(180)) +
+                                        scaleOut(targetScale = 1.15f)
+                                )
+                        },
+                        label = "doneButtonTextAnim",
+                    ) { isCompleted ->
+                        Text(
+                            text =
+                                if (isCompleted) {
+                                    stringResource(R.string.search_filter_status_completed)
+                                } else {
+                                    stringResource(R.string.edit_bottom_bar_mark_done)
+                                },
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = Color.White,
+                                ),
+                        )
+                    }
                 }
             }
 
             // 4. Overflow Menu Button (...)
             Box {
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF3EAF6))
-                        .clickable { overflowMenuOpen = true },
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF3EAF6))
+                            .clickable { overflowMenuOpen = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Canvas(modifier = Modifier.size(20.dp)) {
@@ -285,13 +392,13 @@ fun NoteActionBottomBarContent(
                 ) {
                     // Row 1: Archive
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                overflowMenuOpen = false
-                                onArchive()
-                            }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    overflowMenuOpen = false
+                                    onArchive()
+                                }.padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -304,11 +411,12 @@ fun NoteActionBottomBarContent(
                         )
                         Text(
                             text = "Archive",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 15.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 15.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
                     }
 
@@ -316,13 +424,13 @@ fun NoteActionBottomBarContent(
 
                     // Row 2: Trash
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                overflowMenuOpen = false
-                                onTrash()
-                            }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    overflowMenuOpen = false
+                                    onTrash()
+                                }.padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -335,11 +443,12 @@ fun NoteActionBottomBarContent(
                         )
                         Text(
                             text = "Trash",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 15.sp,
-                                color = Color(0xFFD24750),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 15.sp,
+                                    color = Color(0xFFD24750),
+                                ),
                         )
                     }
                 }

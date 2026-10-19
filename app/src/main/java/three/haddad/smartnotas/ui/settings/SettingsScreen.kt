@@ -26,11 +26,13 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,9 +41,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -54,16 +54,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,8 +76,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -99,6 +99,10 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.backup.RememberBackupWork
@@ -140,10 +144,6 @@ import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
 import three.haddad.smartnotas.update.RememberUpdateInfo
 import three.haddad.smartnotas.update.RememberUpdateState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 private enum class BackupFolderTarget {
     Local,
@@ -683,16 +683,18 @@ fun SettingsRoute(
         topBar = {
             if (showTopActions) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(SettingsDesignTokens.ScreenBg)
-                        .statusBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(SettingsDesignTokens.ScreenBg)
+                            .statusBarsPadding()
+                            .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
@@ -701,10 +703,11 @@ fun SettingsRoute(
                             Surface(
                                 shape = CircleShape,
                                 color = Color.White,
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(CircleShape)
-                                    .clickable { onBack() },
+                                modifier =
+                                    Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .clickable { onBack() },
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     RememberMaterialRoundedSymbol(
@@ -724,19 +727,21 @@ fun SettingsRoute(
                         ) {
                             Text(
                                 text = stringResource(R.string.main_tab_settings),
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 26.sp,
-                                    color = SettingsDesignTokens.TextPrimary,
-                                ),
+                                style =
+                                    MaterialTheme.typography.headlineMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 26.sp,
+                                        color = SettingsDesignTokens.TextPrimary,
+                                    ),
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Make Notas your own",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    color = SettingsDesignTokens.TextSecondary,
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 13.sp,
+                                        color = SettingsDesignTokens.TextSecondary,
+                                    ),
                             )
                         }
 
@@ -744,10 +749,11 @@ fun SettingsRoute(
                         Surface(
                             shape = CircleShape,
                             color = Color.White,
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .clickable { onOpenHelp() },
+                            modifier =
+                                Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .clickable { onOpenHelp() },
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 RememberMaterialRoundedSymbol(
@@ -806,7 +812,6 @@ fun SettingsRoute(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = settingsScrollEnabled,
                 ) {
-
                     if (includeSettingsSection(SettingsSectionKey.History)) {
                         item(key = "history") {
                             SettingsExpandableSection(
@@ -855,8 +860,6 @@ fun SettingsRoute(
                             }
                         }
                     }
-
-
 
                     if (includeSettingsSection(SettingsSectionKey.Defaults)) {
                         item(key = "defaults") {
@@ -992,8 +995,6 @@ fun SettingsRoute(
                         }
                     }
 
-
-
                     if (devModeEnabled && selectedSectionKey == null) {
                         item(key = "dev_options_entry") {
                             DevOptionsSettingsEntry(
@@ -1030,71 +1031,71 @@ fun SettingsRoute(
         }
 
         pendingRestore?.let { restore ->
-        AlertDialog(
-            onDismissRequest = { pendingRestore = null },
-            title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.settings_restore_confirm_body))
-                    if (restore.mediaSummary.hasMissingMedia) {
+            AlertDialog(
+                onDismissRequest = { pendingRestore = null },
+                title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(stringResource(R.string.settings_restore_confirm_body))
+                        if (restore.mediaSummary.hasMissingMedia) {
+                            Text(
+                                text = stringResource(R.string.settings_restore_media_missing_warning),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    RememberTextButton(
+                        onClick = {
+                            pendingRestore = null
+                            scope.launch {
+                                val restoreResult = backupIo.restoreFullReplace(restore.uri)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        resources.getQuantityString(
+                                            R.plurals.toast_imported_notes,
+                                            restoreResult.noteCount,
+                                            restoreResult.noteCount,
+                                        ),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                if (restoreResult.settingsOutcome.foldersNeedingReselection > 0) {
+                                    snackbarHostState.showSnackbar(
+                                        resources.getQuantityString(
+                                            R.plurals.settings_restore_folders_need_reselection,
+                                            restoreResult.settingsOutcome.foldersNeedingReselection,
+                                            restoreResult.settingsOutcome.foldersNeedingReselection,
+                                        ),
+                                    )
+                                }
+                                if (restoreResult.settingsOutcome.automationsDisabled) {
+                                    snackbarHostState.showSnackbar(
+                                        resources.getString(R.string.settings_restore_automation_disabled_no_folder),
+                                    )
+                                }
+                            }
+                        },
+                    ) {
+                        // Restore replaces existing data, so keep this low-emphasis + error-colored.
                         Text(
-                            text = stringResource(R.string.settings_restore_media_missing_warning),
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = stringResource(R.string.settings_restore_go_ahead),
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
-                }
-            },
-            confirmButton = {
-                RememberTextButton(
-                    onClick = {
-                        pendingRestore = null
-                        scope.launch {
-                            val restoreResult = backupIo.restoreFullReplace(restore.uri)
-                            Toast
-                                .makeText(
-                                    context,
-                                    resources.getQuantityString(
-                                        R.plurals.toast_imported_notes,
-                                        restoreResult.noteCount,
-                                        restoreResult.noteCount,
-                                    ),
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            if (restoreResult.settingsOutcome.foldersNeedingReselection > 0) {
-                                snackbarHostState.showSnackbar(
-                                    resources.getQuantityString(
-                                        R.plurals.settings_restore_folders_need_reselection,
-                                        restoreResult.settingsOutcome.foldersNeedingReselection,
-                                        restoreResult.settingsOutcome.foldersNeedingReselection,
-                                    ),
-                                )
-                            }
-                            if (restoreResult.settingsOutcome.automationsDisabled) {
-                                snackbarHostState.showSnackbar(
-                                    resources.getString(R.string.settings_restore_automation_disabled_no_folder),
-                                )
-                            }
-                        }
-                    },
-                ) {
-                    // Restore replaces existing data, so keep this low-emphasis + error-colored.
-                    Text(
-                        text = stringResource(R.string.settings_restore_go_ahead),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            },
-            dismissButton = {
-                RememberTextButton(onClick = { pendingRestore = null }) {
-                    Text(
-                        text = stringResource(R.string.common_cancel),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            },
-        )
-    }
+                },
+                dismissButton = {
+                    RememberTextButton(onClick = { pendingRestore = null }) {
+                        Text(
+                            text = stringResource(R.string.common_cancel),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+            )
+        }
     }
 }
 
@@ -1231,4 +1232,3 @@ private fun settingsSectionScrollIndex(
         .takeWhile { section -> section != target }
         .count { section -> isIncluded(section) }
 }
-

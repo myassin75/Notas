@@ -76,6 +76,12 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.backup.RememberBackupWork
@@ -104,12 +110,6 @@ import three.haddad.smartnotas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
 import three.haddad.smartnotas.ui.nav.LocalNavAnimatedVisibilityScope
 import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
 import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.Instant
 
 private data class DbStats(
@@ -1137,7 +1137,7 @@ private fun fireNotifWithNote(
                 title = title,
                 body = context.getString(R.string.dev_options_test_notif_body),
                 colorIndex = 0,
-                options = NoteOptions(importance = importance, ),
+                options = NoteOptions(importance = importance),
             )
         val noteWithItems = noteRepository.get(noteId) ?: return@launch
         ReminderReceiver.showNotification(context, noteWithItems.note, noteWithItems.items, keepUntilDone = false)
@@ -1176,7 +1176,7 @@ private fun fireNotifBigPicture(
                 title = context.getString(R.string.dev_options_test_notif_big_picture_title),
                 body = context.getString(R.string.dev_options_test_notif_big_picture_body),
                 colorIndex = 2,
-                options = NoteOptions(pictureUri = heroUri, ),
+                options = NoteOptions(pictureUri = heroUri),
             )
         val noteWithItems = noteRepository.get(noteId) ?: return@launch
         ReminderReceiver.showNotification(context, noteWithItems.note, noteWithItems.items, keepUntilDone = false)
@@ -1243,7 +1243,7 @@ private suspend fun createMockNotes(
     noteRepository: NoteRepository,
 ): Int {
     val now = System.currentTimeMillis()
-    
+
     val markdownHeroUri = copyDemoMarkdownHeroUri(context)
     noteRepository.createNote(
         title = "Demo: Markdown",
@@ -1251,7 +1251,6 @@ private suspend fun createMockNotes(
         colorIndex = 0,
         options =
             NoteOptions(
-                
                 pictureUri = markdownHeroUri,
                 pictureHeroFraming = markdownHeroUri?.let { DEMO_MARKDOWN_HERO_FRAMING },
                 iconKey = "symbol_filled:data_object",
@@ -1265,7 +1264,6 @@ private suspend fun createMockNotes(
             items = emptyList(),
             options =
                 NoteOptions(
-                    
                     reminderAt = now + 5 * 24 * 3_600_000L,
                     iconKey = "symbol_filled:grocery",
                     actions =
@@ -1285,7 +1283,6 @@ private suspend fun createMockNotes(
         items = demoGroceriesChecklistItems(),
         options =
             NoteOptions(
-                
                 reminderAt = now + 5 * 24 * 3_600_000L,
                 iconKey = "symbol_filled:grocery",
                 actions =

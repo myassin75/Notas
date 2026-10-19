@@ -2,8 +2,6 @@ package three.haddad.smartnotas.update
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.UpdatePrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -15,6 +13,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.longOrNull
+import three.haddad.smartnotas.BuildConfig
+import three.haddad.smartnotas.data.UpdatePrefs
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject

@@ -40,7 +40,6 @@ import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditEventViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private val insertedNotes = mutableListOf<NoteEntity>()
     private val updatedNotes = mutableListOf<NoteEntity>()
@@ -60,76 +59,118 @@ class EditEventViewModelTest {
     }
 
     private fun createRepository(): NoteRepository {
-        val fakeNoteDao = object : NoteDao {
-            override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
-            override suspend fun get(id: Long): NoteWithItems? {
-                val found = insertedNotes.firstOrNull { it.id == id } ?: return null
-                val atts = insertedAttachments.filter { it.noteId == id }
-                return NoteWithItems(found, emptyList(), attachments = atts)
+        val fakeNoteDao =
+            object : NoteDao {
+                override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
+
+                override suspend fun get(id: Long): NoteWithItems? {
+                    val found = insertedNotes.firstOrNull { it.id == id } ?: return null
+                    val atts = insertedAttachments.filter { it.noteId == id }
+                    return NoteWithItems(found, emptyList(), attachments = atts)
+                }
+
+                override suspend fun allNotes(): List<NoteWithItems> = emptyList()
+
+                override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
+
+                override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override suspend fun insert(note: NoteEntity): Long {
+                    val id = if (note.id > 0) note.id else (insertedNotes.size + 1).toLong()
+                    val assigned = note.copy(id = id)
+                    insertedNotes.add(assigned)
+                    return id
+                }
+
+                override suspend fun update(note: NoteEntity) {
+                    updatedNotes.add(note)
+                    val idx = insertedNotes.indexOfFirst { it.id == note.id }
+                    if (idx >= 0) {
+                        insertedNotes[idx] = note
+                    }
+                }
+
+                override suspend fun setTrashed(
+                    id: Long,
+                    trashed: Boolean,
+                    updatedAt: Long,
+                ) = Unit
+
+                override suspend fun setArchived(
+                    id: Long,
+                    archived: Boolean,
+                    updatedAt: Long,
+                ) = Unit
+
+                override suspend fun deleteById(id: Long) = Unit
+
+                override suspend fun allNoteIds(): List<Long> = emptyList()
+
+                override suspend fun countPictureUri(uri: String): Int = 0
+
+                override suspend fun trashedNoteIds(): List<Long> = emptyList()
+
+                override suspend fun archivedNoteIds(): List<Long> = emptyList()
+
+                override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
+
+                override suspend fun deleteAllNotes() = Unit
+
+                override suspend fun emptyTrash() = Unit
+
+                override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
             }
-            override suspend fun allNotes(): List<NoteWithItems> = emptyList()
-            override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-            override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override suspend fun insert(note: NoteEntity): Long {
-                val id = if (note.id > 0) note.id else (insertedNotes.size + 1).toLong()
-                val assigned = note.copy(id = id)
-                insertedNotes.add(assigned)
-                return id
+
+        val fakeChecklistDao =
+            object : ChecklistItemDao {
+                override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
+
+                override suspend fun insert(item: ChecklistItemEntity): Long = 1L
+
+                override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
+
+                override suspend fun update(item: ChecklistItemEntity) = Unit
+
+                override suspend fun deleteById(id: Long) = Unit
+
+                override suspend fun deleteForNote(noteId: Long) = Unit
             }
-            override suspend fun update(note: NoteEntity) {
-                updatedNotes.add(note)
-                val idx = insertedNotes.indexOfFirst { it.id == note.id }
-                if (idx >= 0) {
-                    insertedNotes[idx] = note
+
+        val fakeAttachmentDao =
+            object : AttachmentDao {
+                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = insertedAttachments.filter { it.noteId == noteId }
+
+                override suspend fun insert(attachment: NoteAttachmentEntity): Long {
+                    val id = (insertedAttachments.size + 1).toLong()
+                    val entity = attachment.copy(id = id)
+                    insertedAttachments.add(entity)
+                    return id
+                }
+
+                override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
+
+                override suspend fun getById(id: Long): NoteAttachmentEntity? = insertedAttachments.firstOrNull { it.id == id }
+
+                override suspend fun countByUri(uri: String): Int = 0
+
+                override suspend fun deleteById(id: Long) {
+                    insertedAttachments.removeAll { it.id == id }
+                }
+
+                override suspend fun deleteForNote(noteId: Long) {
+                    insertedAttachments.removeAll { it.noteId == noteId }
                 }
             }
-            override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) = Unit
-            override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) = Unit
-            override suspend fun deleteById(id: Long) = Unit
-            override suspend fun allNoteIds(): List<Long> = emptyList()
-            override suspend fun countPictureUri(uri: String): Int = 0
-            override suspend fun trashedNoteIds(): List<Long> = emptyList()
-            override suspend fun archivedNoteIds(): List<Long> = emptyList()
-            override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-            override suspend fun deleteAllNotes() = Unit
-            override suspend fun emptyTrash() = Unit
-            override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
-        }
-
-        val fakeChecklistDao = object : ChecklistItemDao {
-            override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
-            override suspend fun insert(item: ChecklistItemEntity): Long = 1L
-            override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
-            override suspend fun update(item: ChecklistItemEntity) = Unit
-            override suspend fun deleteById(id: Long) = Unit
-            override suspend fun deleteForNote(noteId: Long) = Unit
-        }
-
-        val fakeAttachmentDao = object : AttachmentDao {
-            override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> =
-                insertedAttachments.filter { it.noteId == noteId }
-            override suspend fun insert(attachment: NoteAttachmentEntity): Long {
-                val id = (insertedAttachments.size + 1).toLong()
-                val entity = attachment.copy(id = id)
-                insertedAttachments.add(entity)
-                return id
-            }
-            override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
-            override suspend fun getById(id: Long): NoteAttachmentEntity? =
-                insertedAttachments.firstOrNull { it.id == id }
-            override suspend fun countByUri(uri: String): Int = 0
-            override suspend fun deleteById(id: Long) {
-                insertedAttachments.removeAll { it.id == id }
-            }
-            override suspend fun deleteForNote(noteId: Long) {
-                insertedAttachments.removeAll { it.noteId == noteId }
-            }
-        }
 
         return NoteRepository(
             noteDao = fakeNoteDao,
@@ -143,213 +184,244 @@ class EditEventViewModelTest {
     private fun createShoulderRepository(): ShoulderRepository {
         val shoulders = mutableListOf<ShoulderEntity>()
         val shouldersFlow = MutableStateFlow<List<ShoulderEntity>>(emptyList())
-        val fakeShoulderDao = object : ShoulderDao {
-            override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
-            override suspend fun allShoulders(): List<ShoulderEntity> = shoulders
-            override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
-            override suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulders.firstOrNull { it.id == id }
-            override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? =
-                shoulders.firstOrNull { it.normalizedName == normalizedName }
-            override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
-            override suspend fun insertShoulder(shoulder: ShoulderEntity): Long {
-                val id = (shoulders.size + 1).toLong()
-                val assigned = shoulder.copy(id = id)
-                shoulders.add(assigned)
-                shouldersFlow.value = shoulders.toList()
-                return id
-            }
-            override suspend fun updateShoulder(shoulder: ShoulderEntity) {
-                val idx = shoulders.indexOfFirst { it.id == shoulder.id }
-                if (idx >= 0) {
-                    shoulders[idx] = shoulder
+        val fakeShoulderDao =
+            object : ShoulderDao {
+                override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
+
+                override suspend fun allShoulders(): List<ShoulderEntity> = shoulders
+
+                override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
+
+                override suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulders.firstOrNull { it.id == id }
+
+                override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? = shoulders.firstOrNull { it.normalizedName == normalizedName }
+
+                override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
+
+                override suspend fun insertShoulder(shoulder: ShoulderEntity): Long {
+                    val id = (shoulders.size + 1).toLong()
+                    val assigned = shoulder.copy(id = id)
+                    shoulders.add(assigned)
+                    shouldersFlow.value = shoulders.toList()
+                    return id
+                }
+
+                override suspend fun updateShoulder(shoulder: ShoulderEntity) {
+                    val idx = shoulders.indexOfFirst { it.id == shoulder.id }
+                    if (idx >= 0) {
+                        shoulders[idx] = shoulder
+                        shouldersFlow.value = shoulders.toList()
+                    }
+                }
+
+                override suspend fun deleteShoulder(shoulder: ShoulderEntity) {
+                    shoulders.removeAll { it.id == shoulder.id }
                     shouldersFlow.value = shoulders.toList()
                 }
+
+                override suspend fun setShoulderForNote(
+                    noteId: Long,
+                    shoulderId: Long?,
+                ) = Unit
             }
-            override suspend fun deleteShoulder(shoulder: ShoulderEntity) {
-                shoulders.removeAll { it.id == shoulder.id }
-                shouldersFlow.value = shoulders.toList()
-            }
-            override suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?) = Unit
-        }
         return ShoulderRepository(fakeShoulderDao)
     }
 
     @Test
-    fun testCreateTimedEvent_success() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val date = LocalDate.of(2026, 10, 15)
-        val dateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val handle = SavedStateHandle(mapOf(Routes.ARG_DATE_MILLIS to dateMillis))
+    fun testCreateTimedEvent_success() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val date = LocalDate.of(2026, 10, 15)
+            val dateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val handle = SavedStateHandle(mapOf(Routes.ARG_DATE_MILLIS to dateMillis))
 
-        val viewModel = EditEventViewModel(
-            savedStateHandle = handle,
-            noteRepository = repo,
-            shoulderRepository = createShoulderRepository(),
-        )
-        advanceUntilIdle()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                    shoulderRepository = createShoulderRepository(),
+                )
+            advanceUntilIdle()
 
-        assertFalse(viewModel.isEditMode)
-        assertEquals(date, viewModel.selectedDate.value)
+            assertFalse(viewModel.isEditMode)
+            assertEquals(date, viewModel.selectedDate.value)
 
-        viewModel.setTitle("Team Standup")
-        viewModel.setNotes("Discuss Q4 goals")
-        viewModel.setStartTime(LocalTime.of(10, 0))
-        viewModel.setEndTime(LocalTime.of(10, 30))
+            viewModel.setTitle("Team Standup")
+            viewModel.setNotes("Discuss Q4 goals")
+            viewModel.setStartTime(LocalTime.of(10, 0))
+            viewModel.setEndTime(LocalTime.of(10, 30))
 
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
 
-        assertTrue(result.isSuccess)
-        assertEquals(1, insertedNotes.size)
-        val note = insertedNotes.first()
-        assertEquals("Team Standup", note.title)
-        assertTrue(note.body.contains("10:00 AM – 10:30 AM"))
-        assertTrue(note.body.contains("Discuss Q4 goals"))
-        assertEquals(NoteKind.NOTE, note.kind)
-        assertNotNull(note.reminderAt)
-    }
-
-    @Test
-    fun testCreateAllDayEvent_encodesAllDay() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val handle = SavedStateHandle()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = handle,
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
-
-        viewModel.setTitle("Annual Conference")
-        viewModel.setAllDay(true)
-        viewModel.setNotes("Bring badges")
-
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
-
-        assertTrue(result.isSuccess)
-        val note = insertedNotes.first()
-        assertEquals("Annual Conference", note.title)
-        assertTrue(note.body.startsWith("[All Day]"))
-        assertTrue(note.body.contains("Bring badges"))
-    }
+            assertTrue(result.isSuccess)
+            assertEquals(1, insertedNotes.size)
+            val note = insertedNotes.first()
+            assertEquals("Team Standup", note.title)
+            assertTrue(note.body.contains("10:00 AM – 10:30 AM"))
+            assertTrue(note.body.contains("Discuss Q4 goals"))
+            assertEquals(NoteKind.NOTE, note.kind)
+            assertNotNull(note.reminderAt)
+        }
 
     @Test
-    fun testValidation_blankTitleFails() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = SavedStateHandle(),
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
+    fun testCreateAllDayEvent_encodesAllDay() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val handle = SavedStateHandle()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
 
-        viewModel.setTitle("   ")
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
+            viewModel.setTitle("Annual Conference")
+            viewModel.setAllDay(true)
+            viewModel.setNotes("Bring badges")
 
-        assertTrue(result.isFailure)
-        assertNotNull(viewModel.saveError.value)
-        assertEquals(0, insertedNotes.size)
-    }
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
 
-    @Test
-    fun testValidation_sameStartAndEndTimeFails() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = SavedStateHandle(),
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
-
-        viewModel.setTitle("Quick Sync")
-        viewModel.setStartTime(LocalTime.of(14, 0))
-        viewModel.setEndTime(LocalTime.of(14, 0))
-        viewModel.setAllDay(false)
-
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
-
-        assertTrue(result.isFailure)
-        assertTrue(viewModel.saveError.value?.contains("same") == true)
-        assertEquals(0, insertedNotes.size)
-    }
+            assertTrue(result.isSuccess)
+            val note = insertedNotes.first()
+            assertEquals("Annual Conference", note.title)
+            assertTrue(note.body.startsWith("[All Day]"))
+            assertTrue(note.body.contains("Bring badges"))
+        }
 
     @Test
-    fun testEditMode_loadsExistingEventData() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val testDate = LocalDate.of(2026, 11, 20)
-        val startTime = LocalTime.of(15, 0)
-        val reminderAt = testDate.atTime(startTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun testValidation_blankTitleFails() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
 
-        val existingNote = NoteEntity(
-            id = 42L,
-            kind = NoteKind.NOTE,
-            title = "Design Review",
-            body = "3:00 PM – 4:00 PM\nReview mobile mockups",
-            colorIndex = 0,
-            trashed = false,
-            reminderAt = reminderAt,
-            shoulderId = 7L,
-            importance = Importance.HIGH,
-            visibility = Visibility.DEFAULT,
-            createdAt = reminderAt,
-            updatedAt = reminderAt,
-        )
-        insertedNotes.add(existingNote)
+            viewModel.setTitle("   ")
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
 
-        val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 42L))
-        val viewModel = EditEventViewModel(
-            savedStateHandle = handle,
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
-
-        assertTrue(viewModel.isEditMode)
-        assertEquals("Design Review", viewModel.title.value)
-        assertEquals("Review mobile mockups", viewModel.notes.value)
-        assertEquals(testDate, viewModel.selectedDate.value)
-        assertEquals(LocalTime.of(15, 0), viewModel.startTime.value)
-        assertEquals(LocalTime.of(16, 0), viewModel.endTime.value)
-        assertFalse(viewModel.isAllDay.value)
-        assertEquals(7L, viewModel.selectedShoulderId.value)
-        assertEquals(Importance.HIGH, viewModel.importance.value)
-    }
+            assertTrue(result.isFailure)
+            assertNotNull(viewModel.saveError.value)
+            assertEquals(0, insertedNotes.size)
+        }
 
     @Test
-    fun testEditMode_updateEventSavesChanges() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val existingNote = NoteEntity(
-            id = 99L,
-            kind = NoteKind.NOTE,
-            title = "Original Title",
-            body = "9:00 AM – 10:00 AM\nOld notes",
-            colorIndex = 0,
-            trashed = false,
-            createdAt = 1000L,
-            updatedAt = 1000L,
-        )
-        insertedNotes.add(existingNote)
+    fun testValidation_sameStartAndEndTimeFails() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
 
-        val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 99L))
-        val viewModel = EditEventViewModel(
-            savedStateHandle = handle,
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
+            viewModel.setTitle("Quick Sync")
+            viewModel.setStartTime(LocalTime.of(14, 0))
+            viewModel.setEndTime(LocalTime.of(14, 0))
+            viewModel.setAllDay(false)
 
-        viewModel.setTitle("Updated Title")
-        viewModel.setNotes("New notes content")
-        viewModel.setImportance(Importance.CRITICAL)
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
 
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
+            assertTrue(result.isFailure)
+            assertTrue(viewModel.saveError.value?.contains("same") == true)
+            assertEquals(0, insertedNotes.size)
+        }
 
-        assertTrue(result.isSuccess)
-        assertEquals(99L, result.getOrNull())
-        val updated = insertedNotes.first { it.id == 99L }
-        assertEquals("Updated Title", updated.title)
-        assertTrue(updated.body.contains("New notes content"))
-        assertEquals(Importance.CRITICAL, updated.importance)
-    }
+    @Test
+    fun testEditMode_loadsExistingEventData() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val testDate = LocalDate.of(2026, 11, 20)
+            val startTime = LocalTime.of(15, 0)
+            val reminderAt =
+                testDate
+                    .atTime(startTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+
+            val existingNote =
+                NoteEntity(
+                    id = 42L,
+                    kind = NoteKind.NOTE,
+                    title = "Design Review",
+                    body = "3:00 PM – 4:00 PM\nReview mobile mockups",
+                    colorIndex = 0,
+                    trashed = false,
+                    reminderAt = reminderAt,
+                    shoulderId = 7L,
+                    importance = Importance.HIGH,
+                    visibility = Visibility.DEFAULT,
+                    createdAt = reminderAt,
+                    updatedAt = reminderAt,
+                )
+            insertedNotes.add(existingNote)
+
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 42L))
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
+
+            assertTrue(viewModel.isEditMode)
+            assertEquals("Design Review", viewModel.title.value)
+            assertEquals("Review mobile mockups", viewModel.notes.value)
+            assertEquals(testDate, viewModel.selectedDate.value)
+            assertEquals(LocalTime.of(15, 0), viewModel.startTime.value)
+            assertEquals(LocalTime.of(16, 0), viewModel.endTime.value)
+            assertFalse(viewModel.isAllDay.value)
+            assertEquals(7L, viewModel.selectedShoulderId.value)
+            assertEquals(Importance.HIGH, viewModel.importance.value)
+        }
+
+    @Test
+    fun testEditMode_updateEventSavesChanges() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val existingNote =
+                NoteEntity(
+                    id = 99L,
+                    kind = NoteKind.NOTE,
+                    title = "Original Title",
+                    body = "9:00 AM – 10:00 AM\nOld notes",
+                    colorIndex = 0,
+                    trashed = false,
+                    createdAt = 1000L,
+                    updatedAt = 1000L,
+                )
+            insertedNotes.add(existingNote)
+
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 99L))
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
+
+            viewModel.setTitle("Updated Title")
+            viewModel.setNotes("New notes content")
+            viewModel.setImportance(Importance.CRITICAL)
+
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
+
+            assertTrue(result.isSuccess)
+            assertEquals(99L, result.getOrNull())
+            val updated = insertedNotes.first { it.id == 99L }
+            assertEquals("Updated Title", updated.title)
+            assertTrue(updated.body.contains("New notes content"))
+            assertEquals(Importance.CRITICAL, updated.importance)
+        }
 
     @Test
     fun testParseEventBodyAndTimes_allDay() {
@@ -360,10 +432,11 @@ class EditEventViewModelTest {
 
     @Test
     fun testParseEventBodyAndTimes_timeRange() {
-        val parsed = EditEventViewModel.parseEventBodyAndTimes(
-            "9:00 AM – 10:30 AM\nDetailed agenda item",
-            null,
-        )
+        val parsed =
+            EditEventViewModel.parseEventBodyAndTimes(
+                "9:00 AM – 10:30 AM\nDetailed agenda item",
+                null,
+            )
         assertFalse(parsed.isAllDay)
         assertEquals(LocalTime.of(9, 0), parsed.startTime)
         assertEquals(LocalTime.of(10, 30), parsed.endTime)
@@ -371,159 +444,174 @@ class EditEventViewModelTest {
     }
 
     @Test
-    fun testShoulderSelectionAndCrud() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val shoulderRepo = createShoulderRepository()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = SavedStateHandle(),
-            noteRepository = repo,
-            shoulderRepository = shoulderRepo,
-        )
-        advanceUntilIdle()
+    fun testShoulderSelectionAndCrud() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val shoulderRepo = createShoulderRepository()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    noteRepository = repo,
+                    shoulderRepository = shoulderRepo,
+                )
+            advanceUntilIdle()
 
-        viewModel.createShoulder("Work", "#4285F4")
-        advanceUntilIdle()
+            viewModel.createShoulder("Work", "#4285F4")
+            advanceUntilIdle()
 
-        assertNotNull(viewModel.selectedShoulderId.value)
+            assertNotNull(viewModel.selectedShoulderId.value)
 
-        viewModel.setSelectedShoulderId(null)
-        assertEquals(null, viewModel.selectedShoulderId.value)
-    }
-
-    @Test
-    fun testSetReminders_savesCustomReminders() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = SavedStateHandle(),
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
-
-        viewModel.setTitle("Dentist Appointment")
-        val customReminderMillis = 1791890000000L
-        viewModel.setReminders(listOf(NoteReminder(reminderAt = customReminderMillis)))
-
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
-
-        assertTrue(result.isSuccess)
-        val note = insertedNotes.first()
-        assertEquals(1, note.reminders.size)
-        assertEquals(customReminderMillis, note.reminders.first().reminderAt)
-    }
+            viewModel.setSelectedShoulderId(null)
+            assertEquals(null, viewModel.selectedShoulderId.value)
+        }
 
     @Test
-    fun testLoadExistingEvent_populatesReminders() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val customReminderMillis = 1791895000000L
-        val existingNote = NoteEntity(
-            id = 42L,
-            kind = NoteKind.NOTE,
-            title = "Conference Call",
-            body = "10:00 AM – 11:00 AM",
-            colorIndex = 1,
-            trashed = false,
-            createdAt = 1791880000000L,
-            updatedAt = 1791880000000L,
-            reminderAt = 1791890000000L,
-            reminders = listOf(
-                NoteReminder(reminderAt = 1791890000000L),
-                NoteReminder(reminderAt = customReminderMillis),
-            ),
-        )
-        insertedNotes.add(existingNote)
+    fun testSetReminders_savesCustomReminders() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
 
-        val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 42L))
-        val viewModel = EditEventViewModel(
-            savedStateHandle = handle,
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
+            viewModel.setTitle("Dentist Appointment")
+            val customReminderMillis = 1791890000000L
+            viewModel.setReminders(listOf(NoteReminder(reminderAt = customReminderMillis)))
 
-        assertTrue(viewModel.isEditMode)
-        assertEquals(2, viewModel.reminders.value.size)
-        assertEquals(customReminderMillis, viewModel.reminders.value[1].reminderAt)
-    }
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
+
+            assertTrue(result.isSuccess)
+            val note = insertedNotes.first()
+            assertEquals(1, note.reminders.size)
+            assertEquals(customReminderMillis, note.reminders.first().reminderAt)
+        }
 
     @Test
-    fun testCreateEvent_defaultColorAndIcon() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = SavedStateHandle(),
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
+    fun testLoadExistingEvent_populatesReminders() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val customReminderMillis = 1791895000000L
+            val existingNote =
+                NoteEntity(
+                    id = 42L,
+                    kind = NoteKind.NOTE,
+                    title = "Conference Call",
+                    body = "10:00 AM – 11:00 AM",
+                    colorIndex = 1,
+                    trashed = false,
+                    createdAt = 1791880000000L,
+                    updatedAt = 1791880000000L,
+                    reminderAt = 1791890000000L,
+                    reminders =
+                        listOf(
+                            NoteReminder(reminderAt = 1791890000000L),
+                            NoteReminder(reminderAt = customReminderMillis),
+                        ),
+                )
+            insertedNotes.add(existingNote)
 
-        assertEquals(8, viewModel.colorIndex.value)
-        assertEquals("calendar_month", viewModel.iconKey.value)
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 42L))
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
 
-        viewModel.setTitle("New Event")
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
-
-        assertTrue(result.isSuccess)
-        val note = insertedNotes.first()
-        assertEquals(8, note.colorIndex)
-        assertEquals("calendar_month", note.iconKey)
-    }
-
-    @Test
-    fun testCreateEvent_customColorAndIcon() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val viewModel = EditEventViewModel(
-            savedStateHandle = SavedStateHandle(),
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
-
-        viewModel.setTitle("Birthday Party")
-        viewModel.setColorIndex(3)
-        viewModel.setIconKey("symbol:cake")
-
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
-
-        assertTrue(result.isSuccess)
-        val note = insertedNotes.first()
-        assertEquals(3, note.colorIndex)
-        assertEquals("symbol:cake", note.iconKey)
-    }
+            assertTrue(viewModel.isEditMode)
+            assertEquals(2, viewModel.reminders.value.size)
+            assertEquals(customReminderMillis, viewModel.reminders.value[1].reminderAt)
+        }
 
     @Test
-    fun testEditEvent_loadsExistingColorAndIcon() = runTest(testDispatcher) {
-        val repo = createRepository()
-        val existingNote = NoteEntity(
-            id = 55L,
-            kind = NoteKind.NOTE,
-            title = "Gym Session",
-            body = "07:00 AM – 08:00 AM",
-            colorIndex = 5,
-            iconKey = "fitness_center",
-            trashed = false,
-            createdAt = 1791880000000L,
-            updatedAt = 1791880000000L,
-            reminderAt = 1791890000000L,
-        )
-        insertedNotes.add(existingNote)
+    fun testCreateEvent_defaultColorAndIcon() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
 
-        val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 55L))
-        val viewModel = EditEventViewModel(
-            savedStateHandle = handle,
-            noteRepository = repo,
-        )
-        advanceUntilIdle()
+            assertEquals(8, viewModel.colorIndex.value)
+            assertEquals("calendar_month", viewModel.iconKey.value)
 
-        assertEquals(5, viewModel.colorIndex.value)
-        assertEquals("fitness_center", viewModel.iconKey.value)
+            viewModel.setTitle("New Event")
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
 
-        viewModel.setColorIndex(6)
-        viewModel.setIconKey("pool")
-        val result = viewModel.saveEvent()
-        advanceUntilIdle()
+            assertTrue(result.isSuccess)
+            val note = insertedNotes.first()
+            assertEquals(8, note.colorIndex)
+            assertEquals("calendar_month", note.iconKey)
+        }
 
-        assertTrue(result.isSuccess)
-        val updated = updatedNotes.first()
-        assertEquals(6, updated.colorIndex)
-        assertEquals("pool", updated.iconKey)
-    }
+    @Test
+    fun testCreateEvent_customColorAndIcon() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = SavedStateHandle(),
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
+
+            viewModel.setTitle("Birthday Party")
+            viewModel.setColorIndex(3)
+            viewModel.setIconKey("symbol:cake")
+
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
+
+            assertTrue(result.isSuccess)
+            val note = insertedNotes.first()
+            assertEquals(3, note.colorIndex)
+            assertEquals("symbol:cake", note.iconKey)
+        }
+
+    @Test
+    fun testEditEvent_loadsExistingColorAndIcon() =
+        runTest(testDispatcher) {
+            val repo = createRepository()
+            val existingNote =
+                NoteEntity(
+                    id = 55L,
+                    kind = NoteKind.NOTE,
+                    title = "Gym Session",
+                    body = "07:00 AM – 08:00 AM",
+                    colorIndex = 5,
+                    iconKey = "fitness_center",
+                    trashed = false,
+                    createdAt = 1791880000000L,
+                    updatedAt = 1791880000000L,
+                    reminderAt = 1791890000000L,
+                )
+            insertedNotes.add(existingNote)
+
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ID to 55L))
+            val viewModel =
+                EditEventViewModel(
+                    savedStateHandle = handle,
+                    noteRepository = repo,
+                )
+            advanceUntilIdle()
+
+            assertEquals(5, viewModel.colorIndex.value)
+            assertEquals("fitness_center", viewModel.iconKey.value)
+
+            viewModel.setColorIndex(6)
+            viewModel.setIconKey("pool")
+            val result = viewModel.saveEvent()
+            advanceUntilIdle()
+
+            assertTrue(result.isSuccess)
+            val updated = updatedNotes.first()
+            assertEquals(6, updated.colorIndex)
+            assertEquals("pool", updated.iconKey)
+        }
 }

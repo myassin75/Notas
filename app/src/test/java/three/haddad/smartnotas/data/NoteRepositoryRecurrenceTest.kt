@@ -1,9 +1,5 @@
 package three.haddad.smartnotas.data
 
-import three.haddad.smartnotas.ui.edit.MonthlyKind
-import three.haddad.smartnotas.ui.edit.ReminderDraft
-import three.haddad.smartnotas.ui.edit.toDraft
-import three.haddad.smartnotas.ui.edit.toReminder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -12,6 +8,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import three.haddad.smartnotas.ui.edit.MonthlyKind
+import three.haddad.smartnotas.ui.edit.ReminderDraft
+import three.haddad.smartnotas.ui.edit.toDraft
+import three.haddad.smartnotas.ui.edit.toReminder
 import java.util.Calendar
 
 class NoteRepositoryRecurrenceTest {
@@ -590,8 +590,6 @@ class NoteRepositoryRecurrenceTest {
             }
         }
 
-
-
         override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
         override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
@@ -606,10 +604,6 @@ class NoteRepositoryRecurrenceTest {
         override suspend fun update(note: NoteEntity) {
             stored = stored.copy(note = note)
         }
-
-
-
-
 
         override suspend fun setTrashed(
             id: Long,
@@ -626,8 +620,6 @@ class NoteRepositoryRecurrenceTest {
         override suspend fun deleteById(id: Long) = Unit
 
         override suspend fun allNoteIds(): List<Long> = listOf(stored.note.id)
-
-
 
         override suspend fun countPictureUri(uri: String): Int = 0
 

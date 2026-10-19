@@ -76,6 +76,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.NoteKind
@@ -109,8 +111,6 @@ import three.haddad.smartnotas.ui.settings.settingsPaneSections
 import three.haddad.smartnotas.ui.settings.settingsSectionKeyForHighlight
 import three.haddad.smartnotas.ui.theme.RoundedPolygonShape
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 private const val NEW_NOTE_DETAIL_ID = -10L
 private const val NEW_LIST_DETAIL_ID = -11L
@@ -344,9 +344,9 @@ fun NotesTwoPaneRoute(
                                 viewModel.selectNotes(selectableVisibleNoteIds)
                             },
                             onClearSelection = viewModel::clearSelection,
-                                            onPinSelected = viewModel::pinSelected,
+                            onPinSelected = viewModel::pinSelected,
                             pinEnabled = state.canPinSelected,
-                                                            onMarkDoneSelected = viewModel::markSelectedDone,
+                            onMarkDoneSelected = viewModel::markSelectedDone,
                             onArchiveSelected = viewModel::archiveSelected,
                             onTrashSelected = viewModel::trashSelected,
                         )
@@ -553,6 +553,7 @@ fun HistoryTwoPaneRoute(
     onSectionChange: (HistorySection) -> Unit,
     onVisibleItemCountChange: (Int) -> Unit,
     onOpenNoteInSinglePane: (NoteWithItems, Boolean) -> Unit,
+    onBack: () -> Unit = {},
 ) {
     val navigator =
         rememberListDetailPaneScaffoldNavigator<Long>(
@@ -568,6 +569,7 @@ fun HistoryTwoPaneRoute(
             onSectionChange = onSectionChange,
             onVisibleItemCountChange = onVisibleItemCountChange,
             onOpenNote = onOpenNoteInSinglePane,
+            onBack = onBack,
         )
         return
     }
@@ -651,6 +653,7 @@ fun HistoryTwoPaneRoute(
                         onOpenNote = { note, forceEdit -> showNoteInDetailPane(note, forceEdit) },
                         activeNoteId = activeDetailId,
                         showSelectionActionBar = false,
+                        onBack = onBack,
                     )
                     val isSmallLandscape = isSmallLandscape()
                     val shouldShowPaneFab =

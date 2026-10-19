@@ -28,6 +28,9 @@ import androidx.compose.ui.zIndex
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.QuickCapturePrefs
 import three.haddad.smartnotas.data.QuickCaptureState
@@ -35,9 +38,6 @@ import three.haddad.smartnotas.data.ReminderPreferencesState
 import three.haddad.smartnotas.data.ReminderPrefs
 import three.haddad.smartnotas.data.SnoozeType
 import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun RemindersSection(
@@ -180,12 +180,13 @@ internal fun RemindersSection(
 
         // Row 3: Keep reminder notifications until done
         Box(
-            modifier = Modifier
-                .zIndex(if (keepUntilDoneHighlightActive) 1f else 0f)
-                .pulsingSectionHighlightOutline(
-                    active = keepUntilDoneHighlightActive,
-                    outlineColor = MaterialTheme.colorScheme.primary.copy(alpha = keepUntilDoneHighlightAlpha),
-                ),
+            modifier =
+                Modifier
+                    .zIndex(if (keepUntilDoneHighlightActive) 1f else 0f)
+                    .pulsingSectionHighlightOutline(
+                        active = keepUntilDoneHighlightActive,
+                        outlineColor = MaterialTheme.colorScheme.primary.copy(alpha = keepUntilDoneHighlightAlpha),
+                    ),
         ) {
             SettingsRowItem(
                 materialSymbolName = "notification_important",
@@ -254,12 +255,13 @@ internal fun RemindersSection(
 
         // Row 6: Snooze type
         Box(
-            modifier = Modifier
-                .zIndex(if (snoozeTypeHighlightActive) 1f else 0f)
-                .pulsingSectionHighlightOutline(
-                    active = snoozeTypeHighlightActive,
-                    outlineColor = MaterialTheme.colorScheme.primary.copy(alpha = snoozeTypeHighlightAlpha),
-                ),
+            modifier =
+                Modifier
+                    .zIndex(if (snoozeTypeHighlightActive) 1f else 0f)
+                    .pulsingSectionHighlightOutline(
+                        active = snoozeTypeHighlightActive,
+                        outlineColor = MaterialTheme.colorScheme.primary.copy(alpha = snoozeTypeHighlightAlpha),
+                    ),
         ) {
             SnoozeTypeRow(
                 snoozeType = reminderState.snoozeType,
@@ -307,10 +309,11 @@ private fun SnoozeTypeRow(
     onSelect: (SnoozeType) -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val selectedLabel = when (snoozeType) {
-        SnoozeType.RELATIVE -> stringResource(R.string.settings_preset_type_timing)
-        SnoozeType.ABSOLUTE -> stringResource(R.string.settings_preset_type_duration)
-    }
+    val selectedLabel =
+        when (snoozeType) {
+            SnoozeType.RELATIVE -> stringResource(R.string.settings_preset_type_timing)
+            SnoozeType.ABSOLUTE -> stringResource(R.string.settings_preset_type_duration)
+        }
 
     Box {
         SettingsRowItem(

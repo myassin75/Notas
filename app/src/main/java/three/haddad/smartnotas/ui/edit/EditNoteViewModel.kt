@@ -3,15 +3,15 @@ package three.haddad.smartnotas.ui.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.AppMediaStorage
 import three.haddad.smartnotas.data.DefaultNotePrefs
 import three.haddad.smartnotas.data.NoteOptions
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.getActiveReminders
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -64,7 +64,7 @@ class EditNoteViewModel
                 repository.createNote(
                     title = title.value,
                     body = _body.value,
-                    colorIndex = 0,
+                    colorIndex = colorIndex.value,
                     options = currentOptions(),
                 )
             loadedId = newId
@@ -90,6 +90,7 @@ class EditNoteViewModel
                 if (opts.pictureUri != old.pictureUri) return true
                 if (opts.pictureHeroFraming != old.pictureHeroFraming) return true
                 if (opts.locked != old.locked) return true
+                if (colorIndex.value != old.colorIndex) return true
                 if (opts.iconKey != old.iconKey) return true
                 if (opts.actions != old.actions) return true
                 if (opts.recurrence != old.recurrence) return true
@@ -117,7 +118,7 @@ class EditNoteViewModel
                 if (id == null) {
                     if (!persistence.isDirty) return@withLock null
                     val epochAtWrite = persistence.currentEpoch()
-                    val newId = repository.createNote(finalTitle, bodyValue, 0, currentOptions())
+                    val newId = repository.createNote(finalTitle, bodyValue, colorIndex.value, currentOptions())
                     loadedId = newId
                     syncHasPersistedRow()
                     startExternalFieldMirror(newId)
@@ -137,7 +138,7 @@ class EditNoteViewModel
                     if (!persistence.isDirty) return@withLock null
                     val old = originalNote
                     val epochAtWrite = persistence.currentEpoch()
-                    repository.updateNote(id, finalTitle, bodyValue, 0, currentOptions())
+                    repository.updateNote(id, finalTitle, bodyValue, colorIndex.value, currentOptions())
                     if (titleValue.isBlank()) setTitle(finalTitle)
                     val cur = repository.get(id)?.note
                     persistence.clearDirtyIfUnchanged(epochAtWrite)

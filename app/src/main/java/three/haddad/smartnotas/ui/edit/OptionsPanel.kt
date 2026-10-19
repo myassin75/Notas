@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -25,6 +26,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -39,12 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import three.haddad.smartnotas.data.ShoulderEntity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -79,6 +78,7 @@ import three.haddad.smartnotas.data.NoteAttachmentEntity
 import three.haddad.smartnotas.data.NoteReminder
 import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
+import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.data.labelRes
 import three.haddad.smartnotas.data.recycleNoteActionIconBitmap
 import three.haddad.smartnotas.data.toNoteActionIconDrawable
@@ -203,39 +203,47 @@ fun OptionsPanel(
                     modifier = Modifier.fillMaxWidth(),
                     summaryContent = {
                         if (shoulder != null) {
-                            val shoulderColor = remember(shoulder.colorHex) {
-                                if (shoulder.colorHex.isNullOrBlank()) SettingsDesignTokens.PrimaryPurple else try {
-                                    Color(android.graphics.Color.parseColor(if (shoulder.colorHex.startsWith("#")) shoulder.colorHex else "#${shoulder.colorHex}"))
-                                } catch (_: Throwable) {
-                                    SettingsDesignTokens.PrimaryPurple
+                            val shoulderColor =
+                                remember(shoulder.colorHex) {
+                                    if (shoulder.colorHex.isNullOrBlank()) {
+                                        SettingsDesignTokens.PrimaryPurple
+                                    } else {
+                                        try {
+                                            Color(android.graphics.Color.parseColor(if (shoulder.colorHex.startsWith("#")) shoulder.colorHex else "#${shoulder.colorHex}"))
+                                        } catch (_: Throwable) {
+                                            SettingsDesignTokens.PrimaryPurple
+                                        }
+                                    }
                                 }
-                            }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(shoulderColor),
+                                    modifier =
+                                        Modifier
+                                            .size(10.dp)
+                                            .clip(CircleShape)
+                                            .background(shoulderColor),
                                 )
                                 Text(
                                     text = shoulder.name,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = 13.sp,
-                                        color = shoulderColor,
-                                        fontWeight = FontWeight.Bold,
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 13.sp,
+                                            color = shoulderColor,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
                                 )
                             }
                         } else {
                             Text(
                                 text = "No shoulder",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF89899C),
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF89899C),
+                                    ),
                             )
                         }
                     },
@@ -278,13 +286,16 @@ fun OptionsPanel(
                     symbolName = "visibility",
                     title = stringResource(R.string.options_behavior),
                     summary = "",
-                    onClick = if (readOnly) null else {
-                        {
-                            draftVisibility = visibility
-                            draftImportance = importance
-                            behaviorOpen = true
-                        }
-                    },
+                    onClick =
+                        if (readOnly) {
+                            null
+                        } else {
+                            {
+                                draftVisibility = visibility
+                                draftImportance = importance
+                                behaviorOpen = true
+                            }
+                        },
                     modifier = Modifier.fillMaxWidth(),
                     summaryContent = { BehaviorOptionSummary(visibility, importance) },
                 )
@@ -299,10 +310,11 @@ fun OptionsPanel(
             Surface(
                 shape = RoundedCornerShape(22.dp),
                 color = Color.White,
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(22.dp))
-                    .clickable(onClick = onOpenPicture),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(22.dp))
+                        .clickable(onClick = onOpenPicture),
             ) {
                 Row(
                     modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
@@ -319,11 +331,12 @@ fun OptionsPanel(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.options_picture),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = Color(0xFF32313F),
-                        ),
+                        style =
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = Color(0xFF32313F),
+                            ),
                     )
                 }
             }
@@ -331,10 +344,11 @@ fun OptionsPanel(
             Surface(
                 shape = RoundedCornerShape(22.dp),
                 color = Color.White,
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(22.dp))
-                    .clickable(onClick = onOpenAttachments),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(22.dp))
+                        .clickable(onClick = onOpenAttachments),
             ) {
                 Row(
                     modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
@@ -351,62 +365,63 @@ fun OptionsPanel(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.options_attachments),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = Color(0xFF32313F),
-                        ),
+                        style =
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = Color(0xFF32313F),
+                            ),
                     )
                 }
             }
         }
-                if (createdAt != null && createdAt > 0L) {
-                    Spacer(Modifier.height(6.dp))
-                    BoxWithConstraints(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 2.dp),
-                    ) {
-                        val createdFormatted =
-                            remember(createdAt, context) {
-                                val createdDate = Date(createdAt)
-                                android.text.format.DateFormat
-                                    .getMediumDateFormat(context)
-                                    .format(createdDate) + " " +
-                                    formatTimeOfDay(context, createdAt)
-                            }
-                        val createdLabel = stringResource(R.string.options_created, createdFormatted)
-                        if (updatedAt != null && updatedAt > 0L) {
-                            val updatedFormatted =
-                                remember(updatedAt, context) {
-                                    val updatedDate = Date(updatedAt)
-                                    android.text.format.DateFormat
-                                        .getMediumDateFormat(context)
-                                        .format(updatedDate) + " " +
-                                        formatTimeOfDay(context, updatedAt)
-                                }
-                            val updatedLabel = stringResource(R.string.options_updated, updatedFormatted)
-                            val stacked =
-                                responsiveActionLayout(
-                                    availableWidth = maxWidth,
-                                    effectiveFontScale = LocalDensity.current.fontScale,
-                                    itemCount = 2,
-                                ) == ResponsiveActionLayout.STACKED
-                            TimestampFooter(
-                                createdLabel = createdLabel,
-                                updatedLabel = updatedLabel,
-                                stacked = stacked,
-                            )
-                        } else {
-                            TimestampText(
-                                text = createdLabel,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
+        if (createdAt != null && createdAt > 0L) {
+            Spacer(Modifier.height(6.dp))
+            BoxWithConstraints(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 2.dp),
+            ) {
+                val createdFormatted =
+                    remember(createdAt, context) {
+                        val createdDate = Date(createdAt)
+                        android.text.format.DateFormat
+                            .getMediumDateFormat(context)
+                            .format(createdDate) + " " +
+                            formatTimeOfDay(context, createdAt)
                     }
+                val createdLabel = stringResource(R.string.options_created, createdFormatted)
+                if (updatedAt != null && updatedAt > 0L) {
+                    val updatedFormatted =
+                        remember(updatedAt, context) {
+                            val updatedDate = Date(updatedAt)
+                            android.text.format.DateFormat
+                                .getMediumDateFormat(context)
+                                .format(updatedDate) + " " +
+                                formatTimeOfDay(context, updatedAt)
+                        }
+                    val updatedLabel = stringResource(R.string.options_updated, updatedFormatted)
+                    val stacked =
+                        responsiveActionLayout(
+                            availableWidth = maxWidth,
+                            effectiveFontScale = LocalDensity.current.fontScale,
+                            itemCount = 2,
+                        ) == ResponsiveActionLayout.STACKED
+                    TimestampFooter(
+                        createdLabel = createdLabel,
+                        updatedLabel = updatedLabel,
+                        stacked = stacked,
+                    )
+                } else {
+                    TimestampText(
+                        text = createdLabel,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
+        }
+    }
 
     // The sheet draws in its own window, above any navigation, so it is only shown while this
     // screen is the resumed one. Opening Help from it takes it off screen as Help slides in;
@@ -719,23 +734,26 @@ private fun OptionCell(
     summaryContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    val clickableModifier = when {
-        onClick == null -> Modifier
-        onLongClick != null -> Modifier.appCombinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel)
-        else -> Modifier.appClickable(onClick = onClick)
-    }
+    val clickableModifier =
+        when {
+            onClick == null -> Modifier
+            onLongClick != null -> Modifier.appCombinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = onLongClickLabel)
+            else -> Modifier.appClickable(onClick = onClick)
+        }
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(clickableModifier)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .then(clickableModifier)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFF4EAF6)),
+            modifier =
+                Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFF4EAF6)),
             contentAlignment = Alignment.Center,
         ) {
             OptionCellIcon(
@@ -751,11 +769,12 @@ private fun OptionCell(
         ) {
             Text(
                 title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color(0xFF32313F),
-                ),
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color(0xFF32313F),
+                    ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -764,10 +783,11 @@ private fun OptionCell(
             } else if (summary.isNotBlank()) {
                 Text(
                     summary,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 13.sp,
-                        color = Color(0xFF89899C),
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            color = Color(0xFF89899C),
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
@@ -866,7 +886,6 @@ fun MediaStorageChip(
         )
     }
 }
-
 
 private data class ChoiceOption<T>(
     val value: T,

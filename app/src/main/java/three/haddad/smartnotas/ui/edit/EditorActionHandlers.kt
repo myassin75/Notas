@@ -9,11 +9,11 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.notifications.canPostNotifications
 import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 internal class EditorActionHandlers(
     val saveAndShowToast: () -> Unit,

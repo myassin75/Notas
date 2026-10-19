@@ -75,30 +75,34 @@ fun YearNavigationHeader(
     val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
     ) {
         // Centered Year Title
         Text(
             text = year.toString(),
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                color = textPrimary,
-            ),
+            style =
+                MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    color = textPrimary,
+                ),
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = 48.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 48.dp),
         )
 
         // Previous Year Button (<)
         Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(40.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .size(40.dp),
             contentAlignment = Alignment.Center,
         ) {
             Surface(
@@ -121,9 +125,10 @@ fun YearNavigationHeader(
 
         // Next Year Button (>)
         Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .size(40.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(40.dp),
             contentAlignment = Alignment.Center,
         ) {
             Surface(
@@ -186,45 +191,52 @@ fun CalendarYearView(
                     val exitSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
                     val exitSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
 
-                    (slideInHorizontally(
-                        animationSpec = enterSlideSpec,
-                        initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
-                    ) + fadeIn(
-                        animationSpec = enterSpec,
-                    )).togetherWith(
+                    (
+                        slideInHorizontally(
+                            animationSpec = enterSlideSpec,
+                            initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
+                        ) +
+                            fadeIn(
+                                animationSpec = enterSpec,
+                            )
+                    ).togetherWith(
                         slideOutHorizontally(
                             animationSpec = exitSlideSpec,
                             targetOffsetX = { fullWidth -> (-direction * fullWidth * slideDistanceFactor).toInt() },
-                        ) + fadeOut(
-                            animationSpec = exitSpec,
-                        )
+                        ) +
+                            fadeOut(
+                                animationSpec = exitSpec,
+                            ),
                     )
                 }
             },
             label = "YearViewAnimation",
         ) { targetYear ->
-            val months = remember(targetYear) {
-                (1..12).map { YearMonth.of(targetYear, it) }
-            }
+            val months =
+                remember(targetYear) {
+                    (1..12).map { YearMonth.of(targetYear, it) }
+                }
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 // Centered Year Title Row (animated with the month grid)
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(horizontal = 60.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(horizontal = 60.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = targetYear.toString(),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp,
-                            color = textPrimary,
-                        ),
+                        style =
+                            MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 28.sp,
+                                color = textPrimary,
+                            ),
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                     )
@@ -234,19 +246,22 @@ fun CalendarYearView(
 
                 // Responsive Months Grid
                 BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
                 ) {
-                    val columns = when {
-                        maxWidth >= 760.dp -> 4
-                        maxWidth >= 540.dp -> 3
-                        else -> 2
-                    }
+                    val columns =
+                        when {
+                            maxWidth >= 760.dp -> 4
+                            maxWidth >= 540.dp -> 3
+                            else -> 2
+                        }
 
-                    val monthRows = remember(months, columns) {
-                        months.chunked(columns)
-                    }
+                    val monthRows =
+                        remember(months, columns) {
+                            months.chunked(columns)
+                        }
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -254,9 +269,10 @@ fun CalendarYearView(
                     ) {
                         monthRows.forEach { rowMonths ->
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(IntrinsicSize.Min),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(IntrinsicSize.Min),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 rowMonths.forEach { month ->
@@ -266,9 +282,10 @@ fun CalendarYearView(
                                         today = today,
                                         onMonthClick = onMonthSelected,
                                         onDateClick = onDateSelected,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight(),
+                                        modifier =
+                                            Modifier
+                                                .weight(1f)
+                                                .fillMaxHeight(),
                                     )
                                 }
 
@@ -287,10 +304,11 @@ fun CalendarYearView(
 
         // 2. Stationary Navigation Arrows (< on left, > on right) pinned in place
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -361,42 +379,48 @@ fun YearMonthCard(
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
-    val cardBg = if (isSelectedMonth) {
-        if (isDark) CalendarDesignTokens.CardBgDark else Color.White
-    } else {
-        CalendarDesignTokens.resolveCardBg(isDark)
-    }
+    val cardBg =
+        if (isSelectedMonth) {
+            if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+        } else {
+            CalendarDesignTokens.resolveCardBg(isDark)
+        }
 
-    val cardBorder = if (isSelectedMonth) {
-        BorderStroke(
-            1.5.dp,
-            CalendarDesignTokens.PrimaryPurple.copy(alpha = if (isDark) 0.85f else 0.75f),
-        )
-    } else {
-        BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    }
+    val cardBorder =
+        if (isSelectedMonth) {
+            BorderStroke(
+                1.5.dp,
+                CalendarDesignTokens.PrimaryPurple.copy(alpha = if (isDark) 0.85f else 0.75f),
+            )
+        } else {
+            BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
+        }
 
-    val monthName = remember(month) {
-        val formatter = DateTimeFormatter.ofPattern("MMMM", Locale.getDefault())
-        month.format(formatter)
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-    }
+    val monthName =
+        remember(month) {
+            val formatter = DateTimeFormatter.ofPattern("MMMM", Locale.getDefault())
+            month
+                .format(formatter)
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        }
 
     Surface(
         shape = CalendarDesignTokens.CardShape,
         color = cardBg,
         border = cardBorder,
-        modifier = modifier
-            .clip(CalendarDesignTokens.CardShape)
-            .clickable(
-                onClickLabel = "Open $monthName calendar",
-                role = Role.Button,
-            ) { onMonthClick(month) },
+        modifier =
+            modifier
+                .clip(CalendarDesignTokens.CardShape)
+                .clickable(
+                    onClickLabel = "Open $monthName calendar",
+                    role = Role.Button,
+                ) { onMonthClick(month) },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
         ) {
             // Month Title & Highlight Indicator
             Row(
@@ -408,19 +432,21 @@ fun YearMonthCard(
                     text = monthName,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = if (isSelectedMonth) CalendarDesignTokens.PrimaryPurple else textPrimary,
-                    ),
+                    style =
+                        MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = if (isSelectedMonth) CalendarDesignTokens.PrimaryPurple else textPrimary,
+                        ),
                     modifier = Modifier.weight(1f, fill = false),
                 )
 
                 if (isSelectedMonth) {
                     Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .background(CalendarDesignTokens.PrimaryPurple, CircleShape),
+                        modifier =
+                            Modifier
+                                .size(6.dp)
+                                .background(CalendarDesignTokens.PrimaryPurple, CircleShape),
                     )
                 }
             }
@@ -452,12 +478,13 @@ private fun YearWeekdayHeaderRow(
 ) {
     val isDark = LocalIsDark.current
     val textColor = CalendarDesignTokens.resolveTextSecondary(isDark)
-    val dayLabels = remember(firstDayOfWeek) {
-        val locale = Locale.getDefault()
-        (0L..6L).map { offset ->
-            firstDayOfWeek.plus(offset).getDisplayName(TextStyle.NARROW, locale)
+    val dayLabels =
+        remember(firstDayOfWeek) {
+            val locale = Locale.getDefault()
+            (0L..6L).map { offset ->
+                firstDayOfWeek.plus(offset).getDisplayName(TextStyle.NARROW, locale)
+            }
         }
-    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -471,11 +498,12 @@ private fun YearWeekdayHeaderRow(
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = textColor,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.5.sp,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            color = textColor,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.5.sp,
+                        ),
                     textAlign = TextAlign.Center,
                 )
             }
@@ -497,21 +525,22 @@ private fun YearMonthDateGrid(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
     // Compute calendar cells (weeks of 7 days, with null for leading/trailing days)
-    val weeks = remember(month) {
-        val firstOfMonth = month.atDay(1)
-        val leadingBlanks = (firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
-        val daysInMonth = month.lengthOfMonth()
+    val weeks =
+        remember(month) {
+            val firstOfMonth = month.atDay(1)
+            val leadingBlanks = (firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
+            val daysInMonth = month.lengthOfMonth()
 
-        val allCells = mutableListOf<Int?>()
-        repeat(leadingBlanks) { allCells.add(null) }
-        for (day in 1..daysInMonth) {
-            allCells.add(day)
+            val allCells = mutableListOf<Int?>()
+            repeat(leadingBlanks) { allCells.add(null) }
+            for (day in 1..daysInMonth) {
+                allCells.add(day)
+            }
+            while (allCells.size % 7 != 0) {
+                allCells.add(null)
+            }
+            allCells.chunked(7)
         }
-        while (allCells.size % 7 != 0) {
-            allCells.add(null)
-        }
-        allCells.chunked(7)
-    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -532,52 +561,57 @@ private fun YearMonthDateGrid(
                         val isToday = date == today
 
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(22.dp)
-                                .clip(CircleShape)
-                                .clickable(
-                                    role = Role.Button,
-                                    onClickLabel = "Select $date",
-                                ) { onDateClick(date) },
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(22.dp)
+                                    .clip(CircleShape)
+                                    .clickable(
+                                        role = Role.Button,
+                                        onClickLabel = "Select $date",
+                                    ) { onDateClick(date) },
                             contentAlignment = Alignment.Center,
                         ) {
                             when {
                                 isSelectedDate -> {
                                     Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .background(CalendarDesignTokens.PrimaryPurple, CircleShape),
+                                        modifier =
+                                            Modifier
+                                                .size(20.dp)
+                                                .background(CalendarDesignTokens.PrimaryPurple, CircleShape),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
                                             text = dayNumber.toString(),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White,
-                                            ),
+                                            style =
+                                                MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                ),
                                             textAlign = TextAlign.Center,
                                         )
                                     }
                                 }
                                 isToday -> {
                                     Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .background(
-                                                if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
-                                                CircleShape,
-                                            ),
+                                        modifier =
+                                            Modifier
+                                                .size(20.dp)
+                                                .background(
+                                                    if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
+                                                    CircleShape,
+                                                ),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
                                             text = dayNumber.toString(),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = CalendarDesignTokens.PrimaryPurple,
-                                            ),
+                                            style =
+                                                MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = CalendarDesignTokens.PrimaryPurple,
+                                                ),
                                             textAlign = TextAlign.Center,
                                         )
                                     }
@@ -585,11 +619,12 @@ private fun YearMonthDateGrid(
                                 else -> {
                                     Text(
                                         text = dayNumber.toString(),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                         textAlign = TextAlign.Center,
                                     )
                                 }

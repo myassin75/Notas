@@ -62,7 +62,8 @@ fun DayTimelineCard(
     timelineItems: List<CalendarTimelineItemUiModel>,
     allDayItems: List<CalendarTimelineItemUiModel>,
     selectedDate: LocalDate,
-    onItemClick: (Long) -> Unit,
+    onItemClick: (Long) -> Unit = {},
+    onOpenItemDetails: (id: Long, isTask: Boolean) -> Unit = { id, _ -> onItemClick(id) },
     onToggleDone: (Long, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -76,20 +77,22 @@ fun DayTimelineCard(
         shape = CalendarDesignTokens.CardShape,
         color = cardBg,
         border = BorderStroke(1.dp, cardBorder),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
         ) {
             // 1. All-Day / Unscheduled section if any items exist
             if (allDayItems.isNotEmpty()) {
                 AllDayItemsSection(
                     items = allDayItems,
-                    onItemClick = onItemClick,
+                    onItemClick = { id -> onOpenItemDetails(id, false) },
                     onToggleDone = onToggleDone,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -106,54 +109,60 @@ fun DayTimelineCard(
             val density = LocalDensity.current
 
             LaunchedEffect(selectedDate, timelineItems) {
-                val targetHour = when {
-                    timelineItems.isNotEmpty() -> {
-                        val earliestMinute = timelineItems.minOf { it.startMinuteOfDay }
-                        maxOf(0, (earliestMinute / 60) - 1)
+                val targetHour =
+                    when {
+                        timelineItems.isNotEmpty() -> {
+                            val earliestMinute = timelineItems.minOf { it.startMinuteOfDay }
+                            maxOf(0, (earliestMinute / 60) - 1)
+                        }
+                        selectedDate == LocalDate.now() -> {
+                            maxOf(0, LocalTime.now().hour - 1)
+                        }
+                        else -> 8 // Default to 08:00 AM
                     }
-                    selectedDate == LocalDate.now() -> {
-                        maxOf(0, LocalTime.now().hour - 1)
-                    }
-                    else -> 8 // Default to 08:00 AM
-                }
                 val scrollPx = with(density) { (targetHour * HourHeight.toPx()).toInt() }
                 scrollState.scrollTo(scrollPx)
             }
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(460.dp)
-                    .verticalScroll(scrollState),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(460.dp)
+                        .verticalScroll(scrollState),
             ) {
                 // Background hourly grid (00:00 to 23:00)
                 Column(modifier = Modifier.fillMaxWidth()) {
                     for (hour in 0..23) {
                         val timeLabel = String.format(Locale.getDefault(), "%02d:00", hour)
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(HourHeight),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(HourHeight),
                             verticalAlignment = Alignment.Top,
                         ) {
                             Text(
                                 text = timeLabel,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = textMuted,
-                                ),
-                                modifier = Modifier
-                                    .width(TimeColumnWidth)
-                                    .padding(start = 12.dp, top = 0.dp),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = textMuted,
+                                    ),
+                                modifier =
+                                    Modifier
+                                        .width(TimeColumnWidth)
+                                        .padding(start = 12.dp, top = 0.dp),
                             )
 
                             HorizontalDivider(
                                 thickness = 0.8.dp,
                                 color = cardBorder,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(top = 7.dp, end = 12.dp),
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(top = 7.dp, end = 12.dp),
                             )
                         }
                     }
@@ -161,9 +170,10 @@ fun DayTimelineCard(
 
                 // Overlaid timed events & tasks
                 BoxWithConstraints(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(HourHeight * 24),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(HourHeight * 24),
                 ) {
                     val availableWidth = maxWidth - TimeColumnWidth - 12.dp
 
@@ -177,29 +187,31 @@ fun DayTimelineCard(
                             val blockHeight = maxOf(38.dp, HourHeight * (durationMinutes / 60f))
 
                             Box(
-                                modifier = Modifier
-                                    .offset(x = xOffset, y = topOffset)
-                                    .width(colWidth - 4.dp)
-                                    .height(blockHeight)
-                                    .padding(end = 4.dp),
+                                modifier =
+                                    Modifier
+                                        .offset(x = xOffset, y = topOffset)
+                                        .width(colWidth - 4.dp)
+                                        .height(blockHeight)
+                                        .padding(end = 4.dp),
                             ) {
                                 TimelineEventBlock(
                                     item = item,
-                                    onClick = { onItemClick(item.id) },
+                                    onClick = { onOpenItemDetails(item.id, false) },
                                     modifier = Modifier.fillMaxHeight(),
                                 )
                             }
                         } else {
                             // Instantaneous Task
                             Box(
-                                modifier = Modifier
-                                    .offset(x = xOffset, y = topOffset)
-                                    .width(colWidth - 4.dp)
-                                    .padding(end = 4.dp),
+                                modifier =
+                                    Modifier
+                                        .offset(x = xOffset, y = topOffset)
+                                        .width(colWidth - 4.dp)
+                                        .padding(end = 4.dp),
                             ) {
                                 TimelineTaskMarker(
                                     item = item,
-                                    onClick = { onItemClick(item.id) },
+                                    onClick = { onOpenItemDetails(item.id, true) },
                                     onToggleDone = { onToggleDone(item.id, item.isDone) },
                                 )
                             }
@@ -238,27 +250,30 @@ fun TimelineEventBlock(
         ) {
             // Left vertical accent bar
             Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .fillMaxHeight()
-                    .background(
-                        item.accentColor,
-                        shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp),
-                    ),
+                modifier =
+                    Modifier
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .background(
+                            item.accentColor,
+                            shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp),
+                        ),
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Optional category/location icon
                 if (item.iconName != "edit" && item.iconName != "edit_note") {
                     Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .background(item.accentColor.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)),
+                        modifier =
+                            Modifier
+                                .size(28.dp)
+                                .background(item.accentColor.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
                         CalendarEventIcon(
@@ -276,22 +291,24 @@ fun TimelineEventBlock(
                 ) {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.5.sp,
-                            color = textPrimary,
-                            textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.5.sp,
+                                color = textPrimary,
+                                textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
+                            ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(modifier = Modifier.height(1.dp))
                     Text(
                         text = item.subtitle,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 11.5.sp,
-                            color = textSecondary,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 11.5.sp,
+                                color = textSecondary,
+                            ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -300,9 +317,10 @@ fun TimelineEventBlock(
                 if (item.isDone) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.2f), shape = CircleShape),
+                        modifier =
+                            Modifier
+                                .size(20.dp)
+                                .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.2f), shape = CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         RememberMaterialRoundedSymbol(
@@ -342,17 +360,19 @@ fun TimelineTaskMarker(
         modifier = modifier,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 4.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Interactive checkbox
             Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onToggleDone),
+                modifier =
+                    Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onToggleDone),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -367,21 +387,23 @@ fun TimelineTaskMarker(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.5.sp,
-                        color = textPrimary,
-                        textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.5.sp,
+                            color = textPrimary,
+                            textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
+                        ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = item.timeRangeDisplay,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.5.sp,
-                        color = textSecondary,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.5.sp,
+                            color = textSecondary,
+                        ),
                 )
             }
         }
@@ -402,17 +424,19 @@ private fun AllDayItemsSection(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
     ) {
         Text(
             text = "All day",
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.5.sp,
-                color = textSecondary,
-            ),
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.5.sp,
+                    color = textSecondary,
+                ),
             modifier = Modifier.padding(bottom = 6.dp),
         )
 
@@ -421,40 +445,45 @@ private fun AllDayItemsSection(
                 onClick = { onItemClick(item.id) },
                 shape = RoundedCornerShape(8.dp),
                 color = item.containerBgColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 3.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 3.dp),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(item.accentColor, shape = CircleShape),
+                        modifier =
+                            Modifier
+                                .size(8.dp)
+                                .background(item.accentColor, shape = CircleShape),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.5.sp,
-                            color = textPrimary,
-                            textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
-                        ),
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.5.sp,
+                                color = textPrimary,
+                                textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
+                            ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
                     if (item.type == TimelineItemType.TASK) {
                         Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .clickable { onToggleDone(item.id, item.isDone) },
+                            modifier =
+                                Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                                    .clickable { onToggleDone(item.id, item.isDone) },
                             contentAlignment = Alignment.Center,
                         ) {
                             RememberMaterialRoundedSymbol(

@@ -194,7 +194,7 @@ abstract class RememberDatabase : RoomDatabase() {
                             `createdAt` INTEGER NOT NULL, 
                             `updatedAt` INTEGER NOT NULL
                         )
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
                     db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_shoulders_normalizedName` ON `shoulders` (`normalizedName`)")
 
@@ -230,9 +230,9 @@ abstract class RememberDatabase : RoomDatabase() {
                             `pinnedAt` INTEGER, 
                             FOREIGN KEY(`shoulderId`) REFERENCES `shoulders`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL
                         )
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
-                    
+
                     // Add index for shoulderId
                     db.execSQL("CREATE INDEX IF NOT EXISTS `index_notes_shoulderId` ON `notes_new` (`shoulderId`)")
 
@@ -251,7 +251,7 @@ abstract class RememberDatabase : RoomDatabase() {
                             `visibility`, `pictureUri`, `pictureHeroFraming`, `locked`, `iconKey`, `actions`, 
                             `recurrence`, `reminders`, `archived`, `trashedAt`, `completedAt`, `pinnedAt`
                         FROM `notes`
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
 
                     // Drop old table and rename new one
@@ -261,7 +261,7 @@ abstract class RememberDatabase : RoomDatabase() {
                     // Drop tag related tables
                     db.execSQL("DROP TABLE IF EXISTS `tags`")
                     db.execSQL("DROP TABLE IF EXISTS `note_tags`")
-                    
+
                     // Recreate notes_fts
                     dropNotesFtsSyncTriggers(db)
                     db.execSQL("DROP TABLE IF EXISTS notes_fts")

@@ -70,21 +70,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.first
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.common.MarkdownText
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
 import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
-import three.haddad.smartnotas.ui.settings.SettingsSectionCard
 import three.haddad.smartnotas.ui.components.settings.GroupPosition
 import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
 import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
+import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.settings.SettingsSectionCard
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
-import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -208,11 +208,12 @@ fun HelpScreen(
                     Surface(
                         shape = CircleShape,
                         color = Color.White,
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .clickable(onClick = onBack),
+                        modifier =
+                            Modifier
+                                .padding(start = 12.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable(onClick = onBack),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             RememberMaterialRoundedSymbol(
@@ -235,17 +236,18 @@ fun HelpScreen(
                     Surface(
                         shape = CircleShape,
                         color = Color.White,
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .clickable {
-                                if (allExpanded) {
-                                    helpVm.collapseAll(allSubsectionKeys)
-                                } else {
-                                    helpVm.expandAll(allSubsectionKeys)
-                                }
-                            },
+                        modifier =
+                            Modifier
+                                .padding(end = 12.dp)
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    if (allExpanded) {
+                                        helpVm.collapseAll(allSubsectionKeys)
+                                    } else {
+                                        helpVm.expandAll(allSubsectionKeys)
+                                    }
+                                },
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             RememberMaterialRoundedSymbol(
@@ -320,12 +322,13 @@ fun HelpScreen(
                         },
                         singleLine = true,
                         shape = CircleShape,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                        ),
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = Color.Transparent,
+                                focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                            ),
                     )
                 }
             }
@@ -345,11 +348,12 @@ fun HelpScreen(
                 item(key = "label_${section.title}") {
                     Text(
                         text = section.title,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = SettingsDesignTokens.PrimaryPurple,
-                        ),
+                        style =
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = SettingsDesignTokens.PrimaryPurple,
+                            ),
                         modifier = Modifier.padding(top = 16.dp, bottom = 4.dp, start = 4.dp),
                     )
                 }
@@ -415,11 +419,12 @@ private fun HelpSubsectionCard(
             ) {
                 Text(
                     text = subsection.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp,
-                        color = SettingsDesignTokens.TextPrimary,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp,
+                            color = SettingsDesignTokens.TextPrimary,
+                        ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -484,21 +489,23 @@ private fun HelpSubsectionCard(
                                 Surface(
                                     shape = CircleShape,
                                     color = SettingsDesignTokens.SoftLavender,
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .clickable {
-                                            when (action) {
-                                                is HelpAction.OpenAppSection -> onOpenAppSection(action.sectionKey)
-                                            }
-                                        },
+                                    modifier =
+                                        Modifier
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                when (action) {
+                                                    is HelpAction.OpenAppSection -> onOpenAppSection(action.sectionKey)
+                                                }
+                                            },
                                 ) {
                                     Text(
                                         text = stringResource(action.labelRes),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Medium,
-                                            color = SettingsDesignTokens.PrimaryPurple,
-                                            fontSize = 13.sp,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = FontWeight.Medium,
+                                                color = SettingsDesignTokens.PrimaryPurple,
+                                                fontSize = 13.sp,
+                                            ),
                                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                                     )
                                 }

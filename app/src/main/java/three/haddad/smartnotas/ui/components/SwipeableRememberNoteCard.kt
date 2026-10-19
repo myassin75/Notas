@@ -102,7 +102,6 @@ fun SwipeableRememberNoteCard(
                     .map { action ->
                         action.revealTile(
                             noteCompleted = noteCompleted,
-                            
                             notePinned = notePinned,
                             onClick = { onSwipeAction(note, action) },
                         )
@@ -117,7 +116,6 @@ fun SwipeableRememberNoteCard(
                     .map { action ->
                         action.revealTile(
                             noteCompleted = noteCompleted,
-                            
                             notePinned = notePinned,
                             onClick = { onSwipeAction(note, action) },
                         )
@@ -239,7 +237,6 @@ fun SwipeableRememberNoteCard(
 @Composable
 private fun NoteSwipeAction.labelString(
     noteCompleted: Boolean = false,
-    
     notePinned: Boolean = false,
 ): String =
     stringResource(
@@ -263,7 +260,6 @@ private fun NoteSwipeAction.labelString(
 @Composable
 private fun NoteSwipeAction.revealTile(
     noteCompleted: Boolean,
-    
     notePinned: Boolean,
     onClick: () -> Unit,
 ): SwipeRevealTile {

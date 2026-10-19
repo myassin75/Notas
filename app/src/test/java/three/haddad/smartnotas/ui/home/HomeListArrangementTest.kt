@@ -1,5 +1,9 @@
 package three.haddad.smartnotas.ui.home
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import three.haddad.smartnotas.data.GroupBy
 import three.haddad.smartnotas.data.NoteEntity
 import three.haddad.smartnotas.data.NoteKind
@@ -9,10 +13,6 @@ import three.haddad.smartnotas.data.SortDir
 import three.haddad.smartnotas.data.SortKey
 import three.haddad.smartnotas.data.ViewOptions
 import three.haddad.smartnotas.data.matches
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 /**
  * Covers the section-precedence contract in [arrangeItems], with an emphasis on the pinning
@@ -284,8 +284,6 @@ class HomeListArrangementTest {
         assertEquals(3, distinctBadges.size)
     }
 
-
-
     @Test
     fun ordinary_grouping_sections_get_no_badge() {
         val items =
@@ -355,7 +353,7 @@ class HomeListArrangementTest {
         completedAt: Long? = null,
         reminderAt: Long? = null,
         createdAt: Long = 0L,
-            ): NoteWithItems {
+    ): NoteWithItems {
         return NoteWithItems(
             note =
                 NoteEntity(
@@ -368,7 +366,6 @@ class HomeListArrangementTest {
                     createdAt = createdAt,
                     updatedAt = createdAt,
                     reminderAt = reminderAt,
-                    
                     completedAt = completedAt,
                     pinnedAt = if (pinned) 1_000L else null,
                 ),

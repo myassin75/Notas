@@ -4,10 +4,10 @@ import android.app.AlarmManager
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import three.haddad.smartnotas.data.Importance
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import three.haddad.smartnotas.data.Importance
 
 @RunWith(AndroidJUnit4::class)
 class ReminderAlarmInstrumentedTest {

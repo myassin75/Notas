@@ -22,18 +22,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import three.haddad.smartnotas.ui.theme.LocalIsDark
-import java.time.LocalDate
-
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -48,17 +47,19 @@ fun DayOfWeekHeaderRow(
 ) {
     val isDark = LocalIsDark.current
     val textColor = CalendarDesignTokens.resolveTextSecondary(isDark)
-    val dayLabels = remember(firstDayOfWeek) {
-        val locale = Locale.getDefault()
-        (0L..6L).map { offset ->
-            firstDayOfWeek.plus(offset).getDisplayName(TextStyle.NARROW, locale)
+    val dayLabels =
+        remember(firstDayOfWeek) {
+            val locale = Locale.getDefault()
+            (0L..6L).map { offset ->
+                firstDayOfWeek.plus(offset).getDisplayName(TextStyle.NARROW, locale)
+            }
         }
-    }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -69,11 +70,12 @@ fun DayOfWeekHeaderRow(
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = textColor,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                    ),
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            color = textColor,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                        ),
                     textAlign = TextAlign.Center,
                 )
             }
@@ -108,72 +110,77 @@ fun CalendarDayCell(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textOutOfMonth = CalendarDesignTokens.resolveOutOfMonthText(isDark)
 
-    val textColor = when {
-        isSelected -> Color.White
-        isToday -> CalendarDesignTokens.PrimaryPurple
-        isOutOfMonth || isDisabled -> textOutOfMonth
-        else -> textPrimary
-    }
+    val textColor =
+        when {
+            isSelected -> Color.White
+            isToday -> CalendarDesignTokens.PrimaryPurple
+            isOutOfMonth || isDisabled -> textOutOfMonth
+            else -> textPrimary
+        }
 
-    val fontWeight = when {
-        isSelected || isToday -> FontWeight.Bold
-        isOutOfMonth -> FontWeight.Normal
-        else -> FontWeight.Medium
-    }
+    val fontWeight =
+        when {
+            isSelected || isToday -> FontWeight.Bold
+            isOutOfMonth -> FontWeight.Normal
+            else -> FontWeight.Medium
+        }
 
     val dayShape = CalendarDesignTokens.SelectedDayShape
-    val cellBackgroundModifier = when {
-        isSelected && isToday -> Modifier
-            .background(CalendarDesignTokens.PrimaryPurple, shape = dayShape)
-            .border(
-                1.5.dp,
-                if (isDark) Color.White.copy(alpha = 0.5f) else CalendarDesignTokens.DarkPurpleSelected,
-                shape = dayShape,
-            )
-        isSelected -> Modifier.background(CalendarDesignTokens.PrimaryPurple, shape = dayShape)
-        isToday -> Modifier.border(
-            width = 1.5.dp,
-            color = CalendarDesignTokens.PrimaryPurple,
-            shape = dayShape,
-        )
-        else -> Modifier
-    }
+    val cellBackgroundModifier =
+        when {
+            isSelected && isToday ->
+                Modifier
+                    .background(CalendarDesignTokens.PrimaryPurple, shape = dayShape)
+                    .border(
+                        1.5.dp,
+                        if (isDark) Color.White.copy(alpha = 0.5f) else CalendarDesignTokens.DarkPurpleSelected,
+                        shape = dayShape,
+                    )
+            isSelected -> Modifier.background(CalendarDesignTokens.PrimaryPurple, shape = dayShape)
+            isToday ->
+                Modifier.border(
+                    width = 1.5.dp,
+                    color = CalendarDesignTokens.PrimaryPurple,
+                    shape = dayShape,
+                )
+            else -> Modifier
+        }
 
-    val fullDateDescription = remember(day.date, isToday, isSelected, day.dots.size) {
-        val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
-        val dateText = day.date.format(formatter)
-        val todayText = if (isToday) ", Today" else ""
-        val selectedText = if (isSelected) ", Selected" else ""
-        val dotsText = if (day.dots.isNotEmpty()) ", ${day.dots.size} items" else ""
-        "$dateText$todayText$selectedText$dotsText"
-    }
+    val fullDateDescription =
+        remember(day.date, isToday, isSelected, day.dots.size) {
+            val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+            val dateText = day.date.format(formatter)
+            val todayText = if (isToday) ", Today" else ""
+            val selectedText = if (isSelected) ", Selected" else ""
+            val dotsText = if (day.dots.isNotEmpty()) ", ${day.dots.size} items" else ""
+            "$dateText$todayText$selectedText$dotsText"
+        }
 
     Box(
-        modifier = modifier
-            .defaultMinSize(
-                minWidth = CalendarDesignTokens.DayCellMinWidth,
-                minHeight = CalendarDesignTokens.DayCellMinHeight,
-            )
-            .semantics {
-                contentDescription = fullDateDescription
-                role = Role.Button
-            }
-            .then(
-                if (!isDisabled) {
-                    Modifier.clickable { onClick(day.date) }
-                } else {
-                    Modifier
-                }
-            ),
+        modifier =
+            modifier
+                .defaultMinSize(
+                    minWidth = CalendarDesignTokens.DayCellMinWidth,
+                    minHeight = CalendarDesignTokens.DayCellMinHeight,
+                ).semantics {
+                    contentDescription = fullDateDescription
+                    role = Role.Button
+                }.then(
+                    if (!isDisabled) {
+                        Modifier.clickable { onClick(day.date) }
+                    } else {
+                        Modifier
+                    },
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier
-                .size(
-                    width = CalendarDesignTokens.SelectedIndicatorWidth,
-                    height = CalendarDesignTokens.SelectedIndicatorHeight,
-                )
-                .then(cellBackgroundModifier),
+            modifier =
+                Modifier
+                    .size(
+                        width = CalendarDesignTokens.SelectedIndicatorWidth,
+                        height = CalendarDesignTokens.SelectedIndicatorHeight,
+                    ).then(cellBackgroundModifier),
             contentAlignment = Alignment.Center,
         ) {
             Column(
@@ -182,11 +189,12 @@ fun CalendarDayCell(
             ) {
                 Text(
                     text = day.dayNumber.toString(),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = textColor,
-                        fontWeight = fontWeight,
-                        fontSize = 14.5.sp,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            color = textColor,
+                            fontWeight = fontWeight,
+                            fontSize = 14.5.sp,
+                        ),
                     textAlign = TextAlign.Center,
                 )
 
@@ -199,15 +207,17 @@ fun CalendarDayCell(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         day.dots.take(4).forEach { dot ->
-                            val dotColor = when {
-                                isSelected -> Color.White
-                                isOutOfMonth -> dot.color.copy(alpha = 0.35f)
-                                else -> dot.color
-                            }
+                            val dotColor =
+                                when {
+                                    isSelected -> Color.White
+                                    isOutOfMonth -> dot.color.copy(alpha = 0.35f)
+                                    else -> dot.color
+                                }
                             Box(
-                                modifier = Modifier
-                                    .size(CalendarDesignTokens.DotIndicatorSize)
-                                    .background(dotColor, shape = CircleShape),
+                                modifier =
+                                    Modifier
+                                        .size(CalendarDesignTokens.DotIndicatorSize)
+                                        .background(dotColor, shape = CircleShape),
                             )
                         }
                     }

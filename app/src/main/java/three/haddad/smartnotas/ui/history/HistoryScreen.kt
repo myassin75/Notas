@@ -6,6 +6,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,6 +19,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,14 +30,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +50,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
@@ -60,10 +70,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -85,12 +97,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.NoteLayoutMode
@@ -117,39 +141,57 @@ import three.haddad.smartnotas.ui.components.SwipeRevealTile
 import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
 import three.haddad.smartnotas.ui.components.rememberSelectionActionBarListClearance
 import three.haddad.smartnotas.ui.components.toNoteCardUiModel
+import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.modifiers.PillBottomBarHeight
 import three.haddad.smartnotas.ui.modifiers.PillBottomScrimExtra
 import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
 import three.haddad.smartnotas.ui.modifiers.rememberContentOverflowScrollEnabled
 import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.max
 
 /** Which shelf the user is viewing. */
 enum class HistorySection { ARCHIVE, TRASH }
 
-/** Toolbar row below the status bar (Archive / Trash toggles). */
-private val HistoryTopBarContentHeight = 48.dp
+/** Design tokens mapped from reference image (#F5F3F8 background, #FFFFFF main surface, etc.) */
+internal object HistoryDesignTokens {
+    val ScreenBg = Color(0xFFF5F3F8)
+    val MainSurface = Color(0xFFFFFFFF)
+    val ActiveLavenderSurface = Color(0xFFF2E8F7)
+    val PrimaryPurple = Color(0xFFA34EA5)
+    val PrimaryText = Color(0xFF383743)
+    val SecondaryText = Color(0xFF85839C)
+    val IllustrationOutline = Color(0xFFAAA3B9)
+    val IllustrationCircle = Color(0xFFF2E8F7)
+}
 
-/** Extra progressive-blur band past the toggle bottoms so scroll content fades under them. */
-private val HistoryTopBarBlurBelowExtra = 20.dp
+@Composable
+internal fun historyScreenBg(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.surface else HistoryDesignTokens.ScreenBg
 
-/** Softer top blur curve so strength reaches the Archive / Trash row (default 2.5 is mostly status-bar only). */
-private const val HISTORY_TOP_BLUR_PROGRESS_POWER = 1.1f
+@Composable
+internal fun historyMainSurface(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.surfaceContainer else HistoryDesignTokens.MainSurface
+
+@Composable
+internal fun historyActiveLavender(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.primaryContainer else HistoryDesignTokens.ActiveLavenderSurface
+
+@Composable
+internal fun historyPrimaryPurple(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.primary else HistoryDesignTokens.PrimaryPurple
+
+@Composable
+internal fun historyPrimaryText(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.onSurface else HistoryDesignTokens.PrimaryText
+
+@Composable
+internal fun historySecondaryText(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.onSurfaceVariant else HistoryDesignTokens.SecondaryText
+
+@Composable
+internal fun historyIllustrationOutline(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.outline else HistoryDesignTokens.IllustrationOutline
+
+@Composable
+internal fun historyIllustrationCircle(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.surfaceContainerHighest else HistoryDesignTokens.IllustrationCircle
 
 /**
  * One-shot events emitted by [HistoryViewModel] for the UI layer to react to.
@@ -201,6 +243,9 @@ class HistoryViewModel
 
         private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
         val selectedIds: StateFlow<Set<Long>> = _selectedIds.asStateFlow()
+
+        private val _isOperating = MutableStateFlow(false)
+        val isOperating: StateFlow<Boolean> = _isOperating.asStateFlow()
 
         /**
          * One-shot events for the UI: bulk-action completions surface a snackbar with
@@ -299,12 +344,47 @@ class HistoryViewModel
             _events.trySend(HistoryEvent.BulkActionPerformed(action))
         }
 
-        fun emptyTrash() {
-            viewModelScope.launch { repository.emptyTrash() }
+        fun emptyTrash(
+            onSuccess: () -> Unit = {},
+            onError: (Throwable) -> Unit = {},
+        ) {
+            if (_isOperating.value) return
+            viewModelScope.launch {
+                _isOperating.value = true
+                try {
+                    repository.emptyTrash()
+                    lastBulkAction = null
+                    onSuccess()
+                } catch (t: Throwable) {
+                    onError(t)
+                } finally {
+                    _isOperating.value = false
+                }
+            }
         }
 
-        fun moveAllArchivedToTrash() {
-            viewModelScope.launch { repository.moveAllArchivedToTrash() }
+        fun moveAllArchivedToTrash(
+            onSuccess: () -> Unit = {},
+            onError: (Throwable) -> Unit = {},
+        ) {
+            if (_isOperating.value) return
+            viewModelScope.launch {
+                _isOperating.value = true
+                try {
+                    val archivedSnapshot = archivedItems.value.map { it.note.id }.toSet()
+                    repository.moveAllArchivedToTrash()
+                    if (archivedSnapshot.isNotEmpty()) {
+                        val action = BulkUndoableAction.MovedArchiveToTrash(archivedSnapshot)
+                        lastBulkAction = action
+                        _events.trySend(HistoryEvent.BulkActionPerformed(action))
+                    }
+                    onSuccess()
+                } catch (t: Throwable) {
+                    onError(t)
+                } finally {
+                    _isOperating.value = false
+                }
+            }
         }
 
         fun restoreSelected() {
@@ -426,6 +506,7 @@ fun HistoryRoute(
     onOpenNote: (NoteWithItems, Boolean) -> Unit,
     activeNoteId: Long? = null,
     showSelectionActionBar: Boolean = true,
+    onBack: () -> Unit = {},
 ) {
     val vm: HistoryViewModel = hiltViewModel()
     val trashed by vm.trashedItems.collectAsStateWithLifecycle()
@@ -441,15 +522,23 @@ fun HistoryRoute(
     val trashedListState = rememberLazyListState()
     val archivedGridState = rememberLazyStaggeredGridState()
     val trashedGridState = rememberLazyStaggeredGridState()
-    val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val topBarInset = statusBarInset + HistoryTopBarContentHeight
-    val blurStyle =
-        rememberProgressiveBlurStyle(
-            topExtra = HistoryTopBarContentHeight + HistoryTopBarBlurBelowExtra,
-            topBlurProgressPower = HISTORY_TOP_BLUR_PROGRESS_POWER,
-        )
-    val navBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val pillInset = navBarInset + PillBottomBarHeight + PillBottomScrimExtra
+
+    val screenBg = historyScreenBg()
+    val mainSurface = historyMainSurface()
+    val activeLavender = historyActiveLavender()
+    val primaryPurple = historyPrimaryPurple()
+    val primaryText = historyPrimaryText()
+    val secondaryText = historySecondaryText()
+    val illustrationOutline = historyIllustrationOutline()
+    val illustrationCircle = historyIllustrationCircle()
+
+    val reducedMotion = LocalReducedMotion.current
+    val historySectionSpatialSpec =
+        reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>())
+    val historySectionFadeInSpec =
+        reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
+    val historySectionFadeOutSpec =
+        reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
 
     val items =
         when (section) {
@@ -465,72 +554,18 @@ fun HistoryRoute(
                 )
             }
         }
-    val listState =
-        when (section) {
-            HistorySection.ARCHIVE -> archivedListState
-            HistorySection.TRASH -> trashedListState
-        }
-    val gridState =
-        when (section) {
-            HistorySection.ARCHIVE -> archivedGridState
-            HistorySection.TRASH -> trashedGridState
-        }
-    val density = LocalDensity.current
-    val topAlphaMultiplier by remember(listState, gridState, noteLayoutMode) {
-        derivedStateOf {
-            val thresholdPx = with(density) { 24.dp.toPx() }
-            when (noteLayoutMode) {
-                NoteLayoutMode.LIST ->
-                    if (listState.firstVisibleItemIndex > 0) {
-                        1f
-                    } else {
-                        val offsetPx = listState.firstVisibleItemScrollOffset.toFloat()
-                        (offsetPx / thresholdPx).coerceIn(0f, 1f)
-                    }
-                NoteLayoutMode.MOSAIC ->
-                    if (gridState.firstVisibleItemIndex > 0) {
-                        1f
-                    } else {
-                        val offsetPx = gridState.firstVisibleItemScrollOffset.toFloat()
-                        (offsetPx / thresholdPx).coerceIn(0f, 1f)
-                    }
-            }
-        }
-    }
-    // Pane mode (showSelectionActionBar = false) has no floating pill over this list,
-    // so the pill-sized bottom blur band is dropped.
-    val listBlurMod =
-        blurStyle?.applyToScrollableList(
-            topAlphaMultiplier = topAlphaMultiplier,
-            bottomAlphaMultiplier = if (showSelectionActionBar) 1f else 0f,
-        ) ?: Modifier
-    val listScrollEnabled =
-        rememberContentOverflowScrollEnabled(
-            listState = listState,
-            additionalScrollEnabled = true,
-        )
-    val reducedMotion = LocalReducedMotion.current
-    val historySectionSpatialSpec =
-        reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>())
-    val historySectionFadeInSpec =
-        reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
-    val historySectionFadeOutSpec =
-        reducedMotionAwareSpec(MaterialTheme.motionScheme.fastEffectsSpec<Float>())
     val selectableVisibleIds = remember(rows) { rows.map { row -> row.card.id }.toSet() }
     val inSelectionMode = selectedIds.isNotEmpty()
+    val isOperating by vm.isOperating.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     val snackbarHostState = LocalSnackbarHostState.current
     val context = LocalContext.current
-    val isLandscape = isLandscape()
     val notificationsAllowed = rememberNotificationsAllowed()
     val undoLabel = stringResource(R.string.bulk_action_undo)
-    // Confirmation sheet state for the selection-mode delete-forever path. Permanent
-    // delete has no undo so the user has to confirm explicitly before any rows go.
-    // saveable so a config change mid-confirmation does not blow the dialog away.
+
+    var moveAllArchivedToTrashConfirmOpen by rememberSaveable { mutableStateOf(false) }
+    var emptyTrashConfirmOpen by rememberSaveable { mutableStateOf(false) }
     var bulkDeleteForeverOpen by rememberSaveable { mutableStateOf(false) }
-    // Single-card delete-forever confirmation. Held as a NoteWithItems? so the dialog
-    // also has the row context if we ever want to mention the note's title; the value
-    // is non-saveable (NoteWithItems isn't Parcelable) so a config change while the
-    // dialog is up dismisses it - acceptable for a transient permanent-delete prompt.
     var pendingDeleteForeverNote by remember { mutableStateOf<NoteWithItems?>(null) }
     var revealedNoteCardId by rememberSaveable { mutableStateOf<Long?>(null) }
     var revealedNoteCardBounds by remember { mutableStateOf<Rect?>(null) }
@@ -575,6 +610,7 @@ fun HistoryRoute(
         modifier =
             Modifier
                 .fillMaxSize()
+                .background(screenBg)
                 .onGloballyPositioned { coordinates ->
                     historyScreenBounds = coordinates.boundsInRoot()
                 }.pointerInput(revealedNoteCardId, revealedNoteCardBounds) {
@@ -607,313 +643,361 @@ fun HistoryRoute(
                     }
                 },
     ) {
-        // Blur only on the scroll layer (Home pattern). Top bar sits above so scrim/blur do not
-        // paint over the toggles; list contentPadding lets rows scroll under the transparent bar.
-        Box(modifier = Modifier.fillMaxSize()) {
-            AnimatedContent(
-                targetState = section,
-                modifier = Modifier.fillMaxSize(),
-                transitionSpec = {
-                    if (reducedMotion) {
-                        EnterTransition.None togetherWith ExitTransition.None
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp),
+        ) {
+            Spacer(Modifier.height(12.dp))
+
+            // 1. Header (Back button + History title)
+            HistoryHeader(
+                onBack = {
+                    if (inSelectionMode) {
+                        vm.clearSelection()
                     } else {
-                        val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-                        (
-                            slideInHorizontally(animationSpec = historySectionSpatialSpec) { fullWidth ->
-                                direction * fullWidth
-                            } + fadeIn(animationSpec = historySectionFadeInSpec)
-                        ) togetherWith (
-                            slideOutHorizontally(animationSpec = historySectionSpatialSpec) { fullWidth ->
-                                -direction * fullWidth
-                            } + fadeOut(animationSpec = historySectionFadeOutSpec)
-                        )
-                    }.using(SizeTransform(clip = false))
+                        onBack()
+                    }
                 },
-                label = "historySectionContent",
-            ) { targetSection ->
-                val targetItems =
-                    when (targetSection) {
-                        HistorySection.ARCHIVE -> archived
-                        HistorySection.TRASH -> trashed
-                    }
-                val targetRows =
-                    remember(targetItems) {
-                        targetItems.map { noteWithItems ->
-                            HistoryNoteRow(
-                                note = noteWithItems,
-                                card = noteWithItems.toNoteCardUiModel(),
-                            )
-                        }
-                    }
-                val targetListState =
-                    when (targetSection) {
-                        HistorySection.ARCHIVE -> archivedListState
-                        HistorySection.TRASH -> trashedListState
-                    }
-                val targetGridState =
-                    when (targetSection) {
-                        HistorySection.ARCHIVE -> archivedGridState
-                        HistorySection.TRASH -> trashedGridState
-                    }
-                val targetListScrollEnabled =
-                    rememberContentOverflowScrollEnabled(
-                        listState = targetListState,
-                        additionalScrollEnabled = true,
-                    )
-                val listTopPadding =
-                    remember(targetSection, targetRows.isNotEmpty()) {
-                        if (targetRows.isEmpty()) {
-                            topBarInset
-                        } else if (targetSection == HistorySection.TRASH) {
-                            topBarInset + 4.dp
-                        } else {
-                            topBarInset + 12.dp
-                        }
-                    }
-                val selectionBarClearance =
-                    rememberSelectionActionBarListClearance(
-                        visible = showSelectionActionBar && inSelectionMode,
-                    )
-                if (targetRows.isNotEmpty()) {
-                    val contentPadding =
-                        PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = listTopPadding,
-                            bottom = pillInset + 24.dp + selectionBarClearance,
-                        )
-                    BoxWithConstraints(Modifier.fillMaxSize()) {
-                        val mosaicColumnCount = noteMosaicColumnCount(maxWidth)
-                        if (noteLayoutMode == NoteLayoutMode.MOSAIC && mosaicColumnCount > 1) {
-                            LazyVerticalStaggeredGrid(
-                                columns = StaggeredGridCells.Fixed(mosaicColumnCount),
-                                state = targetGridState,
-                                modifier =
-                                    Modifier
-                                        .fillMaxSize()
-                                        .then(listBlurMod),
-                                contentPadding = contentPadding,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalItemSpacing = 6.dp,
-                            ) {
-                                if (targetSection == HistorySection.TRASH) {
-                                    item(
-                                        key = "retention_notice",
-                                        contentType = "retention",
-                                        span = StaggeredGridItemSpan.FullLine,
-                                    ) {
-                                        RetentionNotice(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(
-                                                        top = HistoryTopBarBlurBelowExtra,
-                                                        bottom = 12.dp,
-                                                    ),
-                                        )
-                                    }
-                                }
-                                targetRows.forEach { row ->
-                                    item(
-                                        key = row.card.id,
-                                        contentType =
-                                            if (targetSection == HistorySection.TRASH) {
-                                                "trashedRow"
-                                            } else {
-                                                "archivedRow"
-                                            },
-                                    ) {
-                                        val noteId = row.card.id
-                                        val isSelected = noteId in selectedIds
-                                        val isActiveInDetailPane = !inSelectionMode && activeNoteId == noteId
-                                        var cardBounds by remember { mutableStateOf<Rect?>(null) }
-                                        HistorySwipeCard(
-                                            model = row.card,
-                                            section = targetSection,
-                                            daysLeft =
-                                                vm
-                                                    .daysLeftInTrash(row.note)
-                                                    .takeIf { targetSection == HistorySection.TRASH },
-                                            onOpenNote = {
-                                                if (inSelectionMode) {
-                                                    vm.toggleSelection(noteId)
-                                                } else {
-                                                    onOpenNote(row.note, false)
-                                                }
-                                            },
-                                            onRestore = { vm.restore(row.note) },
-                                            onArchive = { vm.archiveFromTrash(row.note) },
-                                            onDeleteForever = { pendingDeleteForeverNote = row.note },
-                                            onUnarchive = { vm.unarchive(row.note) },
-                                            onMoveToTrash = { vm.moveArchivedToTrash(row.note) },
-                                            selected = isSelected,
-                                            activeInDetailPane = isActiveInDetailPane,
-                                            onLongClick = { vm.toggleSelection(noteId) },
-                                            swipeEnabled = !inSelectionMode,
-                                            reminderNotificationsAllowed = notificationsAllowed,
-                                            modifier =
-                                                Modifier.onGloballyPositioned { coordinates ->
-                                                    cardBounds = coordinates.boundsInRoot()
-                                                    if (revealedNoteCardId == noteId) {
-                                                        revealedNoteCardBounds = cardBounds
-                                                    }
-                                                },
-                                            revealKey = noteId,
-                                            activeRevealKey = revealedNoteCardId,
-                                            onRevealStarted = {
-                                                revealedNoteCardId = noteId
-                                                revealedNoteCardBounds = cardBounds
-                                            },
-                                            onRevealClosed = {
-                                                if (revealedNoteCardId == noteId) {
-                                                    revealedNoteCardId = null
-                                                }
-                                            },
-                                        )
-                                    }
-                                }
+                title = stringResource(R.string.main_tab_history),
+                primaryTextColor = primaryText,
+                buttonBgColor = mainSurface,
+                iconColor = primaryPurple,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // 2. Segmented Control (Archive / Trash)
+            HistorySegmentedControl(
+                section = section,
+                onSectionChange = onSectionChange,
+                containerBg = mainSurface,
+                activeBg = activeLavender,
+                activeColor = primaryPurple,
+                inactiveColor = secondaryText,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // 3. Main Content Panel
+            Surface(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(32.dp),
+                color = mainSurface,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(32.dp)),
+                ) {
+                    AnimatedContent(
+                        targetState = section,
+                        modifier = Modifier.fillMaxSize(),
+                        transitionSpec = {
+                            if (reducedMotion) {
+                                EnterTransition.None togetherWith ExitTransition.None
+                            } else {
+                                val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                                (
+                                    slideInHorizontally(animationSpec = historySectionSpatialSpec) { fullWidth ->
+                                        direction * fullWidth
+                                    } + fadeIn(animationSpec = historySectionFadeInSpec)
+                                ) togetherWith (
+                                    slideOutHorizontally(animationSpec = historySectionSpatialSpec) { fullWidth ->
+                                        -direction * fullWidth
+                                    } + fadeOut(animationSpec = historySectionFadeOutSpec)
+                                )
+                            }.using(SizeTransform(clip = true))
+                        },
+                        label = "historySectionContent",
+                    ) { targetSection ->
+                        val targetItems =
+                            when (targetSection) {
+                                HistorySection.ARCHIVE -> archived
+                                HistorySection.TRASH -> trashed
                             }
-                        } else {
-                            LazyColumn(
-                                state = targetListState,
-                                modifier =
-                                    Modifier
-                                        .fillMaxSize()
-                                        .then(listBlurMod),
-                                contentPadding = contentPadding,
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                                userScrollEnabled = targetListScrollEnabled,
-                            ) {
-                                if (targetSection == HistorySection.TRASH) {
-                                    item(key = "retention_notice", contentType = "retention") {
-                                        RetentionNotice(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(
-                                                        top = HistoryTopBarBlurBelowExtra,
-                                                        bottom = 12.dp,
-                                                    ),
-                                        )
-                                    }
-                                }
-                                items(
-                                    items = targetRows,
-                                    key = { row -> row.card.id },
-                                    contentType = {
-                                        if (targetSection == HistorySection.TRASH) {
-                                            "trashedRow"
-                                        } else {
-                                            "archivedRow"
-                                        }
-                                    },
-                                ) { row ->
-                                    val noteId = row.card.id
-                                    val isSelected = noteId in selectedIds
-                                    val isActiveInDetailPane = !inSelectionMode && activeNoteId == noteId
-                                    var cardBounds by remember { mutableStateOf<Rect?>(null) }
-                                    HistorySwipeCard(
-                                        model = row.card,
-                                        section = targetSection,
-                                        daysLeft =
-                                            vm
-                                                .daysLeftInTrash(row.note)
-                                                .takeIf { targetSection == HistorySection.TRASH },
-                                        onOpenNote = {
-                                            if (inSelectionMode) {
-                                                vm.toggleSelection(noteId)
-                                            } else {
-                                                onOpenNote(row.note, false)
-                                            }
-                                        },
-                                        onRestore = { vm.restore(row.note) },
-                                        onArchive = { vm.archiveFromTrash(row.note) },
-                                        onDeleteForever = { pendingDeleteForeverNote = row.note },
-                                        onUnarchive = { vm.unarchive(row.note) },
-                                        onMoveToTrash = { vm.moveArchivedToTrash(row.note) },
-                                        selected = isSelected,
-                                        activeInDetailPane = isActiveInDetailPane,
-                                        onLongClick = { vm.toggleSelection(noteId) },
-                                        swipeEnabled = !inSelectionMode,
-                                        reminderNotificationsAllowed = notificationsAllowed,
-                                        modifier =
-                                            Modifier.onGloballyPositioned { coordinates ->
-                                                cardBounds = coordinates.boundsInRoot()
-                                                if (revealedNoteCardId == noteId) {
-                                                    revealedNoteCardBounds = cardBounds
-                                                }
-                                            },
-                                        revealKey = noteId,
-                                        activeRevealKey = revealedNoteCardId,
-                                        onRevealStarted = {
-                                            revealedNoteCardId = noteId
-                                            revealedNoteCardBounds = cardBounds
-                                        },
-                                        onRevealClosed = {
-                                            if (revealedNoteCardId == noteId) {
-                                                revealedNoteCardId = null
-                                            }
-                                        },
+                        val targetRows =
+                            remember(targetItems) {
+                                targetItems.map { noteWithItems ->
+                                    HistoryNoteRow(
+                                        note = noteWithItems,
+                                        card = noteWithItems.toNoteCardUiModel(),
                                     )
                                 }
                             }
+                        val targetListState =
+                            when (targetSection) {
+                                HistorySection.ARCHIVE -> archivedListState
+                                HistorySection.TRASH -> trashedListState
+                            }
+                        val targetGridState =
+                            when (targetSection) {
+                                HistorySection.ARCHIVE -> archivedGridState
+                                HistorySection.TRASH -> trashedGridState
+                            }
+                        val targetListScrollEnabled =
+                            rememberContentOverflowScrollEnabled(
+                                listState = targetListState,
+                                additionalScrollEnabled = true,
+                            )
+                        val selectionBarClearance =
+                            rememberSelectionActionBarListClearance(
+                                visible = showSelectionActionBar && inSelectionMode,
+                            )
+
+                        if (targetRows.isNotEmpty()) {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                HistoryBulkActionHeader(
+                                    section = targetSection,
+                                    itemCount = targetRows.size,
+                                    enabled = !isOperating && !inSelectionMode,
+                                    onAction = {
+                                        if (targetSection == HistorySection.ARCHIVE) {
+                                            moveAllArchivedToTrashConfirmOpen = true
+                                        } else {
+                                            emptyTrashConfirmOpen = true
+                                        }
+                                    },
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
+                                )
+                                val contentPadding =
+                                    PaddingValues(
+                                        start = 12.dp,
+                                        end = 12.dp,
+                                        top = 8.dp,
+                                        bottom = 16.dp + selectionBarClearance,
+                                    )
+                                BoxWithConstraints(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .weight(1f),
+                                ) {
+                                    val mosaicColumnCount = noteMosaicColumnCount(maxWidth)
+                                    if (noteLayoutMode == NoteLayoutMode.MOSAIC && mosaicColumnCount > 1) {
+                                        LazyVerticalStaggeredGrid(
+                                            columns = StaggeredGridCells.Fixed(mosaicColumnCount),
+                                            state = targetGridState,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentPadding = contentPadding,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalItemSpacing = 6.dp,
+                                        ) {
+                                            if (targetSection == HistorySection.TRASH) {
+                                                item(
+                                                    key = "retention_notice",
+                                                    contentType = "retention",
+                                                    span = StaggeredGridItemSpan.FullLine,
+                                                ) {
+                                                    RetentionNotice(
+                                                        containerColor = activeLavender,
+                                                        contentColor = primaryPurple,
+                                                        modifier =
+                                                            Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(bottom = 12.dp),
+                                                    )
+                                                }
+                                            }
+                                            targetRows.forEach { row ->
+                                                item(
+                                                    key = row.card.id,
+                                                    contentType =
+                                                        if (targetSection == HistorySection.TRASH) {
+                                                            "trashedRow"
+                                                        } else {
+                                                            "archivedRow"
+                                                        },
+                                                ) {
+                                                    val noteId = row.card.id
+                                                    val isSelected = noteId in selectedIds
+                                                    val isActiveInDetailPane = !inSelectionMode && activeNoteId == noteId
+                                                    var cardBounds by remember { mutableStateOf<Rect?>(null) }
+                                                    HistorySwipeCard(
+                                                        model = row.card,
+                                                        section = targetSection,
+                                                        daysLeft =
+                                                            vm
+                                                                .daysLeftInTrash(row.note)
+                                                                .takeIf { targetSection == HistorySection.TRASH },
+                                                        onOpenNote = {
+                                                            if (inSelectionMode) {
+                                                                vm.toggleSelection(noteId)
+                                                            } else {
+                                                                onOpenNote(row.note, false)
+                                                            }
+                                                        },
+                                                        onRestore = { vm.restore(row.note) },
+                                                        onArchive = { vm.archiveFromTrash(row.note) },
+                                                        onDeleteForever = { pendingDeleteForeverNote = row.note },
+                                                        onUnarchive = { vm.unarchive(row.note) },
+                                                        onMoveToTrash = { vm.moveArchivedToTrash(row.note) },
+                                                        selected = isSelected,
+                                                        activeInDetailPane = isActiveInDetailPane,
+                                                        onLongClick = { vm.toggleSelection(noteId) },
+                                                        swipeEnabled = !inSelectionMode,
+                                                        reminderNotificationsAllowed = notificationsAllowed,
+                                                        modifier =
+                                                            Modifier.onGloballyPositioned { coordinates ->
+                                                                cardBounds = coordinates.boundsInRoot()
+                                                                if (revealedNoteCardId == noteId) {
+                                                                    revealedNoteCardBounds = cardBounds
+                                                                }
+                                                            },
+                                                        revealKey = noteId,
+                                                        activeRevealKey = revealedNoteCardId,
+                                                        onRevealStarted = {
+                                                            revealedNoteCardId = noteId
+                                                            revealedNoteCardBounds = cardBounds
+                                                        },
+                                                        onRevealClosed = {
+                                                            if (revealedNoteCardId == noteId) {
+                                                                revealedNoteCardId = null
+                                                            }
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        LazyColumn(
+                                            state = targetListState,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentPadding = contentPadding,
+                                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                                            userScrollEnabled = targetListScrollEnabled,
+                                        ) {
+                                            if (targetSection == HistorySection.TRASH) {
+                                                item(key = "retention_notice", contentType = "retention") {
+                                                    RetentionNotice(
+                                                        containerColor = activeLavender,
+                                                        contentColor = primaryPurple,
+                                                        modifier =
+                                                            Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(bottom = 12.dp),
+                                                    )
+                                                }
+                                            }
+                                            items(
+                                                items = targetRows,
+                                                key = { row -> row.card.id },
+                                                contentType = {
+                                                    if (targetSection == HistorySection.TRASH) {
+                                                        "trashedRow"
+                                                    } else {
+                                                        "archivedRow"
+                                                    }
+                                                },
+                                            ) { row ->
+                                                val noteId = row.card.id
+                                                val isSelected = noteId in selectedIds
+                                                val isActiveInDetailPane = !inSelectionMode && activeNoteId == noteId
+                                                var cardBounds by remember { mutableStateOf<Rect?>(null) }
+                                                HistorySwipeCard(
+                                                    model = row.card,
+                                                    section = targetSection,
+                                                    daysLeft =
+                                                        vm
+                                                            .daysLeftInTrash(row.note)
+                                                            .takeIf { targetSection == HistorySection.TRASH },
+                                                    onOpenNote = {
+                                                        if (inSelectionMode) {
+                                                            vm.toggleSelection(noteId)
+                                                        } else {
+                                                            onOpenNote(row.note, false)
+                                                        }
+                                                    },
+                                                    onRestore = { vm.restore(row.note) },
+                                                    onArchive = { vm.archiveFromTrash(row.note) },
+                                                    onDeleteForever = { pendingDeleteForeverNote = row.note },
+                                                    onUnarchive = { vm.unarchive(row.note) },
+                                                    onMoveToTrash = { vm.moveArchivedToTrash(row.note) },
+                                                    selected = isSelected,
+                                                    activeInDetailPane = isActiveInDetailPane,
+                                                    onLongClick = { vm.toggleSelection(noteId) },
+                                                    swipeEnabled = !inSelectionMode,
+                                                    reminderNotificationsAllowed = notificationsAllowed,
+                                                    modifier =
+                                                        Modifier.onGloballyPositioned { coordinates ->
+                                                            cardBounds = coordinates.boundsInRoot()
+                                                            if (revealedNoteCardId == noteId) {
+                                                                revealedNoteCardBounds = cardBounds
+                                                            }
+                                                        },
+                                                    revealKey = noteId,
+                                                    activeRevealKey = revealedNoteCardId,
+                                                    onRevealStarted = {
+                                                        revealedNoteCardId = noteId
+                                                        revealedNoteCardBounds = cardBounds
+                                                    },
+                                                    onRevealClosed = {
+                                                        if (revealedNoteCardId == noteId) {
+                                                            revealedNoteCardId = null
+                                                        }
+                                                    },
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 24.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                HistoryEmptyState(
+                                    section = targetSection,
+                                    outlineColor = illustrationOutline,
+                                    circleColor = illustrationCircle,
+                                    primaryTextColor = primaryText,
+                                    secondaryTextColor = secondaryText,
+                                )
+                            }
                         }
                     }
-                } else {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .then(
-                                    if (isLandscape) {
-                                        Modifier.padding(top = topBarInset)
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        EmptyState(
-                            section = targetSection,
+
+                    if (showSelectionActionBar) {
+                        HistorySelectionActionBar(
+                            visible = inSelectionMode,
+                            section = section,
+                            selectedCount = selectedIds.size,
+                            selectableVisibleIds = selectableVisibleIds,
+                            onClearSelection = vm::clearSelection,
+                            onSelectAll = { vm.selectNotes(selectableVisibleIds) },
+                            onUnselectAll = vm::clearSelection,
+                            onRestoreSelected = vm::restoreSelected,
+                            onArchiveSelected = vm::archiveSelectedFromTrash,
+                            onDeleteForeverSelected = { bulkDeleteForeverOpen = true },
+                            onUnarchiveSelected = vm::unarchiveSelected,
+                            onTrashSelected = vm::moveSelectedArchivedToTrash,
+                            bottomPadding = 16.dp,
+                            modifier = Modifier.align(Alignment.BottomCenter),
                         )
                     }
                 }
             }
-            HistoryScreenTopBar(
-                section = section,
-                onSectionChange = onSectionChange,
-                modifier =
-                    Modifier
-                        .align(Alignment.TopCenter)
-                        .zIndex(2f),
-            )
-        }
-        if (showSelectionActionBar) {
-            HistorySelectionActionBar(
-                visible = inSelectionMode,
-                section = section,
-                selectedCount = selectedIds.size,
-                selectableVisibleIds = selectableVisibleIds,
-                onClearSelection = vm::clearSelection,
-                onSelectAll = { vm.selectNotes(selectableVisibleIds) },
-                onUnselectAll = vm::clearSelection,
-                onRestoreSelected = vm::restoreSelected,
-                onArchiveSelected = vm::archiveSelectedFromTrash,
-                // Permanent delete is gated by a confirmation sheet; the actual VM
-                // call only fires after the user taps Delete in that sheet.
-                onDeleteForeverSelected = { bulkDeleteForeverOpen = true },
-                onUnarchiveSelected = vm::unarchiveSelected,
-                onTrashSelected = vm::moveSelectedArchivedToTrash,
-                bottomPadding = navBarInset + PillBottomBarHeight + PillBottomScrimExtra + 24.dp,
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
         }
     }
 
     pendingDeleteForeverNote?.let { noteToDelete ->
-        // Single-card delete-forever confirmation. Mirrors the bulk dialog so users
-        // get the same warning regardless of whether they triggered the delete from
-        // the swipe action on one card or from selection mode on many.
         RememberConfirmDialog(
             title = stringResource(R.string.bulk_delete_forever_confirm_title),
             text = stringResource(R.string.bulk_delete_forever_confirm_subtitle),
@@ -928,9 +1012,6 @@ fun HistoryRoute(
     }
 
     if (bulkDeleteForeverOpen) {
-        // Mirrors the single-card dialog so the confirmation pattern is consistent. The
-        // selected-count snapshot is captured at open time; the selection set itself is
-        // unchanged until the user confirms.
         RememberConfirmDialog(
             title = stringResource(R.string.bulk_delete_forever_confirm_title),
             text = stringResource(R.string.bulk_delete_forever_confirm_subtitle),
@@ -940,6 +1021,52 @@ fun HistoryRoute(
                 vm.deleteSelectedForever()
             },
             onDismiss = { bulkDeleteForeverOpen = false },
+            destructive = true,
+        )
+    }
+
+    if (moveAllArchivedToTrashConfirmOpen) {
+        RememberConfirmDialog(
+            title = stringResource(R.string.history_archive_move_all_dialog_title),
+            text = stringResource(R.string.history_archive_move_all_dialog_message),
+            confirmLabel = stringResource(R.string.history_archive_move_all_to_trash),
+            dismissLabel = stringResource(R.string.common_cancel),
+            onConfirm = {
+                moveAllArchivedToTrashConfirmOpen = false
+                vm.moveAllArchivedToTrash(
+                    onError = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.history_operation_failed),
+                            )
+                        }
+                    },
+                )
+            },
+            onDismiss = { moveAllArchivedToTrashConfirmOpen = false },
+            destructive = true,
+        )
+    }
+
+    if (emptyTrashConfirmOpen) {
+        RememberConfirmDialog(
+            title = stringResource(R.string.history_trash_empty_dialog_title),
+            text = stringResource(R.string.history_trash_empty_dialog_message),
+            confirmLabel = stringResource(R.string.history_trash_empty_dialog_confirm),
+            dismissLabel = stringResource(R.string.common_cancel),
+            onConfirm = {
+                emptyTrashConfirmOpen = false
+                vm.emptyTrash(
+                    onError = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.history_operation_failed),
+                            )
+                        }
+                    },
+                )
+            },
+            onDismiss = { emptyTrashConfirmOpen = false },
             destructive = true,
         )
     }
@@ -1267,12 +1394,16 @@ private fun HistorySelectionActionBar(
 }
 
 @Composable
-private fun RetentionNotice(modifier: Modifier = Modifier) {
+private fun RetentionNotice(
+    modifier: Modifier = Modifier,
+    containerColor: Color = historyActiveLavender(),
+    contentColor: Color = historyPrimaryPurple(),
+) {
     Row(
         modifier =
             modifier
                 .background(
-                    MaterialTheme.colorScheme.surfaceContainerHigh,
+                    containerColor,
                     MaterialTheme.shapes.large,
                 ).padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1280,14 +1411,15 @@ private fun RetentionNotice(modifier: Modifier = Modifier) {
         RememberMaterialRoundedSymbol(
             name = "schedule",
             size = 18.dp,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = contentColor,
             weight = FontWeight.Medium,
         )
         Spacer(Modifier.width(10.dp))
         Text(
             text = stringResource(R.string.history_trash_retention_notice),
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = contentColor,
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -1467,8 +1599,190 @@ private fun TrashDaysLeftBadge(
 }
 
 @Composable
-private fun EmptyState(
+private fun HistoryHeader(
+    onBack: () -> Unit,
+    title: String,
+    primaryTextColor: Color,
+    buttonBgColor: Color,
+    iconColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Surface(
+            onClick = onBack,
+            shape = RoundedCornerShape(16.dp),
+            color = buttonBgColor,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                RememberMaterialRoundedSymbol(
+                    name = "arrow_back",
+                    tint = iconColor,
+                    size = 24.dp,
+                    autoMirror = true,
+                    contentDescription = stringResource(R.string.common_back),
+                )
+            }
+        }
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text = title,
+            style =
+                MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 28.sp,
+                    color = primaryTextColor,
+                ),
+        )
+    }
+}
+
+@Composable
+private fun HistorySegmentedControl(
     section: HistorySection,
+    onSectionChange: (HistorySection) -> Unit,
+    containerBg: Color,
+    activeBg: Color,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val reducedMotion = LocalReducedMotion.current
+    Surface(
+        modifier = modifier.fillMaxWidth().height(56.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = containerBg,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        BoxWithConstraints(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(5.dp),
+        ) {
+            val tabWidth = maxWidth / 2
+            val indicatorOffset by animateDpAsState(
+                targetValue = if (section == HistorySection.ARCHIVE) 0.dp else tabWidth,
+                animationSpec =
+                    if (reducedMotion) {
+                        snap()
+                    } else {
+                        spring(stiffness = Spring.StiffnessMediumLow)
+                    },
+                label = "historyTabIndicatorOffset",
+            )
+
+            // Animated active pill indicator
+            Box(
+                modifier =
+                    Modifier
+                        .offset(x = indicatorOffset)
+                        .width(tabWidth)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(activeBg),
+            )
+
+            Row(modifier = Modifier.fillMaxSize()) {
+                // Archive Tab
+                val isArchiveSelected = section == HistorySection.ARCHIVE
+                val archiveColor by animateColorAsState(
+                    targetValue = if (isArchiveSelected) activeColor else inactiveColor,
+                    label = "archiveTabColor",
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(24.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                role = Role.Tab,
+                                onClick = { onSectionChange(HistorySection.ARCHIVE) },
+                            ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = "archive",
+                            tint = archiveColor,
+                            size = 20.dp,
+                        )
+                        Text(
+                            text = HistorySection.ARCHIVE.label(),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = if (isArchiveSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                    fontSize = 16.sp,
+                                    color = archiveColor,
+                                ),
+                        )
+                    }
+                }
+
+                // Trash Tab
+                val isTrashSelected = section == HistorySection.TRASH
+                val trashColor by animateColorAsState(
+                    targetValue = if (isTrashSelected) activeColor else inactiveColor,
+                    label = "trashTabColor",
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(24.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                role = Role.Tab,
+                                onClick = { onSectionChange(HistorySection.TRASH) },
+                            ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = "delete",
+                            tint = trashColor,
+                            size = 20.dp,
+                        )
+                        Text(
+                            text = HistorySection.TRASH.label(),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = if (isTrashSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                    fontSize = 16.sp,
+                                    color = trashColor,
+                                ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryEmptyState(
+    section: HistorySection,
+    outlineColor: Color,
+    circleColor: Color,
+    primaryTextColor: Color,
+    secondaryTextColor: Color,
     modifier: Modifier = Modifier,
 ) {
     val titleRes =
@@ -1483,126 +1797,53 @@ private fun EmptyState(
         } else {
             R.string.history_trash_empty_subtitle
         }
-    val spacing = emptyStateSpacing(prominent = false)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier.fillMaxWidth(),
     ) {
         if (section == HistorySection.ARCHIVE) {
-            EmptyArchiveIllustration()
+            EmptyArchiveIllustration(
+                outlineColor = outlineColor,
+                circleColor = circleColor,
+            )
         } else {
-            EmptyTrashIllustration()
+            EmptyTrashIllustration(
+                outlineColor = outlineColor,
+                circleColor = circleColor,
+            )
         }
-        Spacer(Modifier.height(spacing.titleSpacer))
+
+        Spacer(Modifier.height(32.dp))
+
         Text(
             text = stringResource(titleRes),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            style =
+                MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 22.sp,
+                    color = primaryTextColor,
+                ),
+            textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(spacing.subtitleSpacer))
+
+        Spacer(Modifier.height(10.dp))
+
         Text(
             text = stringResource(subtitleRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style =
+                MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp,
+                    color = secondaryTextColor,
+                ),
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun HistoryScreenTopBar(
-    section: HistorySection,
-    onSectionChange: (HistorySection) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .background(Color.Transparent)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .height(HistoryTopBarContentHeight)
-                .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        HistorySectionToggleGroup(
-            section = section,
-            onSectionChange = onSectionChange,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 24.dp),
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun HistorySectionToggleGroup(
-    section: HistorySection,
-    onSectionChange: (HistorySection) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val sectionButtonColors =
-        ToggleButtonDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-    val entries = HistorySection.entries
-    val labels = entries.map { entry -> entry.label() }
-    val shapes =
-        entries.mapIndexed { index, _ ->
-            when (index) {
-                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                entries.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-            }
-        }
-    ButtonGroup(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-        overflowIndicator = { menuState ->
-            ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
-        },
-    ) {
-        entries.forEachIndexed { index, entry ->
-            val label = labels[index]
-            customItem(
-                buttonGroupContent = {
-                    RememberToggleButton(
-                        checked = section == entry,
-                        onCheckedChange = { checked -> if (checked) onSectionChange(entry) },
-                        modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                        shapes = shapes[index],
-                        colors = sectionButtonColors,
-                    ) {
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.labelMedium,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                },
-                menuContent = { menuState ->
-                    RememberDropdownMenuItem(
-                        text = { Text(label) },
-                        onClick = {
-                            onSectionChange(entry)
-                            menuState.dismiss()
-                        },
-                    )
-                },
-            )
-        }
     }
 }
 
@@ -1612,3 +1853,93 @@ private fun HistorySection.label(): String =
         HistorySection.ARCHIVE -> stringResource(R.string.history_section_archive)
         HistorySection.TRASH -> stringResource(R.string.history_section_trash)
     }
+
+@Composable
+private fun HistoryBulkActionHeader(
+    section: HistorySection,
+    itemCount: Int,
+    enabled: Boolean,
+    onAction: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val countText =
+            pluralStringResource(
+                R.plurals.history_note_count,
+                itemCount,
+                itemCount,
+            )
+        Text(
+            text = countText,
+            style =
+                MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = historySecondaryText(),
+                ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        val isArchive = section == HistorySection.ARCHIVE
+        val label =
+            if (isArchive) {
+                stringResource(R.string.history_archive_move_all_to_trash)
+            } else {
+                stringResource(R.string.history_trash_empty_action)
+            }
+
+        val isDark = LocalIsDark.current
+        val containerColor =
+            if (isArchive) {
+                if (isDark) MaterialTheme.colorScheme.primaryContainer else Color(0xFFF2E8F7)
+            } else {
+                if (isDark) MaterialTheme.colorScheme.errorContainer else Color(0xFFFDE8E8)
+            }
+        val contentColor =
+            if (isArchive) {
+                if (isDark) MaterialTheme.colorScheme.onPrimaryContainer else Color(0xFFA34EA5)
+            } else {
+                if (isDark) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.error
+            }
+
+        Surface(
+            onClick = onAction,
+            enabled = enabled,
+            shape = RoundedCornerShape(18.dp),
+            color = containerColor,
+            contentColor = contentColor,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
+            modifier = Modifier.height(36.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = "delete",
+                    size = 18.dp,
+                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.38f),
+                )
+                Text(
+                    text = label,
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                        ),
+                    color = if (enabled) contentColor else contentColor.copy(alpha = 0.38f),
+                )
+            }
+        }
+    }
+}

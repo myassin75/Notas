@@ -122,21 +122,23 @@ fun SearchScreen(
 ) {
     var showFilters by remember { mutableStateOf(false) }
 
-    val categories = listOf(
-        stringResource(R.string.search_tab_all),
-        stringResource(R.string.search_tab_notes),
-        stringResource(R.string.search_tab_tasks),
-        stringResource(R.string.search_tab_events),
-    )
+    val categories =
+        listOf(
+            stringResource(R.string.search_tab_all),
+            stringResource(R.string.search_tab_notes),
+            stringResource(R.string.search_tab_tasks),
+            stringResource(R.string.search_tab_events),
+        )
 
     Scaffold(
         containerColor = SettingsDesignTokens.ScreenBg,
         topBar = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, top = 12.dp),
             ) {
                 // Header
                 Column(
@@ -144,19 +146,21 @@ fun SearchScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.main_tab_search),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 26.sp,
-                            color = Color(0xFF272936),
-                        ),
+                        style =
+                            MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 26.sp,
+                                color = Color(0xFF272936),
+                            ),
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = stringResource(R.string.search_subtitle),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
-                            color = Color(0xFF7C7D8B),
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 13.sp,
+                                color = Color(0xFF7C7D8B),
+                            ),
                     )
                 }
 
@@ -169,16 +173,18 @@ fun SearchScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .height(52.dp),
                         shape = RoundedCornerShape(16.dp),
                         color = Color.White,
                     ) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 14.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RememberMaterialRoundedSymbol(
@@ -200,24 +206,27 @@ fun SearchScreen(
                                     onValueChange = onQueryChange,
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                    keyboardActions = KeyboardActions(
-                                        onSearch = { onSubmitSearch(uiState.query) },
-                                    ),
+                                    keyboardActions =
+                                        KeyboardActions(
+                                            onSearch = { onSubmitSearch(uiState.query) },
+                                        ),
                                     modifier = Modifier.fillMaxWidth(),
-                                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                        color = Color(0xFF272936),
-                                        fontSize = 15.sp,
-                                    ),
+                                    textStyle =
+                                        MaterialTheme.typography.bodyLarge.copy(
+                                            color = Color(0xFF272936),
+                                            fontSize = 15.sp,
+                                        ),
                                 )
                             }
                             if (uiState.query.isNotEmpty()) {
                                 Surface(
                                     shape = CircleShape,
                                     color = Color.Transparent,
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                        .clickable { onQueryChange("") },
+                                    modifier =
+                                        Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .clickable { onQueryChange("") },
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         RememberMaterialRoundedSymbol(
@@ -236,10 +245,11 @@ fun SearchScreen(
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = Color.White,
-                            modifier = Modifier
-                                .size(52.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .clickable { showFilters = true },
+                            modifier =
+                                Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .clickable { showFilters = true },
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 RememberMaterialRoundedSymbol(
@@ -253,10 +263,11 @@ fun SearchScreen(
                             Surface(
                                 shape = CircleShape,
                                 color = Color(0xFF945394),
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(4.dp)
-                                    .size(18.dp),
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(18.dp),
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
@@ -281,28 +292,31 @@ fun SearchScreen(
                     itemsIndexed(categories) { index, title ->
                         val isSelected = uiState.filters.typeIndex == index
 
-                        val typeCount = when (index) {
-                            0 -> uiState.allResultsCount
-                            1 -> uiState.notesResultsCount
-                            2 -> uiState.tasksResultsCount
-                            3 -> uiState.eventsResultsCount
-                            else -> 0
-                        }
+                        val typeCount =
+                            when (index) {
+                                0 -> uiState.allResultsCount
+                                1 -> uiState.notesResultsCount
+                                2 -> uiState.tasksResultsCount
+                                3 -> uiState.eventsResultsCount
+                                else -> 0
+                            }
 
-                        val iconName = when (index) {
-                            1 -> "description"
-                            2 -> "checklist"
-                            3 -> "event"
-                            else -> null
-                        }
+                        val iconName =
+                            when (index) {
+                                1 -> "description"
+                                2 -> "checklist"
+                                3 -> "event"
+                                else -> null
+                            }
 
                         Surface(
                             shape = CircleShape,
                             color = if (isSelected) Color(0xFF945394) else Color.White,
                             border = if (isSelected) null else BorderStroke(1.dp, Color(0xFFE9E3EF)),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .clickable { onCategoryIndexChange(index) },
+                            modifier =
+                                Modifier
+                                    .clip(CircleShape)
+                                    .clickable { onCategoryIndexChange(index) },
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
@@ -319,19 +333,21 @@ fun SearchScreen(
                                 Text(
                                     text = title,
                                     color = if (isSelected) Color.White else Color(0xFF7C7D8B),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = 14.sp,
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            fontSize = 14.sp,
+                                        ),
                                 )
                                 if (uiState.query.isNotBlank()) {
                                     Text(
                                         text = typeCount.toString(),
                                         color = if (isSelected) Color.White.copy(alpha = 0.85f) else Color(0xFF945394),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                            ),
                                     )
                                 }
                             }
@@ -344,10 +360,11 @@ fun SearchScreen(
         },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 20.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 20.dp),
         ) {
             if (uiState.query.isEmpty()) {
                 // Initial State: Intro Card & Recent Searches
@@ -368,33 +385,36 @@ fun SearchScreen(
                             ) {
                                 Canvas(modifier = Modifier.size(24.dp)) {
                                     val purple = Color(0xFF945394)
-                                    val p = Path().apply {
-                                        moveTo(size.width * 0.5f, 0f)
-                                        cubicTo(size.width * 0.5f, size.height * 0.35f, size.width * 0.65f, size.height * 0.5f, size.width, size.height * 0.5f)
-                                        cubicTo(size.width * 0.65f, size.height * 0.5f, size.width * 0.5f, size.height * 0.65f, size.width * 0.5f, size.height)
-                                        cubicTo(size.width * 0.5f, size.height * 0.65f, size.width * 0.35f, size.height * 0.5f, 0f, size.height * 0.5f)
-                                        cubicTo(size.width * 0.35f, size.height * 0.5f, size.width * 0.5f, size.height * 0.35f, size.width * 0.5f, 0f)
-                                        close()
-                                    }
+                                    val p =
+                                        Path().apply {
+                                            moveTo(size.width * 0.5f, 0f)
+                                            cubicTo(size.width * 0.5f, size.height * 0.35f, size.width * 0.65f, size.height * 0.5f, size.width, size.height * 0.5f)
+                                            cubicTo(size.width * 0.65f, size.height * 0.5f, size.width * 0.5f, size.height * 0.65f, size.width * 0.5f, size.height)
+                                            cubicTo(size.width * 0.5f, size.height * 0.65f, size.width * 0.35f, size.height * 0.5f, 0f, size.height * 0.5f)
+                                            cubicTo(size.width * 0.35f, size.height * 0.5f, size.width * 0.5f, size.height * 0.35f, size.width * 0.5f, 0f)
+                                            close()
+                                        }
                                     drawPath(p, color = purple)
                                 }
                                 Spacer(modifier = Modifier.width(14.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = stringResource(R.string.search_intro_title),
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp,
-                                            color = Color(0xFF945394),
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp,
+                                                color = Color(0xFF945394),
+                                            ),
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = stringResource(R.string.search_intro_desc),
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontSize = 13.sp,
-                                            color = Color(0xFF7C7D8B),
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyMedium.copy(
+                                                fontSize = 13.sp,
+                                                color = Color(0xFF7C7D8B),
+                                            ),
                                     )
                                 }
                             }
@@ -404,27 +424,30 @@ fun SearchScreen(
                     item {
                         if (recentSearches.isNotEmpty()) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = stringResource(R.string.search_recent_searches_title),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp,
-                                        color = Color(0xFF272936),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp,
+                                            color = Color(0xFF272936),
+                                        ),
                                 )
                                 Text(
                                     text = stringResource(R.string.search_clear_all),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
-                                        color = Color(0xFF945394),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF945394),
+                                        ),
                                     modifier = Modifier.clickable { onClearRecentSearches() },
                                 )
                             }
@@ -439,12 +462,12 @@ fun SearchScreen(
                                 Column {
                                     recentSearches.forEachIndexed { index, entry ->
                                         Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    onSubmitSearch(entry.query)
-                                                }
-                                                .padding(horizontal = 18.dp, vertical = 14.dp),
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable {
+                                                        onSubmitSearch(entry.query)
+                                                    }.padding(horizontal = 18.dp, vertical = 14.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             RememberMaterialRoundedSymbol(
@@ -456,27 +479,30 @@ fun SearchScreen(
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = entry.query,
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        fontWeight = FontWeight.Medium,
-                                                        fontSize = 15.sp,
-                                                        color = Color(0xFF272936),
-                                                    ),
+                                                    style =
+                                                        MaterialTheme.typography.bodyLarge.copy(
+                                                            fontWeight = FontWeight.Medium,
+                                                            fontSize = 15.sp,
+                                                            color = Color(0xFF272936),
+                                                        ),
                                                 )
                                                 Text(
                                                     text = formatRecentSearchDate(entry.timestamp),
-                                                    style = MaterialTheme.typography.bodySmall.copy(
-                                                        fontSize = 12.sp,
-                                                        color = Color(0xFF7C7D8B),
-                                                    ),
+                                                    style =
+                                                        MaterialTheme.typography.bodySmall.copy(
+                                                            fontSize = 12.sp,
+                                                            color = Color(0xFF7C7D8B),
+                                                        ),
                                                 )
                                             }
                                             Surface(
                                                 shape = CircleShape,
                                                 color = Color.Transparent,
-                                                modifier = Modifier
-                                                    .size(28.dp)
-                                                    .clip(CircleShape)
-                                                    .clickable { onRemoveRecentSearch(entry.query) },
+                                                modifier =
+                                                    Modifier
+                                                        .size(28.dp)
+                                                        .clip(CircleShape)
+                                                        .clickable { onRemoveRecentSearch(entry.query) },
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     RememberMaterialRoundedSymbol(
@@ -501,10 +527,11 @@ fun SearchScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = stringResource(R.string.search_recent_searches_hint),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF7C7D8B),
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF7C7D8B),
+                                    ),
                             )
                         }
                     }
@@ -535,35 +562,39 @@ fun SearchScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = stringResource(R.string.search_empty_title),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = stringResource(R.string.search_empty_subtitle, uiState.query),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 14.sp,
-                                color = Color(0xFF7C7D8B),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF7C7D8B),
+                                ),
                             textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                         Surface(
                             shape = CircleShape,
                             color = Color(0xFF945394),
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .clickable { onQueryChange("") },
+                            modifier =
+                                Modifier
+                                    .clip(CircleShape)
+                                    .clickable { onQueryChange("") },
                         ) {
                             Text(
                                 text = stringResource(R.string.search_clear_button),
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                    ),
                                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                             )
                         }
@@ -571,58 +602,65 @@ fun SearchScreen(
                 }
             } else {
                 // Results State
-                val sorts = listOf(
-                    SearchSortMode.RELEVANCE to stringResource(R.string.search_sort_relevance),
-                    SearchSortMode.NEWEST to stringResource(R.string.search_sort_newest),
-                    SearchSortMode.OLDEST to stringResource(R.string.search_sort_oldest),
-                )
+                val sorts =
+                    listOf(
+                        SearchSortMode.RELEVANCE to stringResource(R.string.search_sort_relevance),
+                        SearchSortMode.NEWEST to stringResource(R.string.search_sort_newest),
+                        SearchSortMode.OLDEST to stringResource(R.string.search_sort_oldest),
+                    )
 
                 Column(modifier = Modifier.fillMaxSize()) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val resultsCount = uiState.searchResults.size
                         Text(
                             text = pluralStringResource(R.plurals.search_results_count, resultsCount, resultsCount),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
-                        val scopeText = when (uiState.filters.typeIndex) {
-                            1 -> stringResource(R.string.search_scope_in_notes)
-                            2 -> stringResource(R.string.search_scope_in_tasks)
-                            3 -> stringResource(R.string.search_scope_in_events)
-                            else -> stringResource(R.string.search_scope_across_all)
-                        }
+                        val scopeText =
+                            when (uiState.filters.typeIndex) {
+                                1 -> stringResource(R.string.search_scope_in_notes)
+                                2 -> stringResource(R.string.search_scope_in_tasks)
+                                3 -> stringResource(R.string.search_scope_in_events)
+                                else -> stringResource(R.string.search_scope_across_all)
+                            }
                         Text(
                             text = scopeText,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 13.sp,
-                                color = Color(0xFF7C7D8B),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF7C7D8B),
+                                ),
                         )
                     }
 
                     // Sort row
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
                             text = stringResource(R.string.search_sort_by),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 13.sp,
-                                color = Color(0xFF7C7D8B),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF7C7D8B),
+                                ),
                         )
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -633,18 +671,20 @@ fun SearchScreen(
                                     shape = CircleShape,
                                     color = if (isSelected) Color(0xFFF4EAF6) else Color.White,
                                     border = if (isSelected) null else BorderStroke(1.dp, Color(0xFFE9E3EF)),
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .clickable { onSortModeChange(mode) },
+                                    modifier =
+                                        Modifier
+                                            .clip(CircleShape)
+                                            .clickable { onSortModeChange(mode) },
                                 ) {
                                     Text(
                                         text = label,
                                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                         color = if (isSelected) Color(0xFF945394) else Color(0xFF89899C),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            fontSize = 13.sp,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                            ),
                                     )
                                 }
                             }
@@ -667,14 +707,16 @@ fun SearchScreen(
                             Spacer(Modifier.height(16.dp))
                             Text(
                                 text = stringResource(R.string.search_results_seen_all, uiState.searchResults.size),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 24.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 24.dp),
                                 textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF7C7D8B),
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF7C7D8B),
+                                    ),
                             )
                         }
                     }
@@ -718,26 +760,29 @@ fun SearchFiltersBottomSheet(
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             item {
                 Text(
                     text = stringResource(R.string.search_filter_title),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
-                        color = Color(0xFF272936),
-                    ),
+                    style =
+                        MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                            color = Color(0xFF272936),
+                        ),
                 )
                 Text(
                     text = stringResource(R.string.search_filter_subtitle),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 13.sp,
-                        color = Color(0xFF7C7D8B),
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            color = Color(0xFF7C7D8B),
+                        ),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -754,10 +799,11 @@ fun SearchFiltersBottomSheet(
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = searchQuery,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 15.sp,
-                                color = Color(0xFF7C7D8B),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 15.sp,
+                                    color = Color(0xFF7C7D8B),
+                                ),
                             modifier = Modifier.weight(1f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -770,10 +816,11 @@ fun SearchFiltersBottomSheet(
                                 Text(
                                     text = stringResource(R.string.search_filter_active_count, draftFilters.activeCount),
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF945394),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF945394),
+                                        ),
                                 )
                             }
                         }
@@ -792,11 +839,12 @@ fun SearchFiltersBottomSheet(
                         // 1. Type
                         Text(
                             text = stringResource(R.string.search_filter_type),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -807,12 +855,13 @@ fun SearchFiltersBottomSheet(
                                     onClick = { draftFilters = draftFilters.copy(typeIndex = idx) },
                                     label = { Text(type) },
                                     border = if (selected) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = false, borderColor = Color.Transparent),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = Color(0xFFF5F5F8),
-                                        labelColor = Color(0xFF89899C),
-                                        selectedContainerColor = Color(0xFFF4EAF6),
-                                        selectedLabelColor = Color(0xFF945394),
-                                    ),
+                                    colors =
+                                        FilterChipDefaults.filterChipColors(
+                                            containerColor = Color(0xFFF5F5F8),
+                                            labelColor = Color(0xFF89899C),
+                                            selectedContainerColor = Color(0xFFF4EAF6),
+                                            selectedLabelColor = Color(0xFF945394),
+                                        ),
                                     shape = RoundedCornerShape(100.dp),
                                 )
                             }
@@ -823,18 +872,20 @@ fun SearchFiltersBottomSheet(
                         // 2. Date range
                         Text(
                             text = stringResource(R.string.search_filter_date_range),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        val ranges = listOf(
-                            stringResource(R.string.search_filter_range_any),
-                            stringResource(R.string.search_filter_range_this_month),
-                            stringResource(R.string.search_filter_range_custom),
-                        )
+                        val ranges =
+                            listOf(
+                                stringResource(R.string.search_filter_range_any),
+                                stringResource(R.string.search_filter_range_this_month),
+                                stringResource(R.string.search_filter_range_custom),
+                            )
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             itemsIndexed(ranges) { idx, range ->
                                 val selected = draftFilters.dateRangeIndex == idx
@@ -843,12 +894,13 @@ fun SearchFiltersBottomSheet(
                                     onClick = { draftFilters = draftFilters.copy(dateRangeIndex = idx) },
                                     label = { Text(range) },
                                     border = if (selected) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = false, borderColor = Color.Transparent),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = Color(0xFFF5F5F8),
-                                        labelColor = Color(0xFF89899C),
-                                        selectedContainerColor = Color(0xFFF4EAF6),
-                                        selectedLabelColor = Color(0xFF945394),
-                                    ),
+                                    colors =
+                                        FilterChipDefaults.filterChipColors(
+                                            containerColor = Color(0xFFF5F5F8),
+                                            labelColor = Color(0xFF89899C),
+                                            selectedContainerColor = Color(0xFFF4EAF6),
+                                            selectedLabelColor = Color(0xFF945394),
+                                        ),
                                     shape = RoundedCornerShape(100.dp),
                                 )
                             }
@@ -863,10 +915,11 @@ fun SearchFiltersBottomSheet(
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = Color(0xFFF5F5F8),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp)
-                                        .clickable { showStartDatePicker = true },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .height(48.dp)
+                                            .clickable { showStartDatePicker = true },
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -874,11 +927,12 @@ fun SearchFiltersBottomSheet(
                                     ) {
                                         RememberMaterialRoundedSymbol(name = "calendar_month", size = 18.dp, tint = Color(0xFF7C7D8B))
                                         Spacer(Modifier.width(8.dp))
-                                        val startDateText = if (draftFilters.customStartDate != null) {
-                                            SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(draftFilters.customStartDate!!))
-                                        } else {
-                                            stringResource(R.string.search_filter_start_date)
-                                        }
+                                        val startDateText =
+                                            if (draftFilters.customStartDate != null) {
+                                                SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(draftFilters.customStartDate!!))
+                                            } else {
+                                                stringResource(R.string.search_filter_start_date)
+                                            }
                                         Text(
                                             text = startDateText,
                                             style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF272936)),
@@ -889,10 +943,11 @@ fun SearchFiltersBottomSheet(
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = Color(0xFFF5F5F8),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp)
-                                        .clickable { showEndDatePicker = true },
+                                    modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .height(48.dp)
+                                            .clickable { showEndDatePicker = true },
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -900,11 +955,12 @@ fun SearchFiltersBottomSheet(
                                     ) {
                                         RememberMaterialRoundedSymbol(name = "calendar_month", size = 18.dp, tint = Color(0xFF7C7D8B))
                                         Spacer(Modifier.width(8.dp))
-                                        val endDateText = if (draftFilters.customEndDate != null) {
-                                            SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(draftFilters.customEndDate!!))
-                                        } else {
-                                            stringResource(R.string.search_filter_end_date)
-                                        }
+                                        val endDateText =
+                                            if (draftFilters.customEndDate != null) {
+                                                SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(draftFilters.customEndDate!!))
+                                            } else {
+                                                stringResource(R.string.search_filter_end_date)
+                                            }
                                         Text(
                                             text = endDateText,
                                             style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF272936)),
@@ -924,18 +980,20 @@ fun SearchFiltersBottomSheet(
                         // 3. Task status
                         Text(
                             text = stringResource(R.string.search_filter_task_status),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        val statuses = listOf(
-                            stringResource(R.string.search_filter_status_any),
-                            stringResource(R.string.search_filter_status_todo),
-                            stringResource(R.string.search_filter_status_completed),
-                        )
+                        val statuses =
+                            listOf(
+                                stringResource(R.string.search_filter_status_any),
+                                stringResource(R.string.search_filter_status_todo),
+                                stringResource(R.string.search_filter_status_completed),
+                            )
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             itemsIndexed(statuses) { idx, status ->
                                 val selected = draftFilters.taskStatusIndex == idx
@@ -944,12 +1002,13 @@ fun SearchFiltersBottomSheet(
                                     onClick = { draftFilters = draftFilters.copy(taskStatusIndex = idx) },
                                     label = { Text(status) },
                                     border = if (selected) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = false, borderColor = Color.Transparent),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = Color(0xFFF5F5F8),
-                                        labelColor = Color(0xFF89899C),
-                                        selectedContainerColor = Color(0xFFF4EAF6),
-                                        selectedLabelColor = Color(0xFF945394),
-                                    ),
+                                    colors =
+                                        FilterChipDefaults.filterChipColors(
+                                            containerColor = Color(0xFFF5F5F8),
+                                            labelColor = Color(0xFF89899C),
+                                            selectedContainerColor = Color(0xFFF4EAF6),
+                                            selectedLabelColor = Color(0xFF945394),
+                                        ),
                                     shape = RoundedCornerShape(100.dp),
                                 )
                             }
@@ -960,11 +1019,12 @@ fun SearchFiltersBottomSheet(
                         // 4. Shoulders
                         Text(
                             text = stringResource(R.string.search_filter_shoulders),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color(0xFF272936),
-                            ),
+                            style =
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF272936),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         var shoulderDropdownExpanded by remember { mutableStateOf(false) }
@@ -972,10 +1032,11 @@ fun SearchFiltersBottomSheet(
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = Color(0xFFF5F5F8),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                                    .clickable { shoulderDropdownExpanded = true },
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                        .clickable { shoulderDropdownExpanded = true },
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 14.dp),
@@ -1009,10 +1070,11 @@ fun SearchFiltersBottomSheet(
                                                 if (!shoulder.colorHex.isNullOrBlank()) {
                                                     val color = runCatching { Color(android.graphics.Color.parseColor(shoulder.colorHex)) }.getOrDefault(Color(0xFF945394))
                                                     Box(
-                                                        modifier = Modifier
-                                                            .size(10.dp)
-                                                            .clip(CircleShape)
-                                                            .background(color)
+                                                        modifier =
+                                                            Modifier
+                                                                .size(10.dp)
+                                                                .clip(CircleShape)
+                                                                .background(color),
                                                     )
                                                     Spacer(Modifier.width(8.dp))
                                                 }
@@ -1044,18 +1106,20 @@ fun SearchFiltersBottomSheet(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stringResource(R.string.search_filter_include_archived),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = Color(0xFF272936),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = Color(0xFF272936),
+                                        ),
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                val archiveHint = if (draftFilters.includeArchived) {
-                                    stringResource(R.string.search_filter_archived_shown_hint)
-                                } else {
-                                    stringResource(R.string.search_filter_archived_hidden_hint)
-                                }
+                                val archiveHint =
+                                    if (draftFilters.includeArchived) {
+                                        stringResource(R.string.search_filter_archived_shown_hint)
+                                    } else {
+                                        stringResource(R.string.search_filter_archived_hidden_hint)
+                                    }
                                 Text(
                                     text = archiveHint,
                                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = Color(0xFF89899C)),
@@ -1064,13 +1128,14 @@ fun SearchFiltersBottomSheet(
                             Switch(
                                 checked = draftFilters.includeArchived,
                                 onCheckedChange = { draftFilters = draftFilters.copy(includeArchived = it) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFF945394),
-                                    uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = Color(0xFFDDDDE5),
-                                    uncheckedBorderColor = Color.Transparent,
-                                ),
+                                colors =
+                                    SwitchDefaults.colors(
+                                        checkedThumbColor = Color.White,
+                                        checkedTrackColor = Color(0xFF945394),
+                                        uncheckedThumbColor = Color.White,
+                                        uncheckedTrackColor = Color(0xFFDDDDE5),
+                                        uncheckedBorderColor = Color.Transparent,
+                                    ),
                             )
                         }
                     }
@@ -1089,34 +1154,38 @@ fun SearchFiltersBottomSheet(
                     ) {
                         Text(
                             text = stringResource(R.string.search_filter_reset),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF945394),
-                                fontSize = 16.sp,
-                            ),
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF945394),
+                                    fontSize = 16.sp,
+                                ),
                         )
                     }
                     Surface(
                         shape = RoundedCornerShape(100.dp),
                         color = Color(0xFF945394),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(100.dp))
-                            .clickable {
-                                onApply(draftFilters)
-                            },
+                        modifier =
+                            Modifier
+                                .clip(RoundedCornerShape(100.dp))
+                                .clickable {
+                                    onApply(draftFilters)
+                                },
                     ) {
-                        val applyText = if (draftFilters.activeCount > 0) {
-                            stringResource(R.string.search_filter_apply_with_count, draftFilters.activeCount)
-                        } else {
-                            stringResource(R.string.search_filter_apply)
-                        }
+                        val applyText =
+                            if (draftFilters.activeCount > 0) {
+                                stringResource(R.string.search_filter_apply_with_count, draftFilters.activeCount)
+                            } else {
+                                stringResource(R.string.search_filter_apply)
+                            }
                         Text(
                             text = applyText,
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontSize = 16.sp,
-                            ),
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                ),
                             modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
                         )
                     }
@@ -1126,9 +1195,10 @@ fun SearchFiltersBottomSheet(
     }
 
     if (showStartDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = draftFilters.customStartDate ?: System.currentTimeMillis()
-        )
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = draftFilters.customStartDate ?: System.currentTimeMillis(),
+            )
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
@@ -1138,7 +1208,7 @@ fun SearchFiltersBottomSheet(
                             draftFilters = draftFilters.copy(customStartDate = millis)
                         }
                         showStartDatePicker = false
-                    }
+                    },
                 ) {
                     Text("OK", color = Color(0xFF945394), fontWeight = FontWeight.Bold)
                 }
@@ -1147,16 +1217,17 @@ fun SearchFiltersBottomSheet(
                 TextButton(onClick = { showStartDatePicker = false }) {
                     Text("Cancel", color = Color(0xFF7C7D8B))
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
     }
 
     if (showEndDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = draftFilters.customEndDate ?: System.currentTimeMillis()
-        )
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = draftFilters.customEndDate ?: System.currentTimeMillis(),
+            )
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
@@ -1166,7 +1237,7 @@ fun SearchFiltersBottomSheet(
                             draftFilters = draftFilters.copy(customEndDate = millis)
                         }
                         showEndDatePicker = false
-                    }
+                    },
                 ) {
                     Text("OK", color = Color(0xFF945394), fontWeight = FontWeight.Bold)
                 }
@@ -1175,7 +1246,7 @@ fun SearchFiltersBottomSheet(
                 TextButton(onClick = { showEndDatePicker = false }) {
                     Text("Cancel", color = Color(0xFF7C7D8B))
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -1191,29 +1262,32 @@ fun SearchResultCard(
     val isEvent = SearchViewModel.isEvent(result)
     val isTask = SearchViewModel.isTask(result)
 
-    val iconName = when {
-        isEvent -> "event"
-        isTask -> "checklist"
-        else -> "description"
-    }
+    val iconName =
+        when {
+            isEvent -> "event"
+            isTask -> "checklist"
+            else -> "description"
+        }
 
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = Color.White,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top,
         ) {
             Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF4EAF6)),
+                modifier =
+                    Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF4EAF6)),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -1228,11 +1302,12 @@ fun SearchResultCard(
                 val titleText = result.note.title.ifBlank { "Untitled" }
                 Text(
                     text = buildHighlightedString(titleText, searchQuery),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF272936),
-                    ),
+                    style =
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF272936),
+                        ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1253,11 +1328,12 @@ fun SearchResultCard(
                             )
                             Text(
                                 text = formatEventDateTime(eventTimestamp),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF945394),
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF945394),
+                                    ),
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
@@ -1268,10 +1344,11 @@ fun SearchResultCard(
                             text = buildHighlightedString(bodySnippet, searchQuery),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 13.sp,
-                                color = Color(0xFF7C7D8B),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF7C7D8B),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                     }
@@ -1284,16 +1361,18 @@ fun SearchResultCard(
                                 val checkPrefix = if (item.checked) "☑ " else "☐ "
                                 val itemAnnotated = buildHighlightedString(item.text, searchQuery)
                                 Text(
-                                    text = buildAnnotatedString {
-                                        append(checkPrefix)
-                                        append(itemAnnotated)
-                                    },
+                                    text =
+                                        buildAnnotatedString {
+                                            append(checkPrefix)
+                                            append(itemAnnotated)
+                                        },
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = 13.sp,
-                                        color = if (item.checked) Color(0xFF89899C) else Color(0xFF272936),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 13.sp,
+                                            color = if (item.checked) Color(0xFF89899C) else Color(0xFF272936),
+                                        ),
                                 )
                             }
                         }
@@ -1306,10 +1385,11 @@ fun SearchResultCard(
                             text = buildHighlightedString(bodySnippet, searchQuery),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 13.sp,
-                                color = Color(0xFF7C7D8B),
-                            ),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 13.sp,
+                                    color = Color(0xFF7C7D8B),
+                                ),
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                     }
@@ -1321,29 +1401,31 @@ fun SearchResultCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    val dateText = remember(result.note.updatedAt, result.note.reminderAt) {
-                        when {
-                            isEvent -> {
-                                val t = SearchViewModel.getEntityTimestamp(result)
-                                if (t != null) "Event · " + formatSimpleDate(t) else "Event"
-                            }
-                            isTask -> {
-                                if (result.note.reminderAt != null) {
-                                    "Task · Due " + formatSimpleDate(result.note.reminderAt)
-                                } else {
-                                    "Task · Updated " + formatSimpleDate(result.note.updatedAt)
+                    val dateText =
+                        remember(result.note.updatedAt, result.note.reminderAt) {
+                            when {
+                                isEvent -> {
+                                    val t = SearchViewModel.getEntityTimestamp(result)
+                                    if (t != null) "Event · " + formatSimpleDate(t) else "Event"
                                 }
+                                isTask -> {
+                                    if (result.note.reminderAt != null) {
+                                        "Task · Due " + formatSimpleDate(result.note.reminderAt)
+                                    } else {
+                                        "Task · Updated " + formatSimpleDate(result.note.updatedAt)
+                                    }
+                                }
+                                else -> "Note · Updated " + formatSimpleDate(result.note.updatedAt)
                             }
-                            else -> "Note · Updated " + formatSimpleDate(result.note.updatedAt)
                         }
-                    }
 
                     Text(
                         text = dateText,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 12.sp,
-                            color = Color(0xFF7C7D8B),
-                        ),
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.sp,
+                                color = Color(0xFF7C7D8B),
+                            ),
                     )
 
                     // Shoulder chip
@@ -1360,19 +1442,21 @@ fun SearchResultCard(
                                 if (!result.shoulder.colorHex.isNullOrBlank()) {
                                     val sColor = runCatching { Color(android.graphics.Color.parseColor(result.shoulder.colorHex)) }.getOrDefault(Color(0xFF945394))
                                     Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(CircleShape)
-                                            .background(sColor)
+                                        modifier =
+                                            Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(sColor),
                                     )
                                 }
                                 Text(
                                     text = result.shoulder.name,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF272936),
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF272936),
+                                        ),
                                 )
                             }
                         }
@@ -1387,11 +1471,12 @@ fun SearchResultCard(
                             Text(
                                 text = "Archived",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFB76E00),
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFB76E00),
+                                    ),
                             )
                         }
                     }
@@ -1435,7 +1520,7 @@ fun buildHighlightedString(
                     fontWeight = FontWeight.Bold,
                     color = highlightColor,
                     background = highlightBg,
-                )
+                ),
             )
             append(text.substring(matchIndex, matchEnd))
             pop()
@@ -1445,7 +1530,11 @@ fun buildHighlightedString(
     }
 }
 
-fun buildSnippetAroundMatch(text: String, query: String, maxChars: Int = 110): String {
+fun buildSnippetAroundMatch(
+    text: String,
+    query: String,
+    maxChars: Int = 110,
+): String {
     val clean = text.replace("\n", " ").trim()
     if (clean.isBlank()) return ""
     val trimmedQuery = query.trim()
@@ -1469,8 +1558,9 @@ fun buildSnippetAroundMatch(text: String, query: String, maxChars: Int = 110): S
 private fun formatEventDateTime(reminderAt: Long): String {
     val eventCal = Calendar.getInstance().apply { timeInMillis = reminderAt }
     val nowCal = Calendar.getInstance()
-    val isToday = eventCal.get(Calendar.YEAR) == nowCal.get(Calendar.YEAR) &&
-        eventCal.get(Calendar.DAY_OF_YEAR) == nowCal.get(Calendar.DAY_OF_YEAR)
+    val isToday =
+        eventCal.get(Calendar.YEAR) == nowCal.get(Calendar.YEAR) &&
+            eventCal.get(Calendar.DAY_OF_YEAR) == nowCal.get(Calendar.DAY_OF_YEAR)
 
     val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
     val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
@@ -1483,9 +1573,7 @@ private fun formatEventDateTime(reminderAt: Long): String {
     }
 }
 
-private fun formatSimpleDate(timestamp: Long): String {
-    return SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
-}
+private fun formatSimpleDate(timestamp: Long): String = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(timestamp))
 
 private fun formatRecentSearchDate(timestamp: Long): String {
     val now = System.currentTimeMillis()

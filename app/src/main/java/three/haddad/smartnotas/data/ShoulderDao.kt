@@ -21,7 +21,7 @@ interface ShoulderDao {
 
     @Query("SELECT * FROM shoulders WHERE id = :id")
     suspend fun getShoulderById(id: Long): ShoulderEntity?
-    
+
     @Query("SELECT * FROM shoulders WHERE normalizedName = :normalizedName LIMIT 1")
     suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity?
 
@@ -38,5 +38,8 @@ interface ShoulderDao {
     suspend fun deleteShoulder(shoulder: ShoulderEntity)
 
     @Query("UPDATE notes SET shoulderId = :shoulderId WHERE id = :noteId")
-    suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?)
+    suspend fun setShoulderForNote(
+        noteId: Long,
+        shoulderId: Long?,
+    )
 }
