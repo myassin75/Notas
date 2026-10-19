@@ -555,7 +555,6 @@ fun ReminderPickerSheet(
 
     val controlsEnabled = notificationsGranted
     var dateDialogOpen by rememberSaveable { mutableStateOf(false) }
-    var timePickerOpen by rememberSaveable { mutableStateOf(false) }
     var endDateDialogOpen by rememberSaveable { mutableStateOf(false) }
 
     AppBottomSheet(
@@ -726,34 +725,20 @@ fun ReminderPickerSheet(
                                         PillRow(
                                             materialSymbolName = "calendar_month",
                                             label =
-                                                if (draft.reminderDateExplicit) {
+                                                if (draft.reminderDateExplicit && draft.reminderTimeExplicit) {
+                                                    "${formatDate(draft.selectedDate)}, ${formatReminderTimePill(draft.reminderHour, draft.reminderMinute)}"
+                                                } else if (draft.reminderDateExplicit) {
                                                     formatDate(draft.selectedDate)
+                                                } else if (draft.reminderTimeExplicit) {
+                                                    formatReminderTimePill(draft.reminderHour, draft.reminderMinute)
                                                 } else {
                                                     stringResource(R.string.reminder_pick_date)
                                                 },
-                                            hasValue = draft.reminderDateExplicit,
+                                            hasValue = draft.reminderDateExplicit || draft.reminderTimeExplicit,
                                             enabled = controlsEnabled,
                                             onClick = {
                                                 dateDialogOpen = true
                                             },
-                                        )
-
-                                        Spacer(Modifier.height(8.dp))
-
-                                        PillRow(
-                                            materialSymbolName = "schedule",
-                                            label =
-                                                if (draft.reminderTimeExplicit) {
-                                                    formatReminderTimePill(draft.reminderHour, draft.reminderMinute)
-                                                } else {
-                                                    stringResource(R.string.reminder_pick_time)
-                                                },
-                                            hasValue = draft.reminderTimeExplicit,
-                                            enabled = controlsEnabled,
-                                            onClick = {
-                                                timePickerOpen = true
-                                            },
-                                            onClear = null,
                                         )
 
                                         if (draft.snoozedUntil != null) {
@@ -1076,14 +1061,27 @@ fun ReminderPickerSheet(
 
     if (dateDialogOpen && expandedIndex in drafts.indices) {
         val currentDraft = drafts[expandedIndex]
-        CalendarPickerDialog(
-            initial = currentDraft.selectedDate,
-            onConfirm = { dateMillis ->
+        SetDateBottomSheet(
+            initialDateMillis = currentDraft.selectedDate,
+            initialHour = currentDraft.reminderHour,
+            initialMinute = currentDraft.reminderMinute,
+            initialEndDateMillis = currentDraft.endDate,
+            initialIsEvent = currentDraft.endDate != null,
+            onDismiss = { dateDialogOpen = false },
+            onSave = { dateMillis, hour, minute, isEvent, endDateMillis, _, _ ->
                 drafts =
                     drafts.mapIndexed { idx, d ->
                         if (idx == expandedIndex) {
                             d
-                                .copy(selectedDate = dateMillis, reminderDateExplicit = true)
+                                .copy(
+                                    selectedDate = dateMillis,
+                                    reminderDateExplicit = true,
+                                    reminderHour = hour,
+                                    reminderMinute = minute,
+                                    reminderTimeExplicit = true,
+                                    endDate = if (isEvent) endDateMillis else null,
+                                    endKind = if (isEvent && endDateMillis != null) RecurrenceEndKind.ON_DATE else d.endKind,
+                                )
                                 .withRepeatAnchorsOn(dateMillis)
                         } else {
                             d
@@ -1091,7 +1089,6 @@ fun ReminderPickerSheet(
                     }
                 dateDialogOpen = false
             },
-            onDismiss = { dateDialogOpen = false },
         )
     }
 
@@ -1107,22 +1104,6 @@ fun ReminderPickerSheet(
                 endDateDialogOpen = false
             },
             onDismiss = { endDateDialogOpen = false },
-        )
-    }
-
-    if (timePickerOpen && expandedIndex in drafts.indices) {
-        val currentDraft = drafts[expandedIndex]
-        ReminderTimePickerDialog(
-            initialHour = currentDraft.reminderHour,
-            initialMinute = currentDraft.reminderMinute,
-            onDismiss = { timePickerOpen = false },
-            onConfirm = { pickedHour, pickedMinute ->
-                drafts =
-                    drafts.mapIndexed { idx, d ->
-                        if (idx == expandedIndex) d.copy(reminderHour = pickedHour, reminderMinute = pickedMinute, reminderTimeExplicit = true) else d
-                    }
-                timePickerOpen = false
-            },
         )
     }
     if (showUnsavedDialog) {
