@@ -1,9 +1,12 @@
 package three.haddad.smartnotas.ui.calendar
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -33,15 +36,18 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.ui.theme.LocalIsDark
+import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -193,6 +199,13 @@ fun CalendarRoute(
 
                 CalendarViewMode.WEEK -> {
                     // ==================== WEEK VIEW ====================
+                    val reducedMotion = LocalReducedMotion.current
+                    val weekAnimationState =
+                        CalendarWeekViewState(
+                            weekStart = uiState.currentWeekStart,
+                            weekDays = uiState.weekDays,
+                        )
+
                     Column(modifier = Modifier.fillMaxWidth()) {
                         // 2. Week Navigation Header (< Today >) inside week view card
                         Surface(
@@ -221,10 +234,41 @@ fun CalendarRoute(
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 // 7-day compact selector row with tall selected pill
-                                WeekDaySelectorRow(
-                                    weekDays = uiState.weekDays,
-                                    onDateSelected = viewModel::onDateSelected,
-                                )
+                                AnimatedContent(
+                                    targetState = weekAnimationState,
+                                    contentKey = { it.weekStart },
+                                    transitionSpec = {
+                                        if (reducedMotion) {
+                                            fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                                        } else {
+                                            val direction = if (targetState.weekStart.isAfter(initialState.weekStart)) 1 else -1
+                                            val slideDistanceFactor = 0.35f
+                                            val enterSpec = tween<Float>(durationMillis = 260, easing = FastOutSlowInEasing)
+                                            val enterSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+                                            val exitSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+                                            val exitSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+
+                                            (
+                                                slideInHorizontally(
+                                                    animationSpec = enterSlideSpec,
+                                                    initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
+                                                ) + fadeIn(animationSpec = enterSpec)
+                                            ).togetherWith(
+                                                slideOutHorizontally(
+                                                    animationSpec = exitSlideSpec,
+                                                    targetOffsetX = { fullWidth -> (-direction * fullWidth * slideDistanceFactor).toInt() },
+                                                ) + fadeOut(animationSpec = exitSpec)
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier.clipToBounds(),
+                                    label = "WeekDaySelectorRowAnimation",
+                                ) { state ->
+                                    WeekDaySelectorRow(
+                                        weekDays = state.weekDays,
+                                        onDateSelected = viewModel::onDateSelected,
+                                    )
+                                }
                             }
                         }
 
@@ -247,11 +291,42 @@ fun CalendarRoute(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         // 4. Week Agenda Card grouped by day
-                        WeekAgendaCard(
-                            weekDays = uiState.weekDays,
-                            onDateSelected = viewModel::onDateSelected,
-                            onOpenItemDetails = onOpenItemDetails,
-                        )
+                        AnimatedContent(
+                            targetState = weekAnimationState,
+                            contentKey = { it.weekStart },
+                            transitionSpec = {
+                                if (reducedMotion) {
+                                    fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                                } else {
+                                    val direction = if (targetState.weekStart.isAfter(initialState.weekStart)) 1 else -1
+                                    val slideDistanceFactor = 0.35f
+                                    val enterSpec = tween<Float>(durationMillis = 260, easing = FastOutSlowInEasing)
+                                    val enterSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+                                    val exitSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+                                    val exitSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+
+                                    (
+                                        slideInHorizontally(
+                                            animationSpec = enterSlideSpec,
+                                            initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
+                                        ) + fadeIn(animationSpec = enterSpec)
+                                    ).togetherWith(
+                                        slideOutHorizontally(
+                                            animationSpec = exitSlideSpec,
+                                            targetOffsetX = { fullWidth -> (-direction * fullWidth * slideDistanceFactor).toInt() },
+                                        ) + fadeOut(animationSpec = exitSpec)
+                                    )
+                                }
+                            },
+                            modifier = Modifier.clipToBounds(),
+                            label = "WeekAgendaCardAnimation",
+                        ) { state ->
+                            WeekAgendaCard(
+                                weekDays = state.weekDays,
+                                onDateSelected = viewModel::onDateSelected,
+                                onOpenItemDetails = onOpenItemDetails,
+                            )
+                        }
                     }
                 }
 

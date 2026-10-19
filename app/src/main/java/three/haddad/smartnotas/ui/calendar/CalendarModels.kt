@@ -68,6 +68,14 @@ data class CalendarWeekDayUiModel(
 )
 
 /**
+ * State holder for week navigation transitions.
+ */
+data class CalendarWeekViewState(
+    val weekStart: LocalDate,
+    val weekDays: List<CalendarWeekDayUiModel>,
+)
+
+/**
  * UI model representing an event or task card in the agenda or day timeline.
  */
 data class CalendarEventUiModel(

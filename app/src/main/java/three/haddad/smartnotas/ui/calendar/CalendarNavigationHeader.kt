@@ -1,5 +1,11 @@
 package three.haddad.smartnotas.ui.calendar
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -139,27 +145,36 @@ fun CalendarNavigationHeader(
             }
 
             // Title and optional subtitle (Date positioned directly between the two arrows)
-            Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 6.dp),
-            ) {
-                Text(
-                    text = annotatedTitle,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                if (!subtitle.isNullOrBlank()) {
+            AnimatedContent(
+                targetState = annotatedTitle to subtitle,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) togetherWith
+                        fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing))
+                },
+                label = "CalendarHeaderTitleAnimation",
+            ) { (currentAnnotatedTitle, currentSubtitle) ->
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                ) {
                     Text(
-                        text = subtitle,
+                        text = currentAnnotatedTitle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.sp,
-                                color = textSecondary,
-                            ),
+                        style = MaterialTheme.typography.titleMedium,
                     )
+                    if (!currentSubtitle.isNullOrBlank()) {
+                        Text(
+                            text = currentSubtitle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 12.sp,
+                                    color = textSecondary,
+                                ),
+                        )
+                    }
                 }
             }
 
