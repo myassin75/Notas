@@ -105,41 +105,15 @@ fun CalendarNavigationHeader(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Left: Title and optional subtitle
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = annotatedTitle,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            if (!subtitle.isNullOrBlank()) {
-                Text(
-                    text = subtitle,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style =
-                        MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 12.sp,
-                            color = textSecondary,
-                        ),
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Right: Navigation cluster (< Today >)
+        // Date navigation cluster with date between the two arrows (< Date >)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.weight(1f, fill = false),
         ) {
             // Previous Button (<) with 40dp touch target
             Box(
@@ -164,32 +138,28 @@ fun CalendarNavigationHeader(
                 }
             }
 
-            // Today Pill Button
-            if (showTodayButton) {
-                Surface(
-                    onClick = onToday,
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
-                    modifier =
-                        Modifier
-                            .height(32.dp)
-                            .defaultMinSize(minWidth = 48.dp),
-                ) {
-                    Box(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.calendar_today),
-                            maxLines = 1,
-                            style =
-                                MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.5.sp,
-                                    color = CalendarDesignTokens.PrimaryPurple,
-                                ),
-                        )
-                    }
+            // Title and optional subtitle (Date positioned directly between the two arrows)
+            Column(
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(horizontal = 6.dp),
+            ) {
+                Text(
+                    text = annotatedTitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.sp,
+                                color = textSecondary,
+                            ),
+                    )
                 }
             }
 
@@ -212,6 +182,35 @@ fun CalendarNavigationHeader(
                             tint = textPrimary,
                         )
                     }
+                }
+            }
+        }
+
+        // Right: Today Pill Button
+        if (showTodayButton) {
+            Surface(
+                onClick = onToday,
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
+                modifier =
+                    Modifier
+                        .height(32.dp)
+                        .defaultMinSize(minWidth = 48.dp),
+            ) {
+                Box(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.calendar_today),
+                        maxLines = 1,
+                        style =
+                            MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.5.sp,
+                                color = CalendarDesignTokens.PrimaryPurple,
+                            ),
+                    )
                 }
             }
         }

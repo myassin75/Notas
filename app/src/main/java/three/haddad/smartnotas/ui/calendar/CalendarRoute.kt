@@ -68,24 +68,15 @@ fun CalendarRoute(
     val isTodaySelected = uiState.selectedDate == uiState.today
 
     val dayHeaderTitle =
-        if (isTodaySelected) {
-            stringResource(R.string.calendar_today)
-        } else {
-            remember(uiState.selectedDate) {
-                val formatter = DateTimeFormatter.ofPattern("MMMM d", Locale.getDefault())
-                uiState.selectedDate.format(formatter)
-            }
+        remember(uiState.selectedDate) {
+            val formatter = DateTimeFormatter.ofPattern("MMMM d", Locale.getDefault())
+            uiState.selectedDate.format(formatter)
         }
 
     val dayHeaderSubtitle =
-        remember(uiState.selectedDate, isTodaySelected) {
-            if (isTodaySelected) {
-                val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
-                uiState.selectedDate.format(formatter)
-            } else {
-                val formatter = DateTimeFormatter.ofPattern("EEEE · yyyy", Locale.getDefault())
-                uiState.selectedDate.format(formatter)
-            }
+        remember(uiState.selectedDate) {
+            val formatter = DateTimeFormatter.ofPattern("EEEE · yyyy", Locale.getDefault())
+            uiState.selectedDate.format(formatter)
         }
 
     val dayAgendaDatePrefix =
