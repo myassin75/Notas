@@ -56,7 +56,7 @@ import three.haddad.smartnotas.ui.components.RememberConfirmDialog
 import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
 import android.graphics.Color as AndroidColor
 
-private val DEFAULT_SHOULDER_COLOR = SettingsDesignTokens.PrimaryPurple
+private val DEFAULT_SHOULDER_COLOR = SettingsDesignTokens.StaticPrimary
 
 @Composable
 fun ShoulderPickerSheet(

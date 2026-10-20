@@ -78,8 +78,8 @@ internal fun ActiveFilterChips(
             val allSelected = filter.shoulderId == null
             Surface(
                 shape = CircleShape,
-                color = if (allSelected) Color(0xFFF4EAF6) else Color.Transparent,
-                border = if (allSelected) null else BorderStroke(1.dp, Color(0xFFE9E3EF)),
+                color = if (allSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                border = if (allSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 modifier =
                     Modifier
                         .clip(CircleShape)
@@ -96,7 +96,7 @@ internal fun ActiveFilterChips(
                             MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Medium,
                                 fontSize = 14.sp,
-                                color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
+                                color = if (allSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
                     )
                     if (totalActiveCount > 0) {
@@ -106,7 +106,7 @@ internal fun ActiveFilterChips(
                                 MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 13.sp,
-                                    color = if (allSelected) Color(0xFF98549C) else Color(0xFF89899C),
+                                    color = if (allSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                 ),
                         )
                     }
@@ -116,10 +116,10 @@ internal fun ActiveFilterChips(
             // Shoulder Chips
             activeShoulders.forEach { shoulder ->
                 val selected = filter.shoulderId == shoulder.id
-                val shoulderColor = parseColorHex(shoulder.colorHex, Color(0xFF2454E8))
+                val shoulderColor = parseColorHex(shoulder.colorHex, MaterialTheme.colorScheme.primary)
                 val chipBg = if (selected) shoulderColor.copy(alpha = 0.15f) else Color.Transparent
-                val chipBorderColor = if (selected) shoulderColor.copy(alpha = 0.4f) else Color(0xFFE9E3EF)
-                val chipTextColor = if (selected) shoulderColor else Color(0xFF32313F)
+                val chipBorderColor = if (selected) shoulderColor.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outlineVariant
+                val chipTextColor = if (selected) shoulderColor else MaterialTheme.colorScheme.onSurface
 
                 Surface(
                     shape = CircleShape,
@@ -161,7 +161,7 @@ internal fun ActiveFilterChips(
                 RememberMaterialRoundedSymbol(
                     name = "tune",
                     size = 20.dp,
-                    tint = Color(0xFF89899C),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     weight = FontWeight.Normal,
                     filled = false,
                 )

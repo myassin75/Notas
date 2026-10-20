@@ -31,11 +31,12 @@ fun BirthdayCakeIllustration(
         val w = this.size.width
         val h = this.size.height
         val strokePx = strokeWidth.toPx()
-        val strokeStyle = Stroke(
-            width = strokePx,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round,
-        )
+        val strokeStyle =
+            Stroke(
+                width = strokePx,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round,
+            )
 
         // 1. Pedestal / plate line at bottom
         val plateY = h * 0.90f
@@ -43,8 +44,12 @@ fun BirthdayCakeIllustration(
         val plateRight = w * 0.88f
         drawLine(
             color = tint,
-            start = androidx.compose.ui.geometry.Offset(plateLeft, plateY),
-            end = androidx.compose.ui.geometry.Offset(plateRight, plateY),
+            start =
+                androidx.compose.ui.geometry
+                    .Offset(plateLeft, plateY),
+            end =
+                androidx.compose.ui.geometry
+                    .Offset(plateRight, plateY),
             strokeWidth = strokePx,
             cap = StrokeCap.Round,
         )
@@ -56,14 +61,15 @@ fun BirthdayCakeIllustration(
         val cakeBottom = plateY
         val cornerRadius = 4.dp.toPx()
 
-        val cakePath = Path().apply {
-            moveTo(cakeLeft, cakeBottom)
-            lineTo(cakeLeft, cakeTop + cornerRadius)
-            quadraticTo(cakeLeft, cakeTop, cakeLeft + cornerRadius, cakeTop)
-            lineTo(cakeRight - cornerRadius, cakeTop)
-            quadraticTo(cakeRight, cakeTop, cakeRight, cakeTop + cornerRadius)
-            lineTo(cakeRight, cakeBottom)
-        }
+        val cakePath =
+            Path().apply {
+                moveTo(cakeLeft, cakeBottom)
+                lineTo(cakeLeft, cakeTop + cornerRadius)
+                quadraticTo(cakeLeft, cakeTop, cakeLeft + cornerRadius, cakeTop)
+                lineTo(cakeRight - cornerRadius, cakeTop)
+                quadraticTo(cakeRight, cakeTop, cakeRight, cakeTop + cornerRadius)
+                lineTo(cakeRight, cakeBottom)
+            }
         drawPath(
             path = cakePath,
             color = tint,
@@ -72,20 +78,23 @@ fun BirthdayCakeIllustration(
 
         // 3. Wavy frosting line across middle
         val waveY = h * 0.68f
-        val wavePath = Path().apply {
-            moveTo(cakeLeft, waveY)
-            val segmentWidth = (cakeRight - cakeLeft) / 3f
-            val waveHeight = 3.5f.dp.toPx()
-            for (i in 0 until 3) {
-                val startX = cakeLeft + i * segmentWidth
-                val midX = startX + segmentWidth * 0.5f
-                val endX = startX + segmentWidth
-                quadraticTo(
-                    midX, waveY + waveHeight,
-                    endX, waveY,
-                )
+        val wavePath =
+            Path().apply {
+                moveTo(cakeLeft, waveY)
+                val segmentWidth = (cakeRight - cakeLeft) / 3f
+                val waveHeight = 3.5f.dp.toPx()
+                for (i in 0 until 3) {
+                    val startX = cakeLeft + i * segmentWidth
+                    val midX = startX + segmentWidth * 0.5f
+                    val endX = startX + segmentWidth
+                    quadraticTo(
+                        midX,
+                        waveY + waveHeight,
+                        endX,
+                        waveY,
+                    )
+                }
             }
-        }
         drawPath(
             path = wavePath,
             color = tint,
@@ -93,11 +102,12 @@ fun BirthdayCakeIllustration(
         )
 
         // 4. Three candles & flames
-        val candleXPositions = floatArrayOf(
-            w * 0.32f, // Left candle
-            w * 0.50f, // Center candle
-            w * 0.68f, // Right candle
-        )
+        val candleXPositions =
+            floatArrayOf(
+                w * 0.32f, // Left candle
+                w * 0.50f, // Center candle
+                w * 0.68f, // Right candle
+            )
         val candleTop = h * 0.30f
         val candleBottom = cakeTop
 
@@ -105,8 +115,12 @@ fun BirthdayCakeIllustration(
             // Candle stick
             drawLine(
                 color = tint,
-                start = androidx.compose.ui.geometry.Offset(candleX, candleBottom),
-                end = androidx.compose.ui.geometry.Offset(candleX, candleTop),
+                start =
+                    androidx.compose.ui.geometry
+                        .Offset(candleX, candleBottom),
+                end =
+                    androidx.compose.ui.geometry
+                        .Offset(candleX, candleTop),
                 strokeWidth = strokePx,
                 cap = StrokeCap.Round,
             )
@@ -117,20 +131,27 @@ fun BirthdayCakeIllustration(
             val flameBaseY = candleTop - 2.5f.dp.toPx()
             val flameTipY = flameBaseY - flameHeight
 
-            val flamePath = Path().apply {
-                moveTo(candleX, flameTipY)
-                cubicTo(
-                    candleX + flameWidth, flameTipY + flameHeight * 0.45f,
-                    candleX + flameWidth, flameBaseY,
-                    candleX, flameBaseY,
-                )
-                cubicTo(
-                    candleX - flameWidth, flameBaseY,
-                    candleX - flameWidth, flameTipY + flameHeight * 0.45f,
-                    candleX, flameTipY,
-                )
-                close()
-            }
+            val flamePath =
+                Path().apply {
+                    moveTo(candleX, flameTipY)
+                    cubicTo(
+                        candleX + flameWidth,
+                        flameTipY + flameHeight * 0.45f,
+                        candleX + flameWidth,
+                        flameBaseY,
+                        candleX,
+                        flameBaseY,
+                    )
+                    cubicTo(
+                        candleX - flameWidth,
+                        flameBaseY,
+                        candleX - flameWidth,
+                        flameTipY + flameHeight * 0.45f,
+                        candleX,
+                        flameTipY,
+                    )
+                    close()
+                }
             drawPath(
                 path = flamePath,
                 color = tint,

@@ -190,7 +190,8 @@ fun OptionsPanel(
     ) {
         Surface(
             shape = RoundedCornerShape(28.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -203,15 +204,16 @@ fun OptionsPanel(
                     modifier = Modifier.fillMaxWidth(),
                     summaryContent = {
                         if (shoulder != null) {
+                            val fallbackColor = MaterialTheme.colorScheme.primary
                             val shoulderColor =
-                                remember(shoulder.colorHex) {
+                                remember(shoulder.colorHex, fallbackColor) {
                                     if (shoulder.colorHex.isNullOrBlank()) {
-                                        SettingsDesignTokens.PrimaryPurple
+                                        fallbackColor
                                     } else {
                                         try {
                                             Color(android.graphics.Color.parseColor(if (shoulder.colorHex.startsWith("#")) shoulder.colorHex else "#${shoulder.colorHex}"))
                                         } catch (_: Throwable) {
-                                            SettingsDesignTokens.PrimaryPurple
+                                            fallbackColor
                                         }
                                     }
                                 }
@@ -242,14 +244,14 @@ fun OptionsPanel(
                                 style =
                                     MaterialTheme.typography.bodyMedium.copy(
                                         fontSize = 13.sp,
-                                        color = Color(0xFF89899C),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     ),
                             )
                         }
                     },
                 )
 
-                HorizontalDivider(color = Color(0xFFE9E3EF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
                 // Row 2: Reminder
                 OptionCell(
@@ -267,7 +269,7 @@ fun OptionsPanel(
                     },
                 )
 
-                HorizontalDivider(color = Color(0xFFE9E3EF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
                 // Row 3: Notification action
                 OptionCell(
@@ -279,7 +281,7 @@ fun OptionsPanel(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                HorizontalDivider(color = Color(0xFFE9E3EF), thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
                 // Row 4: Behavior
                 OptionCell(
@@ -303,13 +305,17 @@ fun OptionsPanel(
         }
 
         // Side-by-side Picture and Attachments action buttons
+        val cardBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        val primaryAccent = MaterialTheme.colorScheme.primary
+        val onSurfaceColor = MaterialTheme.colorScheme.onSurface
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
                 shape = RoundedCornerShape(22.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
+                border = cardBorder,
                 modifier =
                     Modifier
                         .weight(1f)
@@ -324,7 +330,7 @@ fun OptionsPanel(
                     RememberMaterialRoundedSymbol(
                         name = "image",
                         size = 20.dp,
-                        tint = SettingsDesignTokens.PrimaryPurple,
+                        tint = primaryAccent,
                         weight = FontWeight.Normal,
                         filled = false,
                     )
@@ -335,7 +341,7 @@ fun OptionsPanel(
                             MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color(0xFF32313F),
+                                color = onSurfaceColor,
                             ),
                     )
                 }
@@ -343,7 +349,8 @@ fun OptionsPanel(
 
             Surface(
                 shape = RoundedCornerShape(22.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
+                border = cardBorder,
                 modifier =
                     Modifier
                         .weight(1f)
@@ -358,7 +365,7 @@ fun OptionsPanel(
                     RememberMaterialRoundedSymbol(
                         name = "attach_file",
                         size = 20.dp,
-                        tint = SettingsDesignTokens.PrimaryPurple,
+                        tint = primaryAccent,
                         weight = FontWeight.Normal,
                         filled = false,
                     )
@@ -369,7 +376,7 @@ fun OptionsPanel(
                             MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color(0xFF32313F),
+                                color = onSurfaceColor,
                             ),
                     )
                 }
@@ -753,7 +760,7 @@ private fun OptionCell(
                 Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFF4EAF6)),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             OptionCellIcon(
@@ -773,7 +780,7 @@ private fun OptionCell(
                     MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = Color(0xFF32313F),
+                        color = MaterialTheme.colorScheme.onSurface,
                     ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -786,7 +793,7 @@ private fun OptionCell(
                     style =
                         MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            color = Color(0xFF89899C),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -800,7 +807,7 @@ private fun OptionCell(
             RememberMaterialRoundedSymbol(
                 name = "chevron_right",
                 size = 20.dp,
-                tint = Color(0xFF89899C),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 weight = FontWeight.Normal,
                 filled = false,
             )

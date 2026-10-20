@@ -71,7 +71,7 @@ internal fun NotesEmptyState(
                         MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 22.sp,
-                            color = Color(0xFF32313F),
+                            color = MaterialTheme.colorScheme.onSurface,
                         ),
                     textAlign = TextAlign.Center,
                 )
@@ -81,7 +81,7 @@ internal fun NotesEmptyState(
                     style =
                         MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 14.sp,
-                            color = Color(0xFF89899C),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                     textAlign = TextAlign.Center,
                     modifier =
@@ -94,7 +94,7 @@ internal fun NotesEmptyState(
                 Spacer(Modifier.height(24.dp))
                 Surface(
                     shape = RoundedCornerShape(28.dp),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.surface,
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -115,13 +115,13 @@ internal fun NotesEmptyState(
                                     Modifier
                                         .size(42.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFFF4EAF6)),
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
                                     name = "edit_note",
                                     size = 22.dp,
-                                    tint = Color(0xFF98549C),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     weight = FontWeight.Normal,
                                     filled = false,
                                 )
@@ -134,7 +134,7 @@ internal fun NotesEmptyState(
                                         MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 16.sp,
-                                            color = Color(0xFF32313F),
+                                            color = MaterialTheme.colorScheme.onSurface,
                                         ),
                                 )
                                 Text(
@@ -142,21 +142,21 @@ internal fun NotesEmptyState(
                                     style =
                                         MaterialTheme.typography.bodyMedium.copy(
                                             fontSize = 13.sp,
-                                            color = Color(0xFF89899C),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         ),
                                 )
                             }
                             RememberMaterialRoundedSymbol(
                                 name = "chevron_right",
                                 size = 20.dp,
-                                tint = Color(0xFF89899C),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 weight = FontWeight.Normal,
                                 filled = false,
                             )
                         }
 
                         HorizontalDivider(
-                            color = Color(0xFFF0EFF4),
+                            color = MaterialTheme.colorScheme.outlineVariant,
                             thickness = 1.dp,
                             modifier = Modifier.padding(horizontal = 16.dp),
                         )
@@ -175,13 +175,13 @@ internal fun NotesEmptyState(
                                     Modifier
                                         .size(42.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFFF4EAF6)),
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
                                     name = "checklist",
                                     size = 22.dp,
-                                    tint = Color(0xFF98549C),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     weight = FontWeight.Normal,
                                     filled = false,
                                 )
@@ -194,7 +194,7 @@ internal fun NotesEmptyState(
                                         MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 16.sp,
-                                            color = Color(0xFF32313F),
+                                            color = MaterialTheme.colorScheme.onSurface,
                                         ),
                                 )
                                 Text(
@@ -202,14 +202,14 @@ internal fun NotesEmptyState(
                                     style =
                                         MaterialTheme.typography.bodyMedium.copy(
                                             fontSize = 13.sp,
-                                            color = Color(0xFF89899C),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         ),
                                 )
                             }
                             RememberMaterialRoundedSymbol(
                                 name = "chevron_right",
                                 size = 20.dp,
-                                tint = Color(0xFF89899C),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 weight = FontWeight.Normal,
                                 filled = false,
                             )
@@ -243,7 +243,7 @@ internal fun NotesEmptyState(
                     style =
                         MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF32313F),
+                            color = MaterialTheme.colorScheme.onSurface,
                         ),
                     textAlign = TextAlign.Center,
                 )
@@ -252,7 +252,7 @@ internal fun NotesEmptyState(
                     text = hintText,
                     style =
                         MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF89899C),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),

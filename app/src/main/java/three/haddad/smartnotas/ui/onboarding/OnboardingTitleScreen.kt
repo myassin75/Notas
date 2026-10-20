@@ -131,11 +131,13 @@ private fun PortraitLayout(
     blockEnter: EnterTransition,
     onLetsBegin: () -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
+
     BoxWithConstraints(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F8)),
+                .background(scheme.background),
     ) {
         val screenW = maxWidth
         val horizontalMargin = screenW * 0.05f
@@ -155,7 +157,7 @@ private fun PortraitLayout(
                         .fillMaxWidth()
                         .padding(horizontal = horizontalMargin),
                 shape = RoundedCornerShape(screenW * 0.06f),
-                color = Color(0xFFFFFFFF),
+                color = scheme.surface,
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -186,13 +188,13 @@ private fun PortraitLayout(
                                     text = stringResource(R.string.app_name),
                                     fontSize = 38.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF383743),
+                                    color = scheme.onSurface,
                                 )
                                 Spacer(modifier = Modifier.height(screenW * 0.0375f))
                                 Text(
                                     text = stringResource(R.string.app_tagline),
                                     fontSize = 16.sp,
-                                    color = Color(0xFF8A879B),
+                                    color = scheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -212,7 +214,7 @@ private fun PortraitLayout(
                         text = stringResource(R.string.onboarding_byline),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF858296),
+                        color = scheme.onSurfaceVariant,
                     )
                 }
             }
@@ -230,8 +232,8 @@ private fun PortraitLayout(
                         shape = RoundedCornerShape(screenW * 0.045f),
                         colors =
                             ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFA64FA8),
-                                contentColor = Color(0xFFFFFFFF),
+                                containerColor = scheme.primary,
+                                contentColor = scheme.onPrimary,
                             ),
                         contentPadding = PaddingValues(horizontal = horizontalMargin * 1.5f),
                         modifier =
@@ -248,12 +250,12 @@ private fun PortraitLayout(
                                 text = stringResource(R.string.onboarding_lets_begin),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFFFFF),
+                                color = scheme.onPrimary,
                             )
                             RememberMaterialRoundedSymbol(
                                 name = "arrow_forward",
                                 autoMirror = true,
-                                tint = Color(0xFFFFFFFF),
+                                tint = scheme.onPrimary,
                             )
                         }
                     }
@@ -268,6 +270,7 @@ private fun PortraitLayout(
 
 @Composable
 private fun LogoComposition(logoSize: androidx.compose.ui.unit.Dp) {
+    val bubbleColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
     Box(
         modifier = Modifier.size(logoSize),
         contentAlignment = Alignment.Center,
@@ -282,7 +285,7 @@ private fun LogoComposition(logoSize: androidx.compose.ui.unit.Dp) {
                 Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
-                    .background(Color(0xFFF0E8F7)),
+                    .background(bubbleColor),
         )
 
         // Upper-right circle
@@ -293,7 +296,7 @@ private fun LogoComposition(logoSize: androidx.compose.ui.unit.Dp) {
                     .align(Alignment.Center)
                     .offset(x = logoSize * 0.42f, y = -(logoSize * 0.35f))
                     .clip(CircleShape)
-                    .background(Color(0xFFF0E8F7)),
+                    .background(bubbleColor),
         )
 
         // Lower-left circle
@@ -304,7 +307,7 @@ private fun LogoComposition(logoSize: androidx.compose.ui.unit.Dp) {
                     .align(Alignment.Center)
                     .offset(x = -(logoSize * 0.4f), y = logoSize * 0.35f)
                     .clip(CircleShape)
-                    .background(Color(0xFFF0E8F7)),
+                    .background(bubbleColor),
         )
 
         // Grounding shadow
@@ -341,11 +344,13 @@ private fun LandscapeLayout(
     blockEnter: EnterTransition,
     onLetsBegin: () -> Unit,
 ) {
+    val scheme = MaterialTheme.colorScheme
+
     BoxWithConstraints(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F8)),
+                .background(scheme.background),
     ) {
         val screenW = maxWidth
         val screenH = maxHeight
@@ -360,7 +365,7 @@ private fun LandscapeLayout(
                         .weight(1.1f)
                         .fillMaxHeight(),
                 shape = RoundedCornerShape(screenH * 0.06f),
-                color = Color(0xFFFFFFFF),
+                color = scheme.surface,
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -382,13 +387,13 @@ private fun LandscapeLayout(
                                 text = stringResource(R.string.app_name),
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF383743),
+                                color = scheme.onSurface,
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = stringResource(R.string.app_tagline),
                                 fontSize = 14.sp,
-                                color = Color(0xFF8A879B),
+                                color = scheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -409,7 +414,7 @@ private fun LandscapeLayout(
                         text = stringResource(R.string.onboarding_byline),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF858296),
+                        color = scheme.onSurfaceVariant,
                     )
                 }
 
@@ -421,8 +426,8 @@ private fun LandscapeLayout(
                         shape = RoundedCornerShape(20.dp),
                         colors =
                             ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFA64FA8),
-                                contentColor = Color(0xFFFFFFFF),
+                                containerColor = scheme.primary,
+                                contentColor = scheme.onPrimary,
                             ),
                         contentPadding = PaddingValues(horizontal = 24.dp),
                         modifier =
@@ -439,12 +444,12 @@ private fun LandscapeLayout(
                                 text = stringResource(R.string.onboarding_lets_begin),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFFFFF),
+                                color = scheme.onPrimary,
                             )
                             RememberMaterialRoundedSymbol(
                                 name = "arrow_forward",
                                 autoMirror = true,
-                                tint = Color(0xFFFFFFFF),
+                                tint = scheme.onPrimary,
                             )
                         }
                     }

@@ -123,7 +123,7 @@ fun NoteCard(
     val showHero = heroPictureUri != null
     val surface = MaterialTheme.colorScheme.surface
 
-    val cardContentColor = Color(0xFF32313F)
+    val cardContentColor = MaterialTheme.colorScheme.onSurface
     val heroScrimColor = if (showHero) Color.Black else surface
     val cardShape = RoundedCornerShape(28.dp)
     val pinnedIconDescription = stringResource(R.string.notecard_pinned_cd)
@@ -308,15 +308,16 @@ fun NoteCard(
             // declares mergeDescendants and contentDescription includes "Starred".
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
+            val defaultShoulderColor = MaterialTheme.colorScheme.primary
             val stripeColor =
-                remember(model.shoulderColorHex) {
+                remember(model.shoulderColorHex, defaultShoulderColor) {
                     if (model.shoulderColorHex.isNullOrBlank()) {
-                        Color(0xFF2454E8)
+                        defaultShoulderColor
                     } else {
                         try {
                             Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
                         } catch (_: Throwable) {
-                            Color(0xFF2454E8)
+                            defaultShoulderColor
                         }
                     }
                 }
@@ -533,7 +534,7 @@ private fun MetadataRow(
 ) {
     val reminderAt = model.reminderAt
     val isOverdue = reminderAt != null && reminderAt < System.currentTimeMillis()
-    val reminderColor = if (isOverdue) Color(0xFFB86473) else Color(0xFF89899C)
+    val reminderColor = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -542,21 +543,22 @@ private fun MetadataRow(
     ) {
         // Left side: Shoulder chip OR completed count for list
         if (model.shoulderName != null) {
+            val fallbackPrimary = MaterialTheme.colorScheme.primary
             val chipColor =
-                remember(model.shoulderColorHex) {
+                remember(model.shoulderColorHex, fallbackPrimary) {
                     if (model.shoulderColorHex.isNullOrBlank()) {
-                        Color(0xFF2454E8)
+                        fallbackPrimary
                     } else {
                         try {
                             Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
                         } catch (_: Throwable) {
-                            Color(0xFF2454E8)
+                            fallbackPrimary
                         }
                     }
                 }
             Surface(
                 shape = CircleShape,
-                color = Color(0xFFEAEFFE),
+                color = chipColor.copy(alpha = 0.12f),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -589,7 +591,7 @@ private fun MetadataRow(
                 style =
                     MaterialTheme.typography.bodySmall.copy(
                         fontSize = 12.sp,
-                        color = Color(0xFF89899C),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
             )
         } else {
@@ -665,13 +667,13 @@ private fun ChecklistPreview(
                                     .clip(
                                         androidx.compose.foundation.shape
                                             .RoundedCornerShape(5.dp),
-                                    ).background(Color(0xFF98549C)),
+                                    ).background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center,
                         ) {
                             RememberMaterialRoundedSymbol(
                                 name = "check",
                                 size = 12.dp,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 weight = FontWeight.Bold,
                             )
                         }
@@ -681,7 +683,7 @@ private fun ChecklistPreview(
                                 Modifier
                                     .size(18.dp)
                                     .border(
-                                        BorderStroke(1.5.dp, Color(0xFF89899C)),
+                                        BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
                                         androidx.compose.foundation.shape
                                             .RoundedCornerShape(5.dp),
                                     ),
@@ -692,7 +694,7 @@ private fun ChecklistPreview(
                         text = item.text,
                         style =
                             MaterialTheme.typography.bodyMedium.copy(
-                                color = if (item.checked) Color(0xFF89899C) else Color(0xFF32313F),
+                                color = if (item.checked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                                 fontSize = 14.sp,
                             ),
                         maxLines = 1,
@@ -707,7 +709,7 @@ private fun ChecklistPreview(
                 text = "+$hiddenCount more",
                 style =
                     MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF89899C),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
                     ),
                 modifier = Modifier.padding(start = 28.dp, top = 2.dp),

@@ -109,11 +109,13 @@ fun CalendarDayCell(
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textOutOfMonth = CalendarDesignTokens.resolveOutOfMonthText(isDark)
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val onPrimaryAccent = MaterialTheme.colorScheme.onPrimary
 
     val textColor =
         when {
-            isSelected -> Color.White
-            isToday -> CalendarDesignTokens.PrimaryPurple
+            isSelected -> onPrimaryAccent
+            isToday -> primaryAccent
             isOutOfMonth || isDisabled -> textOutOfMonth
             else -> textPrimary
         }
@@ -130,17 +132,17 @@ fun CalendarDayCell(
         when {
             isSelected && isToday ->
                 Modifier
-                    .background(CalendarDesignTokens.PrimaryPurple, shape = dayShape)
+                    .background(primaryAccent, shape = dayShape)
                     .border(
                         1.5.dp,
-                        if (isDark) Color.White.copy(alpha = 0.5f) else CalendarDesignTokens.DarkPurpleSelected,
+                        if (isDark) onPrimaryAccent.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                         shape = dayShape,
                     )
-            isSelected -> Modifier.background(CalendarDesignTokens.PrimaryPurple, shape = dayShape)
+            isSelected -> Modifier.background(primaryAccent, shape = dayShape)
             isToday ->
                 Modifier.border(
                     width = 1.5.dp,
-                    color = CalendarDesignTokens.PrimaryPurple,
+                    color = primaryAccent,
                     shape = dayShape,
                 )
             else -> Modifier

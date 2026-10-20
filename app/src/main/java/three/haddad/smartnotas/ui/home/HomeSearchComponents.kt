@@ -112,7 +112,7 @@ internal fun SearchableTopBarTitle(
                 RememberMaterialRoundedSymbol(
                     name = "close",
                     size = 20.dp,
-                    tint = Color(0xFF32313F),
+                    tint = MaterialTheme.colorScheme.onSurface,
                     weight = FontWeight.Normal,
                     filled = false,
                 )
@@ -124,7 +124,7 @@ internal fun SearchableTopBarTitle(
                     MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 30.sp,
-                        color = Color(0xFF32313F),
+                        color = MaterialTheme.colorScheme.onSurface,
                     ),
             )
             Row(
@@ -143,7 +143,7 @@ internal fun SearchableTopBarTitle(
                     RememberMaterialRoundedSymbol(
                         name = "search",
                         size = 24.dp,
-                        tint = Color(0xFF32313F),
+                        tint = MaterialTheme.colorScheme.onSurface,
                         weight = FontWeight.Normal,
                         filled = false,
                     )
@@ -152,7 +152,7 @@ internal fun SearchableTopBarTitle(
                 // + Add button
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFF98549C),
+                    color = MaterialTheme.colorScheme.primary,
                     modifier =
                         Modifier
                             .clip(CircleShape)
@@ -166,7 +166,7 @@ internal fun SearchableTopBarTitle(
                         RememberMaterialRoundedSymbol(
                             name = "add",
                             size = 18.dp,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             weight = FontWeight.Bold,
                             filled = false,
                         )
@@ -176,7 +176,7 @@ internal fun SearchableTopBarTitle(
                                 MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 15.sp,
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                 ),
                         )
                     }

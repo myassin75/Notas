@@ -92,9 +92,10 @@ fun CalendarDetailsScreen(
 
     if (uiState.isLoading) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(headerScreenBg),
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(headerScreenBg),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator(color = uiState.accentColor)
@@ -104,11 +105,12 @@ fun CalendarDetailsScreen(
 
     if (uiState.notFound) {
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(headerScreenBg)
-                .statusBarsPadding()
-                .padding(24.dp),
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(headerScreenBg)
+                    .statusBarsPadding()
+                    .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -130,22 +132,25 @@ fun CalendarDetailsScreen(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(headerScreenBg),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(headerScreenBg),
     ) {
         // ==================== HEADER AREA ====================
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp),
         ) {
             // 1. Back button (clean, minimal chevron left)
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 12.dp),
             ) {
                 IconButton(
                     onClick = onBack,
@@ -161,33 +166,36 @@ fun CalendarDetailsScreen(
 
             // 2. Date, Day and Illustration Row
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 12.dp, end = 12.dp, bottom = 24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, end = 12.dp, bottom = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = uiState.dateText,
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontSize = 42.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = uiState.accentColor,
-                            lineHeight = 46.sp,
-                            letterSpacing = (-0.5).sp,
-                        ),
+                        style =
+                            MaterialTheme.typography.headlineLarge.copy(
+                                fontSize = 42.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = uiState.accentColor,
+                                lineHeight = 46.sp,
+                                letterSpacing = (-0.5).sp,
+                            ),
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = uiState.weekdayText,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = 42.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = uiState.accentColor,
-                            lineHeight = 46.sp,
-                            letterSpacing = (-0.5).sp,
-                        ),
+                        style =
+                            MaterialTheme.typography.headlineMedium.copy(
+                                fontSize = 42.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = uiState.accentColor,
+                                lineHeight = 46.sp,
+                                letterSpacing = (-0.5).sp,
+                            ),
                     )
                 }
 
@@ -216,9 +224,10 @@ fun CalendarDetailsScreen(
 
         // ==================== MAIN DETAILS CARD ====================
         BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
         ) {
             val fabSize = maxWidth * (64f / 473f)
             val fabEndPadding = maxWidth * ((473f - 398f) / 473f)
@@ -233,25 +242,28 @@ fun CalendarDetailsScreen(
             ) {
                 val scrollState = rememberScrollState()
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .navigationBarsPadding(),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .navigationBarsPadding(),
                 ) {
                     Spacer(modifier = Modifier.height(28.dp))
 
                     // Title
                     Text(
                         text = uiState.title,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary,
-                            lineHeight = 34.sp,
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 28.dp, end = titleEndPadding),
+                        style =
+                            MaterialTheme.typography.titleLarge.copy(
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textPrimary,
+                                lineHeight = 34.sp,
+                            ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(start = 28.dp, end = titleEndPadding),
                     )
 
                     // Description (if present)
@@ -259,14 +271,16 @@ fun CalendarDetailsScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = uiState.description,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 15.sp,
-                                color = textSecondary,
-                                lineHeight = 22.sp,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 30.dp),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 15.sp,
+                                    color = textSecondary,
+                                    lineHeight = 22.sp,
+                                ),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 30.dp),
                         )
                     }
 
@@ -281,28 +295,31 @@ fun CalendarDetailsScreen(
 
                     // Details Rows
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 30.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 30.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
                         // 1. Color row
                         DetailsRow(
                             icon = {
                                 Box(
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .background(uiState.accentColor, CircleShape),
+                                    modifier =
+                                        Modifier
+                                            .size(20.dp)
+                                            .background(uiState.accentColor, CircleShape),
                                 )
                             },
                             content = {
                                 Text(
                                     text = stringResource(R.string.calendar_details_color),
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Normal,
-                                        color = textPrimary,
-                                    ),
+                                    style =
+                                        MaterialTheme.typography.bodyLarge.copy(
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            color = textPrimary,
+                                        ),
                                 )
                             },
                         )
@@ -321,36 +338,40 @@ fun CalendarDetailsScreen(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
                                             text = uiState.startTimeText,
-                                            style = MaterialTheme.typography.bodyLarge.copy(
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                color = textPrimary,
-                                            ),
+                                            style =
+                                                MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Normal,
+                                                    color = textPrimary,
+                                                ),
                                         )
                                         Text(
                                             text = " → ",
-                                            style = MaterialTheme.typography.bodyLarge.copy(
-                                                fontSize = 16.sp,
-                                                color = textMuted,
-                                            ),
+                                            style =
+                                                MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    color = textMuted,
+                                                ),
                                             modifier = Modifier.padding(horizontal = 6.dp),
                                         )
                                         Text(
                                             text = uiState.endTimeText,
-                                            style = MaterialTheme.typography.bodyLarge.copy(
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                color = textPrimary,
-                                            ),
+                                            style =
+                                                MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Normal,
+                                                    color = textPrimary,
+                                                ),
                                         )
                                         if (!uiState.durationText.isNullOrBlank()) {
                                             Spacer(modifier = Modifier.width(14.dp))
                                             Text(
                                                 text = uiState.durationText,
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontSize = 14.5.sp,
-                                                    color = textMuted,
-                                                ),
+                                                style =
+                                                    MaterialTheme.typography.bodyMedium.copy(
+                                                        fontSize = 14.5.sp,
+                                                        color = textMuted,
+                                                    ),
                                             )
                                         }
                                     }
@@ -371,11 +392,12 @@ fun CalendarDetailsScreen(
                                 content = {
                                     Text(
                                         text = stringResource(R.string.calendar_details_all_day),
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                             )
@@ -394,11 +416,12 @@ fun CalendarDetailsScreen(
                                 content = {
                                     Text(
                                         text = uiState.taskScheduledTimeText,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                             )
@@ -416,16 +439,18 @@ fun CalendarDetailsScreen(
                                 },
                                 content = {
                                     Text(
-                                        text = if (uiState.isDone) {
-                                            stringResource(R.string.calendar_details_status_completed)
-                                        } else {
-                                            stringResource(R.string.calendar_details_status_todo)
-                                        },
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        text =
+                                            if (uiState.isDone) {
+                                                stringResource(R.string.calendar_details_status_completed)
+                                            } else {
+                                                stringResource(R.string.calendar_details_status_todo)
+                                            },
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                                 onClick = onToggleDone,
@@ -445,11 +470,12 @@ fun CalendarDetailsScreen(
                                 content = {
                                     Text(
                                         text = uiState.checklistSummary,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                             )
@@ -469,20 +495,22 @@ fun CalendarDetailsScreen(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
                                             text = uiState.recurrencePrimary,
-                                            style = MaterialTheme.typography.bodyLarge.copy(
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Normal,
-                                                color = textPrimary,
-                                            ),
+                                            style =
+                                                MaterialTheme.typography.bodyLarge.copy(
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Normal,
+                                                    color = textPrimary,
+                                                ),
                                         )
                                         if (!uiState.recurrenceSecondary.isNullOrBlank()) {
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
                                                 text = uiState.recurrenceSecondary,
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontSize = 14.5.sp,
-                                                    color = textMuted,
-                                                ),
+                                                style =
+                                                    MaterialTheme.typography.bodyMedium.copy(
+                                                        fontSize = 14.5.sp,
+                                                        color = textMuted,
+                                                    ),
                                             )
                                         }
                                     }
@@ -503,11 +531,12 @@ fun CalendarDetailsScreen(
                                 content = {
                                     Text(
                                         text = uiState.reminderSummary,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                             )
@@ -526,11 +555,12 @@ fun CalendarDetailsScreen(
                                 content = {
                                     Text(
                                         text = uiState.locationSummary,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                             )
@@ -549,11 +579,12 @@ fun CalendarDetailsScreen(
                                 content = {
                                     Text(
                                         text = uiState.shoulderName,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Normal,
-                                            color = textPrimary,
-                                        ),
+                                        style =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Normal,
+                                                color = textPrimary,
+                                            ),
                                     )
                                 },
                             )
@@ -566,18 +597,19 @@ fun CalendarDetailsScreen(
 
             // Circular Edit FAB sitting in the upper-right alcove
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(end = fabEndPadding)
-                    .size(fabSize)
-                    .background(uiState.accentColor, CircleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, radius = fabSize / 2),
-                        role = Role.Button,
-                        onClick = onEditClick,
-                        onClickLabel = stringResource(R.string.calendar_details_edit),
-                    ),
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(end = fabEndPadding)
+                        .size(fabSize)
+                        .background(uiState.accentColor, CircleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = true, radius = fabSize / 2),
+                            role = Role.Button,
+                            onClick = onEditClick,
+                            onClickLabel = stringResource(R.string.calendar_details_edit),
+                        ),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -597,20 +629,22 @@ private fun DetailsRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    val clickableModifier = if (onClick != null) {
-        Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = ripple(bounded = true),
-            onClick = onClick,
-        )
-    } else {
-        Modifier
-    }
+    val clickableModifier =
+        if (onClick != null) {
+            Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = true),
+                onClick = onClick,
+            )
+        } else {
+            Modifier
+        }
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(clickableModifier),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .then(clickableModifier),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -633,10 +667,11 @@ private fun CalendarDetailsHeaderIcon(
     modifier: Modifier = Modifier,
     size: androidx.compose.ui.unit.Dp = 54.dp,
 ) {
-    val resolved = remember(iconKey, isTask) {
-        val kind = if (isTask) NoteKind.LIST else NoteKind.NOTE
-        resolveNoteIcon(iconKey, kind)
-    }
+    val resolved =
+        remember(iconKey, isTask) {
+            val kind = if (isTask) NoteKind.LIST else NoteKind.NOTE
+            resolveNoteIcon(iconKey, kind)
+        }
 
     when (resolved) {
         is NoteIcon.Symbol -> {
@@ -665,19 +700,20 @@ private fun CalendarDetailsHeaderIcon(
             )
         }
         else -> {
-            val fallbackSymbol = remember(title, isTask) {
-                val lower = title.lowercase(Locale.getDefault())
-                when {
-                    isTask -> "checklist"
-                    lower.contains("coffee") || lower.contains("cafe") -> "local_cafe"
-                    lower.contains("meet") || lower.contains("sync") -> "groups"
-                    lower.contains("call") || lower.contains("phone") -> "call"
-                    lower.contains("flight") || lower.contains("travel") -> "flight"
-                    lower.contains("doctor") || lower.contains("hospital") -> "local_hospital"
-                    lower.contains("shop") || lower.contains("grocery") -> "shopping_cart"
-                    else -> "edit_note"
+            val fallbackSymbol =
+                remember(title, isTask) {
+                    val lower = title.lowercase(Locale.getDefault())
+                    when {
+                        isTask -> "checklist"
+                        lower.contains("coffee") || lower.contains("cafe") -> "local_cafe"
+                        lower.contains("meet") || lower.contains("sync") -> "groups"
+                        lower.contains("call") || lower.contains("phone") -> "call"
+                        lower.contains("flight") || lower.contains("travel") -> "flight"
+                        lower.contains("doctor") || lower.contains("hospital") -> "local_hospital"
+                        lower.contains("shop") || lower.contains("grocery") -> "shopping_cart"
+                        else -> "edit_note"
+                    }
                 }
-            }
             RememberMaterialRoundedSymbol(
                 name = fallbackSymbol,
                 size = size,

@@ -207,15 +207,17 @@ fun CalendarNavigationHeader(
         // Right: Today Pill Button (animated appearance/disappearance)
         AnimatedVisibility(
             visible = showTodayButton,
-            enter = fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) +
-                expandHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing)),
-            exit = fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing)) +
-                shrinkHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing)),
+            enter =
+                fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) +
+                    expandHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing)),
+            exit =
+                fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing)) +
+                    shrinkHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing)),
         ) {
             Surface(
                 onClick = onToday,
                 shape = RoundedCornerShape(12.dp),
-                color = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 modifier =
                     Modifier
                         .height(32.dp)
@@ -232,7 +234,7 @@ fun CalendarNavigationHeader(
                             MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.5.sp,
-                                color = CalendarDesignTokens.PrimaryPurple,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                             ),
                     )
                 }

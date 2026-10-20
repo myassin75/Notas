@@ -390,7 +390,7 @@ fun YearMonthCard(
         if (isSelectedMonth) {
             BorderStroke(
                 1.5.dp,
-                CalendarDesignTokens.PrimaryPurple.copy(alpha = if (isDark) 0.85f else 0.75f),
+                MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.85f else 0.75f),
             )
         } else {
             BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
@@ -436,7 +436,7 @@ fun YearMonthCard(
                         MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
-                            color = if (isSelectedMonth) CalendarDesignTokens.PrimaryPurple else textPrimary,
+                            color = if (isSelectedMonth) MaterialTheme.colorScheme.primary else textPrimary,
                         ),
                     modifier = Modifier.weight(1f, fill = false),
                 )
@@ -446,7 +446,7 @@ fun YearMonthCard(
                         modifier =
                             Modifier
                                 .size(6.dp)
-                                .background(CalendarDesignTokens.PrimaryPurple, CircleShape),
+                                .background(MaterialTheme.colorScheme.primary, CircleShape),
                     )
                 }
             }
@@ -578,7 +578,7 @@ private fun YearMonthDateGrid(
                                         modifier =
                                             Modifier
                                                 .size(20.dp)
-                                                .background(CalendarDesignTokens.PrimaryPurple, CircleShape),
+                                                .background(MaterialTheme.colorScheme.primary, CircleShape),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
@@ -587,7 +587,7 @@ private fun YearMonthDateGrid(
                                                 MaterialTheme.typography.labelSmall.copy(
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = Color.White,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
                                                 ),
                                             textAlign = TextAlign.Center,
                                         )
@@ -599,7 +599,7 @@ private fun YearMonthDateGrid(
                                             Modifier
                                                 .size(20.dp)
                                                 .background(
-                                                    if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender,
+                                                    MaterialTheme.colorScheme.primaryContainer,
                                                     CircleShape,
                                                 ),
                                         contentAlignment = Alignment.Center,
@@ -610,7 +610,7 @@ private fun YearMonthDateGrid(
                                                 MaterialTheme.typography.labelSmall.copy(
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = CalendarDesignTokens.PrimaryPurple,
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                                                 ),
                                             textAlign = TextAlign.Center,
                                         )

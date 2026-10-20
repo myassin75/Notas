@@ -170,28 +170,28 @@ internal object HistoryDesignTokens {
 }
 
 @Composable
-internal fun historyScreenBg(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.surface else HistoryDesignTokens.ScreenBg
+internal fun historyScreenBg(): Color = MaterialTheme.colorScheme.background
 
 @Composable
-internal fun historyMainSurface(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.surfaceContainer else HistoryDesignTokens.MainSurface
+internal fun historyMainSurface(): Color = MaterialTheme.colorScheme.surface
 
 @Composable
-internal fun historyActiveLavender(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.primaryContainer else HistoryDesignTokens.ActiveLavenderSurface
+internal fun historyActiveLavender(): Color = MaterialTheme.colorScheme.primaryContainer
 
 @Composable
-internal fun historyPrimaryPurple(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.primary else HistoryDesignTokens.PrimaryPurple
+internal fun historyPrimaryPurple(): Color = MaterialTheme.colorScheme.primary
 
 @Composable
-internal fun historyPrimaryText(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.onSurface else HistoryDesignTokens.PrimaryText
+internal fun historyPrimaryText(): Color = MaterialTheme.colorScheme.onSurface
 
 @Composable
-internal fun historySecondaryText(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.onSurfaceVariant else HistoryDesignTokens.SecondaryText
+internal fun historySecondaryText(): Color = MaterialTheme.colorScheme.onSurfaceVariant
 
 @Composable
-internal fun historyIllustrationOutline(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.outline else HistoryDesignTokens.IllustrationOutline
+internal fun historyIllustrationOutline(): Color = MaterialTheme.colorScheme.outline
 
 @Composable
-internal fun historyIllustrationCircle(): Color = if (LocalIsDark.current) MaterialTheme.colorScheme.surfaceContainerHighest else HistoryDesignTokens.IllustrationCircle
+internal fun historyIllustrationCircle(): Color = MaterialTheme.colorScheme.primaryContainer
 
 /**
  * One-shot events emitted by [HistoryViewModel] for the UI layer to react to.

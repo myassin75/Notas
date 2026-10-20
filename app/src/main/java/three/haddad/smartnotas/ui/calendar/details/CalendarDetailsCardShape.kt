@@ -39,34 +39,44 @@ class CalendarDetailsCardShape(
 
         val kappa = 0.55228475f
 
-        val path = Path().apply {
-            moveTo(0f, size.height)
-            lineTo(0f, topStartPx)
-            // Top-left round corner
-            cubicTo(
-                0f, topStartPx * (1f - kappa),
-                topStartPx * (1f - kappa), 0f,
-                topStartPx, 0f,
-            )
-            // High plateau across title area
-            lineTo(stepStart, 0f)
-            // Smooth S-curve transition stepping down around the FAB notch with generous radius
-            cubicTo(
-                stepStart + stepWidthPx * 0.68f, 0f,
-                stepStart + stepWidthPx * 0.38f, stepHeightPx,
-                stepEnd, stepHeightPx,
-            )
-            // Lower shelf extending rightwards, then smoothly rounding down into the right edge
-            val shelfEndX = (size.width - topEndRadiusPx).coerceAtLeast(stepEnd)
-            lineTo(shelfEndX, stepHeightPx)
-            cubicTo(
-                size.width - topEndRadiusPx * (1f - kappa), stepHeightPx,
-                size.width, stepHeightPx + topEndRadiusPx * (1f - kappa),
-                size.width, stepHeightPx + topEndRadiusPx,
-            )
-            lineTo(size.width, size.height)
-            close()
-        }
+        val path =
+            Path().apply {
+                moveTo(0f, size.height)
+                lineTo(0f, topStartPx)
+                // Top-left round corner
+                cubicTo(
+                    0f,
+                    topStartPx * (1f - kappa),
+                    topStartPx * (1f - kappa),
+                    0f,
+                    topStartPx,
+                    0f,
+                )
+                // High plateau across title area
+                lineTo(stepStart, 0f)
+                // Smooth S-curve transition stepping down around the FAB notch with generous radius
+                cubicTo(
+                    stepStart + stepWidthPx * 0.68f,
+                    0f,
+                    stepStart + stepWidthPx * 0.38f,
+                    stepHeightPx,
+                    stepEnd,
+                    stepHeightPx,
+                )
+                // Lower shelf extending rightwards, then smoothly rounding down into the right edge
+                val shelfEndX = (size.width - topEndRadiusPx).coerceAtLeast(stepEnd)
+                lineTo(shelfEndX, stepHeightPx)
+                cubicTo(
+                    size.width - topEndRadiusPx * (1f - kappa),
+                    stepHeightPx,
+                    size.width,
+                    stepHeightPx + topEndRadiusPx * (1f - kappa),
+                    size.width,
+                    stepHeightPx + topEndRadiusPx,
+                )
+                lineTo(size.width, size.height)
+                close()
+            }
         return Outline.Generic(path)
     }
 }

@@ -306,7 +306,7 @@ fun LiveCurrentTimeLine(
                     .fillMaxWidth()
                     .padding(start = timeColumnWidth, end = 12.dp)
                     .height(1.8.dp)
-                    .background(CalendarDesignTokens.PrimaryPurple, shape = RoundedCornerShape(1.dp)),
+                    .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(1.dp)),
         )
 
         // Small indicator circle at the beginning of the line
@@ -315,7 +315,7 @@ fun LiveCurrentTimeLine(
                 Modifier
                     .padding(start = timeColumnWidth)
                     .size(8.dp)
-                    .background(CalendarDesignTokens.PrimaryPurple, shape = CircleShape),
+                    .background(MaterialTheme.colorScheme.primary, shape = CircleShape),
         )
     }
 }
@@ -334,11 +334,23 @@ fun TimelineEventBlock(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
+    val effectiveAccent =
+        if (item.accentColor == CalendarDesignTokens.PrimaryPurple) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            item.accentColor
+        }
+    val effectiveBg =
+        if (item.containerBgColor == CalendarDesignTokens.CategoryPurpleBg) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            item.containerBgColor
+        }
 
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
-        color = item.containerBgColor,
+        color = effectiveBg,
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
@@ -352,7 +364,7 @@ fun TimelineEventBlock(
                         .width(4.dp)
                         .fillMaxHeight()
                         .background(
-                            item.accentColor,
+                            effectiveAccent,
                             shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp),
                         ),
             )

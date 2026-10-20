@@ -45,13 +45,38 @@ fun ThemeMode.blackThemeEligible(isDarkTheme: Boolean): Boolean =
         else -> isDarkTheme
     }
 
+typealias AppearanceMode = ThemeMode
+
+enum class AccentTheme(
+    val id: String,
+    val displayName: String,
+    val seedHex: String,
+) {
+    MAROON("maroon", "Maroon", "#800000"),
+    ROYAL_BLUE("royal_blue", "Royal Blue", "#04147D"),
+    FOREST_GREEN("forest_green", "Forest Green", "#047D06"),
+    DARK_BROWN("dark_brown", "Dark Brown", "#4D2002"),
+    OCEAN_TEAL("ocean_teal", "Ocean Teal", "#29A4AB"),
+    PURE_BLACK("pure_black", "Pure Black", "#000000"),
+    AMETHYST("amethyst", "Amethyst", "#98549C"),
+    ;
+
+    companion object {
+        fun fromId(id: String?): AccentTheme =
+            entries.firstOrNull { it.id.equals(id, ignoreCase = true) || it.name.equals(id, ignoreCase = true) }
+                ?: AMETHYST
+    }
+}
+
 data class ThemeState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val accentTheme: AccentTheme = AccentTheme.AMETHYST,
     val useBlackTheme: Boolean = false,
     val blurBars: Boolean = true,
     val customFontPath: String = "",
     val customFontName: String = "",
 ) {
+    val appearanceMode: ThemeMode get() = themeMode
     val useEnhancedShading: Boolean = false
 
     fun blackThemeActive(isDarkTheme: Boolean): Boolean = useBlackTheme && themeMode.blackThemeEligible(isDarkTheme)
@@ -66,6 +91,7 @@ class ThemePrefs(
 ) {
     private object Keys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val ACCENT_THEME = stringPreferencesKey("accent_theme")
         val USE_BLACK_THEME = booleanPreferencesKey("use_black_theme")
         val BLUR_BARS = booleanPreferencesKey("blur_bars")
         val CUSTOM_FONT_PATH = stringPreferencesKey("custom_font_path")
@@ -80,8 +106,10 @@ class ThemePrefs(
                 runCatching { ThemeMode.valueOf(storedThemeModeRaw) }
                     .getOrDefault(ThemeMode.SYSTEM)
             val legacyBlackTheme = isLegacyBlackThemeModeName(storedThemeModeRaw)
+            val storedAccent = AccentTheme.fromId(p[Keys.ACCENT_THEME])
             ThemeState(
                 themeMode = storedThemeMode.migrated(),
+                accentTheme = storedAccent,
                 useBlackTheme = (p[Keys.USE_BLACK_THEME] ?: false) || legacyBlackTheme,
                 blurBars = p[Keys.BLUR_BARS] ?: true,
                 customFontPath = p[Keys.CUSTOM_FONT_PATH].orEmpty(),
@@ -91,6 +119,12 @@ class ThemePrefs(
 
     suspend fun setThemeMode(mode: ThemeMode) {
         context.themePrefsDataStore.edit { it[Keys.THEME_MODE] = mode.migrated().name }
+    }
+
+    suspend fun setAppearanceMode(mode: AppearanceMode) = setThemeMode(mode)
+
+    suspend fun setAccentTheme(theme: AccentTheme) {
+        context.themePrefsDataStore.edit { it[Keys.ACCENT_THEME] = theme.id }
     }
 
     suspend fun setUseBlackTheme(value: Boolean) {
@@ -141,6 +175,7 @@ class ThemePrefs(
                     storedThemeMode
                 },
             )
+            put(Keys.ACCENT_THEME.name, prefs[Keys.ACCENT_THEME] ?: AccentTheme.AMETHYST.id)
             put(Keys.USE_BLACK_THEME.name, exportBlackTheme)
             put(Keys.BLUR_BARS.name, prefs[Keys.BLUR_BARS] ?: true)
             put(Keys.CUSTOM_FONT_PATH.name, prefs[Keys.CUSTOM_FONT_PATH].orEmpty())
@@ -187,6 +222,10 @@ class ThemePrefs(
                         }
                     }
                 }
+            }
+            val accentRaw = stringOrNull(Keys.ACCENT_THEME.name)
+            if (accentRaw != null) {
+                mutable[Keys.ACCENT_THEME] = AccentTheme.fromId(accentRaw).id
             }
             booleanOrNull(Keys.BLUR_BARS.name)?.let { value ->
                 mutable[Keys.BLUR_BARS] = value

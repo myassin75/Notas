@@ -40,7 +40,6 @@ import java.time.ZoneId
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarDetailsViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private val noteFlow = MutableStateFlow<NoteWithItems?>(null)
     private var completedCalledId: Long? = null
@@ -57,56 +56,100 @@ class CalendarDetailsViewModelTest {
     }
 
     private fun createRepository(): NoteRepository {
-        val fakeDao = object : NoteDao {
-            override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun observe(id: Long): Flow<NoteWithItems?> = noteFlow
-            override suspend fun get(id: Long): NoteWithItems? = noteFlow.value
-            override suspend fun allNotes(): List<NoteWithItems> = emptyList()
-            override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-            override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-            override suspend fun insert(note: NoteEntity): Long = 1L
-            override suspend fun update(note: NoteEntity) {
-                if (note.completedAt != null) {
-                    completedCalledId = note.id
-                } else {
-                    incompleteCalledId = note.id
+        val fakeDao =
+            object : NoteDao {
+                override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun observe(id: Long): Flow<NoteWithItems?> = noteFlow
+
+                override suspend fun get(id: Long): NoteWithItems? = noteFlow.value
+
+                override suspend fun allNotes(): List<NoteWithItems> = emptyList()
+
+                override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
+
+                override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+                override suspend fun insert(note: NoteEntity): Long = 1L
+
+                override suspend fun update(note: NoteEntity) {
+                    if (note.completedAt != null) {
+                        completedCalledId = note.id
+                    } else {
+                        incompleteCalledId = note.id
+                    }
                 }
+
+                override suspend fun setTrashed(
+                    id: Long,
+                    trashed: Boolean,
+                    updatedAt: Long,
+                ) = Unit
+
+                override suspend fun setArchived(
+                    id: Long,
+                    archived: Boolean,
+                    updatedAt: Long,
+                ) = Unit
+
+                override suspend fun deleteById(id: Long) = Unit
+
+                override suspend fun allNoteIds(): List<Long> = emptyList()
+
+                override suspend fun countPictureUri(uri: String): Int = 0
+
+                override suspend fun trashedNoteIds(): List<Long> = emptyList()
+
+                override suspend fun archivedNoteIds(): List<Long> = emptyList()
+
+                override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
+
+                override suspend fun deleteAllNotes() = Unit
+
+                override suspend fun emptyTrash() = Unit
+
+                override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
             }
-            override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) = Unit
-            override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) = Unit
-            override suspend fun deleteById(id: Long) = Unit
-            override suspend fun allNoteIds(): List<Long> = emptyList()
-            override suspend fun countPictureUri(uri: String): Int = 0
-            override suspend fun trashedNoteIds(): List<Long> = emptyList()
-            override suspend fun archivedNoteIds(): List<Long> = emptyList()
-            override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-            override suspend fun deleteAllNotes() = Unit
-            override suspend fun emptyTrash() = Unit
-            override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
-        }
 
-        val fakeItemDao = object : ChecklistItemDao {
-            override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
-            override suspend fun insert(item: ChecklistItemEntity): Long = 1L
-            override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
-            override suspend fun update(item: ChecklistItemEntity) = Unit
-            override suspend fun deleteById(id: Long) = Unit
-            override suspend fun deleteForNote(noteId: Long) = Unit
-        }
+        val fakeItemDao =
+            object : ChecklistItemDao {
+                override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
 
-        val fakeAttachmentDao = object : AttachmentDao {
-            override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = emptyList()
-            override suspend fun insert(attachment: NoteAttachmentEntity): Long = 1L
-            override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
-            override suspend fun getById(id: Long): NoteAttachmentEntity? = null
-            override suspend fun countByUri(uri: String): Int = 0
-            override suspend fun deleteById(id: Long) = Unit
-            override suspend fun deleteForNote(noteId: Long) = Unit
-        }
+                override suspend fun insert(item: ChecklistItemEntity): Long = 1L
+
+                override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
+
+                override suspend fun update(item: ChecklistItemEntity) = Unit
+
+                override suspend fun deleteById(id: Long) = Unit
+
+                override suspend fun deleteForNote(noteId: Long) = Unit
+            }
+
+        val fakeAttachmentDao =
+            object : AttachmentDao {
+                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = emptyList()
+
+                override suspend fun insert(attachment: NoteAttachmentEntity): Long = 1L
+
+                override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
+
+                override suspend fun getById(id: Long): NoteAttachmentEntity? = null
+
+                override suspend fun countByUri(uri: String): Int = 0
+
+                override suspend fun deleteById(id: Long) = Unit
+
+                override suspend fun deleteForNote(noteId: Long) = Unit
+            }
 
         return NoteRepository(
             noteDao = fakeDao,
@@ -128,20 +171,21 @@ class CalendarDetailsViewModelTest {
         isCompleted: Boolean = false,
         shoulder: ShoulderEntity? = null,
     ): NoteWithItems {
-        val entity = NoteEntity(
-            id = id,
-            kind = kind,
-            title = title,
-            body = body,
-            colorIndex = colorIndex,
-            trashed = false,
-            createdAt = 1718438400000L, // June 15, 2024
-            updatedAt = 1718438400000L,
-            reminderAt = reminderAt,
-            recurrence = recurrence,
-            completedAt = if (isCompleted) 1718438400000L else null,
-            shoulderId = shoulder?.id,
-        )
+        val entity =
+            NoteEntity(
+                id = id,
+                kind = kind,
+                title = title,
+                body = body,
+                colorIndex = colorIndex,
+                trashed = false,
+                createdAt = 1718438400000L, // June 15, 2024
+                updatedAt = 1718438400000L,
+                reminderAt = reminderAt,
+                recurrence = recurrence,
+                completedAt = if (isCompleted) 1718438400000L else null,
+                shoulderId = shoulder?.id,
+            )
         return NoteWithItems(
             note = entity,
             items = emptyList(),
@@ -151,149 +195,164 @@ class CalendarDetailsViewModelTest {
     }
 
     @Test
-    fun testTimedEventDetailsMappedCorrectly() = runTest {
-        val repo = createRepository()
-        val targetDate = LocalDate.of(2026, 6, 16) // A Tuesday
-        val targetMillis = targetDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun testTimedEventDetailsMappedCorrectly() =
+        runTest {
+            val repo = createRepository()
+            val targetDate = LocalDate.of(2026, 6, 16) // A Tuesday
+            val targetMillis = targetDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        val sampleNote = makeNote(
-            id = 42L,
-            title = "Tommy’s birthday (Jacob and Lisa)",
-            body = "8:00 AM – 10:00 AM\nPlan activities: Plan activities that guests can enjoy.",
-            reminderAt = targetMillis + (8 * 3600 * 1000), // 8:00 AM
-            recurrence = RecurrenceRule(unit = RecurrenceUnit.YEAR),
-        )
-        noteFlow.value = sampleNote
+            val sampleNote =
+                makeNote(
+                    id = 42L,
+                    title = "Tommy’s birthday (Jacob and Lisa)",
+                    body = "8:00 AM – 10:00 AM\nPlan activities: Plan activities that guests can enjoy.",
+                    reminderAt = targetMillis + (8 * 3600 * 1000), // 8:00 AM
+                    recurrence = RecurrenceRule(unit = RecurrenceUnit.YEAR),
+                )
+            noteFlow.value = sampleNote
 
-        val handle = SavedStateHandle(
-            mapOf(
-                Routes.ARG_ITEM_ID to 42L,
-                Routes.ARG_IS_TASK to false,
-                Routes.ARG_DATE_MILLIS to targetMillis,
-            ),
-        )
+            val handle =
+                SavedStateHandle(
+                    mapOf(
+                        Routes.ARG_ITEM_ID to 42L,
+                        Routes.ARG_IS_TASK to false,
+                        Routes.ARG_DATE_MILLIS to targetMillis,
+                    ),
+                )
 
-        val vm = CalendarDetailsViewModel(handle, repo)
+            val vm = CalendarDetailsViewModel(handle, repo)
 
-        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            vm.uiState.collect {}
+            val collectJob =
+                launch(UnconfinedTestDispatcher(testScheduler)) {
+                    vm.uiState.collect {}
+                }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertFalse(state.isLoading)
+            assertFalse(state.notFound)
+            assertEquals(42L, state.id)
+            assertEquals("Tommy’s birthday (Jacob and Lisa)", state.title)
+            assertEquals("Plan activities: Plan activities that guests can enjoy.", state.description)
+            assertEquals("June 16", state.dateText)
+            assertEquals("Tuesday", state.weekdayText)
+            assertEquals("8:00 AM", state.startTimeText)
+            assertEquals("10:00 AM", state.endTimeText)
+            assertEquals("2 hours", state.durationText)
+            assertFalse(state.isAllDay)
+            assertFalse(state.isTask)
+            assertTrue(state.isBirthday)
+            assertEquals("Every year", state.recurrencePrimary)
+            assertNotNull(state.recurrenceSecondary)
+
+            collectJob.cancel()
         }
-        advanceUntilIdle()
-
-        val state = vm.uiState.value
-        assertFalse(state.isLoading)
-        assertFalse(state.notFound)
-        assertEquals(42L, state.id)
-        assertEquals("Tommy’s birthday (Jacob and Lisa)", state.title)
-        assertEquals("Plan activities: Plan activities that guests can enjoy.", state.description)
-        assertEquals("June 16", state.dateText)
-        assertEquals("Tuesday", state.weekdayText)
-        assertEquals("8:00 AM", state.startTimeText)
-        assertEquals("10:00 AM", state.endTimeText)
-        assertEquals("2 hours", state.durationText)
-        assertFalse(state.isAllDay)
-        assertFalse(state.isTask)
-        assertTrue(state.isBirthday)
-        assertEquals("Every year", state.recurrencePrimary)
-        assertNotNull(state.recurrenceSecondary)
-
-        collectJob.cancel()
-    }
 
     @Test
-    fun testAllDayEventMappedCorrectly() = runTest {
-        val repo = createRepository()
-        val sampleNote = makeNote(
-            id = 10L,
-            title = "Annual Company Picnic",
-            body = "[All Day]\nDon't forget sunscreen and picnic blankets.",
-        )
-        noteFlow.value = sampleNote
+    fun testAllDayEventMappedCorrectly() =
+        runTest {
+            val repo = createRepository()
+            val sampleNote =
+                makeNote(
+                    id = 10L,
+                    title = "Annual Company Picnic",
+                    body = "[All Day]\nDon't forget sunscreen and picnic blankets.",
+                )
+            noteFlow.value = sampleNote
 
-        val handle = SavedStateHandle(
-            mapOf(
-                Routes.ARG_ITEM_ID to 10L,
-                Routes.ARG_IS_TASK to false,
-            ),
-        )
+            val handle =
+                SavedStateHandle(
+                    mapOf(
+                        Routes.ARG_ITEM_ID to 10L,
+                        Routes.ARG_IS_TASK to false,
+                    ),
+                )
 
-        val vm = CalendarDetailsViewModel(handle, repo)
+            val vm = CalendarDetailsViewModel(handle, repo)
 
-        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            vm.uiState.collect {}
+            val collectJob =
+                launch(UnconfinedTestDispatcher(testScheduler)) {
+                    vm.uiState.collect {}
+                }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertFalse(state.isLoading)
+            assertTrue(state.isAllDay)
+            assertEquals("Don't forget sunscreen and picnic blankets.", state.description)
+
+            collectJob.cancel()
         }
-        advanceUntilIdle()
-
-        val state = vm.uiState.value
-        assertFalse(state.isLoading)
-        assertTrue(state.isAllDay)
-        assertEquals("Don't forget sunscreen and picnic blankets.", state.description)
-
-        collectJob.cancel()
-    }
 
     @Test
-    fun testTaskMappedAndToggledCorrectly() = runTest {
-        val repo = createRepository()
-        val sampleNote = makeNote(
-            id = 99L,
-            title = "Finish project documentation",
-            body = "Review PR and write markdown summary",
-            kind = NoteKind.LIST,
-            isCompleted = false,
-        )
-        noteFlow.value = sampleNote
+    fun testTaskMappedAndToggledCorrectly() =
+        runTest {
+            val repo = createRepository()
+            val sampleNote =
+                makeNote(
+                    id = 99L,
+                    title = "Finish project documentation",
+                    body = "Review PR and write markdown summary",
+                    kind = NoteKind.LIST,
+                    isCompleted = false,
+                )
+            noteFlow.value = sampleNote
 
-        val handle = SavedStateHandle(
-            mapOf(
-                Routes.ARG_ITEM_ID to 99L,
-                Routes.ARG_IS_TASK to true,
-            ),
-        )
+            val handle =
+                SavedStateHandle(
+                    mapOf(
+                        Routes.ARG_ITEM_ID to 99L,
+                        Routes.ARG_IS_TASK to true,
+                    ),
+                )
 
-        val vm = CalendarDetailsViewModel(handle, repo)
+            val vm = CalendarDetailsViewModel(handle, repo)
 
-        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            vm.uiState.collect {}
+            val collectJob =
+                launch(UnconfinedTestDispatcher(testScheduler)) {
+                    vm.uiState.collect {}
+                }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertFalse(state.isLoading)
+            assertTrue(state.isTask)
+            assertFalse(state.isDone)
+            assertEquals("Finish project documentation", state.title)
+
+            vm.toggleTaskCompletion()
+            advanceUntilIdle()
+
+            assertEquals(99L, completedCalledId)
+
+            collectJob.cancel()
         }
-        advanceUntilIdle()
-
-        val state = vm.uiState.value
-        assertFalse(state.isLoading)
-        assertTrue(state.isTask)
-        assertFalse(state.isDone)
-        assertEquals("Finish project documentation", state.title)
-
-        vm.toggleTaskCompletion()
-        advanceUntilIdle()
-
-        assertEquals(99L, completedCalledId)
-
-        collectJob.cancel()
-    }
 
     @Test
-    fun testNonExistentItemReturnsNotFound() = runTest {
-        val repo = createRepository()
-        noteFlow.value = null
+    fun testNonExistentItemReturnsNotFound() =
+        runTest {
+            val repo = createRepository()
+            noteFlow.value = null
 
-        val handle = SavedStateHandle(
-            mapOf(
-                Routes.ARG_ITEM_ID to 9999L,
-            ),
-        )
+            val handle =
+                SavedStateHandle(
+                    mapOf(
+                        Routes.ARG_ITEM_ID to 9999L,
+                    ),
+                )
 
-        val vm = CalendarDetailsViewModel(handle, repo)
+            val vm = CalendarDetailsViewModel(handle, repo)
 
-        val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) {
-            vm.uiState.collect {}
+            val collectJob =
+                launch(UnconfinedTestDispatcher(testScheduler)) {
+                    vm.uiState.collect {}
+                }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertFalse(state.isLoading)
+            assertTrue(state.notFound)
+
+            collectJob.cancel()
         }
-        advanceUntilIdle()
-
-        val state = vm.uiState.value
-        assertFalse(state.isLoading)
-        assertTrue(state.notFound)
-
-        collectJob.cancel()
-    }
 }

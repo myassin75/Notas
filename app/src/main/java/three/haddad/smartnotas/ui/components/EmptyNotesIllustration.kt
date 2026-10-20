@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,35 +43,36 @@ import three.haddad.smartnotas.ui.theme.RoundedPolygonShape
 fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
     val isSmallLandscape = isSmallLandscape()
     val sizeDp = if (isSmallLandscape) 120.dp else 160.dp
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val cardSurface = MaterialTheme.colorScheme.surface
 
     Box(
         modifier = modifier.size(sizeDp),
         contentAlignment = Alignment.Center,
     ) {
-        // Soft lavender background circle
+        // Soft background circle
         Box(
             modifier =
                 Modifier
                     .size(sizeDp * 0.9f)
                     .clip(CircleShape)
-                    .background(Color(0xFFF4EAF6)),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
         )
 
         // Document illustration
         Canvas(modifier = Modifier.size(sizeDp * 0.65f)) {
-            val purple = Color(0xFF98549C)
             val strokeWidth = 2.5.dp.toPx()
 
-            // Document body (white card with purple border)
+            // Document body (card surface with primary border)
             drawRoundRect(
-                color = Color.White,
+                color = cardSurface,
                 topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
                 size = Size(size.width * 0.65f, size.height * 0.8f),
                 cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
                 style = Fill,
             )
             drawRoundRect(
-                color = purple.copy(alpha = 0.35f),
+                color = primaryColor.copy(alpha = 0.35f),
                 topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
                 size = Size(size.width * 0.65f, size.height * 0.8f),
                 cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
@@ -84,9 +86,9 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
             val lineY2 = size.height * 0.45f
             val lineY3 = size.height * 0.60f
 
-            drawLine(purple.copy(alpha = 0.6f), Offset(lineXStart, lineY1), Offset(lineXEnd, lineY1), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-            drawLine(purple.copy(alpha = 0.6f), Offset(lineXStart, lineY2), Offset(lineXEnd * 0.88f, lineY2), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-            drawLine(purple.copy(alpha = 0.6f), Offset(lineXStart, lineY3), Offset(lineXEnd * 0.78f, lineY3), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            drawLine(primaryColor.copy(alpha = 0.6f), Offset(lineXStart, lineY1), Offset(lineXEnd, lineY1), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            drawLine(primaryColor.copy(alpha = 0.6f), Offset(lineXStart, lineY2), Offset(lineXEnd * 0.88f, lineY2), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            drawLine(primaryColor.copy(alpha = 0.6f), Offset(lineXStart, lineY3), Offset(lineXEnd * 0.78f, lineY3), strokeWidth = strokeWidth, cap = StrokeCap.Round)
         }
 
         // Circular checkmark badge in bottom right corner
@@ -97,13 +99,13 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
                     .padding(end = 12.dp, bottom = 12.dp)
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color.White),
+                    .background(cardSurface),
             contentAlignment = Alignment.Center,
         ) {
             RememberMaterialRoundedSymbol(
                 name = "check",
                 size = 22.dp,
-                tint = Color(0xFF98549C),
+                tint = primaryColor,
                 weight = FontWeight.Bold,
             )
         }
@@ -113,9 +115,9 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
 @Composable
 fun EmptyArchiveIllustration(
     modifier: Modifier = Modifier,
-    outlineColor: Color = Color(0xFFAAA3B9),
-    circleColor: Color = Color(0xFFF2E8F7),
-    cabinetFill: Color = Color.White,
+    outlineColor: Color = MaterialTheme.colorScheme.outline,
+    circleColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    cabinetFill: Color = MaterialTheme.colorScheme.surface,
 ) {
     ArchiveCabinetIllustration(
         modifier = modifier,
@@ -128,9 +130,9 @@ fun EmptyArchiveIllustration(
 @Composable
 fun EmptyTrashIllustration(
     modifier: Modifier = Modifier,
-    outlineColor: Color = Color(0xFFAAA3B9),
-    circleColor: Color = Color(0xFFF2E8F7),
-    canFill: Color = Color.White,
+    outlineColor: Color = MaterialTheme.colorScheme.outline,
+    circleColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    canFill: Color = MaterialTheme.colorScheme.surface,
 ) {
     TrashCanIllustration(
         modifier = modifier,
@@ -143,9 +145,9 @@ fun EmptyTrashIllustration(
 @Composable
 fun ArchiveCabinetIllustration(
     modifier: Modifier = Modifier,
-    outlineColor: Color = Color(0xFFAAA3B9),
-    circleColor: Color = Color(0xFFF2E8F7),
-    cabinetFill: Color = Color.White,
+    outlineColor: Color = MaterialTheme.colorScheme.outline,
+    circleColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    cabinetFill: Color = MaterialTheme.colorScheme.surface,
 ) {
     Canvas(modifier = modifier.size(160.dp)) {
         val w = size.width
@@ -295,9 +297,9 @@ fun ArchiveCabinetIllustration(
 @Composable
 fun TrashCanIllustration(
     modifier: Modifier = Modifier,
-    outlineColor: Color = Color(0xFFAAA3B9),
-    circleColor: Color = Color(0xFFF2E8F7),
-    canFill: Color = Color.White,
+    outlineColor: Color = MaterialTheme.colorScheme.outline,
+    circleColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    canFill: Color = MaterialTheme.colorScheme.surface,
 ) {
     Canvas(modifier = modifier.size(160.dp)) {
         val w = size.width

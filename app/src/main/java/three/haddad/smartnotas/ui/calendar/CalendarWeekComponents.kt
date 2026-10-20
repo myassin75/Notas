@@ -65,11 +65,11 @@ fun WeekDaySelectorRow(
                 contentAlignment = Alignment.Center,
             ) {
                 if (day.isSelected) {
-                    // Selected Day: Tall purple pill
+                    // Selected Day: Tall pill
                     Surface(
                         onClick = { onDateSelected(day.date) },
                         shape = RoundedCornerShape(18.dp),
-                        color = CalendarDesignTokens.PrimaryPurple,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -85,7 +85,7 @@ fun WeekDaySelectorRow(
                                 text = day.dayOfWeekLetter,
                                 style =
                                     MaterialTheme.typography.labelSmall.copy(
-                                        color = Color.White.copy(alpha = 0.85f),
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp,
                                     ),
@@ -96,7 +96,7 @@ fun WeekDaySelectorRow(
                                 text = day.dayNumber.toString(),
                                 style =
                                     MaterialTheme.typography.bodyMedium.copy(
-                                        color = Color.White,
+                                        color = MaterialTheme.colorScheme.onPrimary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
                                     ),
@@ -114,7 +114,7 @@ fun WeekDaySelectorRow(
                                             modifier =
                                                 Modifier
                                                     .size(4.dp)
-                                                    .background(Color.White, shape = CircleShape),
+                                                    .background(MaterialTheme.colorScheme.onPrimary, shape = CircleShape),
                                         )
                                     }
                                 }
@@ -128,19 +128,19 @@ fun WeekDaySelectorRow(
                     val isTodayNonSelected = day.isToday
                     val dayTextColor =
                         when {
-                            isTodayNonSelected -> CalendarDesignTokens.PrimaryPurple
+                            isTodayNonSelected -> MaterialTheme.colorScheme.primary
                             day.state == CalendarDayState.OUT_OF_MONTH -> textMuted
                             else -> textPrimary
                         }
                     val nonSelectedBg =
                         if (isTodayNonSelected) {
-                            if (isDark) CalendarDesignTokens.DarkPurpleSelected.copy(alpha = 0.35f) else CalendarDesignTokens.SoftLavender.copy(alpha = 0.6f)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.6f)
                         } else {
                             Color.Transparent
                         }
                     val nonSelectedBorder =
                         if (isTodayNonSelected) {
-                            BorderStroke(1.5.dp, CalendarDesignTokens.PrimaryPurple)
+                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
                         } else {
                             null
                         }
@@ -165,7 +165,7 @@ fun WeekDaySelectorRow(
                                 text = day.dayOfWeekLetter,
                                 style =
                                     MaterialTheme.typography.labelSmall.copy(
-                                        color = if (isTodayNonSelected) CalendarDesignTokens.PrimaryPurple else textSecondary,
+                                        color = if (isTodayNonSelected) MaterialTheme.colorScheme.primary else textSecondary,
                                         fontWeight = if (isTodayNonSelected) FontWeight.Bold else FontWeight.Medium,
                                         fontSize = 12.sp,
                                     ),
@@ -277,7 +277,7 @@ fun WeekAgendaCard(
                                         MaterialTheme.typography.titleSmall.copy(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.5.sp,
-                                            color = CalendarDesignTokens.PrimaryPurple,
+                                            color = MaterialTheme.colorScheme.primary,
                                         ),
                                 )
                                 if (day.isToday) {
@@ -287,7 +287,7 @@ fun WeekAgendaCard(
                                             MaterialTheme.typography.labelSmall.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 11.5.sp,
-                                                color = CalendarDesignTokens.PrimaryPurple,
+                                                color = MaterialTheme.colorScheme.primary,
                                             ),
                                     )
                                 }
@@ -376,7 +376,7 @@ fun WeekAgendaCard(
                                     MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = CalendarDesignTokens.PrimaryPurple,
+                                        color = MaterialTheme.colorScheme.primary,
                                     ),
                             )
                         }

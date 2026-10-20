@@ -51,7 +51,7 @@ internal object SplashDesignTokens {
  * Production-ready Splash Screen for Notas, matching the approved reference design.
  *
  * Displays the dark burgundy squircle app icon, "Notas" title, and "from 3EE"
- * attribution on a solid light gray-lavender background (#F6F3F8).
+ * attribution on a background that adapts to Light, Dark, and OLED themes.
  */
 @Composable
 fun SplashScreen(
@@ -68,11 +68,15 @@ fun SplashScreen(
         label = "splashContentAlpha",
     )
 
+    val background = MaterialTheme.colorScheme.background
+    val appNameColor = MaterialTheme.colorScheme.onBackground
+    val attributionColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(SplashDesignTokens.Background),
+                .background(background),
     ) {
         // Centered Group: App Icon + App Name (optically balanced slightly above center)
         Column(
@@ -101,7 +105,7 @@ fun SplashScreen(
                     MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Medium,
-                        color = SplashDesignTokens.AppNameColor,
+                        color = appNameColor,
                         letterSpacing = (-0.5).sp,
                     ),
                 textAlign = TextAlign.Center,
@@ -115,7 +119,7 @@ fun SplashScreen(
                 MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
-                    color = SplashDesignTokens.AttributionColor,
+                    color = attributionColor,
                 ),
             textAlign = TextAlign.Center,
             modifier =

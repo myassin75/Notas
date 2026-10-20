@@ -100,11 +100,11 @@ fun AgendaSectionHeader(
         if (showNewEventButton) {
             Spacer(modifier = Modifier.width(12.dp))
 
-            // "+ New event" solid purple pill button
+            // "+ New event" solid primary pill button
             Surface(
                 onClick = onNewEventClick,
                 shape = CircleShape,
-                color = CalendarDesignTokens.PrimaryPurple,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.defaultMinSize(minHeight = 36.dp, minWidth = 48.dp),
             ) {
                 Row(
@@ -115,7 +115,7 @@ fun AgendaSectionHeader(
                     RememberMaterialRoundedSymbol(
                         name = "add",
                         size = 16.dp,
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                     )
                     Text(
                         text = stringResource(R.string.calendar_new_event),
@@ -125,7 +125,7 @@ fun AgendaSectionHeader(
                             MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.5.sp,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                             ),
                     )
                 }
@@ -144,14 +144,14 @@ fun AgendaCategoryHeader(
     iconName: String,
     count: Int,
     modifier: Modifier = Modifier,
-    iconTint: Color = CalendarDesignTokens.PrimaryPurple,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     badgeBgColor: Color? = null,
     badgeTextColor: Color? = null,
 ) {
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val defaultBadgeBg = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender
-    val defaultBadgeText = if (isDark) Color(0xFFD6B5EB) else CalendarDesignTokens.PrimaryPurple
+    val defaultBadgeBg = MaterialTheme.colorScheme.primaryContainer
+    val defaultBadgeText = MaterialTheme.colorScheme.onPrimaryContainer
     val finalBadgeBg = badgeBgColor ?: defaultBadgeBg
     val finalBadgeText = badgeTextColor ?: defaultBadgeText
 
@@ -537,12 +537,12 @@ fun CalendarEmptyIllustration(
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
-    val circleBg = if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender
-    val pegColor = if (isDark) Color(0xFFC49FE0) else CalendarDesignTokens.PrimaryPurple
-    val padBorder = if (isDark) Color(0xFF5A4468) else Color(0xFFC7B3D3)
-    val padBg = if (isDark) Color(0xFF262130) else Color.White
-    val headerStripBg = if (isDark) Color(0xFF483256) else Color(0xFFE2D0E6)
-    val dayNumberColor = if (isDark) Color(0xFFD6B5EB) else CalendarDesignTokens.PrimaryPurple
+    val circleBg = MaterialTheme.colorScheme.primaryContainer
+    val pegColor = MaterialTheme.colorScheme.primary
+    val padBorder = MaterialTheme.colorScheme.outlineVariant
+    val padBg = MaterialTheme.colorScheme.surface
+    val headerStripBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+    val dayNumberColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier =
@@ -711,7 +711,7 @@ fun CalendarEmptyState(
                 Surface(
                     onClick = onCreateEventClick,
                     shape = CircleShape,
-                    color = CalendarDesignTokens.PrimaryPurple,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.defaultMinSize(minHeight = 48.dp, minWidth = 140.dp),
                 ) {
                     Row(
@@ -722,7 +722,7 @@ fun CalendarEmptyState(
                         RememberMaterialRoundedSymbol(
                             name = "add",
                             size = 18.dp,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                         )
                         Text(
                             text = stringResource(R.string.calendar_new_event),
@@ -730,7 +730,7 @@ fun CalendarEmptyState(
                                 MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.5.sp,
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                 ),
                         )
                     }

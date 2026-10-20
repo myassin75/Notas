@@ -184,7 +184,7 @@ internal fun EditorTitleTopBar(
                     if (showNavigateBack) {
                         Surface(
                             shape = CircleShape,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.surface,
                             modifier =
                                 Modifier
                                     .padding(start = 8.dp)
@@ -197,7 +197,7 @@ internal fun EditorTitleTopBar(
                                     name = "arrow_back",
                                     autoMirror = true,
                                     size = 20.dp,
-                                    tint = Color(0xFF32313F),
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                     weight = FontWeight.Normal,
                                     filled = false,
                                 )
@@ -239,7 +239,7 @@ internal fun EditorTitleTopBar(
                     if ((isEditMode || hasUnsavedChanges) && !readOnly) {
                         Surface(
                             shape = CircleShape,
-                            color = SettingsDesignTokens.PrimaryPurple,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier =
                                 Modifier
                                     .padding(end = 8.dp)
@@ -254,7 +254,7 @@ internal fun EditorTitleTopBar(
                                 RememberMaterialRoundedSymbol(
                                     name = "check",
                                     size = 18.dp,
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     weight = FontWeight.Bold,
                                     filled = false,
                                 )
@@ -264,7 +264,7 @@ internal fun EditorTitleTopBar(
                                         MaterialTheme.typography.labelLarge.copy(
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 15.sp,
-                                            color = Color.White,
+                                            color = MaterialTheme.colorScheme.onPrimary,
                                         ),
                                 )
                             }

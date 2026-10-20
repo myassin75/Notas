@@ -46,16 +46,19 @@ import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 
 object SettingsDesignTokens {
-    val ScreenBg = Color(0xFFF5F5F8)
-    val CardBg = Color(0xFFFFFFFF)
-    val PrimaryPurple = Color(0xFF98549C)
-    val SoftLavender = Color(0xFFF4EAF6)
-    val TextPrimary = Color(0xFF41414D)
-    val TextSecondary = Color(0xFF9292A1)
-    val DividerColor = Color(0xFFF0EFF4)
-    val DisabledBg = Color(0xFFEFEFF4)
-    val DisabledText = Color(0xFF9292A1)
-    val DisabledSwitchTrack = Color(0xFFE2E2E9)
+    val ScreenBg: Color @Composable get() = MaterialTheme.colorScheme.background
+    val CardBg: Color @Composable get() = MaterialTheme.colorScheme.surface
+    val PrimaryPurple: Color @Composable get() = MaterialTheme.colorScheme.primary
+    val SoftLavender: Color @Composable get() = MaterialTheme.colorScheme.primaryContainer
+    val TextPrimary: Color @Composable get() = MaterialTheme.colorScheme.onSurface
+    val TextSecondary: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+    val DividerColor: Color @Composable get() = MaterialTheme.colorScheme.outlineVariant
+    val DisabledBg: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh
+    val DisabledText: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+    val DisabledSwitchTrack: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainerHighest
+
+    val StaticPrimary = Color(0xFF98549C)
+    val StaticSoftLavender = Color(0xFFF4EAF6)
 
     val CardShape = RoundedCornerShape(22.dp)
     val IconBoxShape = RoundedCornerShape(10.dp)
@@ -70,7 +73,7 @@ fun SettingsSectionCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = SettingsDesignTokens.CardShape,
-        color = SettingsDesignTokens.CardBg,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
@@ -98,7 +101,7 @@ fun SettingsSectionTitle(
         RememberMaterialRoundedSymbol(
             name = materialSymbolName,
             size = 20.dp,
-            tint = SettingsDesignTokens.PrimaryPurple,
+            tint = MaterialTheme.colorScheme.primary,
             weight = FontWeight.Normal,
             filled = false,
         )
@@ -108,7 +111,7 @@ fun SettingsSectionTitle(
                 MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
-                    color = SettingsDesignTokens.TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 ),
             modifier = Modifier.weight(1f),
         )
@@ -146,13 +149,13 @@ fun SettingsRowItem(
                     Modifier
                         .size(36.dp)
                         .clip(SettingsDesignTokens.IconBoxShape)
-                        .background(if (enabled) SettingsDesignTokens.SoftLavender else SettingsDesignTokens.DisabledBg),
+                        .background(if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
                     name = materialSymbolName,
                     size = 20.dp,
-                    tint = if (enabled) (titleColor ?: SettingsDesignTokens.PrimaryPurple) else SettingsDesignTokens.DisabledText,
+                    tint = if (enabled) (titleColor ?: MaterialTheme.colorScheme.primary) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
                     weight = FontWeight.Normal,
                     filled = false,
                 )
@@ -169,7 +172,7 @@ fun SettingsRowItem(
                     MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
-                        color = titleColor ?: (if (enabled) SettingsDesignTokens.TextPrimary else SettingsDesignTokens.DisabledText),
+                        color = titleColor ?: (if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)),
                     ),
             )
             if (!subtitle.isNullOrEmpty()) {
@@ -178,7 +181,7 @@ fun SettingsRowItem(
                     style =
                         MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.5.sp,
-                            color = SettingsDesignTokens.TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp,
                         ),
                     maxLines = 2,
@@ -205,7 +208,7 @@ fun SettingsValuePill(
                 .clip(SettingsDesignTokens.PillShape)
                 .then(clickableModifier),
         shape = SettingsDesignTokens.PillShape,
-        color = SettingsDesignTokens.SoftLavender,
+        color = MaterialTheme.colorScheme.primaryContainer,
     ) {
         Text(
             text = text,
@@ -213,7 +216,7 @@ fun SettingsValuePill(
                 MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
-                    color = SettingsDesignTokens.PrimaryPurple,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
         )
@@ -232,14 +235,14 @@ fun SettingsCustomSwitch(
         enabled = enabled,
         colors =
             SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = SettingsDesignTokens.PrimaryPurple,
-                checkedIconColor = SettingsDesignTokens.PrimaryPurple,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = SettingsDesignTokens.DisabledSwitchTrack,
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                checkedIconColor = MaterialTheme.colorScheme.primary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 uncheckedBorderColor = Color.Transparent,
-                disabledUncheckedTrackColor = SettingsDesignTokens.DisabledSwitchTrack,
-                disabledUncheckedThumbColor = Color.White,
+                disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                disabledUncheckedThumbColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.38f),
             ),
         thumbContent =
             if (checked) {
@@ -247,7 +250,7 @@ fun SettingsCustomSwitch(
                     RememberMaterialRoundedSymbol(
                         name = "check",
                         size = SwitchDefaults.IconSize,
-                        tint = SettingsDesignTokens.PrimaryPurple,
+                        tint = MaterialTheme.colorScheme.primary,
                         weight = FontWeight.Bold,
                     )
                 }
@@ -261,7 +264,7 @@ fun SettingsCustomSwitch(
 fun SettingsDivider(hasIcon: Boolean = true) {
     HorizontalDivider(
         modifier = Modifier.padding(start = if (hasIcon) 66.dp else 16.dp),
-        color = SettingsDesignTokens.DividerColor,
+        color = MaterialTheme.colorScheme.outlineVariant,
         thickness = 1.dp,
     )
 }

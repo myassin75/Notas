@@ -314,7 +314,12 @@ abstract class RememberDatabase : RoomDatabase() {
                                     }
                                 db.update("notes", SQLiteDatabase.CONFLICT_REPLACE, cv, "id = ?", arrayOf(id))
                             } else {
-                                val firstLine = trimmed.lines().firstOrNull()?.trim().orEmpty()
+                                val firstLine =
+                                    trimmed
+                                        .lines()
+                                        .firstOrNull()
+                                        ?.trim()
+                                        .orEmpty()
                                 val match = rangeRegex.find(firstLine)
                                 if (match != null) {
                                     val (h1Str, m1Str, ampm1, h2Str, m2Str, ampm2) = match.destructured
@@ -339,7 +344,12 @@ abstract class RememberDatabase : RoomDatabase() {
                                     val endDateTime = startDate.atTime(LocalTime.of(h2.coerceIn(0, 23), m2.coerceIn(0, 59)))
                                     val endMillis = endDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-                                    val remainingBody = trimmed.lines().drop(1).joinToString("\n").trim()
+                                    val remainingBody =
+                                        trimmed
+                                            .lines()
+                                            .drop(1)
+                                            .joinToString("\n")
+                                            .trim()
                                     val cv =
                                         ContentValues().apply {
                                             put("endAt", endMillis)

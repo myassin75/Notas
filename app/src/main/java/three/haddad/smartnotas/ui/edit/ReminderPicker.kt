@@ -24,8 +24,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -48,6 +46,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -568,7 +567,7 @@ fun ReminderPickerSheet(
         },
         sheetState = sheetState,
         showTitleBar = notificationsGranted,
-        containerColor = Color(0xFFF5F5F8),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         scrollable = true,
         actions = null,
     ) {
@@ -617,11 +616,11 @@ fun ReminderPickerSheet(
                                     .animateContentSize()
                                     .border(
                                         width = 1.dp,
-                                        color = if (isExpanded) Color(0xFF98549C).copy(alpha = 0.4f) else Color(0xFFEBEBF1),
+                                        color = if (isExpanded) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outlineVariant,
                                         shape = RoundedCornerShape(20.dp),
                                     ),
                             shape = RoundedCornerShape(20.dp),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.surface,
                         ) {
                             Column {
                                 Row(
@@ -998,12 +997,13 @@ fun ReminderPickerSheet(
                 onClick = {
                     showClearAllConfirmDialog = true
                 },
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFFF5F5F8),
-                    contentColor = Color(0xFF98549C),
-                    disabledContainerColor = Color(0xFFE2E2E9),
-                    disabledContentColor = Color(0xFFBBBCC6),
-                ),
+                colors =
+                    ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                    ),
             ) { Text(stringResource(R.string.reminder_clear_all)) }
 
             RememberFilledTonalButton(
@@ -1014,10 +1014,11 @@ fun ReminderPickerSheet(
                         onDismiss()
                     }
                 },
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFFF5F5F8),
-                    contentColor = Color(0xFF98549C),
-                ),
+                colors =
+                    ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
             ) { Text(stringResource(R.string.common_cancel)) }
 
             val isDoneEnabled =
@@ -1048,12 +1049,13 @@ fun ReminderPickerSheet(
                         onConfirm(remindersList)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF98549C),
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFE2E2E9),
-                    disabledContentColor = Color(0xFFBBBCC6),
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                    ),
             ) { Text(stringResource(R.string.common_save)) }
         }
         Spacer(Modifier.height(8.dp))
@@ -1081,8 +1083,7 @@ fun ReminderPickerSheet(
                                     reminderTimeExplicit = true,
                                     endDate = if (isEvent) endDateMillis else null,
                                     endKind = if (isEvent && endDateMillis != null) RecurrenceEndKind.ON_DATE else d.endKind,
-                                )
-                                .withRepeatAnchorsOn(dateMillis)
+                                ).withRepeatAnchorsOn(dateMillis)
                         } else {
                             d
                         }
@@ -1820,19 +1821,19 @@ private fun PillRow(
 ) {
     val iconColor =
         when {
-            !enabled -> Color(0xFFBBBCC6)
-            else -> Color(0xFF98549C)
+            !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+            else -> MaterialTheme.colorScheme.primary
         }
     val labelColor =
         when {
-            !enabled -> Color(0xFFBBBCC6)
-            else -> Color(0xFF272936)
+            !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+            else -> MaterialTheme.colorScheme.onSurface
         }
     val pillBg =
         when {
-            !enabled -> Color(0xFFE2E2E9)
-            hasValue -> Color(0xFFF3EAF6)
-            else -> Color(0xFFF5F5F8)
+            !enabled -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)
+            hasValue -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceContainerHigh
         }
     Row(
         modifier =
@@ -1840,7 +1841,8 @@ private fun PillRow(
                 .fillMaxWidth()
                 .heightIn(min = PillHeight)
                 .clip(MaterialTheme.shapes.large)
-                .background(pillBg).let { modifier ->
+                .background(pillBg)
+                .let { modifier ->
                     if (enabled) {
                         modifier.appClickable(onClick = onClick)
                     } else {
@@ -2667,12 +2669,12 @@ private fun QuickReminderChipsRow(
                 enabled = enabled,
                 colors =
                     FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFFF5F5F8),
-                        labelColor = Color(0xFF272936),
-                        iconColor = Color(0xFF98549C),
-                        selectedContainerColor = Color(0xFF98549C),
-                        selectedLabelColor = Color.White,
-                        selectedLeadingIconColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        labelColor = MaterialTheme.colorScheme.onSurface,
+                        iconColor = MaterialTheme.colorScheme.primary,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                 label = {
                     Text(
@@ -2684,7 +2686,7 @@ private fun QuickReminderChipsRow(
                     RememberMaterialRoundedSymbol(
                         name = preset.symbolName,
                         size = 16.dp,
-                        tint = if (isSelected) Color.White else Color(0xFF98549C),
+                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                     )
                 },
             )

@@ -18,6 +18,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -205,7 +206,9 @@ fun NoteActionBottomBarContent(
         label = "doneIconRotation",
     )
 
-    val targetBackgroundColor = if (completed) Color(0xFF1E8E3E) else Color(0xFF945394)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val targetBackgroundColor = if (completed) Color(0xFF1E8E3E) else primaryColor
     val backgroundColor by animateColorAsState(
         targetValue = targetBackgroundColor,
         animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
@@ -225,7 +228,8 @@ fun NoteActionBottomBarContent(
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         shadowElevation = 2.dp,
     ) {
         Row(
@@ -248,7 +252,7 @@ fun NoteActionBottomBarContent(
                 RememberMaterialRoundedSymbol(
                     name = if (pinned) "push_pin" else "push_pin",
                     size = 20.dp,
-                    tint = Color(0xFF272936),
+                    tint = onSurface,
                     weight = FontWeight.Normal,
                     filled = pinned,
                 )
@@ -257,7 +261,7 @@ fun NoteActionBottomBarContent(
                     style =
                         MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
-                            color = Color(0xFF272936),
+                            color = onSurface,
                         ),
                 )
             }
@@ -274,7 +278,7 @@ fun NoteActionBottomBarContent(
                 RememberMaterialRoundedSymbol(
                     name = "notifications",
                     size = 20.dp,
-                    tint = Color(0xFF272936),
+                    tint = onSurface,
                     weight = FontWeight.Normal,
                     filled = false,
                 )
@@ -283,7 +287,7 @@ fun NoteActionBottomBarContent(
                     style =
                         MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
-                            color = Color(0xFF272936),
+                            color = onSurface,
                         ),
                 )
             }
@@ -309,6 +313,7 @@ fun NoteActionBottomBarContent(
                             onToggleCompleted()
                         },
             ) {
+                val pillForeground = if (completed) Color.White else MaterialTheme.colorScheme.onPrimary
                 Row(
                     modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -317,7 +322,7 @@ fun NoteActionBottomBarContent(
                     RememberMaterialRoundedSymbol(
                         name = "check_circle",
                         size = 18.dp,
-                        tint = Color.White,
+                        tint = pillForeground,
                         weight = FontWeight.Medium,
                         filled = completed,
                         modifier =
@@ -353,7 +358,7 @@ fun NoteActionBottomBarContent(
                                 MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
-                                    color = Color.White,
+                                    color = pillForeground,
                                 ),
                         )
                     }
@@ -367,13 +372,13 @@ fun NoteActionBottomBarContent(
                         Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFF3EAF6))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                             .clickable { overflowMenuOpen = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Canvas(modifier = Modifier.size(20.dp)) {
                         val radius = 2.2.dp.toPx()
-                        val dotColor = Color(0xFF272936)
+                        val dotColor = onSurface
                         val centerY = size.height / 2f
                         val spacing = 5.5.dp.toPx()
                         val centerX = size.width / 2f
@@ -388,7 +393,7 @@ fun NoteActionBottomBarContent(
                 DropdownMenu(
                     expanded = overflowMenuOpen,
                     onDismissRequest = { overflowMenuOpen = false },
-                    modifier = Modifier.background(Color.White),
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer),
                 ) {
                     // Row 1: Archive
                     Row(
@@ -405,7 +410,7 @@ fun NoteActionBottomBarContent(
                         RememberMaterialRoundedSymbol(
                             name = "archive",
                             size = 20.dp,
-                            tint = Color(0xFF272936),
+                            tint = onSurface,
                             weight = FontWeight.Normal,
                             filled = false,
                         )
@@ -415,12 +420,12 @@ fun NoteActionBottomBarContent(
                                 MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp,
-                                    color = Color(0xFF272936),
+                                    color = onSurface,
                                 ),
                         )
                     }
 
-                    HorizontalDivider(color = Color(0xFFEBEBF1), thickness = 1.dp)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
 
                     // Row 2: Trash
                     Row(
@@ -437,7 +442,7 @@ fun NoteActionBottomBarContent(
                         RememberMaterialRoundedSymbol(
                             name = "delete",
                             size = 20.dp,
-                            tint = Color(0xFFD24750),
+                            tint = MaterialTheme.colorScheme.error,
                             weight = FontWeight.Normal,
                             filled = false,
                         )
@@ -447,7 +452,7 @@ fun NoteActionBottomBarContent(
                                 MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp,
-                                    color = Color(0xFFD24750),
+                                    color = MaterialTheme.colorScheme.error,
                                 ),
                         )
                     }

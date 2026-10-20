@@ -388,7 +388,12 @@ class EditEventViewModel
             val (reminderEpochMillis, endEpochMillis) =
                 if (isAllDay) {
                     val startMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    val endMillis = date.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    val endMillis =
+                        date
+                            .atTime(23, 59, 59)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli()
                     startMillis to endMillis
                 } else {
                     val start = _startTime.value
@@ -401,9 +406,18 @@ class EditEventViewModel
                             .toEpochMilli()
                     val endMillis =
                         if (end < start) {
-                            date.plusDays(1).atTime(end).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            date
+                                .plusDays(1)
+                                .atTime(end)
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli()
                         } else {
-                            date.atTime(end).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            date
+                                .atTime(end)
+                                .atZone(ZoneId.systemDefault())
+                                .toInstant()
+                                .toEpochMilli()
                         }
                     startMillis to endMillis
                 }

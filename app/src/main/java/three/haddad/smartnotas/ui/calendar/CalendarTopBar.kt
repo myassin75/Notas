@@ -213,11 +213,11 @@ fun CalendarViewDropdown(
             val isSelected = mode == currentViewMode
             val itemBg =
                 if (isSelected) {
-                    if (isDark) CalendarDesignTokens.DarkPurpleSelected else CalendarDesignTokens.SoftLavender
+                    MaterialTheme.colorScheme.primaryContainer
                 } else {
                     Color.Transparent
                 }
-            val contentColor = if (isSelected) CalendarDesignTokens.PrimaryPurple else textPrimary
+            val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else textPrimary
 
             DropdownMenuItem(
                 text = {
@@ -244,7 +244,7 @@ fun CalendarViewDropdown(
                             RememberMaterialRoundedSymbol(
                                 name = "check",
                                 size = 18.dp,
-                                tint = CalendarDesignTokens.PrimaryPurple,
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                     } else {
@@ -258,7 +258,7 @@ fun CalendarViewDropdown(
                     MenuDefaults.itemColors(
                         textColor = contentColor,
                         leadingIconColor = contentColor,
-                        trailingIconColor = CalendarDesignTokens.PrimaryPurple,
+                        trailingIconColor = MaterialTheme.colorScheme.primary,
                     ),
                 modifier =
                     Modifier

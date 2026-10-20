@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import three.haddad.smartnotas.di.DefaultDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +24,7 @@ import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceUnit
 import three.haddad.smartnotas.data.getActiveReminders
+import three.haddad.smartnotas.di.DefaultDispatcher
 import three.haddad.smartnotas.ui.theme.NoteColors
 import java.time.DayOfWeek
 import java.time.Instant
@@ -103,11 +103,11 @@ class CalendarViewModel
             ) { selectedDate, displayedMonth, currentWeekStart, viewMode, activeNotes ->
                 buildCalendarUiState(selectedDate, displayedMonth, currentWeekStart, viewMode, activeNotes, _errorMessage.value)
             }.flowOn(defaultDispatcher)
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = CalendarUiState(today = LocalDate.now()),
-            )
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = CalendarUiState(today = LocalDate.now()),
+                )
 
         fun onDateSelected(date: LocalDate) {
             _selectedDate.value = date
