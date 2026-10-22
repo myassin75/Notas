@@ -36,6 +36,7 @@ data class NoteCardUiModel(
     val checklistHiddenItemCount: Int,
     val shoulderName: String? = null,
     val shoulderColorHex: String? = null,
+    val colorIndex: Int = 0,
 )
 
 @Immutable
@@ -81,5 +82,6 @@ fun NoteWithItems.toNoteCardUiModel(
         checklistHiddenItemCount = (orderedChecklistItems.size - checklistPreviewLimit).coerceAtLeast(0),
         shoulderName = shoulder?.name,
         shoulderColorHex = shoulder?.colorHex,
+        colorIndex = note.colorIndex,
     )
 }

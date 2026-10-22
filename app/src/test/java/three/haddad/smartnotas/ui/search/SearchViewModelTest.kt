@@ -100,6 +100,8 @@ class SearchViewModelTest {
             object : NoteDao {
                 override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
+                override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
                 override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
                 override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
@@ -788,5 +790,67 @@ class SearchViewModelTest {
 
         val fiveFilters = fourFilters.copy(includeArchived = true)
         assertEquals(5, fiveFilters.activeCount)
+    }
+
+    @Test
+    fun buildHighlightedString_returns_plain_text_when_query_empty_or_no_match() {
+        val plain = buildHighlightedString("Hello World", "")
+        assertEquals("Hello World", plain.text)
+        assertTrue(plain.spanStyles.isEmpty())
+
+        val noMatch = buildHighlightedString("Hello World", "xyz")
+        assertEquals("Hello World", noMatch.text)
+        assertTrue(noMatch.spanStyles.isEmpty())
+    }
+
+    @Test
+    fun buildHighlightedString_adds_spans_for_matching_substrings() {
+        val highlighted = buildHighlightedString("Buy milk and oat milk", "milk")
+        assertEquals("Buy milk and oat milk", highlighted.text)
+        // Two occurrences of "milk" should be highlighted
+        assertEquals(2, highlighted.spanStyles.size)
+        assertEquals(4, highlighted.spanStyles[0].start)
+        assertEquals(8, highlighted.spanStyles[0].end)
+        assertEquals(17, highlighted.spanStyles[1].start)
+        assertEquals(21, highlighted.spanStyles[1].end)
+    }
+
+    @Test
+    fun buildSnippetAroundMatch_handles_various_string_lengths_and_queries() {
+        // Blank text
+        assertEquals("", buildSnippetAroundMatch("", "query"))
+
+        // Short text returns full trimmed text
+        assertEquals("Short text", buildSnippetAroundMatch("Short text", "text"))
+
+        // Long text with match
+        val longText = "Beginning of the very long text that goes on for a while until we find the keyword right here in the middle of a sentence."
+        val snippet = buildSnippetAroundMatch(longText, "keyword", maxChars = 40)
+        assertTrue(snippet.contains("keyword"))
+    }
+
+    @Test
+    fun filter_reset_completely_restores_all_default_fields() {
+        val customFilters =
+            SearchFilters(
+                typeIndex = 3,
+                dateRangeIndex = 2,
+                customStartDate = 1000L,
+                customEndDate = 2000L,
+                taskStatusIndex = 2,
+                shoulderId = 42L,
+                includeArchived = true,
+            )
+        assertEquals(5, customFilters.activeCount)
+
+        val resetFilters = SearchFilters()
+        assertEquals(0, resetFilters.activeCount)
+        assertEquals(0, resetFilters.typeIndex)
+        assertEquals(0, resetFilters.dateRangeIndex)
+        assertEquals(null, resetFilters.customStartDate)
+        assertEquals(null, resetFilters.customEndDate)
+        assertEquals(0, resetFilters.taskStatusIndex)
+        assertEquals(null, resetFilters.shoulderId)
+        assertFalse(resetFilters.includeArchived)
     }
 }

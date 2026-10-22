@@ -55,6 +55,7 @@ import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.data.effectiveDarkTheme
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberButton
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.ThemeColors
 
 /**
@@ -103,7 +104,7 @@ fun AppearanceSection(
                 ) {
                     AppearanceModeOption(
                         title = stringResource(R.string.appearance_theme_system),
-                        iconName = "brightness_auto",
+                        iconName = "devices",
                         selected = state.themeMode == ThemeMode.SYSTEM,
                         onClick = { scope.launch { prefs.setThemeMode(ThemeMode.SYSTEM) } },
                         modifier = Modifier.weight(1f),
@@ -117,7 +118,7 @@ fun AppearanceSection(
                     )
                     AppearanceModeOption(
                         title = stringResource(R.string.appearance_theme_dark),
-                        iconName = "dark_mode",
+                        iconName = "bedtime",
                         selected = state.themeMode == ThemeMode.DARK,
                         onClick = { scope.launch { prefs.setThemeMode(ThemeMode.DARK) } },
                         modifier = Modifier.weight(1f),
@@ -131,7 +132,7 @@ fun AppearanceSection(
             )
 
             // -------------------------------------------------------------------------
-            // Section 2: Accent Color Themes (7 choices)
+            // Section 2: Accent Color & Live Theme Preview (Integrated)
             // -------------------------------------------------------------------------
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
@@ -148,7 +149,7 @@ fun AppearanceSection(
                             ),
                     )
                     Text(
-                        text = state.accentTheme.displayName,
+                        text = stringResource(state.accentTheme.titleRes),
                         style =
                             MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
@@ -157,35 +158,12 @@ fun AppearanceSection(
                     )
                 }
 
-                AccentThemesGrid(
-                    selectedTheme = state.accentTheme,
-                    onSelect = { theme ->
-                        scope.launch { prefs.setAccentTheme(theme) }
-                    },
-                )
-            }
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp,
-            )
-
-            // -------------------------------------------------------------------------
-            // Section 3: Live Theme Preview
-            // -------------------------------------------------------------------------
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = stringResource(R.string.appearance_preview_title),
-                    style =
-                        MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        ),
-                )
-
                 LiveThemePreviewCard(
                     accentTheme = state.accentTheme,
                     isDark = isDark,
+                    onSelectTheme = { theme ->
+                        scope.launch { prefs.setAccentTheme(theme) }
+                    },
                 )
             }
 
@@ -249,19 +227,59 @@ private fun AppearanceModeOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isDark = LocalIsDark.current
+    val springSpec = spring<Color>(stiffness = Spring.StiffnessMediumLow)
+
+    val targetBg =
+        if (isDark) {
+            if (selected) {
+                Color(0xFF1E1E26).copy(alpha = 0.85f)
+            } else {
+                Color(0xFF141419).copy(alpha = 0.60f)
+            }
+        } else {
+            if (selected) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            }
+        }
+
     val animatedBg by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        targetValue = targetBg,
+        animationSpec = springSpec,
         label = "modeBgAnimation",
     )
+
+    val targetBorderColor =
+        if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.55f)
+        }
+
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        targetValue = targetBorderColor,
+        animationSpec = springSpec,
         label = "modeBorderAnimation",
     )
-    val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+
+    val animatedBorderWidth by animateDpAsState(
+        targetValue = if (selected) 1.5.dp else 1.dp,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "modeBorderWidthAnimation",
+    )
+
+    val targetContentColor =
+        if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+    val contentColor by animateColorAsState(
+        targetValue = targetContentColor,
+        animationSpec = springSpec,
         label = "modeContentColor",
     )
 
@@ -269,7 +287,7 @@ private fun AppearanceModeOption(
         modifier =
             modifier
                 .clip(RoundedCornerShape(14.dp))
-                .border(BorderStroke(1.5.dp, animatedBorderColor), RoundedCornerShape(14.dp))
+                .border(BorderStroke(animatedBorderWidth, animatedBorderColor), RoundedCornerShape(14.dp))
                 .clickable(role = Role.RadioButton, onClick = onClick)
                 .semantics {
                     this.role = Role.RadioButton
@@ -279,31 +297,48 @@ private fun AppearanceModeOption(
         shape = RoundedCornerShape(14.dp),
         color = animatedBg,
     ) {
-        Column(
+        Box(
             modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            contentAlignment = Alignment.Center,
         ) {
-            RememberMaterialRoundedSymbol(
-                name = iconName,
-                size = 22.dp,
-                tint = contentColor,
-                weight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                filled = selected,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = title,
-                style =
-                    MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = contentColor,
-                    ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = iconName,
+                    size = 22.dp,
+                    tint = contentColor,
+                    weight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                    filled = selected,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = title,
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = contentColor,
+                        ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            if (selected) {
+                Box(
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(end = 5.dp, top = 2.dp)
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                )
+            }
         }
     }
 }
@@ -361,6 +396,7 @@ private fun AccentThemeCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isDark = LocalIsDark.current
     val seedColor =
         when (theme) {
             AccentTheme.MAROON -> ThemeColors.MaroonSeed
@@ -373,17 +409,35 @@ private fun AccentThemeCard(
         }
 
     val animatedBorderWidth by animateDpAsState(
-        targetValue = if (selected) 2.dp else 1.dp,
+        targetValue = if (selected) 1.5.dp else 1.dp,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "accentBorderWidth",
     )
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+        targetValue =
+            if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.55f)
+            },
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "accentBorderColor",
     )
     val cardBackground by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceContainerLow,
+        targetValue =
+            if (isDark) {
+                if (selected) {
+                    Color(0xFF262638).copy(alpha = 0.90f)
+                } else {
+                    Color(0xFF1E1E28).copy(alpha = 0.75f)
+                }
+            } else {
+                if (selected) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.32f)
+                } else {
+                    MaterialTheme.colorScheme.surface
+                }
+            },
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "accentCardBg",
     )
@@ -417,7 +471,11 @@ private fun AccentThemeCard(
                         .border(
                             BorderStroke(
                                 1.dp,
-                                if (theme == AccentTheme.PURE_BLACK) MaterialTheme.colorScheme.outline else Color.White.copy(alpha = 0.3f),
+                                if (theme == AccentTheme.PURE_BLACK) {
+                                    MaterialTheme.colorScheme.outline
+                                } else {
+                                    Color.White.copy(alpha = 0.35f)
+                                },
                             ),
                             CircleShape,
                         ),
@@ -427,7 +485,7 @@ private fun AccentThemeCard(
                     RememberMaterialRoundedSymbol(
                         name = "check",
                         size = 18.dp,
-                        tint = if (theme == AccentTheme.OCEAN_TEAL || seedColor == Color.White) Color.Black else Color.White,
+                        tint = if (theme == AccentTheme.OCEAN_TEAL) Color.Black else Color.White,
                         weight = FontWeight.Bold,
                     )
                 }
@@ -436,12 +494,17 @@ private fun AccentThemeCard(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = theme.displayName,
+                text = stringResource(theme.titleRes),
                 style =
                     MaterialTheme.typography.labelSmall.copy(
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 11.sp,
-                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color =
+                            if (selected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                     ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -458,22 +521,36 @@ private fun AccentThemeCard(
 private fun LiveThemePreviewCard(
     accentTheme: AccentTheme,
     isDark: Boolean,
+    onSelectTheme: (AccentTheme) -> Unit,
 ) {
+    val isDarkLocal = LocalIsDark.current
+    val previewBg =
+        if (isDarkLocal) {
+            Color(0xFF141419).copy(alpha = 0.65f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer
+        }
+    val previewBorder =
+        BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDarkLocal) 0.35f else 0.55f),
+        )
+
     Surface(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), RoundedCornerShape(16.dp)),
+                .border(previewBorder, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = previewBg,
     ) {
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -507,7 +584,7 @@ private fun LiveThemePreviewCard(
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Text(
-                        text = accentTheme.displayName,
+                        text = stringResource(accentTheme.titleRes),
                         style =
                             MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.SemiBold,
@@ -575,6 +652,16 @@ private fun LiveThemePreviewCard(
                     )
                 }
             }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDarkLocal) 0.35f else 0.55f),
+                thickness = 1.dp,
+            )
+
+            AccentThemesGrid(
+                selectedTheme = accentTheme,
+                onSelect = onSelectTheme,
+            )
         }
     }
 }

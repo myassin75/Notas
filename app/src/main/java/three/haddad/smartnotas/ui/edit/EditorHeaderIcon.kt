@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,7 +42,7 @@ internal fun EditorHeaderIcon(
     val iconContentDescription = stringResource(R.string.options_icon_cd)
     val iconInteractionSource = remember { MutableInteractionSource() }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
     val accent = NoteColors.at(colorIndex)
     val hasCustomColor = !NoteColors.isNone(colorIndex)
     val effectiveTint =

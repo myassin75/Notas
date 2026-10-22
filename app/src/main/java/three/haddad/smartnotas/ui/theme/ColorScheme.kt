@@ -3,6 +3,7 @@ package three.haddad.smartnotas.ui.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.ui.graphics.Color
 import three.haddad.smartnotas.data.AccentTheme
 
 /**
@@ -400,21 +401,155 @@ private fun buildDarkColorScheme(
                 )
         }
 
-    val background = if (isOledBlack) ThemeColors.OledBackground else ThemeColors.DarkBackground
-    val surface = if (isOledBlack) ThemeColors.OledSurface else ThemeColors.DarkSurface
-    val surfaceVariant = if (isOledBlack) ThemeColors.OledSurfaceVariant else ThemeColors.DarkSurfaceVariant
-    val onBackground = if (isOledBlack) ThemeColors.OledOnBackground else ThemeColors.DarkOnBackground
-    val onSurface = if (isOledBlack) ThemeColors.OledOnSurface else ThemeColors.DarkOnSurface
-    val onSurfaceVariant = if (isOledBlack) ThemeColors.OledOnSurfaceVariant else ThemeColors.DarkOnSurfaceVariant
-    val outline = if (isOledBlack) ThemeColors.OledOutline else ThemeColors.DarkOutline
-    val outlineVariant = if (isOledBlack) ThemeColors.OledOutlineVariant else ThemeColors.DarkOutlineVariant
-    val surfaceContainerLowest = if (isOledBlack) ThemeColors.OledSurfaceContainerLowest else ThemeColors.DarkSurfaceContainerLowest
-    val surfaceContainerLow = if (isOledBlack) ThemeColors.OledSurfaceContainerLow else ThemeColors.DarkSurfaceContainerLow
-    val surfaceContainer = if (isOledBlack) ThemeColors.OledSurfaceContainer else ThemeColors.DarkSurfaceContainer
-    val surfaceContainerHigh = if (isOledBlack) ThemeColors.OledSurfaceContainerHigh else ThemeColors.DarkSurfaceContainerHigh
-    val surfaceContainerHighest = if (isOledBlack) ThemeColors.OledSurfaceContainerHighest else ThemeColors.DarkSurfaceContainerHighest
-    val surfaceBright = if (isOledBlack) ThemeColors.OledSurfaceBright else ThemeColors.DarkSurfaceBright
-    val surfaceDim = if (isOledBlack) ThemeColors.OledSurfaceDim else ThemeColors.DarkSurfaceDim
+    val surfaces =
+        if (isOledBlack) {
+            DarkThemeSurfaces(
+                background = ThemeColors.OledBackground,
+                surface = ThemeColors.OledSurface,
+                surfaceVariant = ThemeColors.OledSurfaceVariant,
+                onBackground = ThemeColors.OledOnBackground,
+                onSurface = ThemeColors.OledOnSurface,
+                onSurfaceVariant = ThemeColors.OledOnSurfaceVariant,
+                outline = ThemeColors.OledOutline,
+                outlineVariant = ThemeColors.OledOutlineVariant,
+                surfaceContainerLowest = ThemeColors.OledSurfaceContainerLowest,
+                surfaceContainerLow = ThemeColors.OledSurfaceContainerLow,
+                surfaceContainer = ThemeColors.OledSurfaceContainer,
+                surfaceContainerHigh = ThemeColors.OledSurfaceContainerHigh,
+                surfaceContainerHighest = ThemeColors.OledSurfaceContainerHighest,
+                surfaceBright = ThemeColors.OledSurfaceBright,
+                surfaceDim = ThemeColors.OledSurfaceDim,
+            )
+        } else {
+            when (accentTheme) {
+                AccentTheme.MAROON ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.Maroon.DarkBackground,
+                        surface = ThemeColors.Maroon.DarkSurface,
+                        surfaceVariant = ThemeColors.Maroon.DarkSurfaceVariant,
+                        onBackground = ThemeColors.Maroon.DarkOnBackground,
+                        onSurface = ThemeColors.Maroon.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.Maroon.DarkOnSurfaceVariant,
+                        outline = ThemeColors.Maroon.DarkOutline,
+                        outlineVariant = ThemeColors.Maroon.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.Maroon.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.Maroon.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.Maroon.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.Maroon.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.Maroon.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.Maroon.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.Maroon.DarkSurfaceDim,
+                    )
+                AccentTheme.ROYAL_BLUE ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.RoyalBlue.DarkBackground,
+                        surface = ThemeColors.RoyalBlue.DarkSurface,
+                        surfaceVariant = ThemeColors.RoyalBlue.DarkSurfaceVariant,
+                        onBackground = ThemeColors.RoyalBlue.DarkOnBackground,
+                        onSurface = ThemeColors.RoyalBlue.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.RoyalBlue.DarkOnSurfaceVariant,
+                        outline = ThemeColors.RoyalBlue.DarkOutline,
+                        outlineVariant = ThemeColors.RoyalBlue.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.RoyalBlue.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.RoyalBlue.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.RoyalBlue.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.RoyalBlue.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.RoyalBlue.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.RoyalBlue.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.RoyalBlue.DarkSurfaceDim,
+                    )
+                AccentTheme.FOREST_GREEN ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.ForestGreen.DarkBackground,
+                        surface = ThemeColors.ForestGreen.DarkSurface,
+                        surfaceVariant = ThemeColors.ForestGreen.DarkSurfaceVariant,
+                        onBackground = ThemeColors.ForestGreen.DarkOnBackground,
+                        onSurface = ThemeColors.ForestGreen.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.ForestGreen.DarkOnSurfaceVariant,
+                        outline = ThemeColors.ForestGreen.DarkOutline,
+                        outlineVariant = ThemeColors.ForestGreen.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.ForestGreen.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.ForestGreen.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.ForestGreen.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.ForestGreen.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.ForestGreen.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.ForestGreen.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.ForestGreen.DarkSurfaceDim,
+                    )
+                AccentTheme.DARK_BROWN ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.DarkBrown.DarkBackground,
+                        surface = ThemeColors.DarkBrown.DarkSurface,
+                        surfaceVariant = ThemeColors.DarkBrown.DarkSurfaceVariant,
+                        onBackground = ThemeColors.DarkBrown.DarkOnBackground,
+                        onSurface = ThemeColors.DarkBrown.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.DarkBrown.DarkOnSurfaceVariant,
+                        outline = ThemeColors.DarkBrown.DarkOutline,
+                        outlineVariant = ThemeColors.DarkBrown.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.DarkBrown.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.DarkBrown.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.DarkBrown.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.DarkBrown.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.DarkBrown.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.DarkBrown.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.DarkBrown.DarkSurfaceDim,
+                    )
+                AccentTheme.OCEAN_TEAL ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.OceanTeal.DarkBackground,
+                        surface = ThemeColors.OceanTeal.DarkSurface,
+                        surfaceVariant = ThemeColors.OceanTeal.DarkSurfaceVariant,
+                        onBackground = ThemeColors.OceanTeal.DarkOnBackground,
+                        onSurface = ThemeColors.OceanTeal.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.OceanTeal.DarkOnSurfaceVariant,
+                        outline = ThemeColors.OceanTeal.DarkOutline,
+                        outlineVariant = ThemeColors.OceanTeal.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.OceanTeal.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.OceanTeal.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.OceanTeal.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.OceanTeal.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.OceanTeal.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.OceanTeal.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.OceanTeal.DarkSurfaceDim,
+                    )
+                AccentTheme.PURE_BLACK ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.PureBlack.DarkBackground,
+                        surface = ThemeColors.PureBlack.DarkSurface,
+                        surfaceVariant = ThemeColors.PureBlack.DarkSurfaceVariant,
+                        onBackground = ThemeColors.PureBlack.DarkOnBackground,
+                        onSurface = ThemeColors.PureBlack.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.PureBlack.DarkOnSurfaceVariant,
+                        outline = ThemeColors.PureBlack.DarkOutline,
+                        outlineVariant = ThemeColors.PureBlack.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.PureBlack.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.PureBlack.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.PureBlack.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.PureBlack.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.PureBlack.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.PureBlack.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.PureBlack.DarkSurfaceDim,
+                    )
+                AccentTheme.AMETHYST ->
+                    DarkThemeSurfaces(
+                        background = ThemeColors.Amethyst.DarkBackground,
+                        surface = ThemeColors.Amethyst.DarkSurface,
+                        surfaceVariant = ThemeColors.Amethyst.DarkSurfaceVariant,
+                        onBackground = ThemeColors.Amethyst.DarkOnBackground,
+                        onSurface = ThemeColors.Amethyst.DarkOnSurface,
+                        onSurfaceVariant = ThemeColors.Amethyst.DarkOnSurfaceVariant,
+                        outline = ThemeColors.Amethyst.DarkOutline,
+                        outlineVariant = ThemeColors.Amethyst.DarkOutlineVariant,
+                        surfaceContainerLowest = ThemeColors.Amethyst.DarkSurfaceContainerLowest,
+                        surfaceContainerLow = ThemeColors.Amethyst.DarkSurfaceContainerLow,
+                        surfaceContainer = ThemeColors.Amethyst.DarkSurfaceContainer,
+                        surfaceContainerHigh = ThemeColors.Amethyst.DarkSurfaceContainerHigh,
+                        surfaceContainerHighest = ThemeColors.Amethyst.DarkSurfaceContainerHighest,
+                        surfaceBright = ThemeColors.Amethyst.DarkSurfaceBright,
+                        surfaceDim = ThemeColors.Amethyst.DarkSurfaceDim,
+                    )
+            }
+        }
 
     return darkColorScheme(
         primary = primary,
@@ -430,12 +565,12 @@ private fun buildDarkColorScheme(
         onTertiary = onTertiary,
         tertiaryContainer = tertiaryContainer,
         onTertiaryContainer = onTertiaryContainer,
-        background = background,
-        onBackground = onBackground,
-        surface = surface,
-        onSurface = onSurface,
-        surfaceVariant = surfaceVariant,
-        onSurfaceVariant = onSurfaceVariant,
+        background = surfaces.background,
+        onBackground = surfaces.onBackground,
+        surface = surfaces.surface,
+        onSurface = surfaces.onSurface,
+        surfaceVariant = surfaces.surfaceVariant,
+        onSurfaceVariant = surfaces.onSurfaceVariant,
         surfaceTint = primary,
         inverseSurface = ThemeColors.DarkInverseSurface,
         inverseOnSurface = ThemeColors.DarkInverseOnSurface,
@@ -443,16 +578,16 @@ private fun buildDarkColorScheme(
         onError = ThemeColors.DarkOnError,
         errorContainer = ThemeColors.DarkErrorContainer,
         onErrorContainer = ThemeColors.DarkOnErrorContainer,
-        outline = outline,
-        outlineVariant = outlineVariant,
+        outline = surfaces.outline,
+        outlineVariant = surfaces.outlineVariant,
         scrim = ThemeColors.Scrim,
-        surfaceBright = surfaceBright,
-        surfaceDim = surfaceDim,
-        surfaceContainerLowest = surfaceContainerLowest,
-        surfaceContainerLow = surfaceContainerLow,
-        surfaceContainer = surfaceContainer,
-        surfaceContainerHigh = surfaceContainerHigh,
-        surfaceContainerHighest = surfaceContainerHighest,
+        surfaceBright = surfaces.surfaceBright,
+        surfaceDim = surfaces.surfaceDim,
+        surfaceContainerLowest = surfaces.surfaceContainerLowest,
+        surfaceContainerLow = surfaces.surfaceContainerLow,
+        surfaceContainer = surfaces.surfaceContainer,
+        surfaceContainerHigh = surfaces.surfaceContainerHigh,
+        surfaceContainerHighest = surfaces.surfaceContainerHighest,
     )
 }
 
@@ -469,4 +604,22 @@ private data class Quintuple<A, B, C, D, E>(
     val third: C,
     val fourth: D,
     val fifth: E,
+)
+
+private data class DarkThemeSurfaces(
+    val background: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val onBackground: Color,
+    val onSurface: Color,
+    val onSurfaceVariant: Color,
+    val outline: Color,
+    val outlineVariant: Color,
+    val surfaceContainerLowest: Color,
+    val surfaceContainerLow: Color,
+    val surfaceContainer: Color,
+    val surfaceContainerHigh: Color,
+    val surfaceContainerHighest: Color,
+    val surfaceBright: Color,
+    val surfaceDim: Color,
 )

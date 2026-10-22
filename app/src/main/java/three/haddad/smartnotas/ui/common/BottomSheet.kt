@@ -60,7 +60,7 @@ fun AppBottomSheet(
     scrollable: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
     subtitleSpacing: Dp = 6.dp,
-    containerColor: Color = MaterialTheme.colorScheme.background,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     contentColor: Color = contentColorFor(containerColor),
     subtitleContent: (@Composable () -> Unit)? = null,
     titleAccessory: (@Composable RowScope.() -> Unit)? = null,

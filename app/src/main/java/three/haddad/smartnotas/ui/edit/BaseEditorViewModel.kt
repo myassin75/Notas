@@ -305,6 +305,8 @@ abstract class BaseEditorViewModel(
                         completedAt = n.completedAt,
                         pinnedAt = n.pinnedAt,
                         reminderAt = n.reminderAt,
+                        endAt = n.endAt,
+                        isAllDay = n.isAllDay,
                         recurrence = n.recurrence,
                         reminders = n.reminders,
                         createdAt = n.createdAt,

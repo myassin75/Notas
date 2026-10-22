@@ -19,15 +19,9 @@ private val LightContent = Color(0xFF1C1B1F)
  */
 @Composable
 fun elevatedCardColors(): CardColors {
-    val themeState = LocalThemeState.current
-    val blackThemeActive = themeState.blackThemeActive(LocalIsDark.current)
-    val container =
-        if (blackThemeActive) {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        } else {
-            MaterialTheme.colorScheme.surfaceContainer
-        }
-    val content = if (LocalIsDark.current) DarkContent else LightContent
+    val isDark = LocalIsDark.current
+    val container = glassContainerColor(GlassVariant.StandardCard, isDark)
+    val content = if (isDark) DarkContent else LightContent
     return CardDefaults.elevatedCardColors(
         containerColor = container,
         contentColor = content,

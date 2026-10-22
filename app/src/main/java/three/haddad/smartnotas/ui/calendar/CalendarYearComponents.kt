@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,7 +73,7 @@ fun YearNavigationHeader(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     Box(
         modifier =
@@ -171,7 +172,7 @@ fun CalendarYearView(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
     val reducedMotion = LocalReducedMotion.current
 
     Box(
@@ -379,12 +380,7 @@ fun YearMonthCard(
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
-    val cardBg =
-        if (isSelectedMonth) {
-            if (isDark) CalendarDesignTokens.CardBgDark else Color.White
-        } else {
-            CalendarDesignTokens.resolveCardBg(isDark)
-        }
+    val cardBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     val cardBorder =
         if (isSelectedMonth) {
@@ -578,29 +574,13 @@ private fun YearMonthDateGrid(
                                         modifier =
                                             Modifier
                                                 .size(20.dp)
-                                                .background(MaterialTheme.colorScheme.primary, CircleShape),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text(
-                                            text = dayNumber.toString(),
-                                            style =
-                                                MaterialTheme.typography.labelSmall.copy(
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimary,
-                                                ),
-                                            textAlign = TextAlign.Center,
-                                        )
-                                    }
-                                }
-                                isToday -> {
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .size(20.dp)
-                                                .background(
-                                                    MaterialTheme.colorScheme.primaryContainer,
-                                                    CircleShape,
+                                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                                                .then(
+                                                    if (isToday) {
+                                                        Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                                    } else {
+                                                        Modifier
+                                                    }
                                                 ),
                                         contentAlignment = Alignment.Center,
                                     ) {
@@ -611,6 +591,30 @@ private fun YearMonthDateGrid(
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                ),
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
+                                }
+                                isToday -> {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .size(20.dp)
+                                                .border(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.primary,
+                                                    CircleShape,
+                                                ),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = dayNumber.toString(),
+                                            style =
+                                                MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary,
                                                 ),
                                             textAlign = TextAlign.Center,
                                         )

@@ -84,7 +84,7 @@ fun CalendarTopBar(
             Surface(
                 onClick = { menuExpanded = true },
                 shape = CalendarDesignTokens.MenuButtonShape,
-                color = if (isDark) CalendarDesignTokens.CardBgDark else Color.White,
+                color = CalendarDesignTokens.resolveCardBg(isDark),
                 border =
                     BorderStroke(
                         width = 1.dp,
@@ -155,7 +155,7 @@ fun CalendarTopBar(
             Surface(
                 onClick = onNotificationClick,
                 shape = CircleShape,
-                color = if (isDark) CalendarDesignTokens.CardBgDark else Color.White,
+                color = CalendarDesignTokens.resolveCardBg(isDark),
                 border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark)),
                 modifier = Modifier.size(42.dp),
             ) {
@@ -182,7 +182,7 @@ fun CalendarViewDropdown(
     onSelectViewMode: (CalendarViewMode) -> Unit,
 ) {
     val isDark = LocalIsDark.current
-    val menuBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val menuBg = CalendarDesignTokens.resolveCardBg(isDark)
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 

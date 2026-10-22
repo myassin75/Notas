@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -67,6 +71,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.compositeOver
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.NoteKind
@@ -74,7 +80,12 @@ import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.SearchHistoryEntry
 import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
+import three.haddad.smartnotas.ui.components.parseNoteColorHex
+import three.haddad.smartnotas.ui.components.readableBadgeColors
 import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.theme.LocalIsDark
+import three.haddad.smartnotas.ui.theme.NoteColors
+import three.haddad.smartnotas.ui.theme.elevatedCardColors
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -121,6 +132,8 @@ fun SearchScreen(
     onApplyFilters: (SearchFilters) -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    var isSearchFocused by remember { mutableStateOf(false) }
+    val isDark = LocalIsDark.current
 
     val categories =
         listOf(
@@ -131,7 +144,7 @@ fun SearchScreen(
         )
 
     Scaffold(
-        containerColor = SettingsDesignTokens.ScreenBg,
+        containerColor = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background,
         topBar = {
             Column(
                 modifier =
@@ -172,13 +185,27 @@ fun SearchScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
+                    val searchBarBg =
+                        if (isDark) {
+                            Color(0xFF15151C)
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        }
+                    val searchBarBorder =
+                        if (isSearchFocused) {
+                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.85f else 0.75f))
+                        } else {
+                            BorderStroke(1.dp, if (isDark) Color(0xFF282834).copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                        }
+
                     Surface(
                         modifier =
                             Modifier
                                 .weight(1f)
                                 .height(52.dp),
                         shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surface,
+                        color = searchBarBg,
+                        border = searchBarBorder,
                     ) {
                         Row(
                             modifier =
@@ -187,17 +214,23 @@ fun SearchScreen(
                                     .padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            val iconTint =
+                                if (isSearchFocused || uiState.query.isNotEmpty()) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
                             RememberMaterialRoundedSymbol(
                                 name = "search",
                                 size = 22.dp,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = iconTint,
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Box(modifier = Modifier.weight(1f)) {
                                 if (uiState.query.isEmpty()) {
                                     Text(
                                         text = stringResource(R.string.search_placeholder),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
                                     )
                                 }
@@ -210,7 +243,10 @@ fun SearchScreen(
                                         KeyboardActions(
                                             onSearch = { onSubmitSearch(uiState.query) },
                                         ),
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .onFocusChanged { isSearchFocused = it.isFocused },
                                     textStyle =
                                         MaterialTheme.typography.bodyLarge.copy(
                                             color = MaterialTheme.colorScheme.onSurface,
@@ -241,10 +277,19 @@ fun SearchScreen(
                     }
 
                     // Filter Button with Active Badge
+                    val hasActiveFilters = uiState.filters.activeCount > 0
+                    val filterBorder =
+                        if (hasActiveFilters) {
+                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                        } else {
+                            BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                        }
+
                     Box {
                         Surface(
                             shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colorScheme.surface,
+                            color = searchBarBg,
+                            border = filterBorder,
                             modifier =
                                 Modifier
                                     .size(52.dp)
@@ -255,11 +300,11 @@ fun SearchScreen(
                                 RememberMaterialRoundedSymbol(
                                     name = "tune",
                                     size = 22.dp,
-                                    tint = if (uiState.filters.activeCount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                    tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
-                        if (uiState.filters.activeCount > 0) {
+                        if (hasActiveFilters) {
                             Surface(
                                 shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primary,
@@ -309,10 +354,39 @@ fun SearchScreen(
                                 else -> null
                             }
 
+                        val pillBg =
+                            if (isSelected) {
+                                if (isDark) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                                } else {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                }
+                            } else {
+                                if (isDark) {
+                                    Color(0xFF141419).copy(alpha = 0.60f)
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                }
+                            }
+
+                        val pillBorder =
+                            if (isSelected) {
+                                BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                            } else {
+                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.50f))
+                            }
+
+                        val pillContentColor =
+                            if (isSelected) {
+                                if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+
                         Surface(
                             shape = CircleShape,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            color = pillBg,
+                            border = pillBorder,
                             modifier =
                                 Modifier
                                     .clip(CircleShape)
@@ -327,12 +401,12 @@ fun SearchScreen(
                                     RememberMaterialRoundedSymbol(
                                         name = iconName,
                                         size = 16.dp,
-                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        tint = pillContentColor,
                                     )
                                 }
                                 Text(
                                     text = title,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = pillContentColor,
                                     style =
                                         MaterialTheme.typography.labelLarge.copy(
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -342,7 +416,7 @@ fun SearchScreen(
                                 if (uiState.query.isNotBlank()) {
                                     Text(
                                         text = typeCount.toString(),
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.primary,
+                                        color = if (isSelected) pillContentColor else MaterialTheme.colorScheme.primary,
                                         style =
                                             MaterialTheme.typography.labelLarge.copy(
                                                 fontWeight = FontWeight.Bold,
@@ -374,9 +448,23 @@ fun SearchScreen(
                 ) {
                     item {
                         // Informational Card
+                        val infoCardBg =
+                            if (isDark) {
+                                Color(0xFF181820).copy(alpha = 0.80f)
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer
+                            }
+                        val infoCardBorder =
+                            if (isDark) {
+                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+                            } else {
+                                null
+                            }
+
                         Surface(
                             shape = RoundedCornerShape(24.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
+                            color = infoCardBg,
+                            border = infoCardBorder,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Row(
@@ -404,7 +492,7 @@ fun SearchScreen(
                                             MaterialTheme.typography.titleMedium.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 16.sp,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                color = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimaryContainer,
                                             ),
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -454,9 +542,19 @@ fun SearchScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
+                            val recentCardBg =
+                                if (isDark) {
+                                    Color(0xFF141419).copy(alpha = 0.75f)
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                }
+                            val recentBorder =
+                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.40f))
+
                             Surface(
                                 shape = RoundedCornerShape(24.dp),
-                                color = MaterialTheme.colorScheme.surface,
+                                color = recentCardBg,
+                                border = recentBorder,
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Column {
@@ -515,7 +613,7 @@ fun SearchScreen(
                                         }
                                         if (index < recentSearches.size - 1) {
                                             HorizontalDivider(
-                                                color = MaterialTheme.colorScheme.outlineVariant,
+                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
                                                 thickness = 1.dp,
                                                 modifier = Modifier.padding(horizontal = 18.dp),
                                             )
@@ -536,8 +634,20 @@ fun SearchScreen(
                         }
                     }
                 }
-            } else if (uiState.searchResults.isEmpty() && !uiState.isLoading) {
-                // Empty Search Results State
+            } else if (uiState.isLoading) {
+                // Loading State with Semantic Accent
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(36.dp),
+                        strokeWidth = 3.dp,
+                    )
+                }
+            } else if (uiState.searchResults.isEmpty()) {
+                // Understated Empty Search Results State
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -546,16 +656,26 @@ fun SearchScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(horizontal = 24.dp),
                     ) {
+                        val emptyCircleBg =
+                            if (isDark) {
+                                Color(0xFF181820).copy(alpha = 0.80f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            }
+                        val emptyCircleBorder =
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.35f))
+
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(80.dp),
+                            color = emptyCircleBg,
+                            border = emptyCircleBorder,
+                            modifier = Modifier.size(76.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 RememberMaterialRoundedSymbol(
                                     name = "search_off",
-                                    size = 36.dp,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    size = 32.dp,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -580,9 +700,22 @@ fun SearchScreen(
                             textAlign = TextAlign.Center,
                         )
                         Spacer(modifier = Modifier.height(20.dp))
+                        val clearBtnBg =
+                            if (isDark) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer
+                            }
+                        val clearBtnColor =
+                            if (isDark) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            }
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = clearBtnBg,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                             modifier =
                                 Modifier
                                     .clip(CircleShape)
@@ -593,7 +726,7 @@ fun SearchScreen(
                                 style =
                                     MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        color = clearBtnColor,
                                     ),
                                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                             )
@@ -625,7 +758,7 @@ fun SearchScreen(
                                 MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp,
-                                    color = Color(0xFF272936),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 ),
                         )
                         val scopeText =
@@ -640,7 +773,7 @@ fun SearchScreen(
                             style =
                                 MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 13.sp,
-                                    color = Color(0xFF7C7D8B),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 ),
                         )
                     }
@@ -659,7 +792,7 @@ fun SearchScreen(
                             style =
                                 MaterialTheme.typography.bodySmall.copy(
                                     fontSize = 13.sp,
-                                    color = Color(0xFF7C7D8B),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 ),
                         )
                         LazyRow(
@@ -667,10 +800,37 @@ fun SearchScreen(
                         ) {
                             items(sorts) { (mode, label) ->
                                 val isSelected = uiState.sortMode == mode
+                                val sortPillBg =
+                                    if (isSelected) {
+                                        if (isDark) {
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                                        } else {
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        }
+                                    } else {
+                                        if (isDark) {
+                                            Color(0xFF141419).copy(alpha = 0.60f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surface
+                                        }
+                                    }
+                                val sortPillBorder =
+                                    if (isSelected) {
+                                        BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                    } else {
+                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.50f))
+                                    }
+                                val sortPillColor =
+                                    if (isSelected) {
+                                        if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+
                                 Surface(
                                     shape = CircleShape,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                                    border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    color = sortPillBg,
+                                    border = sortPillBorder,
                                     modifier =
                                         Modifier
                                             .clip(CircleShape)
@@ -679,7 +839,7 @@ fun SearchScreen(
                                     Text(
                                         text = label,
                                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = sortPillColor,
                                         style =
                                             MaterialTheme.typography.labelLarge.copy(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -740,6 +900,63 @@ fun SearchScreen(
     }
 }
 
+@Composable
+private fun SearchFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    val isDark = LocalIsDark.current
+    val chipBg =
+        if (selected) {
+            if (isDark) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            }
+        } else {
+            if (isDark) {
+                Color(0xFF202028)
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
+        }
+    val chipBorder =
+        if (selected) {
+            BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, if (isDark) Color(0xFF2C2C36).copy(alpha = 0.50f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.50f))
+        }
+    val chipLabelColor =
+        if (selected) {
+            if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            if (isDark) Color(0xFFA6A4B4) else MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+    Surface(
+        shape = CircleShape,
+        color = chipBg,
+        border = chipBorder,
+        modifier =
+            modifier
+                .clip(CircleShape)
+                .clickable(onClick = onClick),
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            style =
+                MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = chipLabelColor,
+                ),
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchFiltersBottomSheet(
@@ -753,18 +970,32 @@ fun SearchFiltersBottomSheet(
     var draftFilters by remember(filters) { mutableStateOf(filters) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    val isDark = LocalIsDark.current
+
+    val sheetContainerColor =
+        if (isDark) {
+            Color(0xFF16161C)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = sheetContainerColor,
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isDark) 0.50f else 0.40f),
+            )
+        },
     ) {
         LazyColumn(
             modifier =
                 Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .imePadding()
                     .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(bottom = 24.dp),
+            contentPadding = PaddingValues(bottom = 32.dp),
         ) {
             item {
                 Text(
@@ -830,9 +1061,22 @@ fun SearchFiltersBottomSheet(
             }
 
             item {
+                val innerCardBg =
+                    if (isDark) {
+                        Color(0xFF1E1E26).copy(alpha = 0.88f)
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    }
+                val innerCardBorder =
+                    BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.35f),
+                    )
+
                 Surface(
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface,
+                    color = innerCardBg,
+                    border = innerCardBorder,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -850,24 +1094,18 @@ fun SearchFiltersBottomSheet(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             itemsIndexed(categories) { idx, type ->
                                 val selected = draftFilters.typeIndex == idx
-                                FilterChip(
+                                SearchFilterChip(
                                     selected = selected,
                                     onClick = { draftFilters = draftFilters.copy(typeIndex = idx) },
-                                    label = { Text(type) },
-                                    border = if (selected) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = false, borderColor = Color.Transparent),
-                                    colors =
-                                        FilterChipDefaults.filterChipColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        ),
-                                    shape = RoundedCornerShape(100.dp),
+                                    label = type,
                                 )
                             }
                         }
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 20.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
+                        )
 
                         // 2. Date range
                         Text(
@@ -889,24 +1127,24 @@ fun SearchFiltersBottomSheet(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             itemsIndexed(ranges) { idx, range ->
                                 val selected = draftFilters.dateRangeIndex == idx
-                                FilterChip(
+                                SearchFilterChip(
                                     selected = selected,
                                     onClick = { draftFilters = draftFilters.copy(dateRangeIndex = idx) },
-                                    label = { Text(range) },
-                                    border = if (selected) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = false, borderColor = Color.Transparent),
-                                    colors =
-                                        FilterChipDefaults.filterChipColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        ),
-                                    shape = RoundedCornerShape(100.dp),
+                                    label = range,
                                 )
                             }
                         }
                         if (draftFilters.dateRangeIndex == 2) {
                             Spacer(modifier = Modifier.height(12.dp))
+                            val dateBoxBg =
+                                if (isDark) {
+                                    Color(0xFF22222C).copy(alpha = 0.65f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                }
+                            val dateBoxBorder =
+                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.45f))
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -914,7 +1152,8 @@ fun SearchFiltersBottomSheet(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    color = dateBoxBg,
+                                    border = dateBoxBorder,
                                     modifier =
                                         Modifier
                                             .weight(1f)
@@ -942,7 +1181,8 @@ fun SearchFiltersBottomSheet(
                                 Text("–", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    color = dateBoxBg,
+                                    border = dateBoxBorder,
                                     modifier =
                                         Modifier
                                             .weight(1f)
@@ -975,7 +1215,10 @@ fun SearchFiltersBottomSheet(
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant),
                         )
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 20.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
+                        )
 
                         // 3. Task status
                         Text(
@@ -997,26 +1240,20 @@ fun SearchFiltersBottomSheet(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             itemsIndexed(statuses) { idx, status ->
                                 val selected = draftFilters.taskStatusIndex == idx
-                                FilterChip(
+                                SearchFilterChip(
                                     selected = selected,
                                     onClick = { draftFilters = draftFilters.copy(taskStatusIndex = idx) },
-                                    label = { Text(status) },
-                                    border = if (selected) null else FilterChipDefaults.filterChipBorder(enabled = true, selected = false, borderColor = Color.Transparent),
-                                    colors =
-                                        FilterChipDefaults.filterChipColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        ),
-                                    shape = RoundedCornerShape(100.dp),
+                                    label = status,
                                 )
                             }
                         }
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 20.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
+                        )
 
-                        // 4. Shoulders
+                        // 4. Shoulders (with preserved category colors)
                         Text(
                             text = stringResource(R.string.search_filter_shoulders),
                             style =
@@ -1028,10 +1265,20 @@ fun SearchFiltersBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         var shoulderDropdownExpanded by remember { mutableStateOf(false) }
+                        val shoulderTriggerBg =
+                            if (isDark) {
+                                Color(0xFF22222C).copy(alpha = 0.65f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            }
+                        val shoulderTriggerBorder =
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.45f))
+
                         Box {
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                color = shoulderTriggerBg,
+                                border = shoulderTriggerBorder,
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
@@ -1044,42 +1291,67 @@ fun SearchFiltersBottomSheet(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     val selectedShoulder = activeShoulders.find { it.id == draftFilters.shoulderId }
-                                    Text(
-                                        text = selectedShoulder?.name ?: stringResource(R.string.search_filter_shoulders_any),
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        if (selectedShoulder != null && !selectedShoulder.colorHex.isNullOrBlank()) {
+                                            val sColor = parseNoteColorHex(selectedShoulder.colorHex, MaterialTheme.colorScheme.primary)
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .size(10.dp)
+                                                        .clip(CircleShape)
+                                                        .background(sColor),
+                                            )
+                                        }
+                                        Text(
+                                            text = selectedShoulder?.name ?: stringResource(R.string.search_filter_shoulders_any),
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+                                        )
+                                    }
                                     RememberMaterialRoundedSymbol(name = "expand_more", size = 20.dp, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
+                            val dropdownBg = if (isDark) Color(0xFF1E1E26) else MaterialTheme.colorScheme.surface
                             DropdownMenu(
                                 expanded = shoulderDropdownExpanded,
                                 onDismissRequest = { shoulderDropdownExpanded = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                                modifier =
+                                    Modifier
+                                        .background(dropdownBg)
+                                        .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.50f else 0.35f))),
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.search_filter_shoulders_any)) },
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.search_filter_shoulders_any),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    },
                                     onClick = {
                                         draftFilters = draftFilters.copy(shoulderId = null)
                                         shoulderDropdownExpanded = false
                                     },
                                 )
                                 activeShoulders.forEach { shoulder ->
+                                    val fallbackPrimary = MaterialTheme.colorScheme.primary
+                                    val shoulderColor = parseNoteColorHex(shoulder.colorHex, fallbackPrimary)
                                     DropdownMenuItem(
                                         text = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (!shoulder.colorHex.isNullOrBlank()) {
-                                                    val fallbackPrimary = MaterialTheme.colorScheme.primary
-                                                    val color = runCatching { Color(android.graphics.Color.parseColor(shoulder.colorHex)) }.getOrDefault(fallbackPrimary)
-                                                    Box(
-                                                        modifier =
-                                                            Modifier
-                                                                .size(10.dp)
-                                                                .clip(CircleShape)
-                                                                .background(color),
-                                                    )
-                                                    Spacer(Modifier.width(8.dp))
-                                                }
-                                                Text(shoulder.name)
+                                                Box(
+                                                    modifier =
+                                                        Modifier
+                                                            .size(10.dp)
+                                                            .clip(CircleShape)
+                                                            .background(shoulderColor),
+                                                )
+                                                Spacer(Modifier.width(8.dp))
+                                                Text(
+                                                    text = shoulder.name,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                )
                                             }
                                         },
                                         onClick = {
@@ -1096,7 +1368,10 @@ fun SearchFiltersBottomSheet(
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant),
                         )
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 20.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
+                        )
 
                         // 5. Include archived
                         Row(
@@ -1133,8 +1408,8 @@ fun SearchFiltersBottomSheet(
                                     SwitchDefaults.colors(
                                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                         checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        uncheckedThumbColor = if (isDark) Color(0xFF9E9EA8) else MaterialTheme.colorScheme.outline,
+                                        uncheckedTrackColor = if (isDark) Color(0xFF282834) else MaterialTheme.colorScheme.surfaceContainerHighest,
                                         uncheckedBorderColor = Color.Transparent,
                                     ),
                             )
@@ -1150,7 +1425,7 @@ fun SearchFiltersBottomSheet(
                 ) {
                     TextButton(
                         onClick = {
-                            draftFilters = SearchFilters(typeIndex = draftFilters.typeIndex)
+                            draftFilters = SearchFilters()
                         },
                     ) {
                         Text(
@@ -1211,12 +1486,19 @@ fun SearchFiltersBottomSheet(
                         showStartDatePicker = false
                     },
                 ) {
-                    Text("OK", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.common_ok),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStartDatePicker = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = stringResource(R.string.common_cancel),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             },
         ) {
@@ -1240,12 +1522,19 @@ fun SearchFiltersBottomSheet(
                         showEndDatePicker = false
                     },
                 ) {
-                    Text("OK", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.common_ok),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEndDatePicker = false }) {
-                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = stringResource(R.string.common_cancel),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             },
         ) {
@@ -1271,32 +1560,67 @@ fun SearchResultCard(
         }
 
     val primaryColor = MaterialTheme.colorScheme.primary
-    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
     val highlightColor = MaterialTheme.colorScheme.primary
-    val highlightBg = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+    val isDark = LocalIsDark.current
+    val highlightBg = MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.25f else 0.15f)
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
+    val noteAccent =
+        remember(result.note.colorIndex, isDark) {
+            if (!NoteColors.isNone(result.note.colorIndex)) {
+                if (isDark) NoteColors.at(result.note.colorIndex).dark else NoteColors.at(result.note.colorIndex).light
+            } else {
+                null
+            }
+        }
+    val cardColors = elevatedCardColors()
+    val baseContainer =
+        if (isDark) {
+            Color(0xFF16161C).copy(alpha = 0.85f)
+        } else {
+            cardColors.containerColor
+        }
+    val cardBg =
+        if (noteAccent != null) {
+            val tintAlpha = if (isDark) 0.08f else 0.06f
+            noteAccent.copy(alpha = tintAlpha).compositeOver(baseContainer)
+        } else {
+            baseContainer
+        }
+    val cardBorder =
+        if (noteAccent != null) {
+            BorderStroke(1.dp, noteAccent.copy(alpha = if (isDark) 0.35f else 0.25f))
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.50f else 0.40f))
+        }
+
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(22.dp),
+        color = cardBg,
+        border = cardBorder,
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(22.dp))
                 .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top,
         ) {
+            val iconBoxBg =
+                if (isDark) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                } else {
+                    MaterialTheme.colorScheme.primaryContainer
+                }
             Box(
                 modifier =
                     Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(primaryContainer),
+                        .background(iconBoxBg),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -1308,7 +1632,14 @@ fun SearchResultCard(
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 // Title with Match Highlight
-                val titleText = result.note.title.ifBlank { "Untitled" }
+                val titleText =
+                    result.note.title.ifBlank {
+                        if (result.note.kind == NoteKind.NOTE) {
+                            stringResource(R.string.edit_note_title_new)
+                        } else {
+                            stringResource(R.string.edit_list_title_new)
+                        }
+                    }
                 Text(
                     text = buildHighlightedString(titleText, searchQuery, highlightColor, highlightBg),
                     style =
@@ -1437,34 +1768,40 @@ fun SearchResultCard(
                             ),
                     )
 
-                    // Shoulder chip
+                    // Shoulder chip with actual stored category color and high contrast
                     if (result.shoulder != null) {
+                        val fallbackPrimary = MaterialTheme.colorScheme.primary
+                        val shoulderColor =
+                            remember(result.shoulder.colorHex, fallbackPrimary) {
+                                parseNoteColorHex(result.shoulder.colorHex, fallbackPrimary)
+                            }
+                        val (badgeBg, badgeFg) =
+                            remember(shoulderColor, isDark) {
+                                readableBadgeColors(shoulderColor, isDark)
+                            }
                         Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = CircleShape,
+                            color = badgeBg,
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                if (!result.shoulder.colorHex.isNullOrBlank()) {
-                                    val sColor = runCatching { Color(android.graphics.Color.parseColor(result.shoulder.colorHex)) }.getOrDefault(primaryColor)
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .size(6.dp)
-                                                .clip(CircleShape)
-                                                .background(sColor),
-                                    )
-                                }
+                                RememberMaterialRoundedSymbol(
+                                    name = "local_offer",
+                                    size = 11.dp,
+                                    tint = badgeFg,
+                                    weight = FontWeight.Bold,
+                                    filled = false,
+                                )
                                 Text(
                                     text = result.shoulder.name,
                                     style =
                                         MaterialTheme.typography.labelSmall.copy(
                                             fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = onSurface,
+                                            fontWeight = FontWeight.Bold,
+                                            color = badgeFg,
                                         ),
                                 )
                             }
@@ -1473,18 +1810,31 @@ fun SearchResultCard(
 
                     // Archive badge
                     if (result.note.archived) {
+                        val archiveBg =
+                            if (isDark) {
+                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                            } else {
+                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.60f)
+                            }
+                        val archiveFg =
+                            if (isDark) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            }
                         Surface(
-                            shape = RoundedCornerShape(100.dp),
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                            shape = CircleShape,
+                            color = archiveBg,
+                            border = if (isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)) else null,
                         ) {
                             Text(
-                                text = "Archived",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                text = stringResource(R.string.edit_archived_notice_title),
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
                                 style =
                                     MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        color = archiveFg,
                                     ),
                             )
                         }
@@ -1498,13 +1848,16 @@ fun SearchResultCard(
 fun buildHighlightedString(
     text: String,
     query: String,
-    highlightColor: Color = Color(0xFF98549C),
-    highlightBg: Color = Color(0x3398549C),
+    highlightColor: Color = Color.Unspecified,
+    highlightBg: Color = Color.Unspecified,
 ): AnnotatedString {
     val trimmed = query.trim()
     if (trimmed.isEmpty() || !text.contains(trimmed, ignoreCase = true)) {
         return AnnotatedString(text)
     }
+
+    val resolvedHighlightColor = if (highlightColor != Color.Unspecified) highlightColor else Color.Unspecified
+    val resolvedHighlightBg = if (highlightBg != Color.Unspecified) highlightBg else if (resolvedHighlightColor != Color.Unspecified) resolvedHighlightColor.copy(alpha = 0.20f) else Color(0x33808080)
 
     return buildAnnotatedString {
         var currentIndex = 0
@@ -1527,8 +1880,8 @@ fun buildHighlightedString(
             pushStyle(
                 SpanStyle(
                     fontWeight = FontWeight.Bold,
-                    color = highlightColor,
-                    background = highlightBg,
+                    color = resolvedHighlightColor,
+                    background = resolvedHighlightBg,
                 ),
             )
             append(text.substring(matchIndex, matchEnd))

@@ -63,6 +63,8 @@ class EditEventViewModelTest {
             object : NoteDao {
                 override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
+                override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
                 override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
                 override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())

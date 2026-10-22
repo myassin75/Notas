@@ -65,7 +65,7 @@ fun CalendarNavigationHeader(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    val buttonBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     val annotatedTitle =
         remember(title, textPrimary, textSecondary) {

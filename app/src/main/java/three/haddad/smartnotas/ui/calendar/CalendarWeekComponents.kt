@@ -69,7 +69,8 @@ fun WeekDaySelectorRow(
                     Surface(
                         onClick = { onDateSelected(day.date) },
                         shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        border = if (day.isToday) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -85,7 +86,7 @@ fun WeekDaySelectorRow(
                                 text = day.dayOfWeekLetter,
                                 style =
                                     MaterialTheme.typography.labelSmall.copy(
-                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp,
                                     ),
@@ -96,7 +97,7 @@ fun WeekDaySelectorRow(
                                 text = day.dayNumber.toString(),
                                 style =
                                     MaterialTheme.typography.bodyMedium.copy(
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
                                     ),
@@ -114,7 +115,10 @@ fun WeekDaySelectorRow(
                                             modifier =
                                                 Modifier
                                                     .size(4.dp)
-                                                    .background(MaterialTheme.colorScheme.onPrimary, shape = CircleShape),
+                                                    .background(
+                                                        if (it.color != Color.Unspecified) it.color else MaterialTheme.colorScheme.onPrimaryContainer,
+                                                        shape = CircleShape,
+                                                    ),
                                         )
                                     }
                                 }
@@ -249,9 +253,9 @@ fun WeekAgendaCard(
                     // Highlighted Selected Day Container
                     val highlightBg =
                         if (isDark) {
-                            CalendarDesignTokens.DarkPurpleSelected
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
                         } else {
-                            CalendarDesignTokens.SoftLavender
+                            MaterialTheme.colorScheme.primaryContainer
                         }
 
                     Surface(
@@ -397,7 +401,7 @@ private fun WeekEventItemCard(
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
-    val itemBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val itemBg = CalendarDesignTokens.resolveCardBg(isDark)
     val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)

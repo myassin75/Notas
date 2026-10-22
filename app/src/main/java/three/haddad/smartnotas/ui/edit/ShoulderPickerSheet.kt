@@ -21,8 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -42,9 +40,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,10 +51,15 @@ import three.haddad.smartnotas.data.ShoulderEntity
 import three.haddad.smartnotas.ui.common.AppBottomSheet
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberConfirmDialog
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
-import android.graphics.Color as AndroidColor
-
-private val DEFAULT_SHOULDER_COLOR = SettingsDesignTokens.StaticPrimary
+import three.haddad.smartnotas.ui.components.formatColorToHex
+import three.haddad.smartnotas.ui.components.hsvToRgb
+import three.haddad.smartnotas.ui.components.isColorDark
+import three.haddad.smartnotas.ui.components.parseColorHexOrNull
+import three.haddad.smartnotas.ui.components.parseHsvFromHex
+import three.haddad.smartnotas.ui.components.parseNoteColorHex
+import three.haddad.smartnotas.ui.components.readableBadgeColors
+import three.haddad.smartnotas.ui.components.rgbToHsv
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 
 @Composable
 fun ShoulderPickerSheet(
@@ -80,7 +83,7 @@ fun ShoulderPickerSheet(
         title = stringResource(R.string.shoulder_sheet_title),
         onDismiss = onDismiss,
         showTitleBar = false,
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         scrollable = false,
     ) {
         if (editingShoulder != null || creatingShoulder) {
@@ -95,7 +98,13 @@ fun ShoulderPickerSheet(
                     val target = editingShoulder
                     val cleanName = name.trim()
                     if (target != null) {
-                        onUpdateShoulder(target.copy(name = cleanName, normalizedName = cleanName.lowercase(), colorHex = colorHex))
+                        onUpdateShoulder(
+                            target.copy(
+                                name = cleanName,
+                                normalizedName = cleanName.lowercase(),
+                                colorHex = colorHex,
+                            ),
+                        )
                     } else {
                         onCreateShoulder(cleanName, colorHex)
                     }
@@ -156,6 +165,15 @@ private fun ShoulderListContent(
         }
     val selectedShoulder = shoulders.firstOrNull { it.id == selectedShoulderId }
 
+    val isDark = LocalIsDark.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val textPrimary = if (isDark) MaterialTheme.colorScheme.onSurface else Color(0xFF32313F)
+    val textSecondary = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF89899C)
+    val pillSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f) else Color(0xFFF5F4F9)
+    val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f) else Color(0xFFF8F8FC)
+    val cardBorder = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else Color(0xFFE9E3EF)
+    val noShoulderSelectedBg = if (isDark) primaryAccent.copy(alpha = 0.18f) else primaryAccent.copy(alpha = 0.10f)
+
     Column(
         modifier =
             Modifier
@@ -176,7 +194,7 @@ private fun ShoulderListContent(
                         MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 22.sp,
-                            color = Color(0xFF32313F),
+                            color = textPrimary,
                         ),
                 )
                 Text(
@@ -184,13 +202,13 @@ private fun ShoulderListContent(
                     style =
                         MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 13.sp,
-                            color = Color(0xFF89899C),
+                            color = textSecondary,
                         ),
                 )
             }
             Surface(
                 shape = CircleShape,
-                color = Color(0xFFF5F4F9),
+                color = pillSurface,
                 modifier =
                     Modifier
                         .size(36.dp)
@@ -201,7 +219,7 @@ private fun ShoulderListContent(
                     RememberMaterialRoundedSymbol(
                         name = "close",
                         size = 18.dp,
-                        tint = Color(0xFF89899C),
+                        tint = textSecondary,
                     )
                 }
             }
@@ -210,7 +228,7 @@ private fun ShoulderListContent(
         // Search box
         Surface(
             shape = CircleShape,
-            color = Color(0xFFF5F4F9),
+            color = pillSurface,
             modifier = Modifier.fillMaxWidth(),
         ) {
             OutlinedTextField(
@@ -219,14 +237,14 @@ private fun ShoulderListContent(
                 placeholder = {
                     Text(
                         text = stringResource(R.string.shoulder_search_placeholder),
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF89899C)),
+                        style = MaterialTheme.typography.bodyMedium.copy(color = textSecondary),
                     )
                 },
                 leadingIcon = {
                     RememberMaterialRoundedSymbol(
                         name = "search",
                         size = 20.dp,
-                        tint = Color(0xFF89899C),
+                        tint = textSecondary,
                     )
                 },
                 singleLine = true,
@@ -234,9 +252,11 @@ private fun ShoulderListContent(
                 colors =
                     OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
-                        focusedContainerColor = Color(0xFFF5F4F9),
-                        unfocusedContainerColor = Color(0xFFF5F4F9),
+                        focusedBorderColor = primaryAccent,
+                        focusedContainerColor = pillSurface,
+                        unfocusedContainerColor = pillSurface,
+                        focusedTextColor = textPrimary,
+                        unfocusedTextColor = textPrimary,
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -250,13 +270,33 @@ private fun ShoulderListContent(
                     .height(220.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
+            if (filtered.isEmpty() && searchQuery.isNotBlank()) {
+                item {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "No shoulders matching \"$searchQuery\"",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = textSecondary),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+
             items(filtered, key = { it.id }) { shoulder ->
                 val isSelected = selectedShoulderId == shoulder.id
-                val shoulderColor = parseColorHex(shoulder.colorHex, DEFAULT_SHOULDER_COLOR)
+                val shoulderColor = parseNoteColorHex(shoulder.colorHex, primaryAccent)
+                val (_, readableFg) = readableBadgeColors(shoulderColor, isDark)
 
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isSelected) shoulderColor.copy(alpha = 0.12f) else Color.Transparent,
+                    color = if (isSelected) shoulderColor.copy(alpha = if (isDark) 0.16f else 0.10f) else Color.Transparent,
+                    border = if (isSelected) BorderStroke(1.dp, shoulderColor.copy(alpha = if (isDark) 0.50f else 0.40f)) else null,
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -267,13 +307,18 @@ private fun ShoulderListContent(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Color dot
+                        // Authoritative Color dot with high-contrast outline border
                         Box(
                             modifier =
                                 Modifier
                                     .size(14.dp)
                                     .clip(CircleShape)
-                                    .background(shoulderColor),
+                                    .background(shoulderColor)
+                                    .border(
+                                        1.dp,
+                                        if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.18f),
+                                        CircleShape,
+                                    ),
                         )
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -283,7 +328,7 @@ private fun ShoulderListContent(
                                     MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
-                                        color = Color(0xFF32313F),
+                                        color = textPrimary,
                                     ),
                             )
                             Text(
@@ -294,12 +339,12 @@ private fun ShoulderListContent(
                                 style =
                                     MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 12.sp,
-                                        color = if (isSelected) shoulderColor else Color(0xFF89899C),
+                                        color = if (isSelected) readableFg else textSecondary,
                                     ),
                             )
                         }
 
-                        // Selection check
+                        // Unambiguous selection checkmark container
                         Box(
                             modifier =
                                 Modifier
@@ -307,17 +352,22 @@ private fun ShoulderListContent(
                                     .clip(CircleShape)
                                     .background(if (isSelected) shoulderColor else Color.Transparent)
                                     .border(
-                                        if (isSelected) 0.dp else 1.5.dp,
-                                        if (isSelected) Color.Transparent else Color(0xFFD1D1D6),
+                                        if (isSelected) 1.dp else 1.5.dp,
+                                        if (isSelected) {
+                                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.Black.copy(alpha = 0.20f)
+                                        } else {
+                                            if (isDark) MaterialTheme.colorScheme.outlineVariant else Color(0xFFD1D1D6)
+                                        },
                                         CircleShape,
                                     ),
                             contentAlignment = Alignment.Center,
                         ) {
                             if (isSelected) {
+                                val checkTint = if (isColorDark(shoulderColor)) Color.White else Color(0xFF1E1E26)
                                 RememberMaterialRoundedSymbol(
                                     name = "check",
                                     size = 14.dp,
-                                    tint = Color.White,
+                                    tint = checkTint,
                                     weight = FontWeight.Bold,
                                 )
                             }
@@ -337,19 +387,20 @@ private fun ShoulderListContent(
                             RememberMaterialRoundedSymbol(
                                 name = "edit",
                                 size = 18.dp,
-                                tint = SettingsDesignTokens.PrimaryPurple,
+                                tint = primaryAccent,
                             )
                         }
                     }
                 }
             }
 
-            // No shoulder option
+            // Distinct "No shoulder" option
             item {
                 val isSelected = selectedShoulderId == null
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isSelected) SettingsDesignTokens.SoftLavender else Color.Transparent,
+                    color = if (isSelected) noShoulderSelectedBg else Color.Transparent,
+                    border = if (isSelected) BorderStroke(1.dp, primaryAccent.copy(alpha = if (isDark) 0.50f else 0.40f)) else null,
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -363,7 +414,7 @@ private fun ShoulderListContent(
                         RememberMaterialRoundedSymbol(
                             name = "cancel",
                             size = 18.dp,
-                            tint = if (isSelected) SettingsDesignTokens.PrimaryPurple else Color(0xFF89899C),
+                            tint = if (isSelected) primaryAccent else textSecondary,
                         )
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -373,7 +424,7 @@ private fun ShoulderListContent(
                                     MaterialTheme.typography.bodyLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp,
-                                        color = Color(0xFF32313F),
+                                        color = textPrimary,
                                     ),
                             )
                             val assignedShoulderName =
@@ -390,7 +441,7 @@ private fun ShoulderListContent(
                                 style =
                                     MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 12.sp,
-                                        color = Color(0xFF89899C),
+                                        color = textSecondary,
                                     ),
                             )
                         }
@@ -399,10 +450,10 @@ private fun ShoulderListContent(
                                 Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
-                                    .background(if (isSelected) SettingsDesignTokens.PrimaryPurple else Color.Transparent)
+                                    .background(if (isSelected) primaryAccent else Color.Transparent)
                                     .border(
                                         if (isSelected) 0.dp else 1.5.dp,
-                                        if (isSelected) Color.Transparent else Color(0xFFD1D1D6),
+                                        if (isSelected) Color.Transparent else if (isDark) MaterialTheme.colorScheme.outlineVariant else Color(0xFFD1D1D6),
                                         CircleShape,
                                     ),
                             contentAlignment = Alignment.Center,
@@ -411,7 +462,7 @@ private fun ShoulderListContent(
                                 RememberMaterialRoundedSymbol(
                                     name = "check",
                                     size = 14.dp,
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     weight = FontWeight.Bold,
                                 )
                             }
@@ -421,11 +472,11 @@ private fun ShoulderListContent(
             }
         }
 
-        // Selected note preview
+        // Selected note preview with authoritative stripe and badge
         Surface(
             shape = RoundedCornerShape(18.dp),
-            color = Color(0xFFF8F8FC),
-            border = BorderStroke(1.dp, Color(0xFFE9E3EF)),
+            color = cardSurface,
+            border = BorderStroke(1.dp, cardBorder),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(
@@ -433,7 +484,7 @@ private fun ShoulderListContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (selectedShoulder != null) {
-                    val activeColor = parseColorHex(selectedShoulder.colorHex, DEFAULT_SHOULDER_COLOR)
+                    val activeColor = parseNoteColorHex(selectedShoulder.colorHex, primaryAccent)
                     Box(
                         modifier =
                             Modifier
@@ -454,25 +505,31 @@ private fun ShoulderListContent(
                             MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color(0xFF32313F),
+                                color = textPrimary,
                             ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = stringResource(R.string.shoulder_preview_stripe_hint),
+                        text =
+                            if (selectedShoulder != null) {
+                                stringResource(R.string.shoulder_preview_stripe_hint)
+                            } else {
+                                stringResource(R.string.shoulder_no_assigned)
+                            },
                         style =
                             MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 12.sp,
-                                color = Color(0xFF89899C),
+                                color = textSecondary,
                             ),
                     )
                 }
                 if (selectedShoulder != null) {
-                    val activeColor = parseColorHex(selectedShoulder.colorHex, DEFAULT_SHOULDER_COLOR)
+                    val activeColor = parseNoteColorHex(selectedShoulder.colorHex, primaryAccent)
+                    val (badgeBg, badgeFg) = remember(activeColor, isDark) { readableBadgeColors(activeColor, isDark) }
                     Surface(
                         shape = CircleShape,
-                        color = activeColor.copy(alpha = 0.14f),
+                        color = badgeBg,
                     ) {
                         Text(
                             text = selectedShoulder.name,
@@ -480,7 +537,7 @@ private fun ShoulderListContent(
                                 MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp,
-                                    color = activeColor,
+                                    color = badgeFg,
                                 ),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         )
@@ -495,7 +552,7 @@ private fun ShoulderListContent(
             Surface(
                 shape = CircleShape,
                 color = Color.Transparent,
-                border = BorderStroke(1.5.dp, SettingsDesignTokens.PrimaryPurple),
+                border = BorderStroke(1.5.dp, primaryAccent),
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -510,7 +567,7 @@ private fun ShoulderListContent(
                     RememberMaterialRoundedSymbol(
                         name = "add",
                         size = 18.dp,
-                        tint = SettingsDesignTokens.PrimaryPurple,
+                        tint = primaryAccent,
                         weight = FontWeight.Bold,
                     )
                     Spacer(Modifier.width(6.dp))
@@ -520,7 +577,7 @@ private fun ShoulderListContent(
                             MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = SettingsDesignTokens.PrimaryPurple,
+                                color = primaryAccent,
                             ),
                     )
                 }
@@ -529,7 +586,7 @@ private fun ShoulderListContent(
             // Apply button
             Surface(
                 shape = CircleShape,
-                color = SettingsDesignTokens.PrimaryPurple,
+                color = primaryAccent,
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -553,7 +610,7 @@ private fun ShoulderListContent(
                             MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                             ),
                     )
                 }
@@ -572,10 +629,23 @@ private fun EditShoulderContent(
     onDismiss: () -> Unit,
 ) {
     var name by remember(shoulder) { mutableStateOf(shoulder?.name ?: "") }
-    var hue by remember(shoulder) { mutableFloatStateOf(parseHueFromHex(shoulder?.colorHex)) }
-    var saturation by remember(shoulder) { mutableFloatStateOf(parseSaturationFromHex(shoulder?.colorHex)) }
-    var brightness by remember(shoulder) { mutableFloatStateOf(parseValueFromHex(shoulder?.colorHex)) }
+    val initialHsv = remember(shoulder) { parseHsvFromHex(shoulder?.colorHex) }
+    var hue by remember(shoulder) { mutableFloatStateOf(initialHsv[0]) }
+    var saturation by remember(shoulder) { mutableFloatStateOf(initialHsv[1]) }
+    var brightness by remember(shoulder) { mutableFloatStateOf(initialHsv[2]) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    val initialHex =
+        remember(shoulder) {
+            shoulder?.colorHex?.let { if (it.startsWith("#")) it.uppercase() else "#${it.uppercase()}" }
+                ?: formatColorToHex(hsvToRgb(initialHsv[0], initialHsv[1], initialHsv[2]))
+        }
+    var hexInput by remember(shoulder) { mutableStateOf(initialHex) }
+
+    val parsedColorFromHex = remember(hexInput) { parseColorHexOrNull(hexInput) }
+    val isHexValid = parsedColorFromHex != null
+    val currentColor = parsedColorFromHex ?: remember(hue, saturation, brightness) { hsvToRgb(hue, saturation, brightness) }
+    val canSave = name.isNotBlank() && isHexValid
 
     if (showDeleteConfirm && shoulder != null) {
         RememberConfirmDialog(
@@ -591,15 +661,17 @@ private fun EditShoulderContent(
         )
     }
 
-    val currentColor =
-        remember(hue, saturation, brightness) {
-            val hsv = floatArrayOf(hue, saturation, brightness)
-            Color(AndroidColor.HSVToColor(hsv))
-        }
-    val hexString =
-        remember(currentColor) {
-            String.format("#%06X", 0xFFFFFF and AndroidColor.HSVToColor(floatArrayOf(hue, saturation, brightness)))
-        }
+    val isDark = LocalIsDark.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val textPrimary = if (isDark) MaterialTheme.colorScheme.onSurface else Color(0xFF32313F)
+    val textSecondary = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF89899C)
+    val pillSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f) else Color(0xFFF5F4F9)
+    val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f) else Color(0xFFF8F8FC)
+    val cardBorder = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else Color(0xFFE9E3EF)
+    val inputSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f) else Color.White
+    val cancelBtnBg = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceVariant
+    val cancelBtnText = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    val deleteBg = if (isDark) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f) else Color(0xFFFFEBEE)
 
     Column(
         modifier =
@@ -621,7 +693,7 @@ private fun EditShoulderContent(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFF5F4F9),
+                    color = pillSurface,
                     modifier =
                         Modifier
                             .size(36.dp)
@@ -632,7 +704,7 @@ private fun EditShoulderContent(
                         RememberMaterialRoundedSymbol(
                             name = "arrow_back",
                             size = 18.dp,
-                            tint = Color(0xFF32313F),
+                            tint = textPrimary,
                         )
                     }
                 }
@@ -643,7 +715,7 @@ private fun EditShoulderContent(
                             MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp,
-                                color = Color(0xFF32313F),
+                                color = textPrimary,
                             ),
                     )
                     Text(
@@ -655,7 +727,7 @@ private fun EditShoulderContent(
                         style =
                             MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = 13.sp,
-                                color = Color(0xFF89899C),
+                                color = textSecondary,
                             ),
                     )
                 }
@@ -667,7 +739,7 @@ private fun EditShoulderContent(
                 if (shoulder != null) {
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFFFFEBEE),
+                        color = deleteBg,
                         modifier =
                             Modifier
                                 .size(36.dp)
@@ -685,7 +757,7 @@ private fun EditShoulderContent(
                 }
                 Surface(
                     shape = CircleShape,
-                    color = Color(0xFFF5F4F9),
+                    color = pillSurface,
                     modifier =
                         Modifier
                             .size(36.dp)
@@ -696,7 +768,7 @@ private fun EditShoulderContent(
                         RememberMaterialRoundedSymbol(
                             name = "close",
                             size = 18.dp,
-                            tint = Color(0xFF89899C),
+                            tint = textSecondary,
                         )
                     }
                 }
@@ -710,25 +782,29 @@ private fun EditShoulderContent(
                 style =
                     MaterialTheme.typography.labelMedium.copy(
                         fontSize = 13.sp,
-                        color = Color(0xFF89899C),
+                        color = textSecondary,
                     ),
             )
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, Color(0xFFE9E3EF)),
+                color = inputSurface,
+                border = BorderStroke(1.dp, cardBorder),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    placeholder = { Text(stringResource(R.string.shoulder_name_placeholder), color = Color(0xFF89899C)) },
+                    placeholder = { Text(stringResource(R.string.shoulder_name_placeholder), color = textSecondary) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
+                            focusedBorderColor = primaryAccent,
+                            focusedContainerColor = inputSurface,
+                            unfocusedContainerColor = inputSurface,
+                            focusedTextColor = textPrimary,
+                            unfocusedTextColor = textPrimary,
                         ),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -746,7 +822,7 @@ private fun EditShoulderContent(
                     style =
                         MaterialTheme.typography.labelMedium.copy(
                             fontSize = 13.sp,
-                            color = Color(0xFF89899C),
+                            color = textSecondary,
                         ),
                 )
                 Text(
@@ -754,15 +830,12 @@ private fun EditShoulderContent(
                     style =
                         MaterialTheme.typography.labelMedium.copy(
                             fontSize = 13.sp,
-                            color = Color(0xFF89899C),
+                            color = textSecondary,
                         ),
                 )
             }
 
-            val pureHueColor =
-                remember(hue) {
-                    Color(AndroidColor.HSVToColor(floatArrayOf(hue, 1f, 1f)))
-                }
+            val pureHueColor = remember(hue) { hsvToRgb(hue, 1f, 1f) }
 
             Box(
                 modifier =
@@ -771,12 +844,22 @@ private fun EditShoulderContent(
                         .height(130.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .pointerInput(hue) {
-                            detectDragGestures { change, _ ->
-                                val x = (change.position.x / size.width).coerceIn(0f, 1f)
-                                val y = (change.position.y / size.height).coerceIn(0f, 1f)
-                                saturation = x
-                                brightness = 1f - y
-                            }
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    val x = (offset.x / size.width).coerceIn(0f, 1f)
+                                    val y = (offset.y / size.height).coerceIn(0f, 1f)
+                                    saturation = x
+                                    brightness = 1f - y
+                                    hexInput = formatColorToHex(hsvToRgb(hue, x, 1f - y))
+                                },
+                                onDrag = { change, _ ->
+                                    val x = (change.position.x / size.width).coerceIn(0f, 1f)
+                                    val y = (change.position.y / size.height).coerceIn(0f, 1f)
+                                    saturation = x
+                                    brightness = 1f - y
+                                    hexInput = formatColorToHex(hsvToRgb(hue, x, 1f - y))
+                                },
+                            )
                         },
             ) {
                 // Saturation gradient (white to pure hue)
@@ -827,7 +910,7 @@ private fun EditShoulderContent(
                     style =
                         MaterialTheme.typography.labelMedium.copy(
                             fontSize = 13.sp,
-                            color = Color(0xFF89899C),
+                            color = textSecondary,
                         ),
                 )
                 Text(
@@ -835,7 +918,7 @@ private fun EditShoulderContent(
                     style =
                         MaterialTheme.typography.labelMedium.copy(
                             fontSize = 13.sp,
-                            color = Color(0xFF89899C),
+                            color = textSecondary,
                         ),
                 )
             }
@@ -860,10 +943,20 @@ private fun EditShoulderContent(
                                     ),
                             ),
                         ).pointerInput(Unit) {
-                            detectDragGestures { change, _ ->
-                                val x = (change.position.x / size.width).coerceIn(0f, 1f)
-                                hue = x * 360f
-                            }
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    val x = (offset.x / size.width).coerceIn(0f, 1f)
+                                    val newHue = x * 360f
+                                    hue = newHue
+                                    hexInput = formatColorToHex(hsvToRgb(newHue, saturation, brightness))
+                                },
+                                onDrag = { change, _ ->
+                                    val x = (change.position.x / size.width).coerceIn(0f, 1f)
+                                    val newHue = x * 360f
+                                    hue = newHue
+                                    hexInput = formatColorToHex(hsvToRgb(newHue, saturation, brightness))
+                                },
+                            )
                         },
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -883,53 +976,68 @@ private fun EditShoulderContent(
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White,
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE9E3EF)),
+                color = inputSurface,
+                border = BorderStroke(1.dp, if (!isHexValid && hexInput.isNotEmpty()) MaterialTheme.colorScheme.error else cardBorder),
                 modifier = Modifier.weight(1f),
             ) {
                 OutlinedTextField(
-                    value = hexString,
+                    value = hexInput,
                     onValueChange = { input ->
-                        val parsed = parseColorHexOrNull(input)
+                        val clean = input.filter { ch -> ch == '#' || ch.isDigit() || ch in 'a'..'f' || ch in 'A'..'F' }.take(7)
+                        hexInput = clean.uppercase()
+                        val parsed = parseColorHexOrNull(clean)
                         if (parsed != null) {
-                            val hsv = FloatArray(3)
-                            AndroidColor.colorToHSV(parsed, hsv)
+                            val hsv = rgbToHsv(parsed.red, parsed.green, parsed.blue)
                             hue = hsv[0]
                             saturation = hsv[1]
                             brightness = hsv[2]
                         }
                     },
                     leadingIcon = {
-                        Text("HEX", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF89899C)))
+                        Text(
+                            text = "HEX",
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = textSecondary),
+                        )
                     },
                     trailingIcon = {
-                        RememberMaterialRoundedSymbol(name = "edit", size = 18.dp, tint = Color(0xFF89899C))
+                        RememberMaterialRoundedSymbol(name = "edit", size = 18.dp, tint = textSecondary)
                     },
+                    isError = hexInput.isNotEmpty() && !isHexValid,
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     colors =
                         OutlinedTextFieldDefaults.colors(
                             unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
+                            focusedBorderColor = primaryAccent,
+                            errorBorderColor = MaterialTheme.colorScheme.error,
+                            focusedContainerColor = inputSurface,
+                            unfocusedContainerColor = inputSurface,
+                            focusedTextColor = textPrimary,
+                            unfocusedTextColor = textPrimary,
                         ),
                 )
             }
 
-            // Color preview box
+            // Authoritative Color preview box matching stored HEX value
             Box(
                 modifier =
                     Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(currentColor),
+                        .background(currentColor)
+                        .border(
+                            1.dp,
+                            if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.18f),
+                            RoundedCornerShape(14.dp),
+                        ),
             )
         }
 
         // Note preview
         Surface(
             shape = RoundedCornerShape(18.dp),
-            color = Color(0xFFF8F8FC),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE9E3EF)),
+            color = cardSurface,
+            border = BorderStroke(1.dp, cardBorder),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(
@@ -955,7 +1063,7 @@ private fun EditShoulderContent(
                             MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color(0xFF32313F),
+                                color = textPrimary,
                             ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -965,13 +1073,14 @@ private fun EditShoulderContent(
                         style =
                             MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 12.sp,
-                                color = Color(0xFF89899C),
+                                color = textSecondary,
                             ),
                     )
                 }
+                val (badgeBg, badgeFg) = remember(currentColor, isDark) { readableBadgeColors(currentColor, isDark) }
                 Surface(
                     shape = CircleShape,
-                    color = currentColor.copy(alpha = 0.14f),
+                    color = badgeBg,
                 ) {
                     Text(
                         text = name.ifBlank { stringResource(R.string.shoulder_name_placeholder) },
@@ -979,7 +1088,7 @@ private fun EditShoulderContent(
                             MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
-                                color = currentColor,
+                                color = badgeFg,
                             ),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     )
@@ -994,7 +1103,7 @@ private fun EditShoulderContent(
         ) {
             Surface(
                 shape = CircleShape,
-                color = SettingsDesignTokens.SoftLavender,
+                color = cancelBtnBg,
                 modifier =
                     Modifier
                         .weight(1f)
@@ -1012,7 +1121,7 @@ private fun EditShoulderContent(
                             MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = SettingsDesignTokens.PrimaryPurple,
+                                color = cancelBtnText,
                             ),
                     )
                 }
@@ -1020,14 +1129,15 @@ private fun EditShoulderContent(
 
             Surface(
                 shape = CircleShape,
-                color = SettingsDesignTokens.PrimaryPurple,
+                color = if (canSave) primaryAccent else primaryAccent.copy(alpha = 0.38f),
                 modifier =
                     Modifier
                         .weight(1f)
                         .clip(CircleShape)
-                        .clickable {
-                            if (name.isNotBlank()) {
-                                onSave(name.trim(), hexString)
+                        .clickable(enabled = canSave) {
+                            if (canSave) {
+                                val finalHex = if (hexInput.startsWith("#")) hexInput.uppercase() else "#${hexInput.uppercase()}"
+                                onSave(name.trim(), finalHex)
                             }
                         },
             ) {
@@ -1042,66 +1152,11 @@ private fun EditShoulderContent(
                             MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = if (canSave) 1f else 0.65f),
                             ),
                     )
                 }
             }
         }
-    }
-}
-
-private fun parseColorHex(
-    hex: String?,
-    fallback: Color,
-): Color {
-    if (hex.isNullOrBlank()) return fallback
-    return try {
-        Color(AndroidColor.parseColor(if (hex.startsWith("#")) hex else "#$hex"))
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-private fun parseColorHexOrNull(hex: String): Int? {
-    val clean = if (hex.startsWith("#")) hex else "#$hex"
-    if (clean.length != 7) return null
-    return try {
-        AndroidColor.parseColor(clean)
-    } catch (_: Throwable) {
-        null
-    }
-}
-
-private fun parseHueFromHex(hex: String?): Float {
-    if (hex.isNullOrBlank()) return 296f
-    return try {
-        val hsv = FloatArray(3)
-        AndroidColor.colorToHSV(AndroidColor.parseColor(if (hex.startsWith("#")) hex else "#$hex"), hsv)
-        hsv[0]
-    } catch (_: Throwable) {
-        296f
-    }
-}
-
-private fun parseSaturationFromHex(hex: String?): Float {
-    if (hex.isNullOrBlank()) return 0.5f
-    return try {
-        val hsv = FloatArray(3)
-        AndroidColor.colorToHSV(AndroidColor.parseColor(if (hex.startsWith("#")) hex else "#$hex"), hsv)
-        hsv[1]
-    } catch (_: Throwable) {
-        0.5f
-    }
-}
-
-private fun parseValueFromHex(hex: String?): Float {
-    if (hex.isNullOrBlank()) return 0.65f
-    return try {
-        val hsv = FloatArray(3)
-        AndroidColor.colorToHSV(AndroidColor.parseColor(if (hex.startsWith("#")) hex else "#$hex"), hsv)
-        hsv[2]
-    } catch (_: Throwable) {
-        0.65f
     }
 }

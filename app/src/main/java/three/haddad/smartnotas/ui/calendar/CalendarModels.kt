@@ -88,6 +88,10 @@ data class CalendarEventUiModel(
     val iconTint: Color = CalendarDesignTokens.CategoryPurpleIcon,
     val isDone: Boolean = false,
     val isTask: Boolean = false,
+    val description: String = "",
+    val isAllDay: Boolean = false,
+    val shoulderName: String? = null,
+    val shoulderColorHex: String? = null,
 )
 
 /**

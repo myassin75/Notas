@@ -51,14 +51,15 @@ enum class AccentTheme(
     val id: String,
     val displayName: String,
     val seedHex: String,
+    @param:androidx.annotation.StringRes val titleRes: Int,
 ) {
-    MAROON("maroon", "Maroon", "#800000"),
-    ROYAL_BLUE("royal_blue", "Royal Blue", "#04147D"),
-    FOREST_GREEN("forest_green", "Forest Green", "#047D06"),
-    DARK_BROWN("dark_brown", "Dark Brown", "#4D2002"),
-    OCEAN_TEAL("ocean_teal", "Ocean Teal", "#29A4AB"),
-    PURE_BLACK("pure_black", "Pure Black", "#000000"),
-    AMETHYST("amethyst", "Amethyst", "#98549C"),
+    MAROON("maroon", "Maroon", "#800000", three.haddad.smartnotas.R.string.appearance_accent_maroon),
+    ROYAL_BLUE("royal_blue", "Royal Blue", "#04147D", three.haddad.smartnotas.R.string.appearance_accent_royal_blue),
+    FOREST_GREEN("forest_green", "Forest Green", "#047D06", three.haddad.smartnotas.R.string.appearance_accent_forest_green),
+    DARK_BROWN("dark_brown", "Dark Brown", "#4D2002", three.haddad.smartnotas.R.string.appearance_accent_dark_brown),
+    OCEAN_TEAL("ocean_teal", "Ocean Teal", "#29A4AB", three.haddad.smartnotas.R.string.appearance_accent_ocean_teal),
+    PURE_BLACK("pure_black", "Pure Black", "#000000", three.haddad.smartnotas.R.string.appearance_accent_pure_black),
+    AMETHYST("amethyst", "Amethyst", "#98549C", three.haddad.smartnotas.R.string.appearance_accent_amethyst),
     ;
 
     companion object {

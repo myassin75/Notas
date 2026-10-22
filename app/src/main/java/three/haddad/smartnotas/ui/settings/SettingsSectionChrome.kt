@@ -46,8 +46,8 @@ import three.haddad.smartnotas.ui.feedback.appClickable
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 
 object SettingsDesignTokens {
-    val ScreenBg: Color @Composable get() = MaterialTheme.colorScheme.background
-    val CardBg: Color @Composable get() = MaterialTheme.colorScheme.surface
+    val ScreenBg: Color @Composable get() = if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
+    val CardBg: Color @Composable get() = if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) three.haddad.smartnotas.ui.theme.glassContainerColor(three.haddad.smartnotas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
     val PrimaryPurple: Color @Composable get() = MaterialTheme.colorScheme.primary
     val SoftLavender: Color @Composable get() = MaterialTheme.colorScheme.primaryContainer
     val TextPrimary: Color @Composable get() = MaterialTheme.colorScheme.onSurface
@@ -70,10 +70,17 @@ fun SettingsSectionCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val containerColor =
+        if (isDark) three.haddad.smartnotas.ui.theme.glassContainerColor(three.haddad.smartnotas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
+    val borderStroke =
+        if (isDark) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)) else null
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = SettingsDesignTokens.CardShape,
-        color = MaterialTheme.colorScheme.surface,
+        color = containerColor,
+        border = borderStroke,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {

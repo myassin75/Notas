@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,11 +77,38 @@ internal fun ActiveFilterChips(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // "All" Chip
+            val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+            val semantic = three.haddad.smartnotas.ui.theme.LocalSemanticPalette.current
             val allSelected = filter.shoulderId == null
+            val allBg =
+                if (allSelected) {
+                    if (isDark) semantic.selectedStateContainer else MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    three.haddad.smartnotas.ui.theme.glassContainerColor(
+                        variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                        isDark = isDark,
+                    )
+                }
+            val allBorder =
+                if (allSelected) {
+                    if (isDark) BorderStroke(1.dp, semantic.primaryAction.copy(alpha = 0.5f)) else null
+                } else {
+                    three.haddad.smartnotas.ui.theme.glassBorderStroke(
+                        variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                        isDark = isDark,
+                    )
+                }
+            val allTextColor =
+                if (allSelected) {
+                    if (isDark) semantic.primaryAction else MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    if (isDark) Color(0xFFA6A4B4) else MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
             Surface(
                 shape = CircleShape,
-                color = if (allSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                border = if (allSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                color = allBg,
+                border = allBorder,
                 modifier =
                     Modifier
                         .clip(CircleShape)
@@ -96,7 +125,7 @@ internal fun ActiveFilterChips(
                             MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Medium,
                                 fontSize = 14.sp,
-                                color = if (allSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = allTextColor,
                             ),
                     )
                     if (totalActiveCount > 0) {
@@ -106,7 +135,7 @@ internal fun ActiveFilterChips(
                                 MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 13.sp,
-                                    color = if (allSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = allTextColor,
                                 ),
                         )
                     }
@@ -117,14 +146,38 @@ internal fun ActiveFilterChips(
             activeShoulders.forEach { shoulder ->
                 val selected = filter.shoulderId == shoulder.id
                 val shoulderColor = parseColorHex(shoulder.colorHex, MaterialTheme.colorScheme.primary)
-                val chipBg = if (selected) shoulderColor.copy(alpha = 0.15f) else Color.Transparent
-                val chipBorderColor = if (selected) shoulderColor.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outlineVariant
-                val chipTextColor = if (selected) shoulderColor else MaterialTheme.colorScheme.onSurface
+                val (badgeBg, badgeText) = three.haddad.smartnotas.ui.components.readableBadgeColors(shoulderColor, isDark)
+                val chipBg =
+                    if (selected) {
+                        badgeBg
+                    } else {
+                        three.haddad.smartnotas.ui.theme.glassContainerColor(
+                            variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                            isDark = isDark,
+                        )
+                    }
+                val chipBorder =
+                    if (selected) {
+                        BorderStroke(1.dp, badgeText.copy(alpha = 0.5f))
+                    } else {
+                        three.haddad.smartnotas.ui.theme.glassBorderStroke(
+                            variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                            isDark = isDark,
+                        )
+                    }
+                val chipTextColor =
+                    if (selected) {
+                        badgeText
+                    } else if (isDark) {
+                        Color(0xFFDDDCE5)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
 
                 Surface(
                     shape = CircleShape,
                     color = chipBg,
-                    border = BorderStroke(1.dp, chipBorderColor),
+                    border = chipBorder,
                     modifier =
                         Modifier
                             .clip(CircleShape)
@@ -132,16 +185,30 @@ internal fun ActiveFilterChips(
                                 onChange(filter.copy(shoulderId = if (selected) null else shoulder.id))
                             },
                 ) {
-                    Text(
-                        text = shoulder.name,
-                        style =
-                            MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 14.sp,
-                                color = chipTextColor,
-                            ),
+                    Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (!selected) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(shoulderColor),
+                            )
+                        }
+                        Text(
+                            text = shoulder.name,
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 14.sp,
+                                    color = chipTextColor,
+                                ),
+                        )
+                    }
                 }
             }
         }
@@ -155,7 +222,8 @@ internal fun ActiveFilterChips(
                         .clip(CircleShape)
                         .clickable {
                             onExpandedDropdownChange(if (expandedDropdown == ActiveFilterDropdown.SORT) null else ActiveFilterDropdown.SORT)
-                        },
+                        }
+                        .semantics { contentDescription = "Filter settings" },
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
@@ -194,7 +262,15 @@ private fun parseColorHex(
 ): Color {
     if (hex.isNullOrBlank()) return fallback
     return try {
-        Color(android.graphics.Color.parseColor(if (hex.startsWith("#")) hex else "#$hex"))
+        val clean = hex.removePrefix("#")
+        val colorLong = clean.toLong(16)
+        if (clean.length == 6) {
+            Color(colorLong or 0xFF000000L)
+        } else if (clean.length == 8) {
+            Color(colorLong)
+        } else {
+            fallback
+        }
     } catch (_: Throwable) {
         fallback
     }

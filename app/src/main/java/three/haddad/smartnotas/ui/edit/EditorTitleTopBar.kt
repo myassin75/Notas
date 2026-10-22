@@ -69,7 +69,7 @@ import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.common.rememberLocalTextFieldValueState
 import three.haddad.smartnotas.ui.components.RememberIconButton
 import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
 import kotlin.math.roundToInt
 
@@ -182,9 +182,11 @@ internal fun EditorTitleTopBar(
                 },
                 navigationIcon = {
                     if (showNavigateBack) {
+                        val isDark = LocalIsDark.current
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surface,
+                            color = if (isDark) Color(0xFF181820).copy(alpha = 0.75f) else MaterialTheme.colorScheme.surface,
+                            border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)) else null,
                             modifier =
                                 Modifier
                                     .padding(start = 8.dp)
@@ -237,6 +239,7 @@ internal fun EditorTitleTopBar(
                         }
                     }
                     if ((isEditMode || hasUnsavedChanges) && !readOnly) {
+                        var lastSaveClickMillis by remember { mutableStateOf(0L) }
                         Surface(
                             shape = CircleShape,
                             color = MaterialTheme.colorScheme.primary,
@@ -244,7 +247,13 @@ internal fun EditorTitleTopBar(
                                 Modifier
                                     .padding(end = 8.dp)
                                     .clip(CircleShape)
-                                    .clickable { onSave() },
+                                    .clickable {
+                                        val now = System.currentTimeMillis()
+                                        if (now - lastSaveClickMillis > 600L) {
+                                            lastSaveClickMillis = now
+                                            onSave()
+                                        }
+                                    },
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -259,7 +268,7 @@ internal fun EditorTitleTopBar(
                                     filled = false,
                                 )
                                 Text(
-                                    text = "Save",
+                                    text = stringResource(R.string.common_save),
                                     style =
                                         MaterialTheme.typography.labelLarge.copy(
                                             fontWeight = FontWeight.SemiBold,

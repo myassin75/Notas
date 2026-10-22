@@ -127,6 +127,23 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF5D3F22)
         val DarkOnTertiaryContainer = Color(0xFFFFDDBF)
         val DarkInversePrimary = Color(0xFF800000)
+
+        // Primary-aware dark background and stepped surfaces (warm burgundy undertone)
+        val DarkBackground = Color(0xFF141011)
+        val DarkSurface = Color(0xFF1B1617)
+        val DarkSurfaceVariant = Color(0xFF282023)
+        val DarkSurfaceContainerLowest = Color(0xFF0F0C0D)
+        val DarkSurfaceContainerLow = Color(0xFF1F1A1B)
+        val DarkSurfaceContainer = Color(0xFF241E20)
+        val DarkSurfaceContainerHigh = Color(0xFF2B2426)
+        val DarkSurfaceContainerHighest = Color(0xFF332B2E)
+        val DarkSurfaceBright = Color(0xFF3D3337)
+        val DarkSurfaceDim = Color(0xFF161213)
+        val DarkOutline = Color(0xFF554448)
+        val DarkOutlineVariant = Color(0xFF352A2D)
+        val DarkOnBackground = Color(0xFFEDE0E2)
+        val DarkOnSurface = Color(0xFFEDE0E2)
+        val DarkOnSurfaceVariant = Color(0xFFAFA3A6)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -160,6 +177,23 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF344F67)
         val DarkOnTertiaryContainer = Color(0xFFCCE4FA)
         val DarkInversePrimary = Color(0xFF14247E)
+
+        // Primary-aware dark background and stepped surfaces (cool blue undertone)
+        val DarkBackground = Color(0xFF101218)
+        val DarkSurface = Color(0xFF161922)
+        val DarkSurfaceVariant = Color(0xFF222634)
+        val DarkSurfaceContainerLowest = Color(0xFF0C0E13)
+        val DarkSurfaceContainerLow = Color(0xFF1A1D27)
+        val DarkSurfaceContainer = Color(0xFF20232F)
+        val DarkSurfaceContainerHigh = Color(0xFF262B39)
+        val DarkSurfaceContainerHighest = Color(0xFF2E3344)
+        val DarkSurfaceBright = Color(0xFF383E51)
+        val DarkSurfaceDim = Color(0xFF12141C)
+        val DarkOutline = Color(0xFF484E66)
+        val DarkOutlineVariant = Color(0xFF2D3243)
+        val DarkOnBackground = Color(0xFFE2E4ED)
+        val DarkOnSurface = Color(0xFFE2E4ED)
+        val DarkOnSurfaceVariant = Color(0xFFA3A7B6)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -193,6 +227,23 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF33554A)
         val DarkOnTertiaryContainer = Color(0xFFC7EFE0)
         val DarkInversePrimary = Color(0xFF036905)
+
+        // Primary-aware dark background and stepped surfaces (restrained green undertone)
+        val DarkBackground = Color(0xFF101411)
+        val DarkSurface = Color(0xFF161B17)
+        val DarkSurfaceVariant = Color(0xFF212822)
+        val DarkSurfaceContainerLowest = Color(0xFF0C0F0D)
+        val DarkSurfaceContainerLow = Color(0xFF1A201B)
+        val DarkSurfaceContainer = Color(0xFF202621)
+        val DarkSurfaceContainerHigh = Color(0xFF272F29)
+        val DarkSurfaceContainerHighest = Color(0xFF2E3830)
+        val DarkSurfaceBright = Color(0xFF38433B)
+        val DarkSurfaceDim = Color(0xFF121613)
+        val DarkOutline = Color(0xFF475449)
+        val DarkOutlineVariant = Color(0xFF2C352E)
+        val DarkOnBackground = Color(0xFFE1E5E2)
+        val DarkOnSurface = Color(0xFFE1E5E2)
+        val DarkOnSurfaceVariant = Color(0xFFA2A8A3)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -226,6 +277,23 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF574326)
         val DarkOnTertiaryContainer = Color(0xFFFBDDB6)
         val DarkInversePrimary = Color(0xFF4D2002)
+
+        // Primary-aware dark background and stepped surfaces (charcoal brown undertone)
+        val DarkBackground = Color(0xFF141210)
+        val DarkSurface = Color(0xFF1B1815)
+        val DarkSurfaceVariant = Color(0xFF28231E)
+        val DarkSurfaceContainerLowest = Color(0xFF0F0E0C)
+        val DarkSurfaceContainerLow = Color(0xFF1F1B17)
+        val DarkSurfaceContainer = Color(0xFF26221E)
+        val DarkSurfaceContainerHigh = Color(0xFF2D2823)
+        val DarkSurfaceContainerHighest = Color(0xFF352F29)
+        val DarkSurfaceBright = Color(0xFF403932)
+        val DarkSurfaceDim = Color(0xFF161411)
+        val DarkOutline = Color(0xFF554A41)
+        val DarkOutlineVariant = Color(0xFF342D28)
+        val DarkOnBackground = Color(0xFFEDE4DC)
+        val DarkOnSurface = Color(0xFFEDE4DC)
+        val DarkOnSurfaceVariant = Color(0xFFAEA59D)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -260,6 +328,23 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF315064)
         val DarkOnTertiaryContainer = Color(0xFFC7E8FC)
         val DarkInversePrimary = Color(0xFF136B71)
+
+        // Primary-aware dark background and stepped surfaces (cool teal undertone)
+        val DarkBackground = Color(0xFF0F1415)
+        val DarkSurface = Color(0xFF151B1C)
+        val DarkSurfaceVariant = Color(0xFF20292B)
+        val DarkSurfaceContainerLowest = Color(0xFF0B0F10)
+        val DarkSurfaceContainerLow = Color(0xFF1A2122)
+        val DarkSurfaceContainer = Color(0xFF1F2729)
+        val DarkSurfaceContainerHigh = Color(0xFF263032)
+        val DarkSurfaceContainerHighest = Color(0xFF2E393C)
+        val DarkSurfaceBright = Color(0xFF374448)
+        val DarkSurfaceDim = Color(0xFF121718)
+        val DarkOutline = Color(0xFF455558)
+        val DarkOutlineVariant = Color(0xFF2B3638)
+        val DarkOnBackground = Color(0xFFE0E5E6)
+        val DarkOnSurface = Color(0xFFE0E5E6)
+        val DarkOnSurfaceVariant = Color(0xFFA1A8AA)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -280,9 +365,9 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF2B2B33)
         val LightInversePrimary = Color(0xFFFFFFFF)
 
-        val DarkPrimary = Color(0xFFFFFFFF)
-        val DarkOnPrimary = Color(0xFF000000)
-        val DarkPrimaryContainer = Color(0xFF2D2D35)
+        val DarkPrimary = Color(0xFFD4D4DE)
+        val DarkOnPrimary = Color(0xFF16161C)
+        val DarkPrimaryContainer = Color(0xFF282832)
         val DarkOnPrimaryContainer = Color(0xFFF1F1F6)
         val DarkSecondary = Color(0xFFC6C6D0)
         val DarkOnSecondary = Color(0xFF16161C)
@@ -293,6 +378,23 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF26262F)
         val DarkOnTertiaryContainer = Color(0xFFCFCFD8)
         val DarkInversePrimary = Color(0xFF16161A)
+
+        // True black background with differentiated charcoal surfaces
+        val DarkBackground = Color(0xFF000000)
+        val DarkSurface = Color(0xFF121214)
+        val DarkSurfaceVariant = Color(0xFF1E1E22)
+        val DarkSurfaceContainerLowest = Color(0xFF070708)
+        val DarkSurfaceContainerLow = Color(0xFF161619)
+        val DarkSurfaceContainer = Color(0xFF1D1D21)
+        val DarkSurfaceContainerHigh = Color(0xFF242429)
+        val DarkSurfaceContainerHighest = Color(0xFF2C2C32)
+        val DarkSurfaceBright = Color(0xFF36363E)
+        val DarkSurfaceDim = Color(0xFF0D0D0F)
+        val DarkOutline = Color(0xFF44444D)
+        val DarkOutlineVariant = Color(0xFF2B2B32)
+        val DarkOnBackground = Color(0xFFEDEDF4)
+        val DarkOnSurface = Color(0xFFEDEDF4)
+        val DarkOnSurfaceVariant = Color(0xFFA8A6B5)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -326,5 +428,187 @@ object ThemeColors {
         val DarkTertiaryContainer = Color(0xFF5C3744)
         val DarkOnTertiaryContainer = Color(0xFFF8DCE3)
         val DarkInversePrimary = Color(0xFF863E8B)
+
+        // Primary-aware dark background and stepped surfaces (restrained plum undertone)
+        val DarkBackground = Color(0xFF131116)
+        val DarkSurface = Color(0xFF1A171F)
+        val DarkSurfaceVariant = Color(0xFF26212E)
+        val DarkSurfaceContainerLowest = Color(0xFF0E0C11)
+        val DarkSurfaceContainerLow = Color(0xFF1E1B24)
+        val DarkSurfaceContainer = Color(0xFF25202C)
+        val DarkSurfaceContainerHigh = Color(0xFF2B2634)
+        val DarkSurfaceContainerHighest = Color(0xFF332D3E)
+        val DarkSurfaceBright = Color(0xFF3E364A)
+        val DarkSurfaceDim = Color(0xFF151318)
+        val DarkOutline = Color(0xFF51465F)
+        val DarkOutlineVariant = Color(0xFF322B3A)
+        val DarkOnBackground = Color(0xFFEBE3ED)
+        val DarkOnSurface = Color(0xFFEBE3ED)
+        val DarkOnSurfaceVariant = Color(0xFFAAA1AD)
     }
 }
+
+/**
+ * Centralized, theme-aware semantic color palette for NUVORA.
+ *
+ * Provides contrast-verified, role-specific colors for all 7 application accent themes:
+ * - [ambientTint]: Theme-tinted upper ambient lighting bloom
+ * - [primaryAction]: Light, accessible accent for buttons, active indicators, and FABs
+ * - [primaryActionForeground]: High-contrast foreground color on primaryAction buttons
+ * - [selectedStateForeground]: Foreground tint for selected items/icons
+ * - [selectedStateContainer]: Subtle accent-tinted container background for selected items
+ * - [cardSurface]: Translucent charcoal surface for standard content cards
+ * - [cardBorder]: Fine 1.dp border stroke for cards
+ * - [modalSurface]: High-opacity container for bottom sheets and dialogs
+ * - [primaryText]: High-contrast primary reading text
+ * - [secondaryText]: Accessible muted secondary/label text
+ * - [divider]: Subtle hairline separator
+ * - [inputSurface]: Recessed field container for inputs and search bars
+ * - [error]: Semantic error/destructive indicator
+ * - [success]: Semantic success/completion indicator
+ * - [warning]: Semantic warning/alert indicator
+ */
+data class SemanticPalette(
+    val ambientTint: Color,
+    val primaryAction: Color,
+    val primaryActionForeground: Color,
+    val selectedStateForeground: Color,
+    val selectedStateContainer: Color,
+    val cardSurface: Color,
+    val cardBorder: Color,
+    val modalSurface: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val divider: Color,
+    val inputSurface: Color,
+    val error: Color,
+    val success: Color,
+    val warning: Color,
+)
+
+/**
+ * Resolves the centralized [SemanticPalette] for a given [three.haddad.smartnotas.data.AccentTheme]
+ * under Light Mode, Dark Mode, or OLED Pure Black Mode.
+ */
+fun resolveSemanticPalette(
+    accentTheme: three.haddad.smartnotas.data.AccentTheme,
+    darkTheme: Boolean,
+    isOledBlack: Boolean = false,
+): SemanticPalette {
+    if (!darkTheme) {
+        val (primaryAction, primaryActionFg, selectedContainer) =
+            when (accentTheme) {
+                three.haddad.smartnotas.data.AccentTheme.MAROON ->
+                    Triple(ThemeColors.Maroon.LightPrimary, ThemeColors.Maroon.LightOnPrimary, ThemeColors.Maroon.LightPrimaryContainer)
+                three.haddad.smartnotas.data.AccentTheme.ROYAL_BLUE ->
+                    Triple(ThemeColors.RoyalBlue.LightPrimary, ThemeColors.RoyalBlue.LightOnPrimary, ThemeColors.RoyalBlue.LightPrimaryContainer)
+                three.haddad.smartnotas.data.AccentTheme.FOREST_GREEN ->
+                    Triple(ThemeColors.ForestGreen.LightPrimary, ThemeColors.ForestGreen.LightOnPrimary, ThemeColors.ForestGreen.LightPrimaryContainer)
+                three.haddad.smartnotas.data.AccentTheme.DARK_BROWN ->
+                    Triple(ThemeColors.DarkBrown.LightPrimary, ThemeColors.DarkBrown.LightOnPrimary, ThemeColors.DarkBrown.LightPrimaryContainer)
+                three.haddad.smartnotas.data.AccentTheme.OCEAN_TEAL ->
+                    Triple(ThemeColors.OceanTeal.LightPrimary, ThemeColors.OceanTeal.LightOnPrimary, ThemeColors.OceanTeal.LightPrimaryContainer)
+                three.haddad.smartnotas.data.AccentTheme.PURE_BLACK ->
+                    Triple(ThemeColors.PureBlack.LightPrimary, ThemeColors.PureBlack.LightOnPrimary, ThemeColors.PureBlack.LightPrimaryContainer)
+                three.haddad.smartnotas.data.AccentTheme.AMETHYST ->
+                    Triple(ThemeColors.Amethyst.LightPrimary, ThemeColors.Amethyst.LightOnPrimary, ThemeColors.Amethyst.LightPrimaryContainer)
+            }
+
+        return SemanticPalette(
+            ambientTint = Color.Transparent,
+            primaryAction = primaryAction,
+            primaryActionForeground = primaryActionFg,
+            selectedStateForeground = primaryAction,
+            selectedStateContainer = selectedContainer,
+            cardSurface = ThemeColors.LightSurface,
+            cardBorder = ThemeColors.LightOutlineVariant.copy(alpha = 0.5f),
+            modalSurface = ThemeColors.LightSurfaceContainerHigh,
+            primaryText = ThemeColors.LightOnSurface,
+            secondaryText = ThemeColors.LightOnSurfaceVariant,
+            divider = ThemeColors.LightOutlineVariant,
+            inputSurface = ThemeColors.LightSurfaceVariant,
+            error = ThemeColors.LightError,
+            success = Color(0xFF1B6D24),
+            warning = Color(0xFF7C5800),
+        )
+    }
+
+    // Dark Mode Semantic Palette
+    val ambientTint =
+        when (accentTheme) {
+            three.haddad.smartnotas.data.AccentTheme.MAROON -> Color(0xFF481016)
+            three.haddad.smartnotas.data.AccentTheme.ROYAL_BLUE -> Color(0xFF141E42)
+            three.haddad.smartnotas.data.AccentTheme.FOREST_GREEN -> Color(0xFF102814)
+            three.haddad.smartnotas.data.AccentTheme.DARK_BROWN -> Color(0xFF321C0E)
+            three.haddad.smartnotas.data.AccentTheme.OCEAN_TEAL -> Color(0xFF112B30)
+            three.haddad.smartnotas.data.AccentTheme.PURE_BLACK -> Color(0xFF202028)
+            three.haddad.smartnotas.data.AccentTheme.AMETHYST -> Color(0xFF34153A)
+        }
+
+    val (primaryAction, primaryActionFg) =
+        when (accentTheme) {
+            three.haddad.smartnotas.data.AccentTheme.MAROON ->
+                Pair(ThemeColors.Maroon.DarkPrimary, ThemeColors.Maroon.DarkOnPrimary)
+            three.haddad.smartnotas.data.AccentTheme.ROYAL_BLUE ->
+                Pair(ThemeColors.RoyalBlue.DarkPrimary, ThemeColors.RoyalBlue.DarkOnPrimary)
+            three.haddad.smartnotas.data.AccentTheme.FOREST_GREEN ->
+                Pair(ThemeColors.ForestGreen.DarkPrimary, ThemeColors.ForestGreen.DarkOnPrimary)
+            three.haddad.smartnotas.data.AccentTheme.DARK_BROWN ->
+                Pair(ThemeColors.DarkBrown.DarkPrimary, ThemeColors.DarkBrown.DarkOnPrimary)
+            three.haddad.smartnotas.data.AccentTheme.OCEAN_TEAL ->
+                Pair(ThemeColors.OceanTeal.DarkPrimary, ThemeColors.OceanTeal.DarkOnPrimary)
+            three.haddad.smartnotas.data.AccentTheme.PURE_BLACK ->
+                Pair(Color(0xFFD4D4DE), Color(0xFF16161C))
+            three.haddad.smartnotas.data.AccentTheme.AMETHYST ->
+                Pair(ThemeColors.Amethyst.DarkPrimary, ThemeColors.Amethyst.DarkOnPrimary)
+        }
+
+    val selectedContainer = primaryAction.copy(alpha = 0.16f)
+
+    val cardSurface =
+        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+            Color(0xFF141418)
+        } else {
+            Color(0xFF1B1B22)
+        }
+
+    val cardBorder =
+        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+            Color(0xFF282832).copy(alpha = 0.60f)
+        } else {
+            Color(0xFF2C2C36).copy(alpha = 0.65f)
+        }
+
+    val modalSurface =
+        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+            Color(0xFF16161C).copy(alpha = 0.98f)
+        } else {
+            Color(0xFF1E1D25).copy(alpha = 0.96f)
+        }
+
+    val inputSurface =
+        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+            Color(0xFF101014)
+        } else {
+            Color(0xFF15151C)
+        }
+
+    return SemanticPalette(
+        ambientTint = ambientTint,
+        primaryAction = primaryAction,
+        primaryActionForeground = primaryActionFg,
+        selectedStateForeground = primaryAction,
+        selectedStateContainer = selectedContainer,
+        cardSurface = cardSurface,
+        cardBorder = cardBorder,
+        modalSurface = modalSurface,
+        primaryText = Color(0xFFEDEDF2),
+        secondaryText = Color(0xFFA6A4B4),
+        divider = Color(0xFF282832).copy(alpha = 0.55f),
+        inputSurface = inputSurface,
+        error = ThemeColors.DarkError,
+        success = Color(0xFF7DD080),
+        warning = Color(0xFFFFD188),
+    )
+}
+

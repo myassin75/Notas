@@ -151,18 +151,51 @@ fun MainTabScaffold(
     var moveArchiveToTrashOpen by rememberSaveable { mutableStateOf(false) }
     var closeNotesRevealRequest by rememberSaveable { mutableIntStateOf(0) }
 
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val semanticPalette = three.haddad.smartnotas.ui.theme.LocalSemanticPalette.current
+    val themeState = three.haddad.smartnotas.ui.theme.LocalThemeState.current
+    val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK
+
+    val selectedAccent =
+        if (isDark) {
+            if (isBlackTheme) Color(0xFFD4D4DE) else semanticPalette.primaryAction
+        } else {
+            if (isBlackTheme) Color(0xFF16161A) else MaterialTheme.colorScheme.primary
+        }
+
+    val activePillTint =
+        if (isDark) {
+            if (isBlackTheme) Color(0xFFD4D4DE).copy(alpha = 0.18f) else selectedAccent.copy(alpha = 0.16f)
+        } else {
+            if (isBlackTheme) Color(0xFF16161A).copy(alpha = 0.10f) else selectedAccent.copy(alpha = 0.12f)
+        }
+
+    val unselectedNavColor =
+        if (isDark) Color(0xFFA6A4B4) else Color(0xFF757482)
+
+    val navDividerColor =
+        if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+
     Scaffold(
+        containerColor = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background,
         bottomBar = {
             if (chromeVisible) {
                 Column {
-                    Divider(color = MaterialTheme.colorScheme.outline)
+                    androidx.compose.material3.HorizontalDivider(
+                        color = navDividerColor,
+                    )
                     NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor =
+                            three.haddad.smartnotas.ui.theme.glassContainerColor(
+                                variant = three.haddad.smartnotas.ui.theme.GlassVariant.BottomNav,
+                                isDark = isDark,
+                            ),
                         tonalElevation = 0.dp,
                         windowInsets = WindowInsets.navigationBars,
                     ) {
                         MainTab.entries.forEach { tabItem ->
                             val selected = currentTab == tabItem
+                            val itemColor = if (selected) selectedAccent else unselectedNavColor
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = {
@@ -174,12 +207,14 @@ fun MainTabScaffold(
                                         Icon(
                                             painter = painterResource(R.drawable.ic_home_outlined),
                                             contentDescription = null,
+                                            tint = itemColor,
                                             modifier = Modifier.size(24.dp),
                                         )
                                     } else {
                                         RememberMaterialRoundedSymbol(
                                             name = tabItem.symbolName,
-                                            weight = FontWeight.Medium,
+                                            tint = itemColor,
+                                            weight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                                             filled = false,
                                         )
                                     }
@@ -188,15 +223,16 @@ fun MainTabScaffold(
                                     Text(
                                         text = stringResource(tabItem.labelRes),
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        color = itemColor,
                                     )
                                 },
                                 colors =
                                     NavigationBarItemDefaults.colors(
-                                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        selectedIconColor = selectedAccent,
+                                        selectedTextColor = selectedAccent,
+                                        indicatorColor = activePillTint,
+                                        unselectedIconColor = unselectedNavColor,
+                                        unselectedTextColor = unselectedNavColor,
                                     ),
                             )
                         }

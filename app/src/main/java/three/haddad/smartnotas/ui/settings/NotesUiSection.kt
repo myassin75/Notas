@@ -78,6 +78,6 @@ fun AppearanceSettingsToggleItem(
             Text(text = title, style = MaterialTheme.typography.bodyLarge)
             Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        SettingsCustomSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

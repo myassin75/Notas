@@ -8,6 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -207,7 +208,8 @@ fun HelpScreen(
                 navigationIcon = {
                     Surface(
                         shape = CircleShape,
-                        color = Color.White,
+                        color = SettingsDesignTokens.CardBg,
+                        border = BorderStroke(1.dp, SettingsDesignTokens.DividerColor),
                         modifier =
                             Modifier
                                 .padding(start = 12.dp)
@@ -235,7 +237,8 @@ fun HelpScreen(
                         )
                     Surface(
                         shape = CircleShape,
-                        color = Color.White,
+                        color = SettingsDesignTokens.CardBg,
+                        border = BorderStroke(1.dp, SettingsDesignTokens.DividerColor),
                         modifier =
                             Modifier
                                 .padding(end = 12.dp)
@@ -278,7 +281,8 @@ fun HelpScreen(
             item(key = "search") {
                 Surface(
                     shape = CircleShape,
-                    color = Color.White,
+                    color = SettingsDesignTokens.CardBg,
+                    border = BorderStroke(1.dp, SettingsDesignTokens.DividerColor),
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 ) {
                     OutlinedTextField(
@@ -326,8 +330,8 @@ fun HelpScreen(
                             OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = Color.Transparent,
                                 focusedBorderColor = SettingsDesignTokens.PrimaryPurple,
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
                             ),
                     )
                 }

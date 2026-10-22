@@ -105,9 +105,11 @@ internal fun EditorContentBodyColumn(
         heroContent?.invoke(this)
         EditorShelfNoticeBlock(shelfState = shelfState)
         Spacer(Modifier.height(EditorContentBodyDefaults.BodyTopSpacing))
+        val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
         Surface(
             shape = RoundedCornerShape(28.dp),
-            color = Color.White,
+            color = if (isDark) Color(0xFF141419).copy(alpha = 0.94f) else MaterialTheme.colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.35f)),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(modifier = Modifier.padding(18.dp)) {

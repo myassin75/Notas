@@ -273,8 +273,8 @@ fun EditEventScreen(
                 enabled = !isSaving && title.isNotBlank(),
                 colors =
                     ButtonDefaults.buttonColors(
-                        containerColor = CalendarDesignTokens.PrimaryPurple,
-                        disabledContainerColor = CalendarDesignTokens.PrimaryPurple.copy(alpha = 0.4f),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                     ),
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp),
@@ -284,7 +284,7 @@ fun EditEventScreen(
                     style =
                         MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                         ),
                 )
             }
@@ -347,7 +347,7 @@ fun EditEventScreen(
                             fontWeight = FontWeight.Medium,
                             color = textPrimary,
                         ),
-                    cursorBrush = SolidColor(CalendarDesignTokens.PrimaryPurple),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     decorationBox = { innerTextField ->
                         if (title.isBlank()) {
                             Text(
@@ -396,7 +396,7 @@ fun EditEventScreen(
                         RememberMaterialRoundedSymbol(
                             name = "sell",
                             size = 16.dp,
-                            tint = CalendarDesignTokens.PrimaryPurple,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = stringResource(R.string.event_no_shoulder),
@@ -428,7 +428,7 @@ fun EditEventScreen(
                             fontSize = 15.sp,
                             color = textPrimary,
                         ),
-                    cursorBrush = SolidColor(CalendarDesignTokens.PrimaryPurple),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     minLines = 2,
                     maxLines = 8,
                     decorationBox = { innerTextField ->
@@ -615,8 +615,8 @@ fun EditEventScreen(
                             onCheckedChange = viewModel::setAllDay,
                             colors =
                                 SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = CalendarDesignTokens.PrimaryPurple,
+                                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                    checkedTrackColor = MaterialTheme.colorScheme.primary,
                                 ),
                         )
                     },
@@ -1046,8 +1046,8 @@ private fun SettingRow(
     subtitle: String,
     onClick: (() -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
-    iconBg: Color = CalendarDesignTokens.SoftLavender,
-    iconTint: Color = CalendarDesignTokens.PrimaryPurple,
+    iconBg: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     textPrimary: Color,
     textSecondary: Color,
 ) {
@@ -1189,13 +1189,13 @@ private fun RecurrenceSelectionDialog(
                             style =
                                 MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    color = if (isSelected) CalendarDesignTokens.PrimaryPurple else MaterialTheme.colorScheme.onSurface,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 ),
                         )
                         RadioButton(
                             selected = isSelected,
                             onClick = { onSelect(rule) },
-                            colors = RadioButtonDefaults.colors(selectedColor = CalendarDesignTokens.PrimaryPurple),
+                            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
                         )
                     }
                 }
@@ -1247,13 +1247,13 @@ private fun <T> SelectionOptionDialog(
                             style =
                                 MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    color = if (isSelected) CalendarDesignTokens.PrimaryPurple else MaterialTheme.colorScheme.onSurface,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 ),
                         )
                         RadioButton(
                             selected = isSelected,
                             onClick = { onSelect(value) },
-                            colors = RadioButtonDefaults.colors(selectedColor = CalendarDesignTokens.PrimaryPurple),
+                            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
                         )
                     }
                 }
@@ -1522,16 +1522,16 @@ private fun IconAndColorSheet(
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val sheetBg = if (isDark) Color(0xFF1F1F28) else Color.White
-    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
-    val cardBorder = CalendarDesignTokens.resolveCardBorder(isDark)
-    val innerCardBg = if (isDark) Color(0xFF282834) else Color(0xFFF7F7FA)
+    val sheetBg = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface
+    val textPrimary = MaterialTheme.colorScheme.onSurface
+    val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
+    val cardBorder = MaterialTheme.colorScheme.outlineVariant
+    val innerCardBg = if (isDark) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceVariant
 
     val currentAccent = NoteColors.at(currentColorIndex)
     val currentColor =
         if (NoteColors.isNone(currentColorIndex)) {
-            CalendarDesignTokens.PrimaryPurple
+            MaterialTheme.colorScheme.primary
         } else if (isDark) {
             currentAccent.dark
         } else {
@@ -1594,7 +1594,7 @@ private fun IconAndColorSheet(
                         style =
                             MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                color = CalendarDesignTokens.PrimaryPurple,
+                                color = MaterialTheme.colorScheme.primary,
                             ),
                     )
                 }
@@ -1789,7 +1789,7 @@ private fun IconAndColorSheet(
                         RememberMaterialRoundedSymbol(
                             name = "category",
                             size = 20.dp,
-                            tint = CalendarDesignTokens.PrimaryPurple,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = stringResource(R.string.event_icon_and_color_more_icons),

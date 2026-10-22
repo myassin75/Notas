@@ -96,7 +96,7 @@ class CalendarViewModel
                 _displayedMonth,
                 _currentWeekStart,
                 _viewMode,
-                noteRepository.observeActive().catch { e ->
+                noteRepository.observeScheduled().catch { e ->
                     _errorMessage.value = e.message ?: "Failed to load events"
                     emit(emptyList())
                 },
@@ -260,9 +260,16 @@ class CalendarViewModel
                                     noteWithItems.note.importance == Importance.HIGH ||
                                         noteWithItems.note.importance == Importance.CRITICAL -> CalendarDesignTokens.DotOrange
                                     !NoteColors.isNone(noteWithItems.note.colorIndex) -> NoteColors.at(noteWithItems.note.colorIndex).light
+                                    !noteWithItems.shoulder?.colorHex.isNullOrBlank() -> {
+                                        val hex = noteWithItems.shoulder.colorHex
+                                        runCatching {
+                                            val fullHex = if (hex.startsWith("#")) hex else "#$hex"
+                                            Color(android.graphics.Color.parseColor(fullHex))
+                                        }.getOrElse { CalendarDesignTokens.DotBlue }
+                                    }
                                     noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank() -> CalendarDesignTokens.DotGreen
                                     noteWithItems.shoulder?.name?.contains("work", ignoreCase = true) == true -> CalendarDesignTokens.DotBlue
-                                    else -> CalendarDesignTokens.DotPurple
+                                    else -> Color.Unspecified
                                 }
                             CalendarDot(color)
                         }
@@ -315,9 +322,16 @@ class CalendarViewModel
                                     noteWithItems.note.importance == Importance.HIGH ||
                                         noteWithItems.note.importance == Importance.CRITICAL -> CalendarDesignTokens.DotOrange
                                     !NoteColors.isNone(noteWithItems.note.colorIndex) -> NoteColors.at(noteWithItems.note.colorIndex).light
+                                    !noteWithItems.shoulder?.colorHex.isNullOrBlank() -> {
+                                        val hex = noteWithItems.shoulder.colorHex
+                                        runCatching {
+                                            val fullHex = if (hex.startsWith("#")) hex else "#$hex"
+                                            Color(android.graphics.Color.parseColor(fullHex))
+                                        }.getOrElse { CalendarDesignTokens.DotBlue }
+                                    }
                                     noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank() -> CalendarDesignTokens.DotGreen
                                     noteWithItems.shoulder?.name?.contains("work", ignoreCase = true) == true -> CalendarDesignTokens.DotBlue
-                                    else -> CalendarDesignTokens.DotPurple
+                                    else -> Color.Unspecified
                                 }
                             CalendarDot(color)
                         }
@@ -375,14 +389,14 @@ class CalendarViewModel
 
             val agendaEvents =
                 eventNotes
-                    .sortedBy { it.note.reminderAt ?: it.note.createdAt }
+                    .sortedBy { it.note.reminderAt ?: it.note.endAt ?: 0L }
                     .map { noteWithItems ->
                         mapToEventUiModel(noteWithItems, selectedDate, isTask = false)
                     }
 
             val agendaTasks =
                 taskNotes
-                    .sortedBy { it.note.reminderAt ?: it.note.createdAt }
+                    .sortedBy { it.note.reminderAt ?: it.note.endAt ?: 0L }
                     .map { noteWithItems ->
                         mapToEventUiModel(noteWithItems, selectedDate, isTask = true)
                     }
@@ -390,7 +404,7 @@ class CalendarViewModel
             // 4. Extract genuine birthdays for this date without fabricating records
             val birthdayModels =
                 birthdayNotesOnDate
-                    .sortedBy { it.note.reminderAt ?: it.note.createdAt }
+                    .sortedBy { it.note.reminderAt ?: 0L }
                     .map { noteWithItems ->
                         val subtitle = formatBirthdaySubtitle(noteWithItems)
                         CalendarBirthdayUiModel(
@@ -449,7 +463,7 @@ class CalendarViewModel
                         rDate == selectedDate || isRecurringMatch(reminder, selectedDate)
                     }
 
-                val isAllDay = noteWithItems.note.isAllDay || (reminderOnDate == null && noteWithItems.note.reminderAt == null)
+                val isAllDay = noteWithItems.note.isAllDay
                 if (isAllDay) {
                     allDayItems.add(
                         createTimelineItem(
@@ -463,7 +477,7 @@ class CalendarViewModel
                     continue
                 }
 
-                val epochMillis = reminderOnDate?.reminderAt ?: noteWithItems.note.reminderAt ?: 0L
+                val epochMillis = reminderOnDate?.reminderAt ?: noteWithItems.note.reminderAt ?: noteWithItems.note.endAt ?: continue
                 val reminderTime =
                     Instant
                         .ofEpochMilli(epochMillis)
@@ -729,21 +743,21 @@ class CalendarViewModel
                         accent.light to accent.light.copy(alpha = 0.12f)
                     }
                     !noteWithItems.shoulder?.colorHex.isNullOrBlank() -> {
+                        val hex = noteWithItems.shoulder.colorHex
                         val parsed =
                             runCatching {
-                                val hex = noteWithItems.shoulder!!.colorHex!!
                                 val fullHex = if (hex.startsWith("#")) hex else "#$hex"
                                 Color(android.graphics.Color.parseColor(fullHex))
                             }.getOrNull()
                         if (parsed != null) {
                             parsed to parsed.copy(alpha = 0.12f)
                         } else {
-                            CalendarDesignTokens.PrimaryPurple to CalendarDesignTokens.CategoryPurpleBg
+                            Color.Unspecified to Color.Unspecified
                         }
                     }
                     isList -> CalendarDesignTokens.DotGreen to CalendarDesignTokens.CategoryGreenBg
                     isWork -> CalendarDesignTokens.DotBlue to CalendarDesignTokens.CategoryBlueBg
-                    else -> CalendarDesignTokens.PrimaryPurple to CalendarDesignTokens.CategoryPurpleBg
+                    else -> Color.Unspecified to Color.Unspecified
                 }
 
             val timeRangeDisplay =
@@ -830,21 +844,21 @@ class CalendarViewModel
                         accent.light.copy(alpha = 0.15f) to accent.light
                     }
                     !noteWithItems.shoulder?.colorHex.isNullOrBlank() -> {
+                        val hex = noteWithItems.shoulder.colorHex
                         val parsed =
                             runCatching {
-                                val hex = noteWithItems.shoulder!!.colorHex!!
                                 val fullHex = if (hex.startsWith("#")) hex else "#$hex"
                                 Color(android.graphics.Color.parseColor(fullHex))
                             }.getOrNull()
                         if (parsed != null) {
                             parsed.copy(alpha = 0.15f) to parsed
                         } else {
-                            CalendarDesignTokens.CategoryPurpleBg to CalendarDesignTokens.CategoryPurpleIcon
+                            Color.Unspecified to Color.Unspecified
                         }
                     }
                     isList -> CalendarDesignTokens.CategoryGreenBg to CalendarDesignTokens.CategoryGreenIcon
                     isWork -> CalendarDesignTokens.CategoryBlueBg to CalendarDesignTokens.CategoryBlueIcon
-                    else -> CalendarDesignTokens.CategoryPurpleBg to CalendarDesignTokens.CategoryPurpleIcon
+                    else -> Color.Unspecified to Color.Unspecified
                 }
 
             return CalendarEventUiModel(
@@ -863,6 +877,10 @@ class CalendarViewModel
                 iconTint = iconTint,
                 isDone = noteWithItems.note.completedAt != null,
                 isTask = isList,
+                description = noteWithItems.note.body.trim(),
+                isAllDay = noteWithItems.note.isAllDay,
+                shoulderName = noteWithItems.shoulder?.name,
+                shoulderColorHex = noteWithItems.shoulder?.colorHex,
             )
         }
 
@@ -870,8 +888,13 @@ class CalendarViewModel
             note: NoteWithItems,
             date: LocalDate,
         ): Boolean {
+            // Ordinary notes without any scheduled timestamp or reminders never match any calendar date
+            if (note.note.reminderAt == null && note.note.endAt == null && !note.note.isAllDay && note.note.getActiveReminders().isEmpty()) {
+                return false
+            }
+
             if (note.note.endAt != null) {
-                val startMillis = note.note.reminderAt ?: note.note.createdAt
+                val startMillis = note.note.reminderAt ?: note.note.endAt
                 val startDate =
                     Instant
                         .ofEpochMilli(startMillis)
@@ -900,18 +923,11 @@ class CalendarViewModel
             }
 
             if (isBirthday(note)) {
-                val primaryAt = note.note.reminderAt ?: note.note.createdAt
-                val bdayDate = Instant.ofEpochMilli(primaryAt).atZone(ZoneId.systemDefault()).toLocalDate()
-                if (bdayDate.month == date.month && bdayDate.dayOfMonth == date.dayOfMonth) return true
-            }
-
-            if (note.note.reminderAt == null && note.note.reminders.isEmpty()) {
-                val createdDate =
-                    Instant
-                        .ofEpochMilli(note.note.createdAt)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
-                if (createdDate == date) return true
+                val primaryAt = note.note.reminderAt ?: note.note.getActiveReminders().firstOrNull()?.reminderAt
+                if (primaryAt != null) {
+                    val bdayDate = Instant.ofEpochMilli(primaryAt).atZone(ZoneId.systemDefault()).toLocalDate()
+                    if (bdayDate.month == date.month && bdayDate.dayOfMonth == date.dayOfMonth) return true
+                }
             }
 
             return false
@@ -998,12 +1014,16 @@ class CalendarViewModel
             date: LocalDate,
         ): String {
             if (note.note.isAllDay) return "All day"
-            val reminderAt = note.note.reminderAt
-            return if (reminderAt != null) {
-                val dateTime = Instant.ofEpochMilli(reminderAt).atZone(ZoneId.systemDefault())
+            val matchingReminder = note.note.getActiveReminders().firstOrNull { reminder ->
+                val rDate = Instant.ofEpochMilli(reminder.reminderAt).atZone(ZoneId.systemDefault()).toLocalDate()
+                rDate == date || isRecurringMatch(reminder, date)
+            }
+            val epoch = matchingReminder?.reminderAt ?: note.note.reminderAt ?: note.note.endAt
+            return if (epoch != null && epoch > 0L) {
+                val dateTime = Instant.ofEpochMilli(epoch).atZone(ZoneId.systemDefault())
                 dateTime.format(Time12HourMinuteAmPmFormatter)
             } else {
-                "All day"
+                ""
             }
         }
 
@@ -1025,7 +1045,7 @@ class CalendarViewModel
         }
 
         private fun formatBirthdaySubtitle(note: NoteWithItems): String {
-            val reminderAt = note.note.reminderAt ?: note.note.createdAt
+            val reminderAt = note.note.reminderAt ?: note.note.getActiveReminders().firstOrNull()?.reminderAt ?: return ""
             val dateTime = Instant.ofEpochMilli(reminderAt).atZone(ZoneId.systemDefault())
             val datePart = dateTime.format(DateTimeFormatter.ofPattern("MMMM d, EEEE", Locale.getDefault()))
             val timePart = dateTime.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))

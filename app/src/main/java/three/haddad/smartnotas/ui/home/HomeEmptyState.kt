@@ -92,9 +92,20 @@ internal fun NotesEmptyState(
             }
             if (showCreateActions) {
                 Spacer(Modifier.height(24.dp))
+                val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
                 Surface(
                     shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.surface,
+                    color =
+                        if (isDark) {
+                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                    border =
+                        androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.55f else 0.5f),
+                        ),
                     modifier =
                         Modifier
                             .fillMaxWidth()

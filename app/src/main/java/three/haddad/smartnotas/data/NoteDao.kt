@@ -29,6 +29,18 @@ interface NoteDao {
     fun observeActive(): Flow<List<NoteWithItems>>
 
     @Transaction
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE trashed = 0
+          AND archived = 0
+          AND (reminderAt IS NOT NULL OR endAt IS NOT NULL OR isAllDay = 1 OR (reminders IS NOT NULL AND reminders != '[]' AND reminders != ''))
+        ORDER BY reminderAt ASC, endAt ASC
+        """
+    )
+    fun observeScheduled(): Flow<List<NoteWithItems>>
+
+    @Transaction
     @Query("SELECT * FROM notes WHERE trashed = 1 ORDER BY updatedAt DESC")
     fun observeTrashed(): Flow<List<NoteWithItems>>
 

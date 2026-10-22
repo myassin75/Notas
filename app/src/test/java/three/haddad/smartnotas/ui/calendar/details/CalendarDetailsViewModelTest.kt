@@ -60,6 +60,8 @@ class CalendarDetailsViewModelTest {
             object : NoteDao {
                 override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
+                override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
                 override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
                 override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
@@ -352,6 +354,135 @@ class CalendarDetailsViewModelTest {
             val state = vm.uiState.value
             assertFalse(state.isLoading)
             assertTrue(state.notFound)
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun testNoteWithShoulderPresentsShoulderNameAndColor() =
+        runTest {
+            val repo = createRepository()
+            val shoulder =
+                ShoulderEntity(
+                    id = 5L,
+                    name = "Work",
+                    normalizedName = "work",
+                    colorHex = "#29A4AB",
+                    createdAt = 1718438400000L,
+                    updatedAt = 1718438400000L,
+                )
+            val sampleNote =
+                makeNote(
+                    id = 15L,
+                    title = "Work Meeting",
+                    body = "Quarterly planning",
+                    shoulder = shoulder,
+                )
+            noteFlow.value = sampleNote
+
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ITEM_ID to 15L))
+            val vm = CalendarDetailsViewModel(handle, repo)
+
+            val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("Work", state.shoulderName)
+            assertNotNull(state.shoulderColor)
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun testNoteWithoutShoulderHasNullShoulderColor() =
+        runTest {
+            val repo = createRepository()
+            val sampleNote =
+                makeNote(
+                    id = 16L,
+                    title = "Uncategorized Note",
+                    body = "Some notes",
+                    shoulder = null,
+                )
+            noteFlow.value = sampleNote
+
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ITEM_ID to 16L))
+            val vm = CalendarDetailsViewModel(handle, repo)
+
+            val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals(null, state.shoulderName)
+            assertEquals(null, state.shoulderColor)
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun testScheduledTaskDoesNotDeriveEventEndTime() =
+        runTest {
+            val repo = createRepository()
+            val targetDate = LocalDate.of(2026, 7, 20)
+            val targetMillis = targetDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val sampleTask =
+                makeNote(
+                    id = 77L,
+                    title = "Buy Groceries",
+                    body = "Milk, Eggs, Bread",
+                    kind = NoteKind.NOTE,
+                    reminderAt = targetMillis + (10 * 3600 * 1000), // 10:00 AM
+                )
+            noteFlow.value = sampleTask
+
+            val handle =
+                SavedStateHandle(
+                    mapOf(
+                        Routes.ARG_ITEM_ID to 77L,
+                        Routes.ARG_IS_TASK to true,
+                        Routes.ARG_DATE_MILLIS to targetMillis,
+                    ),
+                )
+            val vm = CalendarDetailsViewModel(handle, repo)
+
+            val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertTrue(state.isTask)
+            assertEquals("10:00 AM", state.taskScheduledTimeText)
+            assertEquals(null, state.endTimeText)
+            assertEquals(null, state.durationText)
+
+            collectJob.cancel()
+        }
+
+    @Test
+    fun testTargetDateNotDerivedFromCreationTimestamp() =
+        runTest {
+            val repo = createRepository()
+            val sampleNote =
+                makeNote(
+                    id = 88L,
+                    title = "Old Note",
+                    body = "Created years ago",
+                    reminderAt = null,
+                )
+            noteFlow.value = sampleNote
+
+            // No dateMillis passed, no reminderAt on note
+            val handle = SavedStateHandle(mapOf(Routes.ARG_ITEM_ID to 88L))
+            val vm = CalendarDetailsViewModel(handle, repo)
+
+            val collectJob = launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            // Should resolve to today's date, NOT the 2024 creation date ("June 15, 2024")
+            val today = LocalDate.now()
+            val currentYearText = today.year.toString()
+            assertFalse("Date should not derive from 2024 creation timestamp", state.dateText.contains("2024"))
 
             collectJob.cancel()
         }

@@ -26,9 +26,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -52,9 +55,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import three.haddad.smartnotas.data.AccentTheme
 import three.haddad.smartnotas.domain.formatTimeOfDay
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import java.time.DayOfWeek
+import three.haddad.smartnotas.ui.theme.GlassVariant
+import three.haddad.smartnotas.ui.theme.LocalIsDark
+import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
+import three.haddad.smartnotas.ui.theme.LocalThemeState
+import three.haddad.smartnotas.ui.theme.glassContainerColor
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -69,8 +77,7 @@ private enum class DatePickerTarget {
     END,
 }
 
-private val PurplePrimary = Color(0xFF8E5BA4)
-private val PurpleDark = Color(0xFF734B8E)
+// Light mode fallback tokens
 private val LavenderBg = Color(0xFFF3EAF6)
 private val LavenderCardBg = Color(0xFFF7F4FA)
 private val LavenderBorder = Color(0xFFE8E3EE)
@@ -82,14 +89,15 @@ private val TextOutOfMonth = Color(0xFFBCB7C4)
 private val FieldBackground = Color(0xFFF8F6FA)
 
 /**
- * Redesigned "Set date" bottom sheet conforming strictly to the reference UI.
+ * NUVORA "Set date" bottom sheet conforming strictly to the design system.
  *
  * Supports:
- * - Task and Event modes with clear subtitle and badge indicator.
- * - Start date field and Start time field.
- * - Monthly calendar grid with previous/next month navigation, filled purple selected day circle.
+ * - Explicit distinction between Task and Event modes with clear subtitle and badge indicator.
+ * - Start date field and Start time field with sufficiently opaque surfaces.
+ * - Monthly calendar grid with previous/next month navigation, light theme accent selected day circle.
  * - For Events: collapsible "Add end date" section with checkbox, end date and time fields,
- *   quick duration presets ("1h", "1h30min", "2h", "1day", "2days"), and dynamic summary text.
+ *   optional explicit all-day toggle, quick duration presets ("1h", "1h30min", "2h", "1day", "2days"),
+ *   and dynamic summary text.
  * - Cancel and Save date footer buttons.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,6 +112,8 @@ fun SetDateBottomSheet(
     initialEndHour: Int? = null,
     initialEndMinute: Int? = null,
     initialIsEvent: Boolean = false,
+    initialIsAllDay: Boolean = false,
+    onSaveWithAllDay: ((dateMillis: Long, hour: Int, minute: Int, isEvent: Boolean, endDateMillis: Long?, endHour: Int?, endMinute: Int?, isAllDay: Boolean) -> Unit)? = null,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
     val context = LocalContext.current
@@ -123,7 +133,12 @@ fun SetDateBottomSheet(
         }
 
     var isEvent by rememberSaveable { mutableStateOf(initialIsEvent || initialEndDateMillis != null) }
-    var hasEndDate by rememberSaveable { mutableStateOf(initialEndDateMillis != null) }
+    var hasEndDate by rememberSaveable {
+        mutableStateOf(
+            initialEndDateMillis != null || (initialIsEvent && initialEndHour != null),
+        )
+    }
+    var isAllDay by rememberSaveable { mutableStateOf(initialIsAllDay) }
 
     var selectedStartDate by rememberSaveable { mutableStateOf(initialStartDate) }
     var selectedStartHour by rememberSaveable { mutableStateOf(initialHour) }
@@ -148,10 +163,54 @@ fun SetDateBottomSheet(
     // Date formatter for Start and End date fields (e.g. "Mon, Oct 19, 2026")
     val dateFormatter = remember { DateTimeFormatter.ofPattern("EEE, MMM d, yyyy", Locale.getDefault()) }
 
+    val isDark = LocalIsDark.current
+    val semanticPalette = LocalSemanticPalette.current
+    val themeState = LocalThemeState.current
+    val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == AccentTheme.PURE_BLACK
+
+    // Use light theme accent for selected dates, focused fields, and primary actions
+    val selectedAccent =
+        if (isDark) {
+            if (isBlackTheme) Color(0xFFD4D4DE) else semanticPalette.primaryAction
+        } else {
+            if (isBlackTheme) Color(0xFF16161A) else MaterialTheme.colorScheme.primary
+        }
+
+    val onSelectedAccent =
+        if (isDark) {
+            if (isBlackTheme) Color(0xFF16161C) else semanticPalette.primaryActionForeground
+        } else {
+            MaterialTheme.colorScheme.onPrimary
+        }
+
+    val textPrimary = if (isDark) MaterialTheme.colorScheme.onSurface else TextDark
+    val textMuted = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else TextMuted
+    val textOutOfMonth = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f) else TextOutOfMonth
+
+    // Use sufficiently opaque input surfaces to maintain readability and eliminate background bleed
+    val fieldBackground = if (isDark) Color(0xFF202026) else FieldBackground
+    val cardBackground = if (isDark) Color(0xFF191920) else LavenderCardBg
+    val borderDefault = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f) else LavenderBorder
+    val cancelBg = if (isDark) Color(0xFF26262E) else LavenderCancelBg
+    val cancelText = if (isDark) textPrimary else selectedAccent
+    val typeBadgeBg = if (isDark) selectedAccent.copy(alpha = 0.16f) else LavenderBg
+    val typeBadgeText = selectedAccent
+    val closeButtonBg = if (isDark) Color(0xFF26262E) else Color(0xFFF5F3F8)
+    val closeButtonTint = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF49454F)
+    val navChevronTint = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF49454F)
+    val dragHandleColor = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.60f) else DragHandleColor
+
+    val modalContainerColor =
+        if (isDark) {
+            glassContainerColor(GlassVariant.ModalSheet, isDark = true)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.White,
+        containerColor = modalContainerColor,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = {
             Box(
@@ -167,7 +226,7 @@ fun SetDateBottomSheet(
                             .width(36.dp)
                             .height(4.dp)
                             .clip(CircleShape)
-                            .background(DragHandleColor),
+                            .background(dragHandleColor),
                 )
             }
         },
@@ -192,7 +251,7 @@ fun SetDateBottomSheet(
                         androidx.compose.ui.text.TextStyle(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextDark,
+                            color = textPrimary,
                         ),
                 )
 
@@ -200,10 +259,11 @@ fun SetDateBottomSheet(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    // Type indicator badge ("Task" or "Event") - clickable to toggle mode
+                    // Type indicator badge ("Task" or "Event") - clickable to toggle mode explicitly
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = LavenderBg,
+                        color = typeBadgeBg,
+                        border = if (isDark) BorderStroke(1.dp, selectedAccent.copy(alpha = 0.35f)) else null,
                         modifier =
                             Modifier
                                 .clip(RoundedCornerShape(12.dp))
@@ -224,6 +284,7 @@ fun SetDateBottomSheet(
                                         }
                                     } else {
                                         hasEndDate = false
+                                        isAllDay = false
                                         activeTarget = DatePickerTarget.START
                                     }
                                 },
@@ -233,8 +294,8 @@ fun SetDateBottomSheet(
                             style =
                                 androidx.compose.ui.text.TextStyle(
                                     fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = PurplePrimary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = typeBadgeText,
                                 ),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         )
@@ -243,7 +304,7 @@ fun SetDateBottomSheet(
                     // Close 'X' Button
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFFF5F3F8),
+                        color = closeButtonBg,
                         modifier =
                             Modifier
                                 .size(36.dp)
@@ -254,7 +315,7 @@ fun SetDateBottomSheet(
                             RememberMaterialRoundedSymbol(
                                 name = "close",
                                 size = 18.dp,
-                                tint = Color(0xFF49454F),
+                                tint = closeButtonTint,
                             )
                         }
                     }
@@ -274,7 +335,7 @@ fun SetDateBottomSheet(
                 style =
                     androidx.compose.ui.text.TextStyle(
                         fontSize = 13.5.sp,
-                        color = TextMuted,
+                        color = textMuted,
                     ),
             )
 
@@ -293,17 +354,17 @@ fun SetDateBottomSheet(
                             androidx.compose.ui.text.TextStyle(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = TextMuted,
+                                color = textMuted,
                             ),
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = FieldBackground,
+                        color = fieldBackground,
                         border =
                             BorderStroke(
-                                width = 1.dp,
-                                color = if (activeTarget == DatePickerTarget.START) PurplePrimary else LavenderBorder,
+                                width = if (activeTarget == DatePickerTarget.START) 1.5.dp else 1.dp,
+                                color = if (activeTarget == DatePickerTarget.START) selectedAccent else borderDefault,
                             ),
                         modifier =
                             Modifier
@@ -327,7 +388,7 @@ fun SetDateBottomSheet(
                                 RememberMaterialRoundedSymbol(
                                     name = "calendar_month",
                                     size = 18.dp,
-                                    tint = PurplePrimary,
+                                    tint = if (activeTarget == DatePickerTarget.START) selectedAccent else textMuted,
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -336,7 +397,7 @@ fun SetDateBottomSheet(
                                         androidx.compose.ui.text.TextStyle(
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = TextDark,
+                                            color = textPrimary,
                                         ),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -345,7 +406,7 @@ fun SetDateBottomSheet(
                             RememberMaterialRoundedSymbol(
                                 name = "keyboard_arrow_down",
                                 size = 18.dp,
-                                tint = TextMuted,
+                                tint = textMuted,
                             )
                         }
                     }
@@ -359,20 +420,24 @@ fun SetDateBottomSheet(
                             androidx.compose.ui.text.TextStyle(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = TextMuted,
+                                color = textMuted,
                             ),
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = FieldBackground,
-                        border = BorderStroke(1.dp, LavenderBorder),
+                        color = fieldBackground,
+                        border = BorderStroke(1.dp, borderDefault),
                         modifier =
                             Modifier
                                 .fillMaxWidth()
                                 .height(48.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .clickable { showStartTimePicker = true },
+                                .clickable {
+                                    if (!(isEvent && isAllDay)) {
+                                        showStartTimePicker = true
+                                    }
+                                },
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp),
@@ -384,27 +449,34 @@ fun SetDateBottomSheet(
                                 modifier = Modifier.weight(1f),
                             ) {
                                 RememberMaterialRoundedSymbol(
-                                    name = "schedule",
+                                    name = if (isEvent && isAllDay) "wb_sunny" else "schedule",
                                     size = 18.dp,
-                                    tint = PurplePrimary,
+                                    tint = selectedAccent,
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = formatTimeOfDay(context, selectedStartHour, selectedStartMinute),
+                                    text =
+                                        if (isEvent && isAllDay) {
+                                            "All day"
+                                        } else {
+                                            formatTimeOfDay(context, selectedStartHour, selectedStartMinute)
+                                        },
                                     style =
                                         androidx.compose.ui.text.TextStyle(
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = TextDark,
+                                            color = textPrimary,
                                         ),
                                     maxLines = 1,
                                 )
                             }
-                            RememberMaterialRoundedSymbol(
-                                name = "keyboard_arrow_down",
-                                size = 18.dp,
-                                tint = TextMuted,
-                            )
+                            if (!(isEvent && isAllDay)) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "keyboard_arrow_down",
+                                    size = 18.dp,
+                                    tint = textMuted,
+                                )
+                            }
                         }
                     }
                 }
@@ -426,7 +498,7 @@ fun SetDateBottomSheet(
                         androidx.compose.ui.text.TextStyle(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextDark,
+                            color = textPrimary,
                         ),
                 )
 
@@ -442,7 +514,7 @@ fun SetDateBottomSheet(
                             name = "chevron_right",
                             modifier = Modifier.graphicsLayer { scaleX = -1f },
                             size = 22.dp,
-                            tint = Color(0xFF49454F),
+                            tint = navChevronTint,
                         )
                     }
 
@@ -453,7 +525,7 @@ fun SetDateBottomSheet(
                         RememberMaterialRoundedSymbol(
                             name = "chevron_right",
                             size = 22.dp,
-                            tint = Color(0xFF49454F),
+                            tint = navChevronTint,
                         )
                     }
                 }
@@ -481,7 +553,7 @@ fun SetDateBottomSheet(
                                 androidx.compose.ui.text.TextStyle(
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = TextMuted,
+                                    color = textMuted,
                                 ),
                             textAlign = TextAlign.Center,
                         )
@@ -541,7 +613,7 @@ fun SetDateBottomSheet(
                                         Modifier
                                             .size(34.dp)
                                             .clip(CircleShape)
-                                            .background(if (isSelected) PurplePrimary else Color.Transparent),
+                                            .background(if (isSelected) selectedAccent else Color.Transparent),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
@@ -552,9 +624,9 @@ fun SetDateBottomSheet(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                                 color =
                                                     when {
-                                                        isSelected -> Color.White
-                                                        !isCurrentMonth -> TextOutOfMonth
-                                                        else -> TextDark
+                                                        isSelected -> onSelectedAccent
+                                                        !isCurrentMonth -> textOutOfMonth
+                                                        else -> textPrimary
                                                     },
                                             ),
                                         textAlign = TextAlign.Center,
@@ -571,7 +643,7 @@ fun SetDateBottomSheet(
             // ==================== 4. ADD END DATE CONTROL (EVENT MODE) ====================
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = LavenderCardBg,
+                color = cardBackground,
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -606,7 +678,9 @@ fun SetDateBottomSheet(
                                             selectedEndDate = selectedStartDate
                                         }
                                     } else {
-                                        isEvent = false
+                                        if (!initialIsEvent) {
+                                            isEvent = false
+                                        }
                                         activeTarget = DatePickerTarget.START
                                         selectedPreset = null
                                     }
@@ -624,10 +698,10 @@ fun SetDateBottomSheet(
                                     Modifier
                                         .size(20.dp)
                                         .clip(RoundedCornerShape(5.dp))
-                                        .background(if (hasEndDate) PurplePrimary else Color.Transparent)
+                                        .background(if (hasEndDate) selectedAccent else Color.Transparent)
                                         .border(
                                             width = 1.5.dp,
-                                            color = if (hasEndDate) PurplePrimary else TextOutOfMonth,
+                                            color = if (hasEndDate) selectedAccent else textOutOfMonth,
                                             shape = RoundedCornerShape(5.dp),
                                         ),
                                 contentAlignment = Alignment.Center,
@@ -636,7 +710,7 @@ fun SetDateBottomSheet(
                                     RememberMaterialRoundedSymbol(
                                         name = "check",
                                         size = 15.dp,
-                                        tint = Color.White,
+                                        tint = onSelectedAccent,
                                     )
                                 }
                             }
@@ -650,7 +724,7 @@ fun SetDateBottomSheet(
                                         androidx.compose.ui.text.TextStyle(
                                             fontSize = 14.5.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = TextDark,
+                                            color = textPrimary,
                                         ),
                                 )
                                 if (!hasEndDate) {
@@ -659,7 +733,7 @@ fun SetDateBottomSheet(
                                         style =
                                             androidx.compose.ui.text.TextStyle(
                                                 fontSize = 11.5.sp,
-                                                color = TextMuted,
+                                                color = textMuted,
                                             ),
                                     )
                                 }
@@ -670,11 +744,11 @@ fun SetDateBottomSheet(
                             name = "keyboard_arrow_down",
                             modifier = if (hasEndDate) Modifier.graphicsLayer { scaleY = -1f } else Modifier,
                             size = 20.dp,
-                            tint = TextMuted,
+                            tint = textMuted,
                         )
                     }
 
-                    // Expanded Section: End Date & End Time Fields + Duration Presets
+                    // Expanded Section: End Date & End Time Fields + Presets + Optional All-Day
                     AnimatedVisibility(
                         visible = hasEndDate,
                         enter = fadeIn() + expandVertically(),
@@ -696,17 +770,17 @@ fun SetDateBottomSheet(
                                             androidx.compose.ui.text.TextStyle(
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium,
-                                                color = TextMuted,
+                                                color = textMuted,
                                             ),
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Surface(
                                         shape = RoundedCornerShape(14.dp),
-                                        color = FieldBackground,
+                                        color = fieldBackground,
                                         border =
                                             BorderStroke(
-                                                width = 1.dp,
-                                                color = if (activeTarget == DatePickerTarget.END) PurplePrimary else LavenderBorder,
+                                                width = if (activeTarget == DatePickerTarget.END) 1.5.dp else 1.dp,
+                                                color = if (activeTarget == DatePickerTarget.END) selectedAccent else borderDefault,
                                             ),
                                         modifier =
                                             Modifier
@@ -730,7 +804,7 @@ fun SetDateBottomSheet(
                                                 RememberMaterialRoundedSymbol(
                                                     name = "calendar_month",
                                                     size = 18.dp,
-                                                    tint = PurplePrimary,
+                                                    tint = if (activeTarget == DatePickerTarget.END) selectedAccent else textMuted,
                                                 )
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
@@ -739,7 +813,7 @@ fun SetDateBottomSheet(
                                                         androidx.compose.ui.text.TextStyle(
                                                             fontSize = 12.sp,
                                                             fontWeight = FontWeight.SemiBold,
-                                                            color = TextDark,
+                                                            color = textPrimary,
                                                         ),
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis,
@@ -748,7 +822,7 @@ fun SetDateBottomSheet(
                                             RememberMaterialRoundedSymbol(
                                                 name = "keyboard_arrow_down",
                                                 size = 18.dp,
-                                                tint = TextMuted,
+                                                tint = textMuted,
                                             )
                                         }
                                     }
@@ -762,20 +836,24 @@ fun SetDateBottomSheet(
                                             androidx.compose.ui.text.TextStyle(
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Medium,
-                                                color = TextMuted,
+                                                color = textMuted,
                                             ),
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Surface(
                                         shape = RoundedCornerShape(14.dp),
-                                        color = FieldBackground,
-                                        border = BorderStroke(1.dp, LavenderBorder),
+                                        color = fieldBackground,
+                                        border = BorderStroke(1.dp, borderDefault),
                                         modifier =
                                             Modifier
                                                 .fillMaxWidth()
                                                 .height(48.dp)
                                                 .clip(RoundedCornerShape(14.dp))
-                                                .clickable { showEndTimePicker = true },
+                                                .clickable {
+                                                    if (!isAllDay) {
+                                                        showEndTimePicker = true
+                                                    }
+                                                },
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 12.dp),
@@ -787,33 +865,81 @@ fun SetDateBottomSheet(
                                                 modifier = Modifier.weight(1f),
                                             ) {
                                                 RememberMaterialRoundedSymbol(
-                                                    name = "schedule",
+                                                    name = if (isAllDay) "wb_sunny" else "schedule",
                                                     size = 18.dp,
-                                                    tint = PurplePrimary,
+                                                    tint = selectedAccent,
                                                 )
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
-                                                    text = formatTimeOfDay(context, selectedEndHour, selectedEndMinute),
+                                                    text =
+                                                        if (isAllDay) {
+                                                            "All day"
+                                                        } else {
+                                                            formatTimeOfDay(context, selectedEndHour, selectedEndMinute)
+                                                        },
                                                     style =
                                                         androidx.compose.ui.text.TextStyle(
                                                             fontSize = 13.sp,
                                                             fontWeight = FontWeight.SemiBold,
-                                                            color = TextDark,
+                                                            color = textPrimary,
                                                         ),
                                                     maxLines = 1,
                                                 )
                                             }
-                                            RememberMaterialRoundedSymbol(
-                                                name = "keyboard_arrow_down",
-                                                size = 18.dp,
-                                                tint = TextMuted,
-                                            )
+                                            if (!isAllDay) {
+                                                RememberMaterialRoundedSymbol(
+                                                    name = "keyboard_arrow_down",
+                                                    size = 18.dp,
+                                                    tint = textMuted,
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // All-day Toggle Row (for Event scheduling)
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { isAllDay = !isAllDay }
+                                        .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "wb_sunny",
+                                        size = 18.dp,
+                                        tint = if (isAllDay) selectedAccent else textMuted,
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "All day",
+                                        style =
+                                            androidx.compose.ui.text.TextStyle(
+                                                fontSize = 13.5.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = textPrimary,
+                                            ),
+                                    )
+                                }
+                                Switch(
+                                    checked = isAllDay,
+                                    onCheckedChange = { isAllDay = it },
+                                    colors =
+                                        SwitchDefaults.colors(
+                                            checkedThumbColor = onSelectedAccent,
+                                            checkedTrackColor = selectedAccent,
+                                        ),
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             // "End after" Label & Duration Chips
                             Text(
@@ -822,7 +948,7 @@ fun SetDateBottomSheet(
                                     androidx.compose.ui.text.TextStyle(
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium,
-                                        color = TextMuted,
+                                        color = textMuted,
                                     ),
                             )
 
@@ -837,12 +963,24 @@ fun SetDateBottomSheet(
                                     val isSelected = (selectedPreset == preset)
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
-                                        color = if (isSelected) PurplePrimary else Color(0xFFF3EFF6),
+                                        color =
+                                            if (isSelected) {
+                                                if (isDark) selectedAccent.copy(alpha = 0.20f) else selectedAccent
+                                            } else {
+                                                if (isDark) Color(0xFF24242C) else Color(0xFFF3EFF6)
+                                            },
+                                        border =
+                                            if (isSelected && isDark) {
+                                                BorderStroke(1.dp, selectedAccent)
+                                            } else {
+                                                null
+                                            },
                                         modifier =
                                             Modifier
                                                 .clip(RoundedCornerShape(10.dp))
                                                 .clickable {
                                                     selectedPreset = preset
+                                                    isAllDay = false
                                                     val startLocalTime = LocalTime.of(selectedStartHour, selectedStartMinute)
                                                     when (preset) {
                                                         "1h" -> {
@@ -882,7 +1020,12 @@ fun SetDateBottomSheet(
                                                 androidx.compose.ui.text.TextStyle(
                                                     fontSize = 12.sp,
                                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                                    color = if (isSelected) Color.White else Color(0xFF49454F),
+                                                    color =
+                                                        if (isSelected) {
+                                                            if (isDark) selectedAccent else onSelectedAccent
+                                                        } else {
+                                                            if (isDark) textMuted else Color(0xFF49454F)
+                                                        },
                                                 ),
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                                         )
@@ -901,6 +1044,7 @@ fun SetDateBottomSheet(
                                     selectedStartMinute,
                                     selectedEndHour,
                                     selectedEndMinute,
+                                    isAllDay,
                                 ) {
                                     formatDurationSummary(
                                         startDate = selectedStartDate,
@@ -909,6 +1053,7 @@ fun SetDateBottomSheet(
                                         startMinute = selectedStartMinute,
                                         endHour = selectedEndHour,
                                         endMinute = selectedEndMinute,
+                                        isAllDay = isAllDay,
                                     )
                                 }
 
@@ -917,16 +1062,16 @@ fun SetDateBottomSheet(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 RememberMaterialRoundedSymbol(
-                                    name = "schedule",
+                                    name = if (isAllDay) "wb_sunny" else "schedule",
                                     size = 14.dp,
-                                    tint = PurplePrimary,
+                                    tint = selectedAccent,
                                 )
                                 Text(
                                     text = summaryText,
                                     style =
                                         androidx.compose.ui.text.TextStyle(
                                             fontSize = 12.sp,
-                                            color = TextMuted,
+                                            color = textMuted,
                                         ),
                                 )
                             }
@@ -949,7 +1094,7 @@ fun SetDateBottomSheet(
                 // Cancel Button
                 Surface(
                     shape = RoundedCornerShape(24.dp),
-                    color = LavenderCancelBg,
+                    color = cancelBg,
                     modifier =
                         Modifier
                             .weight(1f)
@@ -967,7 +1112,7 @@ fun SetDateBottomSheet(
                                 androidx.compose.ui.text.TextStyle(
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = PurplePrimary,
+                                    color = cancelText,
                                 ),
                         )
                     }
@@ -976,7 +1121,7 @@ fun SetDateBottomSheet(
                 // Save Date Button
                 Surface(
                     shape = RoundedCornerShape(24.dp),
-                    color = PurplePrimary,
+                    color = selectedAccent,
                     modifier =
                         Modifier
                             .weight(1.5f)
@@ -998,15 +1143,32 @@ fun SetDateBottomSheet(
                                         null
                                     }
 
-                                onSave(
-                                    startUtcMillis,
-                                    selectedStartHour,
-                                    selectedStartMinute,
-                                    isEvent,
-                                    endUtcMillis,
-                                    if (isEvent && hasEndDate) selectedEndHour else null,
-                                    if (isEvent && hasEndDate) selectedEndMinute else null,
-                                )
+                                val finalEndHour = if (isEvent && hasEndDate) selectedEndHour else null
+                                val finalEndMinute = if (isEvent && hasEndDate) selectedEndMinute else null
+                                val finalIsAllDay = if (isEvent) isAllDay else false
+
+                                if (onSaveWithAllDay != null) {
+                                    onSaveWithAllDay(
+                                        startUtcMillis,
+                                        selectedStartHour,
+                                        selectedStartMinute,
+                                        isEvent,
+                                        endUtcMillis,
+                                        finalEndHour,
+                                        finalEndMinute,
+                                        finalIsAllDay,
+                                    )
+                                } else {
+                                    onSave(
+                                        startUtcMillis,
+                                        selectedStartHour,
+                                        selectedStartMinute,
+                                        isEvent,
+                                        endUtcMillis,
+                                        finalEndHour,
+                                        finalEndMinute,
+                                    )
+                                }
                             },
                 ) {
                     Row(
@@ -1017,7 +1179,7 @@ fun SetDateBottomSheet(
                         RememberMaterialRoundedSymbol(
                             name = "check",
                             size = 18.dp,
-                            tint = Color.White,
+                            tint = onSelectedAccent,
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -1026,7 +1188,7 @@ fun SetDateBottomSheet(
                                 androidx.compose.ui.text.TextStyle(
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.White,
+                                    color = onSelectedAccent,
                                 ),
                         )
                     }
@@ -1097,7 +1259,18 @@ private fun formatDurationSummary(
     startMinute: Int,
     endHour: Int,
     endMinute: Int,
+    isAllDay: Boolean = false,
 ): String {
+    if (isAllDay) {
+        val daysBetween = ChronoUnit.DAYS.between(startDate, endDate)
+        return if (daysBetween == 0L) {
+            "All day event · single day"
+        } else if (daysBetween == 1L) {
+            "All day event · 2 days"
+        } else {
+            "All day event · ${daysBetween + 1} days"
+        }
+    }
     val daysBetween = ChronoUnit.DAYS.between(startDate, endDate)
     val startTotalMinutes = startHour * 60 + startMinute
     val endTotalMinutes = endHour * 60 + endMinute

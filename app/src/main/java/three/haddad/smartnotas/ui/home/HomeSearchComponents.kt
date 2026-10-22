@@ -12,6 +12,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,9 +54,10 @@ import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.NoteCardUiModel
 import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
 import three.haddad.smartnotas.ui.components.SwipeableRememberNoteCard
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
 import three.haddad.smartnotas.ui.feedback.appClickable
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import three.haddad.smartnotas.ui.theme.semanticPalette
 
 /**
  * Top-bar title that doubles as the search entry point. Renders a single Row of:
@@ -88,102 +90,124 @@ internal fun SearchableTopBarTitle(
     onCreateNote: () -> Unit = {},
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        if (searchOpen) {
-            RememberInlineSearchField(
-                focusRequestKey = searchFocusRequestKey,
-                query = query,
-                onQueryChange = onQueryChange,
-                placeholderText = stringResource(R.string.home_search_placeholder),
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(Modifier.width(8.dp))
-            Box(
-                modifier =
-                    Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable { onToggleSearch() },
-                contentAlignment = Alignment.Center,
-            ) {
-                RememberMaterialRoundedSymbol(
-                    name = "close",
-                    size = 20.dp,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    weight = FontWeight.Normal,
-                    filled = false,
-                )
-            }
-        } else {
-            Text(
-                text = "Notas",
-                style =
-                    MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 30.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    ),
-            )
-            Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Search icon button
-                Box(
-                    modifier =
-                        Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .clickable { onToggleSearch() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    RememberMaterialRoundedSymbol(
-                        name = "search",
-                        size = 24.dp,
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        weight = FontWeight.Normal,
-                        filled = false,
+                if (searchOpen) {
+                    RememberInlineSearchField(
+                        focusRequestKey = searchFocusRequestKey,
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        placeholderText = stringResource(R.string.home_search_placeholder),
+                        modifier = Modifier.weight(1f),
                     )
-                }
-
-                // + Add button
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier =
-                        Modifier
-                            .clip(CircleShape)
-                            .clickable { onCreateNote() },
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .clickable { onToggleSearch() }
+                                .semantics { contentDescription = "Close search" },
+                        contentAlignment = Alignment.Center,
                     ) {
                         RememberMaterialRoundedSymbol(
-                            name = "add",
-                            size = 18.dp,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            weight = FontWeight.Bold,
+                            name = "close",
+                            size = 20.dp,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            weight = FontWeight.Normal,
                             filled = false,
                         )
-                        Text(
-                            text = "Add",
-                            style =
-                                MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                ),
-                        )
+                    }
+                } else {
+                    Text(
+                        text = "Notas",
+                        style =
+                            MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 30.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            ),
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        val isDark = LocalIsDark.current
+                        val semantic = MaterialTheme.semanticPalette
+
+                        // Search icon button
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .then(
+                                        if (isDark) {
+                                            Modifier
+                                                .background(
+                                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
+                                                    shape = CircleShape,
+                                                )
+                                                .border(
+                                                    width = 1.dp,
+                                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                                    shape = CircleShape,
+                                                )
+                                        } else {
+                                            Modifier
+                                        },
+                                    )
+                                    .clickable { onToggleSearch() }
+                                    .semantics { contentDescription = "Search" },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            RememberMaterialRoundedSymbol(
+                                name = "search",
+                                size = 24.dp,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                weight = FontWeight.Normal,
+                                filled = false,
+                            )
+                        }
+
+                        // + Add button
+                        Surface(
+                            shape = CircleShape,
+                            color = semantic.primaryAction,
+                            modifier =
+                                Modifier
+                                    .clip(CircleShape)
+                                    .clickable { onCreateNote() }
+                                    .semantics { contentDescription = "Add note" },
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "add",
+                                    size = 18.dp,
+                                    tint = semantic.primaryActionForeground,
+                                    weight = FontWeight.Bold,
+                                    filled = false,
+                                )
+                                Text(
+                                    text = "Add",
+                                    style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 15.sp,
+                                            color = semantic.primaryActionForeground,
+                                        ),
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
-    }
 }
 
 internal enum class SectionBadgeStyle { ARCHIVE, TRASH }

@@ -125,12 +125,19 @@ private fun SwipeGestureModeSegmentedControl(
     current: SwipeGestureMode,
     onSelect: (SwipeGestureMode) -> Unit,
 ) {
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val trackBg =
+        if (isDark) {
+            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.65f)
+        } else {
+            Color(0xFFF5F4F9)
+        }
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .clip(CircleShape)
-                .background(Color(0xFFF5F4F9))
+                .background(trackBg)
                 .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {

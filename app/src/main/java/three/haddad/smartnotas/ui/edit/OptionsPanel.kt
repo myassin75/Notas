@@ -97,7 +97,7 @@ import three.haddad.smartnotas.ui.feedback.appCombinedClickable
 import three.haddad.smartnotas.ui.help.HELP_FOCUS_IMPORTANCE
 import three.haddad.smartnotas.ui.help.HELP_FOCUS_VISIBILITY
 import three.haddad.smartnotas.ui.help.LocalOpenHelp
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
+import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import java.text.DateFormat
 import java.util.Date
@@ -184,39 +184,46 @@ fun OptionsPanel(
         animationSpec = starredCueSpec,
         label = "optionsPanelStarredCue",
     )
+    val isDark = LocalIsDark.current
+    val cardColor = if (isDark) Color(0xFF16161C).copy(alpha = 0.85f) else MaterialTheme.colorScheme.surface
+    val cardBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.5f))
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.5f)
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Surface(
             shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+            color = cardColor,
+            border = cardBorder,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                 // Row 1: Shoulders
+                val fallbackColor = MaterialTheme.colorScheme.primary
+                val shoulderColor =
+                    remember(shoulder?.colorHex, fallbackColor) {
+                        if (shoulder?.colorHex.isNullOrBlank()) {
+                            fallbackColor
+                        } else {
+                            try {
+                                Color(android.graphics.Color.parseColor(if (shoulder.colorHex.startsWith("#")) shoulder.colorHex else "#${shoulder.colorHex}"))
+                            } catch (_: Throwable) {
+                                fallbackColor
+                            }
+                        }
+                    }
                 OptionCell(
                     symbolName = "local_offer",
                     title = stringResource(R.string.view_options_group_shoulders),
                     summary = "",
                     onClick = onOpenShoulders,
                     modifier = Modifier.fillMaxWidth(),
+                    iconTint = if (shoulder != null) shoulderColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                    iconContainerColor = if (shoulder != null) shoulderColor.copy(alpha = if (isDark) 0.22f else 0.15f) else (if (isDark) Color(0xFF1E1E26) else MaterialTheme.colorScheme.surfaceVariant),
                     summaryContent = {
                         if (shoulder != null) {
-                            val fallbackColor = MaterialTheme.colorScheme.primary
-                            val shoulderColor =
-                                remember(shoulder.colorHex, fallbackColor) {
-                                    if (shoulder.colorHex.isNullOrBlank()) {
-                                        fallbackColor
-                                    } else {
-                                        try {
-                                            Color(android.graphics.Color.parseColor(if (shoulder.colorHex.startsWith("#")) shoulder.colorHex else "#${shoulder.colorHex}"))
-                                        } catch (_: Throwable) {
-                                            fallbackColor
-                                        }
-                                    }
-                                }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -240,7 +247,7 @@ fun OptionsPanel(
                             }
                         } else {
                             Text(
-                                text = "No shoulder",
+                                text = stringResource(R.string.shoulder_none),
                                 style =
                                     MaterialTheme.typography.bodyMedium.copy(
                                         fontSize = 13.sp,
@@ -251,7 +258,7 @@ fun OptionsPanel(
                     },
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                HorizontalDivider(color = dividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
                 // Row 2: Reminder
                 OptionCell(
@@ -260,7 +267,8 @@ fun OptionsPanel(
                     summary = "",
                     onClick = onOpenReminder,
                     modifier = Modifier.fillMaxWidth(),
-                    iconTint = if (reminderPermissionMissing) MaterialTheme.colorScheme.error else SettingsDesignTokens.PrimaryPurple,
+                    iconTint = if (reminderPermissionMissing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    iconContainerColor = if (reminderPermissionMissing) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
                     summaryContent = {
                         ReminderOptionSummary(
                             reminders = reminders,
@@ -269,7 +277,7 @@ fun OptionsPanel(
                     },
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                HorizontalDivider(color = dividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
                 // Row 3: Notification action
                 OptionCell(
@@ -279,9 +287,11 @@ fun OptionsPanel(
                     summary = actionsSummary(actions),
                     onClick = onOpenActions,
                     modifier = Modifier.fillMaxWidth(),
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                HorizontalDivider(color = dividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
 
                 // Row 4: Behavior
                 OptionCell(
@@ -299,13 +309,14 @@ fun OptionsPanel(
                             }
                         },
                     modifier = Modifier.fillMaxWidth(),
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     summaryContent = { BehaviorOptionSummary(visibility, importance) },
                 )
             }
         }
 
         // Side-by-side Picture and Attachments action buttons
-        val cardBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         val primaryAccent = MaterialTheme.colorScheme.primary
         val onSurfaceColor = MaterialTheme.colorScheme.onSurface
         Row(
@@ -314,7 +325,7 @@ fun OptionsPanel(
         ) {
             Surface(
                 shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surface,
+                color = cardColor,
                 border = cardBorder,
                 modifier =
                     Modifier
@@ -349,7 +360,7 @@ fun OptionsPanel(
 
             Surface(
                 shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surface,
+                color = cardColor,
                 border = cardBorder,
                 modifier =
                     Modifier
@@ -736,7 +747,8 @@ private fun OptionCell(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
-    iconTint: Color = SettingsDesignTokens.PrimaryPurple,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    iconContainerColor: Color? = null,
     fixedHeight: Boolean = false,
     summaryContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
@@ -760,7 +772,7 @@ private fun OptionCell(
                 Modifier
                     .size(38.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(iconContainerColor ?: MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             OptionCellIcon(
@@ -926,7 +938,7 @@ private fun BehaviorSheet(
         title = stringResource(R.string.options_behavior),
         subtitle = stringResource(R.string.options_behavior_subtitle),
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         onDismiss = {
             if (hasChanges) {
                 showUnsavedDialog = true

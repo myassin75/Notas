@@ -335,13 +335,13 @@ fun TimelineEventBlock(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
     val effectiveAccent =
-        if (item.accentColor == CalendarDesignTokens.PrimaryPurple) {
+        if (item.accentColor == CalendarDesignTokens.PrimaryPurple || item.accentColor == Color.Unspecified) {
             MaterialTheme.colorScheme.primary
         } else {
             item.accentColor
         }
     val effectiveBg =
-        if (item.containerBgColor == CalendarDesignTokens.CategoryPurpleBg) {
+        if (item.containerBgColor == CalendarDesignTokens.CategoryPurpleBg || item.containerBgColor == Color.Unspecified) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
             item.containerBgColor
@@ -459,7 +459,7 @@ fun TimelineTaskMarker(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
     val cardBorder = CalendarDesignTokens.resolveCardBorder(isDark)
-    val cardBg = if (isDark) CalendarDesignTokens.CardBgDark else Color.White
+    val cardBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     Surface(
         onClick = onClick,
@@ -550,10 +550,23 @@ private fun AllDayItemsSection(
         )
 
         items.forEach { item ->
+            val effectiveContainerBg =
+                if (item.containerBgColor == CalendarDesignTokens.CategoryPurpleBg || item.containerBgColor == Color.Unspecified) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    item.containerBgColor
+                }
+            val effectiveAccent =
+                if (item.accentColor == CalendarDesignTokens.PrimaryPurple || item.accentColor == Color.Unspecified) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    item.accentColor
+                }
+
             Surface(
                 onClick = { onItemClick(item.id) },
                 shape = RoundedCornerShape(8.dp),
-                color = item.containerBgColor,
+                color = effectiveContainerBg,
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -570,7 +583,7 @@ private fun AllDayItemsSection(
                         modifier =
                             Modifier
                                 .size(8.dp)
-                                .background(item.accentColor, shape = CircleShape),
+                                .background(effectiveAccent, shape = CircleShape),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(

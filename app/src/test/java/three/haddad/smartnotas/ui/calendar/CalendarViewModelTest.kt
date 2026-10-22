@@ -6,6 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -33,6 +34,7 @@ import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
 import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.data.getActiveReminders
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -58,6 +60,13 @@ class CalendarViewModelTest {
         val fakeDao =
             object : NoteDao {
                 override fun observeActive(): Flow<List<NoteWithItems>> = activeNotesFlow
+
+                override fun observeScheduled(): Flow<List<NoteWithItems>> =
+                    activeNotesFlow.map { list ->
+                        list.filter {
+                            it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
+                        }
+                    }
 
                 override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
@@ -779,7 +788,7 @@ class CalendarViewModelTest {
         }
 
     @Test
-    fun timeline_places_unscheduled_items_in_allday_section() =
+    fun ordinary_note_with_no_scheduled_date_does_not_appear_in_calendar() =
         runTest {
             val viewModel = createViewModel()
             val testDate = LocalDate.of(2026, 10, 3)
@@ -792,12 +801,14 @@ class CalendarViewModelTest {
                             id = 601L,
                             kind = NoteKind.NOTE,
                             title = "Ideas to research",
-                            body = "No reminder",
+                            body = "No reminder or schedule",
                             colorIndex = 0,
                             trashed = false,
                             createdAt = createdMillis,
                             updatedAt = createdMillis,
                             reminderAt = null,
+                            endAt = null,
+                            isAllDay = false,
                         ),
                     items = emptyList(),
                 )
@@ -808,9 +819,342 @@ class CalendarViewModelTest {
 
             val state = viewModel.uiState.value
             assertEquals(0, state.dayTimelineItems.size)
+            assertEquals(0, state.dayAllDayItems.size)
+            assertEquals(0, state.selectedDayEvents.size)
+            assertEquals(0, state.selectedDayTasks.size)
+            val dayCell = state.monthDays.find { it.date == testDate }
+            assertTrue(dayCell == null || dayCell.dots.isEmpty())
+        }
+
+    @Test
+    fun note_with_only_creation_timestamp_does_not_appear_in_calendar() =
+        runTest {
+            val viewModel = createViewModel()
+            val testDate = LocalDate.of(2026, 10, 4)
+            val createdMillis = testDate.atTime(14, 30).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val note =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 602L,
+                            kind = NoteKind.NOTE,
+                            title = "Created today at 2pm",
+                            body = "Just created, not scheduled",
+                            colorIndex = 1,
+                            trashed = false,
+                            createdAt = createdMillis,
+                            updatedAt = createdMillis,
+                            reminderAt = null,
+                            endAt = null,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(note)
+            viewModel.onDateSelected(testDate)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(0, state.dayTimelineItems.size)
+            assertEquals(0, state.dayAllDayItems.size)
+            assertEquals(0, state.selectedDayEvents.size)
+            assertEquals(0, state.selectedDayTasks.size)
+        }
+
+    @Test
+    fun note_with_reminder_appears_on_reminder_date_without_becoming_unintended_event() =
+        runTest {
+            val viewModel = createViewModel()
+            val reminderDate = LocalDate.of(2026, 10, 5)
+            val reminderMillis = reminderDate.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val createdMillis = reminderDate.minusDays(5).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val reminderNote =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 603L,
+                            kind = NoteKind.NOTE,
+                            title = "Doctor Reminder",
+                            body = "Call office",
+                            colorIndex = 2,
+                            trashed = false,
+                            createdAt = createdMillis,
+                            updatedAt = createdMillis,
+                            reminderAt = reminderMillis,
+                            isAllDay = false,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(reminderNote)
+
+            // On reminder date
+            viewModel.onDateSelected(reminderDate)
+            advanceUntilIdle()
+
+            val stateOnDate = viewModel.uiState.value
+            assertEquals(1, stateOnDate.dayTimelineItems.size)
+            assertEquals(0, stateOnDate.dayAllDayItems.size)
+            assertEquals("Doctor Reminder", stateOnDate.dayTimelineItems[0].title)
+            assertEquals(10 * 60, stateOnDate.dayTimelineItems[0].startMinuteOfDay)
+
+            // On other date
+            viewModel.onDateSelected(reminderDate.minusDays(1))
+            advanceUntilIdle()
+
+            val stateOtherDate = viewModel.uiState.value
+            assertEquals(0, stateOtherDate.dayTimelineItems.size)
+            assertEquals(0, stateOtherDate.dayAllDayItems.size)
+        }
+
+    @Test
+    fun scheduled_task_appears_on_correct_date() =
+        runTest {
+            val viewModel = createViewModel()
+            val taskDate = LocalDate.of(2026, 10, 8)
+            val taskMillis = taskDate.atTime(9, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val task =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 604L,
+                            kind = NoteKind.LIST,
+                            title = "Grocery List",
+                            body = "",
+                            colorIndex = 3,
+                            trashed = false,
+                            createdAt = taskMillis,
+                            updatedAt = taskMillis,
+                            reminderAt = taskMillis,
+                        ),
+                    items =
+                        listOf(
+                            ChecklistItemEntity(id = 1, noteId = 604L, text = "Milk", checked = false, sortOrder = 0.0),
+                        ),
+                )
+
+            activeNotesFlow.value = listOf(task)
+            viewModel.onDateSelected(taskDate)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(1, state.selectedDayTasks.size)
+            assertEquals("Grocery List", state.selectedDayTasks[0].title)
+        }
+
+    @Test
+    fun explicitly_dated_all_day_event_appears_as_all_day() =
+        runTest {
+            val viewModel = createViewModel()
+            val eventDate = LocalDate.of(2026, 10, 10)
+            val eventMillis = eventDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val allDayEvent =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 605L,
+                            kind = NoteKind.NOTE,
+                            title = "Company Holiday",
+                            body = "Office closed",
+                            colorIndex = 4,
+                            trashed = false,
+                            createdAt = eventMillis,
+                            updatedAt = eventMillis,
+                            reminderAt = eventMillis,
+                            isAllDay = true,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(allDayEvent)
+            viewModel.onDateSelected(eventDate)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(0, state.dayTimelineItems.size)
             assertEquals(1, state.dayAllDayItems.size)
             assertEquals(TimelineItemType.ALL_DAY, state.dayAllDayItems[0].type)
-            assertEquals("Ideas to research", state.dayAllDayItems[0].title)
+            assertEquals("Company Holiday", state.dayAllDayItems[0].title)
+        }
+
+    @Test
+    fun timed_event_appears_at_its_correct_time() =
+        runTest {
+            val viewModel = createViewModel()
+            val eventDate = LocalDate.of(2026, 10, 15)
+            val startMillis = eventDate.atTime(14, 15).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val endMillis = eventDate.atTime(15, 45).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val timedEvent =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 606L,
+                            kind = NoteKind.NOTE,
+                            title = "Sprint Planning",
+                            body = "Room 3B",
+                            colorIndex = 5,
+                            trashed = false,
+                            createdAt = startMillis,
+                            updatedAt = startMillis,
+                            reminderAt = startMillis,
+                            endAt = endMillis,
+                            isAllDay = false,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(timedEvent)
+            viewModel.onDateSelected(eventDate)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(1, state.dayTimelineItems.size)
+            assertEquals(14 * 60 + 15, state.dayTimelineItems[0].startMinuteOfDay)
+            assertEquals(15 * 60 + 45, state.dayTimelineItems[0].endMinuteOfDay)
+            assertEquals("Sprint Planning", state.dayTimelineItems[0].title)
+        }
+
+    @Test
+    fun editing_an_end_time_does_not_modify_note_body() =
+        runTest {
+            val originalStart = LocalDate.of(2026, 10, 20).atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val originalEnd = LocalDate.of(2026, 10, 20).atTime(11, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val newEnd = LocalDate.of(2026, 10, 20).atTime(12, 30).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val originalEvent =
+                NoteEntity(
+                    id = 607L,
+                    kind = NoteKind.NOTE,
+                    title = "Strategy Workshop",
+                    body = "Important discussion items: Q4 goals",
+                    colorIndex = 1,
+                    trashed = false,
+                    createdAt = originalStart,
+                    updatedAt = originalStart,
+                    reminderAt = originalStart,
+                    endAt = originalEnd,
+                )
+
+            val updatedEvent = originalEvent.copy(endAt = newEnd, updatedAt = originalStart + 5000)
+
+            assertEquals(originalEvent.body, updatedEvent.body)
+            assertEquals(originalEvent.title, updatedEvent.title)
+            assertEquals(originalEvent.reminderAt, updatedEvent.reminderAt)
+            assertEquals(newEnd, updatedEvent.endAt)
+        }
+
+    @Test
+    fun editing_a_note_does_not_create_a_calendar_entry() =
+        runTest {
+            val viewModel = createViewModel()
+            val editDate = LocalDate.of(2026, 10, 22)
+            val editMillis = editDate.atTime(16, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val editedNote =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 608L,
+                            kind = NoteKind.NOTE,
+                            title = "Meeting Notes",
+                            body = "Updated with final action items",
+                            colorIndex = 0,
+                            trashed = false,
+                            createdAt = editMillis - 86400000,
+                            updatedAt = editMillis,
+                            reminderAt = null,
+                            endAt = null,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(editedNote)
+            viewModel.onDateSelected(editDate)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(0, state.dayTimelineItems.size)
+            assertEquals(0, state.dayAllDayItems.size)
+            assertEquals(0, state.selectedDayEvents.size)
+            assertEquals(0, state.selectedDayTasks.size)
+        }
+
+    @Test
+    fun existing_events_survive_reload_and_restart() =
+        runTest {
+            val viewModel = createViewModel()
+            val eventDate = LocalDate.of(2026, 10, 25)
+            val startMillis = eventDate.atTime(11, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val event =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 609L,
+                            kind = NoteKind.NOTE,
+                            title = "Keynote",
+                            body = "Auditorium A",
+                            colorIndex = 2,
+                            trashed = false,
+                            createdAt = startMillis,
+                            updatedAt = startMillis,
+                            reminderAt = startMillis,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(event)
+            viewModel.onDateSelected(eventDate)
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.uiState.value.dayTimelineItems.size)
+
+            // Re-emit new list containing same event (simulating repository reload)
+            activeNotesFlow.value = listOf(event)
+            advanceUntilIdle()
+
+            val reloadedState = viewModel.uiState.value
+            assertEquals(1, reloadedState.dayTimelineItems.size)
+            assertEquals("Keynote", reloadedState.dayTimelineItems[0].title)
+        }
+
+    @Test
+    fun calendar_navigation_does_not_introduce_phantom_events() =
+        runTest {
+            val viewModel = createViewModel()
+            val unscheduledNote =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 610L,
+                            kind = NoteKind.NOTE,
+                            title = "Plain thought",
+                            body = "Just a thought",
+                            colorIndex = 0,
+                            trashed = false,
+                            createdAt = LocalDate.of(2026, 10, 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                            updatedAt = LocalDate.of(2026, 10, 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                            reminderAt = null,
+                        ),
+                    items = emptyList(),
+                )
+
+            activeNotesFlow.value = listOf(unscheduledNote)
+
+            // Navigate across multiple dates
+            for (day in 1..10) {
+                viewModel.onDateSelected(LocalDate.of(2026, 10, day))
+                advanceUntilIdle()
+                val state = viewModel.uiState.value
+                assertEquals("Date 2026-10-$day should have 0 timeline items", 0, state.dayTimelineItems.size)
+                assertEquals("Date 2026-10-$day should have 0 all-day items", 0, state.dayAllDayItems.size)
+                assertEquals("Date 2026-10-$day should have 0 agenda events", 0, state.selectedDayEvents.size)
+            }
         }
 
     @Test
@@ -1135,6 +1479,8 @@ class CalendarViewModelTest {
             val fakeDao =
                 object : NoteDao {
                     override fun observeActive(): Flow<List<NoteWithItems>> = errorFlow
+
+                    override fun observeScheduled(): Flow<List<NoteWithItems>> = errorFlow
 
                     override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 

@@ -23,6 +23,7 @@ import androidx.annotation.StringRes
 import androidx.biometric.BiometricManager
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -702,7 +703,8 @@ fun SettingsRoute(
                             // Left button: Back Arrow button taking user back to Home
                             Surface(
                                 shape = CircleShape,
-                                color = Color.White,
+                                color = SettingsDesignTokens.CardBg,
+                                border = BorderStroke(1.dp, SettingsDesignTokens.DividerColor),
                                 modifier =
                                     Modifier
                                         .size(42.dp)
@@ -748,7 +750,8 @@ fun SettingsRoute(
                         // Right button: Information/Help icon taking user to Help screen
                         Surface(
                             shape = CircleShape,
-                            color = Color.White,
+                            color = SettingsDesignTokens.CardBg,
+                            border = BorderStroke(1.dp, SettingsDesignTokens.DividerColor),
                             modifier =
                                 Modifier
                                     .size(42.dp)
@@ -921,15 +924,17 @@ fun SettingsRoute(
                                 showHeader = showSectionHeaders,
                                 highlightedSectionKey = activeSectionHighlightKey,
                             ) {
-                                SettingsToggleRow(
-                                    materialSymbolName = "vibration",
-                                    title = stringResource(R.string.settings_haptic_feedback),
-                                    subtitle = stringResource(R.string.settings_haptic_feedback_desc),
-                                    checked = interactionState.hapticFeedbackEnabled,
-                                    onCheckedChange = { enabled ->
-                                        scope.launch { interactionPrefs.setHapticFeedbackEnabled(enabled) }
-                                    },
-                                )
+                                SettingsSectionCard {
+                                    SettingsToggleRow(
+                                        materialSymbolName = "vibration",
+                                        title = stringResource(R.string.settings_haptic_feedback),
+                                        subtitle = stringResource(R.string.settings_haptic_feedback_desc),
+                                        checked = interactionState.hapticFeedbackEnabled,
+                                        onCheckedChange = { enabled ->
+                                            scope.launch { interactionPrefs.setHapticFeedbackEnabled(enabled) }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }

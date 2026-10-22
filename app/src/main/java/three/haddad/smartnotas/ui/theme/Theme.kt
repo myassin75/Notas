@@ -113,9 +113,19 @@ fun RememberTheme(
     val targetColorScheme = colorResolution.colorScheme
     val targetBackgroundScheme = colorResolution.backgroundScheme
 
+    val semanticPalette =
+        remember(themeState.accentTheme, darkTheme, blackThemeActive) {
+            resolveSemanticPalette(
+                accentTheme = themeState.accentTheme,
+                darkTheme = darkTheme,
+                isOledBlack = blackThemeActive || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK,
+            )
+        }
+
     CompositionLocalProvider(
         LocalDensity provides responsiveDensity,
         LocalIsDark provides darkTheme,
+        LocalSemanticPalette provides semanticPalette,
         LocalUseGradient provides false,
         LocalHeroOnCards provides notesUiState.heroOnCards,
         LocalShowNoteContentOnCards provides notesUiState.showNoteContentOnCards,
@@ -137,7 +147,15 @@ fun RememberTheme(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 if (paintBackground) {
-                    Box(Modifier.fillMaxSize().background(targetBackgroundScheme.background))
+                    if (darkTheme) {
+                        AmbientBackground(
+                            accentTheme = themeState.accentTheme,
+                            isOledBlack = blackThemeActive || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK,
+                            reducedMotion = reducedMotion,
+                        )
+                    } else {
+                        Box(Modifier.fillMaxSize().background(targetBackgroundScheme.background))
+                    }
                 }
                 content()
             }

@@ -414,7 +414,7 @@ private fun AboutSettingsBlock(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
                         ) {
-                            AboutPlayStoreIcon(tint = SettingsDesignTokens.PrimaryPurple, size = pillIconSize)
+                            AboutPlayStoreIcon(tint = MaterialTheme.colorScheme.onPrimaryContainer, size = pillIconSize)
                             Spacer(Modifier.width(pillIconSpacer))
                             Text(
                                 text = stringResource(R.string.settings_rate_on_play_store),
@@ -423,7 +423,7 @@ private fun AboutSettingsBlock(
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 15.sp,
                                     ),
-                                color = SettingsDesignTokens.PrimaryPurple,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 softWrap = false,
@@ -435,7 +435,7 @@ private fun AboutSettingsBlock(
                     Surface(
                         shape = aboutPillShape,
                         color = SettingsDesignTokens.PrimaryPurple,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -454,7 +454,7 @@ private fun AboutSettingsBlock(
                                 painter = painterResource(R.drawable.ic_github_mark),
                                 contentDescription = null,
                                 modifier = Modifier.size(pillIconSize),
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                             )
                             Spacer(Modifier.width(pillIconSpacer))
                             Text(
@@ -464,7 +464,7 @@ private fun AboutSettingsBlock(
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 15.sp,
                                     ),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 softWrap = false,

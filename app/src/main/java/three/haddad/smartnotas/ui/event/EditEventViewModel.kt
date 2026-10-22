@@ -70,6 +70,12 @@ class EditEventViewModel
         private val _selectedDate = MutableStateFlow(LocalDate.now())
         val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
+        private val _endDate = MutableStateFlow<LocalDate?>(null)
+        val endDate: StateFlow<LocalDate?> = _endDate.asStateFlow()
+
+        private var existingHeroFraming: String? = null
+        private var existingLocked: Boolean = false
+
         private val _startTime = MutableStateFlow(LocalTime.of(9, 0))
         val startTime: StateFlow<LocalTime> = _startTime.asStateFlow()
 
@@ -172,7 +178,7 @@ class EditEventViewModel
                                 }
                             _startTime.value = startTime
                             _endTime.value = endTime
-                            _notes.value = cleanLegacyTimeFromBody(note.body)
+                            _notes.value = note.body
                         } else {
                             val parsed =
                                 parseEventBodyAndTimes(
@@ -185,7 +191,15 @@ class EditEventViewModel
                             _notes.value = parsed.notes
                         }
 
-                        val epoch = note.reminderAt ?: note.createdAt
+                        if (note.endAt != null && note.endAt > 0L) {
+                            _endDate.value = Instant.ofEpochMilli(note.endAt).atZone(ZoneId.systemDefault()).toLocalDate()
+                        } else {
+                            _endDate.value = null
+                        }
+                        existingHeroFraming = note.pictureHeroFraming
+                        existingLocked = note.locked
+
+                        val epoch = note.reminderAt ?: note.endAt ?: (prefillDateMillis?.takeIf { it > 0L } ?: System.currentTimeMillis())
                         _selectedDate.value =
                             Instant
                                 .ofEpochMilli(epoch)
@@ -236,6 +250,10 @@ class EditEventViewModel
 
         fun setSelectedDate(newDate: LocalDate) {
             _selectedDate.value = newDate
+        }
+
+        fun setEndDate(newDate: LocalDate?) {
+            _endDate.value = newDate
         }
 
         fun setStartTime(newTime: LocalTime) {
@@ -388,8 +406,10 @@ class EditEventViewModel
             val (reminderEpochMillis, endEpochMillis) =
                 if (isAllDay) {
                     val startMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    val targetEndDate = _endDate.value ?: date
+                    val resolvedEndDate = if (targetEndDate.isBefore(date)) date else targetEndDate
                     val endMillis =
-                        date
+                        resolvedEndDate
                             .atTime(23, 59, 59)
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
@@ -404,21 +424,14 @@ class EditEventViewModel
                             .atZone(ZoneId.systemDefault())
                             .toInstant()
                             .toEpochMilli()
+                    val targetEndDate = _endDate.value ?: if (end < start) date.plusDays(1) else date
+                    val resolvedEndDate = if (targetEndDate.isBefore(date)) date else targetEndDate
                     val endMillis =
-                        if (end < start) {
-                            date
-                                .plusDays(1)
-                                .atTime(end)
-                                .atZone(ZoneId.systemDefault())
-                                .toInstant()
-                                .toEpochMilli()
-                        } else {
-                            date
-                                .atTime(end)
-                                .atZone(ZoneId.systemDefault())
-                                .toInstant()
-                                .toEpochMilli()
-                        }
+                        resolvedEndDate
+                            .atTime(end)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli()
                     startMillis to endMillis
                 }
 
@@ -461,6 +474,8 @@ class EditEventViewModel
                     importance = _importance.value,
                     visibility = _visibility.value,
                     pictureUri = _pictureUri.value,
+                    pictureHeroFraming = existingHeroFraming,
+                    locked = existingLocked,
                     actions = _actions.value,
                     iconKey = _iconKey.value,
                 )

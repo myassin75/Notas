@@ -20,6 +20,7 @@ import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.RecurrenceRule
 import three.haddad.smartnotas.data.RecurrenceUnit
 import three.haddad.smartnotas.data.getActiveReminders
+import three.haddad.smartnotas.ui.components.parseColorHexOrNull
 import three.haddad.smartnotas.ui.event.EditEventViewModel
 import three.haddad.smartnotas.ui.nav.Routes
 import three.haddad.smartnotas.ui.theme.NoteColors
@@ -42,7 +43,7 @@ data class CalendarDetailsUiState(
     val description: String = "",
     val dateText: String = "",
     val weekdayText: String = "",
-    val accentColor: Color = Color(0xFFB56598),
+    val accentColor: Color = Color.Unspecified,
     val isBirthday: Boolean = false,
     val iconKey: String? = null,
     val colorIndex: Int = 0,
@@ -59,6 +60,7 @@ data class CalendarDetailsUiState(
     val reminderSummary: String? = null,
     val locationSummary: String? = null,
     val shoulderName: String? = null,
+    val shoulderColor: Color? = null,
     val rawNote: NoteWithItems? = null,
 )
 
@@ -124,11 +126,15 @@ class CalendarDetailsViewModel
                         Instant.ofEpochMilli(note.reminderAt).atZone(ZoneId.systemDefault()).toLocalDate()
                     }
                     note.getActiveReminders().isNotEmpty() -> {
-                        val soonest = note.getActiveReminders().minByOrNull { it.reminderAt }?.reminderAt ?: note.createdAt
-                        Instant.ofEpochMilli(soonest).atZone(ZoneId.systemDefault()).toLocalDate()
+                        val soonest = note.getActiveReminders().minByOrNull { it.reminderAt }?.reminderAt
+                        if (soonest != null && soonest > 0L) {
+                            Instant.ofEpochMilli(soonest).atZone(ZoneId.systemDefault()).toLocalDate()
+                        } else {
+                            LocalDate.now()
+                        }
                     }
                     else -> {
-                        Instant.ofEpochMilli(note.createdAt).atZone(ZoneId.systemDefault()).toLocalDate()
+                        LocalDate.now()
                     }
                 }
 
@@ -142,13 +148,9 @@ class CalendarDetailsViewModel
                 when {
                     !NoteColors.isNone(note.colorIndex) -> NoteColors.at(note.colorIndex).light
                     !noteWithItems.shoulder?.colorHex.isNullOrBlank() -> {
-                        val hex = noteWithItems.shoulder?.colorHex.orEmpty()
-                        runCatching {
-                            val fullHex = if (hex.startsWith("#")) hex else "#$hex"
-                            Color(android.graphics.Color.parseColor(fullHex))
-                        }.getOrElse { Color(0xFFBF669D) }
+                        parseColorHexOrNull(noteWithItems.shoulder.colorHex) ?: Color.Unspecified
                     }
-                    else -> Color(0xFFBF669D)
+                    else -> Color.Unspecified
                 }
 
             // 3. Title & Description
@@ -251,6 +253,7 @@ class CalendarDetailsViewModel
 
             // 9. Shoulder
             val shoulderName = noteWithItems.shoulder?.name
+            val shoulderColor = parseColorHexOrNull(noteWithItems.shoulder?.colorHex)
 
             return CalendarDetailsUiState(
                 isLoading = false,
@@ -278,6 +281,7 @@ class CalendarDetailsViewModel
                 reminderSummary = reminderSummary,
                 locationSummary = locationSummary,
                 shoulderName = shoulderName,
+                shoulderColor = shoulderColor,
                 rawNote = noteWithItems,
             )
         }
@@ -370,7 +374,7 @@ class CalendarDetailsViewModel
             }
 
             return ParsedBodyResult(
-                isAllDay = true,
+                isAllDay = false,
                 startTime = null,
                 endTime = null,
                 description = trimmed,

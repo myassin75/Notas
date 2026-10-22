@@ -31,6 +31,7 @@ import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.NoteWithItems
 import three.haddad.smartnotas.data.Visibility
+import three.haddad.smartnotas.data.getActiveReminders
 import three.haddad.smartnotas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -370,12 +371,14 @@ internal class FakeRepositoryStore {
     val itemsByNote = LinkedHashMap<Long, MutableList<ChecklistItemEntity>>()
     val observedNotes = LinkedHashMap<Long, MutableStateFlow<NoteWithItems?>>()
     var afterNoteUpdate: suspend () -> Unit = {}
+    var shoulderRepository: three.haddad.smartnotas.data.ShoulderRepository? = null
 
     fun repository(): NoteRepository =
         NoteRepository(
             noteDao = FakeNoteDao(this),
             itemDao = FakeChecklistItemDao(this),
             attachmentDao = FakeAttachmentDao(),
+            shoulderRepository = shoulderRepository,
             clock = { 1_000L },
             ioDispatcher = Dispatchers.Unconfined,
             defaultDispatcher = Dispatchers.Unconfined,
@@ -399,6 +402,15 @@ private class FakeNoteDao(
     private val store: FakeRepositoryStore,
 ) : NoteDao {
     override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(store.notes.keys.mapNotNull { noteId -> store.noteWithItems(noteId) })
+
+    override fun observeScheduled(): Flow<List<NoteWithItems>> =
+        flowOf(
+            store.notes.keys.mapNotNull { noteId ->
+                store.noteWithItems(noteId)
+            }.filter {
+                it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
+            }
+        )
 
     override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 

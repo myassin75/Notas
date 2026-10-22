@@ -187,8 +187,8 @@ internal fun GroupHeader(
             }
         }
         val isOverdue = label.contains("Overdue", ignoreCase = true)
-        val titleColor = if (isOverdue) Color(0xFFB86473) else Color(0xFF32313F)
-        val countColor = Color(0xFF89899C)
+        val titleColor = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+        val countColor = MaterialTheme.colorScheme.onSurfaceVariant
 
         Text(
             text = label,

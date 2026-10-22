@@ -566,6 +566,13 @@ class NoteRepositoryRecurrenceTest {
 
         override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(listOf(stored))
 
+        override fun observeScheduled(): Flow<List<NoteWithItems>> =
+            flowOf(
+                listOf(stored).filter {
+                    it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
+                }
+            )
+
         override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
         override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())

@@ -83,7 +83,7 @@ fun NoteIconAndColorCard(
             val accent = NoteColors.at(colorIndex)
             val resolvedColor =
                 if (NoteColors.isNone(colorIndex)) {
-                    CalendarDesignTokens.PrimaryPurple
+                    MaterialTheme.colorScheme.primary
                 } else if (isDark) {
                     accent.dark
                 } else {
@@ -92,7 +92,7 @@ fun NoteIconAndColorCard(
 
             val boxBg =
                 if (NoteColors.isNone(colorIndex)) {
-                    if (isDark) Color(0xFF382942) else CalendarDesignTokens.SoftLavender
+                    MaterialTheme.colorScheme.primaryContainer
                 } else {
                     resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)
                 }
@@ -196,16 +196,16 @@ fun IconAndColorSheet(
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val sheetBg = if (isDark) Color(0xFF1F1F28) else Color.White
-    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
-    val cardBorder = CalendarDesignTokens.resolveCardBorder(isDark)
-    val innerCardBg = if (isDark) Color(0xFF282834) else Color(0xFFF7F7FA)
+    val sheetBg = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface
+    val textPrimary = MaterialTheme.colorScheme.onSurface
+    val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
+    val cardBorder = MaterialTheme.colorScheme.outlineVariant
+    val innerCardBg = if (isDark) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceVariant
 
     val currentAccent = NoteColors.at(currentColorIndex)
     val currentColor =
         if (NoteColors.isNone(currentColorIndex)) {
-            CalendarDesignTokens.PrimaryPurple
+            MaterialTheme.colorScheme.primary
         } else if (isDark) {
             currentAccent.dark
         } else {
@@ -268,7 +268,7 @@ fun IconAndColorSheet(
                         style =
                             MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                color = CalendarDesignTokens.PrimaryPurple,
+                                color = MaterialTheme.colorScheme.primary,
                             ),
                     )
                 }
@@ -463,7 +463,7 @@ fun IconAndColorSheet(
                         RememberMaterialRoundedSymbol(
                             name = "category",
                             size = 20.dp,
-                            tint = CalendarDesignTokens.PrimaryPurple,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = stringResource(R.string.event_icon_and_color_more_icons),

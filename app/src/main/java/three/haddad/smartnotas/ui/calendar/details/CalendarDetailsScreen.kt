@@ -50,7 +50,12 @@ import three.haddad.smartnotas.ui.calendar.CalendarDesignTokens
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.edit.NoteIcon
 import three.haddad.smartnotas.ui.edit.resolveNoteIcon
+import three.haddad.smartnotas.data.AccentTheme
+import three.haddad.smartnotas.ui.theme.GlassVariant
 import three.haddad.smartnotas.ui.theme.LocalIsDark
+import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
+import three.haddad.smartnotas.ui.theme.LocalThemeState
+import three.haddad.smartnotas.ui.theme.glassContainerColor
 import java.util.Locale
 
 @Composable
@@ -82,13 +87,24 @@ fun CalendarDetailsScreen(
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
+    val semanticPalette = LocalSemanticPalette.current
+    val themeState = LocalThemeState.current
+    val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == AccentTheme.PURE_BLACK
 
-    val headerScreenBg = if (isDark) Color(0xFF1B1622) else Color(0xFFF8EDFF)
-    val cardSurfaceBg = if (isDark) Color(0xFF231F2C) else Color(0xFFFFFFFF)
-    val textPrimary = if (isDark) Color(0xFFF3F1F8) else Color(0xFF1D1924)
-    val textSecondary = if (isDark) Color(0xFFB5B2C2) else Color(0xFF33303D)
-    val textMuted = if (isDark) Color(0xFF7E7A8C) else Color(0xFF8E8A9E)
-    val dividerColor = if (isDark) Color(0xFF2E2A38) else Color(0xFFF0EBF4)
+    val effectiveAccent = if (uiState.accentColor != Color.Unspecified) uiState.accentColor else MaterialTheme.colorScheme.primary
+    val globalActionAccent = if (isDark) {
+        if (isBlackTheme) Color(0xFFD4D4DE) else semanticPalette.primaryAction
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    val onGlobalActionAccent = if (isDark) Color(0xFF121216) else Color.White
+
+    val headerScreenBg = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background
+    val cardSurfaceBg = if (isDark) glassContainerColor(GlassVariant.StandardCard, isDark = true) else Color(0xFFFFFFFF)
+    val textPrimary = MaterialTheme.colorScheme.onSurface
+    val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
+    val textMuted = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant
 
     if (uiState.isLoading) {
         Box(
@@ -98,7 +114,7 @@ fun CalendarDetailsScreen(
                     .background(headerScreenBg),
             contentAlignment = Alignment.Center,
         ) {
-            CircularProgressIndicator(color = uiState.accentColor)
+            CircularProgressIndicator(color = effectiveAccent)
         }
         return
     }
@@ -180,7 +196,7 @@ fun CalendarDetailsScreen(
                             MaterialTheme.typography.headlineLarge.copy(
                                 fontSize = 42.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = uiState.accentColor,
+                                color = effectiveAccent,
                                 lineHeight = 46.sp,
                                 letterSpacing = (-0.5).sp,
                             ),
@@ -192,7 +208,7 @@ fun CalendarDetailsScreen(
                             MaterialTheme.typography.headlineMedium.copy(
                                 fontSize = 42.sp,
                                 fontWeight = FontWeight.Normal,
-                                color = uiState.accentColor,
+                                color = effectiveAccent,
                                 lineHeight = 46.sp,
                                 letterSpacing = (-0.5).sp,
                             ),
@@ -206,7 +222,7 @@ fun CalendarDetailsScreen(
                 ) {
                     if (uiState.isBirthday) {
                         BirthdayCakeIllustration(
-                            tint = uiState.accentColor,
+                            tint = effectiveAccent,
                             size = 72.dp,
                         )
                     } else {
@@ -214,7 +230,7 @@ fun CalendarDetailsScreen(
                             iconKey = uiState.iconKey,
                             isTask = uiState.isTask,
                             title = uiState.title,
-                            tint = uiState.accentColor,
+                            tint = effectiveAccent,
                             size = 56.dp,
                         )
                     }
@@ -308,7 +324,7 @@ fun CalendarDetailsScreen(
                                     modifier =
                                         Modifier
                                             .size(20.dp)
-                                            .background(uiState.accentColor, CircleShape),
+                                            .background(effectiveAccent, CircleShape),
                                 )
                             },
                             content = {
@@ -570,11 +586,20 @@ fun CalendarDetailsScreen(
                         if (uiState.shoulderName != null) {
                             DetailsRow(
                                 icon = {
-                                    RememberMaterialRoundedSymbol(
-                                        name = "folder",
-                                        size = 20.dp,
-                                        tint = textMuted,
-                                    )
+                                    if (uiState.shoulderColor != null) {
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .size(16.dp)
+                                                    .background(uiState.shoulderColor, CircleShape),
+                                        )
+                                    } else {
+                                        RememberMaterialRoundedSymbol(
+                                            name = "folder",
+                                            size = 20.dp,
+                                            tint = textMuted,
+                                        )
+                                    }
                                 },
                                 content = {
                                     Text(
@@ -602,7 +627,7 @@ fun CalendarDetailsScreen(
                         .align(Alignment.TopEnd)
                         .padding(end = fabEndPadding)
                         .size(fabSize)
-                        .background(uiState.accentColor, CircleShape)
+                        .background(globalActionAccent, CircleShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = true, radius = fabSize / 2),
@@ -615,7 +640,7 @@ fun CalendarDetailsScreen(
                 RememberMaterialRoundedSymbol(
                     name = "edit",
                     size = fabSize * (24f / 64f),
-                    tint = Color.White,
+                    tint = onGlobalActionAccent,
                 )
             }
         }

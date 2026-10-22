@@ -228,42 +228,54 @@ fun AgendaEventCard(
                 .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Time label column (e.g. "09:00" above "AM")
+        // Time label column (e.g. "09:00" above "AM", or "All day")
         Column(
             modifier = Modifier.width(52.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center,
         ) {
-            val parts = event.timeDisplay.trim().split(" ")
-            if (parts.size >= 2) {
+            if (event.isAllDay) {
                 Text(
-                    text = parts[0],
-                    style =
-                        MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary,
-                        ),
-                )
-                Text(
-                    text = parts[1],
-                    style =
-                        MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = textSecondary,
-                        ),
-                )
-            } else {
-                Text(
-                    text = event.timeDisplay,
+                    text = stringResource(R.string.calendar_all_day),
                     style =
                         MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = textSecondary,
+                            color = MaterialTheme.colorScheme.primary,
                         ),
                 )
+            } else {
+                val parts = event.timeDisplay.trim().split(" ")
+                if (parts.size >= 2) {
+                    Text(
+                        text = parts[0],
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textPrimary,
+                            ),
+                    )
+                    Text(
+                        text = parts[1],
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = textSecondary,
+                            ),
+                    )
+                } else if (event.timeDisplay.isNotBlank()) {
+                    Text(
+                        text = event.timeDisplay,
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = textSecondary,
+                            ),
+                    )
+                }
             }
         }
 
@@ -282,24 +294,37 @@ fun AgendaEventCard(
                         .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val resolvedIconBg =
+                    if (event.iconBgColor != Color.Unspecified && event.iconBgColor != CalendarDesignTokens.CategoryPurpleBg) {
+                        event.iconBgColor
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    }
+                val resolvedIconTint =
+                    if (event.iconTint != Color.Unspecified && event.iconTint != CalendarDesignTokens.CategoryPurpleIcon) {
+                        event.iconTint
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+
                 // Category Icon Squircle
                 Box(
                     modifier =
                         Modifier
                             .size(CalendarDesignTokens.IconBoxSize)
-                            .background(event.iconBgColor, shape = CalendarDesignTokens.IconBoxShape),
+                            .background(resolvedIconBg, shape = CalendarDesignTokens.IconBoxShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     CalendarEventIcon(
                         iconName = event.iconName,
-                        tint = event.iconTint,
+                        tint = resolvedIconTint,
                         size = 20.dp,
                     )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Title and Subtitle
+                // Title, Description, and Shoulder Chip
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = event.title,
@@ -313,17 +338,59 @@ fun AgendaEventCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = event.subtitle,
-                        style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.5.sp,
-                                color = textSecondary,
-                            ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    val displaySubtitle = event.description.ifBlank { event.subtitle }
+                    if (displaySubtitle.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = displaySubtitle,
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 12.5.sp,
+                                    color = textSecondary,
+                                ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (!event.shoulderName.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val fallbackPrimary = MaterialTheme.colorScheme.primary
+                        val chipColor =
+                            remember(event.shoulderColorHex, fallbackPrimary) {
+                                three.haddad.smartnotas.ui.components.parseNoteColorHex(event.shoulderColorHex, fallbackPrimary)
+                            }
+                        val (badgeBg, badgeFg) =
+                            remember(chipColor, isDark) {
+                                three.haddad.smartnotas.ui.components.readableBadgeColors(chipColor, isDark)
+                            }
+                        Surface(
+                            shape = CircleShape,
+                            color = badgeBg,
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                RememberMaterialRoundedSymbol(
+                                    name = "local_offer",
+                                    size = 11.dp,
+                                    tint = badgeFg,
+                                    weight = FontWeight.Bold,
+                                    filled = false,
+                                )
+                                Text(
+                                    text = event.shoulderName,
+                                    style =
+                                        MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp,
+                                            color = badgeFg,
+                                        ),
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // If it's a task with toggle support, show interactive completion checkbox with 36dp touch target

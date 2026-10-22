@@ -336,6 +336,33 @@ class HomeListArrangementTest {
         assertTrue(noteRows(items).all { it.groupKey == PINNED_SECTION_KEY })
     }
 
+    @Test
+    fun undated_notes_strictly_remain_in_no_date_section_regardless_of_created_or_updated_timestamps() {
+        val now = System.currentTimeMillis()
+        val undatedNoteWithRecentTimestamps =
+            NoteWithItems(
+                note =
+                    NoteEntity(
+                        id = 42L,
+                        kind = NoteKind.NOTE,
+                        title = "Undated note",
+                        body = "Body",
+                        colorIndex = 1,
+                        trashed = false,
+                        createdAt = now,
+                        updatedAt = now,
+                        reminderAt = null,
+                        shoulderId = 10L,
+                    ),
+                items = emptyList(),
+            )
+
+        val items = arrangeItems(listOf(undatedNoteWithRecentTimestamps), ViewOptions(groupBy = GroupBy.DATE))
+
+        assertEquals(listOf("NO_DATE"), headerKeys(items))
+        assertEquals(listOf(42L), noteIdsIn(items, "NO_DATE"))
+    }
+
     private fun headerKeys(items: List<HomeListItem>): List<String> = items.filterIsInstance<HomeListItem.Header>().map { it.stableKey }
 
     private fun noteRows(items: List<HomeListItem>): List<HomeListItem.NoteRow> = items.filterIsInstance<HomeListItem.NoteRow>()

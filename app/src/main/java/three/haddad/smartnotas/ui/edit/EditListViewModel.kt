@@ -379,12 +379,14 @@ class EditListViewModel
             val nonEmpty = _items.value.filter { it.text.isNotBlank() }
             val opts = currentOptions()
             if (id == null) {
-                return t.isNotBlank() || nonEmpty.isNotEmpty() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null || opts.shoulderId != null
+                return t.isNotBlank() || nonEmpty.isNotEmpty() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null || opts.shoulderId != null || opts.endAt != null || opts.isAllDay
             } else {
                 val old = originalNote ?: return true
                 val oldItems = originalItems
                 if (t != old.title) return true
                 if (opts.reminderAt != old.reminderAt) return true
+                if (opts.endAt != old.endAt) return true
+                if (opts.isAllDay != old.isAllDay) return true
                 if (opts.importance != old.importance) return true
                 if (opts.visibility != old.visibility) return true
                 if (opts.pictureUri != old.pictureUri) return true
@@ -495,6 +497,8 @@ class EditListViewModel
                                 options =
                                     NoteOptions(
                                         reminderAt = old.reminderAt,
+                                        endAt = old.endAt,
+                                        isAllDay = old.isAllDay,
                                         importance = old.importance,
                                         visibility = old.visibility,
                                         pictureUri = old.pictureUri,

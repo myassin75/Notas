@@ -275,7 +275,7 @@ fun ActionPicker(
         title = stringResource(R.string.options_actions),
         subtitle = if (screen == ActionPickerScreen.ChooseType) stringResource(R.string.actions_sheet_subtitle) else null,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         onDismiss = {
             if (hasChanges) {
                 showUnsavedDialog = true

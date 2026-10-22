@@ -120,6 +120,8 @@ class NoteRepository(
 
     fun observeActive(): Flow<List<NoteWithItems>> = noteDao.observeActive().flowOn(ioDispatcher)
 
+    fun observeScheduled(): Flow<List<NoteWithItems>> = noteDao.observeScheduled().flowOn(ioDispatcher)
+
     fun observeTrashed(): Flow<List<NoteWithItems>> = noteDao.observeTrashed().flowOn(ioDispatcher)
 
     fun observeArchived(): Flow<List<NoteWithItems>> = noteDao.observeArchived().flowOn(ioDispatcher)

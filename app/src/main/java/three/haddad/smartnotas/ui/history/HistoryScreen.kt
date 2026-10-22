@@ -147,9 +147,14 @@ import three.haddad.smartnotas.ui.modifiers.PillBottomScrimExtra
 import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
 import three.haddad.smartnotas.ui.modifiers.rememberContentOverflowScrollEnabled
 import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
+import three.haddad.smartnotas.data.AccentTheme
+import three.haddad.smartnotas.ui.theme.GlassVariant
 import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.LocalReducedMotion
+import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
 import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
+import three.haddad.smartnotas.ui.theme.LocalThemeState
+import three.haddad.smartnotas.ui.theme.glassContainerColor
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import javax.inject.Inject
 import kotlin.math.max
@@ -170,16 +175,36 @@ internal object HistoryDesignTokens {
 }
 
 @Composable
-internal fun historyScreenBg(): Color = MaterialTheme.colorScheme.background
+internal fun historyScreenBg(): Color =
+    if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
 
 @Composable
-internal fun historyMainSurface(): Color = MaterialTheme.colorScheme.surface
+internal fun historyMainSurface(): Color =
+    if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) {
+        glassContainerColor(GlassVariant.StandardCard, isDark = true)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
 
 @Composable
-internal fun historyActiveLavender(): Color = MaterialTheme.colorScheme.primaryContainer
+internal fun historyActiveLavender(): Color {
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val palette = LocalSemanticPalette.current
+    return if (isDark) palette.selectedStateContainer else MaterialTheme.colorScheme.primaryContainer
+}
 
 @Composable
-internal fun historyPrimaryPurple(): Color = MaterialTheme.colorScheme.primary
+internal fun historyPrimaryPurple(): Color {
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val palette = LocalSemanticPalette.current
+    val themeState = LocalThemeState.current
+    val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == AccentTheme.PURE_BLACK
+    return if (isDark) {
+        if (isBlackTheme) Color(0xFFD4D4DE) else palette.primaryAction
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+}
 
 @Composable
 internal fun historyPrimaryText(): Color = MaterialTheme.colorScheme.onSurface
@@ -191,7 +216,11 @@ internal fun historySecondaryText(): Color = MaterialTheme.colorScheme.onSurface
 internal fun historyIllustrationOutline(): Color = MaterialTheme.colorScheme.outline
 
 @Composable
-internal fun historyIllustrationCircle(): Color = MaterialTheme.colorScheme.primaryContainer
+internal fun historyIllustrationCircle(): Color {
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val palette = LocalSemanticPalette.current
+    return if (isDark) palette.selectedStateContainer else MaterialTheme.colorScheme.primaryContainer
+}
 
 /**
  * One-shot events emitted by [HistoryViewModel] for the UI layer to react to.

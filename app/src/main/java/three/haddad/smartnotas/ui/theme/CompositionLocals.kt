@@ -47,3 +47,24 @@ val LocalReducedMotion = compositionLocalOf { false }
  * default values → DataStore-backed values.
  */
 val LocalThemeState = compositionLocalOf { ThemeState() }
+
+/**
+ * The centralized, theme-aware [SemanticPalette]. Provided once from RememberTheme
+ * so any screen or component can access role-specific semantic colors.
+ */
+val LocalSemanticPalette = staticCompositionLocalOf<SemanticPalette> {
+    resolveSemanticPalette(
+        accentTheme = three.haddad.smartnotas.data.AccentTheme.AMETHYST,
+        darkTheme = false,
+        isOledBlack = false,
+    )
+}
+
+/**
+ * Accessor for the centralized [SemanticPalette] on [androidx.compose.material3.MaterialTheme].
+ */
+val androidx.compose.material3.MaterialTheme.semanticPalette: SemanticPalette
+    @androidx.compose.runtime.Composable
+    @androidx.compose.runtime.ReadOnlyComposable
+    get() = LocalSemanticPalette.current
+

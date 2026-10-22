@@ -79,12 +79,14 @@ class EditNoteViewModel
             val b = _body.value
             val opts = currentOptions()
             if (id == null) {
-                return t.isNotBlank() || b.isNotBlank() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null || opts.shoulderId != null
+                return t.isNotBlank() || b.isNotBlank() || attachments.value.isNotEmpty() || opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() || opts.iconKey != null || opts.shoulderId != null || opts.endAt != null || opts.isAllDay
             } else {
                 val old = originalNote ?: return true
                 if (t != old.title) return true
                 if (b != old.body) return true
                 if (opts.reminderAt != old.reminderAt) return true
+                if (opts.endAt != old.endAt) return true
+                if (opts.isAllDay != old.isAllDay) return true
                 if (opts.importance != old.importance) return true
                 if (opts.visibility != old.visibility) return true
                 if (opts.pictureUri != old.pictureUri) return true
@@ -159,6 +161,8 @@ class EditNoteViewModel
                                 options =
                                     NoteOptions(
                                         reminderAt = old.reminderAt,
+                                        endAt = old.endAt,
+                                        isAllDay = old.isAllDay,
                                         importance = old.importance,
                                         visibility = old.visibility,
                                         pictureUri = old.pictureUri,

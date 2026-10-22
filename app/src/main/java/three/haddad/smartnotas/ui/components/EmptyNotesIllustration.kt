@@ -42,21 +42,28 @@ import three.haddad.smartnotas.ui.theme.RoundedPolygonShape
 @Composable
 fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
     val isSmallLandscape = isSmallLandscape()
-    val sizeDp = if (isSmallLandscape) 120.dp else 160.dp
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val sizeDp = if (isSmallLandscape) 96.dp else 120.dp
     val primaryColor = MaterialTheme.colorScheme.primary
-    val cardSurface = MaterialTheme.colorScheme.surface
+    val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f) else MaterialTheme.colorScheme.surface
 
     Box(
         modifier = modifier.size(sizeDp),
         contentAlignment = Alignment.Center,
     ) {
+        val circleBg =
+            if (isDark) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
+            } else {
+                MaterialTheme.colorScheme.primaryContainer
+            }
         // Soft background circle
         Box(
             modifier =
                 Modifier
                     .size(sizeDp * 0.9f)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .background(circleBg),
         )
 
         // Document illustration

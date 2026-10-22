@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -70,6 +71,7 @@ import three.haddad.smartnotas.ui.nav.noteMorphContainer
 import three.haddad.smartnotas.ui.theme.LocalHeroOnCards
 import three.haddad.smartnotas.ui.theme.LocalShowNoteContentOnCards
 import three.haddad.smartnotas.ui.theme.MorphPolygonShape
+import three.haddad.smartnotas.ui.theme.NoteColors
 import three.haddad.smartnotas.ui.theme.elevatedCardColors
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 import java.time.Instant
@@ -245,6 +247,27 @@ fun NoteCard(
         } else {
             Modifier
         }
+    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val noteAccent =
+        remember(model.colorIndex, isDark) {
+            if (!NoteColors.isNone(model.colorIndex)) {
+                if (isDark) NoteColors.at(model.colorIndex).dark else NoteColors.at(model.colorIndex).light
+            } else {
+                null
+            }
+        }
+    val defaultBorder =
+        if (!selected && !activeInDetailPane) {
+            Modifier.border(
+                BorderStroke(
+                    1.dp,
+                    if (isDark) Color(0xFF2C2C36).copy(alpha = 0.65f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                ),
+                cardShape,
+            )
+        } else {
+            Modifier
+        }
     val clickableModifier =
         if (onLongClick != null) {
             Modifier.appCombinedClickable(
@@ -255,10 +278,18 @@ fun NoteCard(
         } else {
             Modifier.appClickable(onClick = onClick)
         }
+    val baseContainerColor =
+        if (noteAccent != null) {
+            val tintAlpha = if (isDark) 0.08f else 0.06f
+            noteAccent.copy(alpha = tintAlpha).compositeOver(cardColors.containerColor)
+        } else {
+            cardColors.containerColor
+        }
     val completedContainerColor =
-        cardColors.containerColor
+        baseContainerColor
             .copy(alpha = completedCardAlpha)
             .compositeOver(MaterialTheme.colorScheme.background)
+    val cardBackground = if (model.completed) completedContainerColor else baseContainerColor
     Surface(
         modifier =
             modifier
@@ -267,6 +298,7 @@ fun NoteCard(
                     renderEffect = completedRenderEffect
                 }.then(sharedModifier)
                 .clip(cardShape)
+                .then(defaultBorder)
                 .then(activePaneBorder)
                 .then(selectionBorder)
                 .then(clickableModifier)
@@ -274,7 +306,7 @@ fun NoteCard(
                     contentDescription = noteCardAnnouncement
                 },
         shape = cardShape,
-        color = if (model.completed) completedContainerColor else Color.White,
+        color = cardBackground,
         contentColor = cardContentColor,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
@@ -309,29 +341,27 @@ fun NoteCard(
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
             val defaultShoulderColor = MaterialTheme.colorScheme.primary
-            val stripeColor =
+            val parsedShoulderColor =
                 remember(model.shoulderColorHex, defaultShoulderColor) {
-                    if (model.shoulderColorHex.isNullOrBlank()) {
-                        defaultShoulderColor
-                    } else {
-                        try {
-                            Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
-                        } catch (_: Throwable) {
-                            defaultShoulderColor
-                        }
-                    }
+                    parseNoteColorHex(model.shoulderColorHex, defaultShoulderColor)
                 }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            val stripeColor =
                 if (model.shoulderName != null) {
+                    parsedShoulderColor
+                } else {
+                    noteAccent
+                }
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (stripeColor != null) {
                     Box(
                         modifier =
                             Modifier
-                                .padding(start = 14.dp, top = 16.dp, bottom = 16.dp)
+                                .padding(start = 8.dp)
+                                .align(Alignment.CenterStart)
                                 .width(4.dp)
-                                .height(48.dp)
+                                .height(38.dp)
                                 .clip(CircleShape)
                                 .background(stripeColor),
                     )
@@ -339,9 +369,9 @@ fun NoteCard(
                 Column(
                     modifier =
                         Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .padding(
-                                start = if (model.shoulderName != null) 12.dp else 20.dp,
+                                start = 20.dp,
                                 end = 20.dp,
                                 top = 18.dp,
                                 bottom = 18.dp,
@@ -546,19 +576,13 @@ private fun MetadataRow(
             val fallbackPrimary = MaterialTheme.colorScheme.primary
             val chipColor =
                 remember(model.shoulderColorHex, fallbackPrimary) {
-                    if (model.shoulderColorHex.isNullOrBlank()) {
-                        fallbackPrimary
-                    } else {
-                        try {
-                            Color(android.graphics.Color.parseColor(if (model.shoulderColorHex.startsWith("#")) model.shoulderColorHex else "#${model.shoulderColorHex}"))
-                        } catch (_: Throwable) {
-                            fallbackPrimary
-                        }
-                    }
+                    parseNoteColorHex(model.shoulderColorHex, fallbackPrimary)
                 }
+            val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+            val (badgeBg, badgeFg) = remember(chipColor, isDark) { readableBadgeColors(chipColor, isDark) }
             Surface(
                 shape = CircleShape,
-                color = chipColor.copy(alpha = 0.12f),
+                color = badgeBg,
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -568,7 +592,7 @@ private fun MetadataRow(
                     RememberMaterialRoundedSymbol(
                         name = "local_offer",
                         size = 12.dp,
-                        tint = chipColor,
+                        tint = badgeFg,
                         weight = FontWeight.Bold,
                         filled = false,
                     )
@@ -578,7 +602,7 @@ private fun MetadataRow(
                             MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
-                                color = chipColor,
+                                color = badgeFg,
                             ),
                     )
                 }

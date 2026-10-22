@@ -2,6 +2,8 @@ package three.haddad.smartnotas.ui.calendar
 
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -74,19 +76,29 @@ object CalendarDesignTokens {
     val IconBoxSize = 42.dp
 
     // Theme Helpers
-    fun resolveScreenBg(isDark: Boolean): Color = if (isDark) ScreenBgDark else ScreenBgLight
+    @Composable
+    fun resolveScreenBg(isDark: Boolean = false): Color =
+        if (isDark) Color.Transparent else MaterialTheme.colorScheme.background
 
-    fun resolveCardBg(isDark: Boolean): Color = if (isDark) CardBgDark else CardBgLight
+    @Composable
+    fun resolveCardBg(isDark: Boolean = false): Color =
+        three.haddad.smartnotas.ui.theme.glassContainerColor(three.haddad.smartnotas.ui.theme.GlassVariant.StandardCard, isDark)
 
-    fun resolveCardBorder(isDark: Boolean): Color = if (isDark) CardBorderDark else CardBorderLight
+    @Composable
+    fun resolveCardBorder(isDark: Boolean = false): Color =
+        if (isDark) Color(0xFF2C2C36).copy(alpha = 0.65f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
 
-    fun resolveTextPrimary(isDark: Boolean): Color = if (isDark) TextPrimaryDark else TextPrimaryLight
+    @Composable
+    fun resolveTextPrimary(isDark: Boolean = false): Color = MaterialTheme.colorScheme.onSurface
 
-    fun resolveTextSecondary(isDark: Boolean): Color = if (isDark) TextSecondaryDark else TextSecondaryLight
+    @Composable
+    fun resolveTextSecondary(isDark: Boolean = false): Color = MaterialTheme.colorScheme.onSurfaceVariant
 
-    fun resolveTextMuted(isDark: Boolean): Color = if (isDark) TextMutedDark else TextMutedLight
+    @Composable
+    fun resolveTextMuted(isDark: Boolean = false): Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 
-    fun resolveOutOfMonthText(isDark: Boolean): Color = if (isDark) OutOfMonthTextDark else OutOfMonthTextLight
+    @Composable
+    fun resolveOutOfMonthText(isDark: Boolean = false): Color = MaterialTheme.colorScheme.outline
 
     /**
      * Cleans icon key strings (e.g. "symbol:school", "sym:school", "symbol_filled:school")

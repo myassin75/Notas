@@ -109,12 +109,15 @@ fun CalendarDayCell(
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textOutOfMonth = CalendarDesignTokens.resolveOutOfMonthText(isDark)
-    val primaryAccent = MaterialTheme.colorScheme.primary
-    val onPrimaryAccent = MaterialTheme.colorScheme.onPrimary
+    val semanticPalette = three.haddad.smartnotas.ui.theme.LocalSemanticPalette.current
+
+    val lightAccent = if (isDark) semanticPalette.primaryAction else MaterialTheme.colorScheme.primary
+    val onLightAccent = if (isDark) semanticPalette.primaryActionForeground else MaterialTheme.colorScheme.onPrimary
+    val primaryAccent = if (isDark) semanticPalette.primaryAction else MaterialTheme.colorScheme.primary
 
     val textColor =
         when {
-            isSelected -> onPrimaryAccent
+            isSelected -> onLightAccent
             isToday -> primaryAccent
             isOutOfMonth || isDisabled -> textOutOfMonth
             else -> textPrimary
@@ -132,13 +135,13 @@ fun CalendarDayCell(
         when {
             isSelected && isToday ->
                 Modifier
-                    .background(primaryAccent, shape = dayShape)
+                    .background(lightAccent, shape = dayShape)
                     .border(
                         1.5.dp,
-                        if (isDark) onPrimaryAccent.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                        if (isDark) onLightAccent.copy(alpha = 0.35f) else MaterialTheme.colorScheme.primaryContainer,
                         shape = dayShape,
                     )
-            isSelected -> Modifier.background(primaryAccent, shape = dayShape)
+            isSelected -> Modifier.background(lightAccent, shape = dayShape)
             isToday ->
                 Modifier.border(
                     width = 1.5.dp,
@@ -209,11 +212,17 @@ fun CalendarDayCell(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         day.dots.take(4).forEach { dot ->
+                            val resolvedDotColor =
+                                if (dot.color != Color.Unspecified && dot.color != CalendarDesignTokens.DotPurple) {
+                                    dot.color
+                                } else {
+                                    primaryAccent
+                                }
                             val dotColor =
                                 when {
-                                    isSelected -> Color.White
-                                    isOutOfMonth -> dot.color.copy(alpha = 0.35f)
-                                    else -> dot.color
+                                    isSelected -> if (isDark) onLightAccent else resolvedDotColor
+                                    isOutOfMonth -> resolvedDotColor.copy(alpha = 0.35f)
+                                    else -> resolvedDotColor
                                 }
                             Box(
                                 modifier =

@@ -281,9 +281,10 @@ internal fun MarkdownTextEditor(
             decorator = { innerTextField ->
                 Box(modifier = Modifier.fillMaxWidth()) {
                     if (state.markdown.isEmpty()) {
+                        val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
                         Text(
                             text = bodyPlaceholder,
-                            style = editorTextStyle.copy(color = editorTextStyle.color.copy(alpha = 0.35f)),
+                            style = editorTextStyle.copy(color = editorTextStyle.color.copy(alpha = if (isDark) 0.45f else 0.40f)),
                         )
                     }
                     innerTextField()
