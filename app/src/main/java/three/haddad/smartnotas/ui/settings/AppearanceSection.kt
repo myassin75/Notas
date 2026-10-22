@@ -30,7 +30,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,10 +56,23 @@ import three.haddad.smartnotas.data.ThemeMode
 import three.haddad.smartnotas.data.ThemePrefs
 import three.haddad.smartnotas.data.ThemeState
 import three.haddad.smartnotas.data.effectiveDarkTheme
+import three.haddad.smartnotas.ui.common.AppBottomSheet
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.RememberButton
 import three.haddad.smartnotas.ui.theme.LocalIsDark
 import three.haddad.smartnotas.ui.theme.ThemeColors
+
+private val AccentTheme.seedColor: Color
+    get() =
+        when (this) {
+            AccentTheme.MAROON -> ThemeColors.MaroonSeed
+            AccentTheme.ROYAL_BLUE -> ThemeColors.RoyalBlueSeed
+            AccentTheme.FOREST_GREEN -> ThemeColors.ForestGreenSeed
+            AccentTheme.DARK_BROWN -> ThemeColors.DarkBrownSeed
+            AccentTheme.OCEAN_TEAL -> ThemeColors.OceanTealSeed
+            AccentTheme.PURE_BLACK -> ThemeColors.PureBlackSeed
+            AccentTheme.AMETHYST -> ThemeColors.AmethystSeed
+        }
 
 /**
  * Production-ready Appearance Settings Section for NUVORA.
@@ -76,88 +92,140 @@ fun AppearanceSection(
     val scope = rememberCoroutineScope()
     val isSystemDark = isSystemInDarkTheme()
     val isDark = state.themeMode.effectiveDarkTheme(isSystemDark)
+    var showThemeBottomSheet by remember { mutableStateOf(false) }
 
     SettingsSectionCard {
+        // -------------------------------------------------------------------------
+        // Section 1: Appearance Mode (System, Light, Dark)
+        // -------------------------------------------------------------------------
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // -------------------------------------------------------------------------
-            // Section 1: Appearance Mode (System, Light, Dark)
-            // -------------------------------------------------------------------------
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = stringResource(R.string.appearance_mode_title),
-                    style =
-                        MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        ),
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    AppearanceModeOption(
-                        title = stringResource(R.string.appearance_theme_system),
-                        iconName = "devices",
-                        selected = state.themeMode == ThemeMode.SYSTEM,
-                        onClick = { scope.launch { prefs.setThemeMode(ThemeMode.SYSTEM) } },
-                        modifier = Modifier.weight(1f),
-                    )
-                    AppearanceModeOption(
-                        title = stringResource(R.string.appearance_theme_light),
-                        iconName = "light_mode",
-                        selected = state.themeMode == ThemeMode.LIGHT,
-                        onClick = { scope.launch { prefs.setThemeMode(ThemeMode.LIGHT) } },
-                        modifier = Modifier.weight(1f),
-                    )
-                    AppearanceModeOption(
-                        title = stringResource(R.string.appearance_theme_dark),
-                        iconName = "bedtime",
-                        selected = state.themeMode == ThemeMode.DARK,
-                        onClick = { scope.launch { prefs.setThemeMode(ThemeMode.DARK) } },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp,
+            Text(
+                text = stringResource(R.string.appearance_mode_title),
+                style =
+                    MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
             )
 
-            // -------------------------------------------------------------------------
-            // Section 2: Accent Color & Live Theme Preview (Integrated)
-            // -------------------------------------------------------------------------
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AppearanceModeOption(
+                    title = stringResource(R.string.appearance_theme_system),
+                    iconName = "devices",
+                    selected = state.themeMode == ThemeMode.SYSTEM,
+                    onClick = { scope.launch { prefs.setThemeMode(ThemeMode.SYSTEM) } },
+                    modifier = Modifier.weight(1f),
+                )
+                AppearanceModeOption(
+                    title = stringResource(R.string.appearance_theme_light),
+                    iconName = "light_mode",
+                    selected = state.themeMode == ThemeMode.LIGHT,
+                    onClick = { scope.launch { prefs.setThemeMode(ThemeMode.LIGHT) } },
+                    modifier = Modifier.weight(1f),
+                )
+                AppearanceModeOption(
+                    title = stringResource(R.string.appearance_theme_dark),
+                    iconName = "bedtime",
+                    selected = state.themeMode == ThemeMode.DARK,
+                    onClick = { scope.launch { prefs.setThemeMode(ThemeMode.DARK) } },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            thickness = 1.dp,
+        )
+
+        // -------------------------------------------------------------------------
+        // Section 2: Accent Color Row (Opens Theme Preview & Color BottomSheet)
+        // -------------------------------------------------------------------------
+        SettingsRowItem(
+            materialSymbolName = "palette",
+            title = stringResource(R.string.appearance_accent_color_title),
+            subtitle = stringResource(state.accentTheme.titleRes),
+            onClick = { showThemeBottomSheet = true },
+            trailingContent = {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.appearance_accent_color_title),
-                        style =
-                            MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            ),
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(state.accentTheme.seedColor)
+                                .border(
+                                    BorderStroke(
+                                        1.dp,
+                                        if (state.accentTheme == AccentTheme.PURE_BLACK) {
+                                            MaterialTheme.colorScheme.outline
+                                        } else {
+                                            Color.White.copy(alpha = 0.45f)
+                                        },
+                                    ),
+                                    CircleShape,
+                                ),
                     )
-                    Text(
-                        text = stringResource(state.accentTheme.titleRes),
-                        style =
-                            MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary,
-                            ),
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        size = 20.dp,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 }
+            },
+        )
 
+        // -------------------------------------------------------------------------
+        // Section 3: Pure Black (OLED) Dark Mode Toggle
+        // -------------------------------------------------------------------------
+        AnimatedVisibility(visible = isDark || state.themeMode == ThemeMode.DARK) {
+            Column {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 1.dp,
+                )
+                SettingsRowItem(
+                    title = stringResource(R.string.appearance_use_black_theme),
+                    subtitle = "Save battery on OLED displays with true black surfaces",
+                    onClick = { scope.launch { prefs.setUseBlackTheme(!state.useBlackTheme) } },
+                    trailingContent = {
+                        SettingsCustomSwitch(
+                            checked = state.useBlackTheme,
+                            onCheckedChange = { checked ->
+                                scope.launch { prefs.setUseBlackTheme(checked) }
+                            },
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+    if (showThemeBottomSheet) {
+        AppBottomSheet(
+            title = stringResource(R.string.appearance_accent_color_title),
+            subtitle = stringResource(R.string.appearance_preview_sample_card_body),
+            onDismiss = { showThemeBottomSheet = false },
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 LiveThemePreviewCard(
                     accentTheme = state.accentTheme,
                     isDark = isDark,
@@ -165,55 +233,6 @@ fun AppearanceSection(
                         scope.launch { prefs.setAccentTheme(theme) }
                     },
                 )
-            }
-
-            // -------------------------------------------------------------------------
-            // Section 4: Pure Black (OLED) Dark Mode Toggle
-            // -------------------------------------------------------------------------
-            AnimatedVisibility(visible = isDark || state.themeMode == ThemeMode.DARK) {
-                Column {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        thickness = 1.dp,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable { scope.launch { prefs.setUseBlackTheme(!state.useBlackTheme) } }
-                                .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.appearance_use_black_theme),
-                                style =
-                                    MaterialTheme.typography.bodyLarge.copy(
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Medium,
-                                    ),
-                            )
-                            Text(
-                                text = "Save battery on OLED displays with true black surfaces",
-                                style =
-                                    MaterialTheme.typography.bodySmall.copy(
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 12.sp,
-                                    ),
-                            )
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        SettingsCustomSwitch(
-                            checked = state.useBlackTheme,
-                            onCheckedChange = { checked ->
-                                scope.launch { prefs.setUseBlackTheme(checked) }
-                            },
-                        )
-                    }
-                }
             }
         }
     }
@@ -397,16 +416,7 @@ private fun AccentThemeCard(
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
-    val seedColor =
-        when (theme) {
-            AccentTheme.MAROON -> ThemeColors.MaroonSeed
-            AccentTheme.ROYAL_BLUE -> ThemeColors.RoyalBlueSeed
-            AccentTheme.FOREST_GREEN -> ThemeColors.ForestGreenSeed
-            AccentTheme.DARK_BROWN -> ThemeColors.DarkBrownSeed
-            AccentTheme.OCEAN_TEAL -> ThemeColors.OceanTealSeed
-            AccentTheme.PURE_BLACK -> ThemeColors.PureBlackSeed
-            AccentTheme.AMETHYST -> ThemeColors.AmethystSeed
-        }
+    val seedColor = theme.seedColor
 
     val animatedBorderWidth by animateDpAsState(
         targetValue = if (selected) 1.5.dp else 1.dp,
