@@ -54,7 +54,7 @@ val LocalThemeState = compositionLocalOf { ThemeState() }
  */
 val LocalSemanticPalette = staticCompositionLocalOf<SemanticPalette> {
     resolveSemanticPalette(
-        accentTheme = three.haddad.smartnotas.data.AccentTheme.AMETHYST,
+        accentTheme = three.haddad.smartnotas.data.AccentTheme.PURE_BLACK,
         darkTheme = false,
         isOledBlack = false,
     )

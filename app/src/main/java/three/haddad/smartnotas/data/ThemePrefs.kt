@@ -65,13 +65,13 @@ enum class AccentTheme(
     companion object {
         fun fromId(id: String?): AccentTheme =
             entries.firstOrNull { it.id.equals(id, ignoreCase = true) || it.name.equals(id, ignoreCase = true) }
-                ?: AMETHYST
+                ?: PURE_BLACK
     }
 }
 
 data class ThemeState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val accentTheme: AccentTheme = AccentTheme.AMETHYST,
+    val accentTheme: AccentTheme = AccentTheme.PURE_BLACK,
     val useBlackTheme: Boolean = false,
     val blurBars: Boolean = true,
     val customFontPath: String = "",
@@ -176,7 +176,7 @@ class ThemePrefs(
                     storedThemeMode
                 },
             )
-            put(Keys.ACCENT_THEME.name, prefs[Keys.ACCENT_THEME] ?: AccentTheme.AMETHYST.id)
+            put(Keys.ACCENT_THEME.name, prefs[Keys.ACCENT_THEME] ?: AccentTheme.PURE_BLACK.id)
             put(Keys.USE_BLACK_THEME.name, exportBlackTheme)
             put(Keys.BLUR_BARS.name, prefs[Keys.BLUR_BARS] ?: true)
             put(Keys.CUSTOM_FONT_PATH.name, prefs[Keys.CUSTOM_FONT_PATH].orEmpty())

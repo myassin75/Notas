@@ -40,10 +40,10 @@ class ThemeSystemTest {
         assertEquals(AccentTheme.PURE_BLACK, AccentTheme.fromId("pure_black"))
         assertEquals(AccentTheme.AMETHYST, AccentTheme.fromId("amethyst"))
 
-        // Unknown or null falls back to AMETHYST
-        assertEquals(AccentTheme.AMETHYST, AccentTheme.fromId("invalid_color_theme"))
-        assertEquals(AccentTheme.AMETHYST, AccentTheme.fromId(""))
-        assertEquals(AccentTheme.AMETHYST, AccentTheme.fromId(null))
+        // Unknown or null falls back to PURE_BLACK
+        assertEquals(AccentTheme.PURE_BLACK, AccentTheme.fromId("invalid_color_theme"))
+        assertEquals(AccentTheme.PURE_BLACK, AccentTheme.fromId(""))
+        assertEquals(AccentTheme.PURE_BLACK, AccentTheme.fromId(null))
     }
 
     @Test
