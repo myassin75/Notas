@@ -1,0 +1,308 @@
+package three.haddad.smartnotas.ui.lock
+
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
+import kotlinx.coroutines.launch
+import three.haddad.smartnotas.R
+import three.haddad.smartnotas.data.LockPrefs
+import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
+import three.haddad.smartnotas.ui.feedback.appClickable
+
+@Composable
+fun LockScreen(
+    biometricEnabled: Boolean,
+    hasPin: Boolean,
+    /** Number of digits required before verifying (4–6), from [LockPrefs.State.pinLength]. */
+    pinLength: Int = LockPrefs.MAX_PIN_LENGTH,
+    verify: suspend (String) -> Boolean,
+    onUnlocked: () -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val requiredDigits = pinLength.coerceIn(LockPrefs.MIN_PIN_LENGTH, LockPrefs.MAX_PIN_LENGTH)
+    var pin by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf(false) }
+    val unlockTitle = stringResource(R.string.lock_title_unlock)
+
+    fun tryUnlock() {
+        scope.launch {
+            if (verify(pin)) {
+                onUnlocked()
+            } else {
+                error = true
+                pin = ""
+            }
+        }
+    }
+
+    fun authenticateWithSystemUnlock() {
+        val activity = context as? FragmentActivity ?: return
+        val mgr = BiometricManager.from(context)
+        val authenticators =
+            if (biometricEnabled) {
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            } else {
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            }
+        if (mgr.canAuthenticate(authenticators) != BiometricManager.BIOMETRIC_SUCCESS) return
+        val prompt =
+            BiometricPrompt(
+                activity,
+                activity.mainExecutor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        onUnlocked()
+                    }
+                },
+            )
+        val info =
+            BiometricPrompt.PromptInfo
+                .Builder()
+                .setTitle(unlockTitle)
+                .setConfirmationRequired(false)
+                .setAllowedAuthenticators(authenticators)
+                .build()
+        prompt.authenticate(info)
+    }
+
+    LaunchedEffect(biometricEnabled, hasPin) {
+        if (biometricEnabled || !hasPin) {
+            authenticateWithSystemUnlock()
+        }
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                RememberMaterialRoundedSymbol(
+                    name = "lock",
+                    size = 40.dp,
+                    tint = MaterialTheme.colorScheme.primary,
+                    weight = FontWeight.Medium,
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    unlockTitle,
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    when {
+                        error -> stringResource(R.string.lock_wrong_pin)
+                        hasPin -> stringResource(R.string.lock_enter_pin)
+                        else -> stringResource(R.string.lock_use_device_unlock)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color =
+                        if (error) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                )
+                Spacer(Modifier.height(24.dp))
+                if (hasPin) {
+                    PinDots(length = pin.length, max = requiredDigits)
+                }
+            }
+            if (hasPin) {
+                Keypad(
+                    onDigit = {
+                        if (pin.length < requiredDigits) {
+                            pin += it
+                            error = false
+                            if (pin.length == requiredDigits) tryUnlock()
+                        }
+                    },
+                    onBackspace = {
+                        if (pin.isNotEmpty()) {
+                            pin = pin.dropLast(1)
+                            error = false
+                        }
+                    },
+                    showBiometric = biometricEnabled,
+                    onBiometric = { authenticateWithSystemUnlock() },
+                )
+            } else {
+                DeviceUnlockButton(onClick = { authenticateWithSystemUnlock() })
+            }
+        }
+    }
+}
+
+@Composable
+private fun PinDots(
+    length: Int,
+    max: Int,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        repeat(max) { idx ->
+            val filled = idx < length
+            Box(
+                modifier =
+                    Modifier
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (filled) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                        ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeviceUnlockButton(onClick: () -> Unit) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier =
+            Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .appClickable(onClick = onClick),
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+            RememberMaterialRoundedSymbol(
+                name = "lock_open",
+                size = 36.dp,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                weight = FontWeight.Medium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun Keypad(
+    onDigit: (String) -> Unit,
+    onBackspace: () -> Unit,
+    showBiometric: Boolean,
+    onBiometric: () -> Unit,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        listOf(
+            listOf("1", "2", "3"),
+            listOf("4", "5", "6"),
+            listOf("7", "8", "9"),
+        ).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { d ->
+                    DigitKey(d, onClick = { onDigit(d) })
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ActionKey(
+                materialSymbolName = if (showBiometric) "fingerprint" else null,
+                onClick =
+                    if (showBiometric) {
+                        onBiometric
+                    } else {
+                        {}
+                    },
+            )
+            DigitKey("0", onClick = { onDigit("0") })
+            ActionKey(materialSymbolName = "backspace", onClick = onBackspace)
+        }
+    }
+}
+
+@Composable
+private fun DigitKey(
+    digit: String,
+    onClick: () -> Unit,
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier =
+            Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .appClickable(onClick = onClick),
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+            Text(digit, style = MaterialTheme.typography.headlineSmall)
+        }
+    }
+}
+
+@Composable
+private fun ActionKey(
+    materialSymbolName: String?,
+    onClick: () -> Unit,
+) {
+    if (materialSymbolName == null) {
+        Spacer(Modifier.size(72.dp))
+        return
+    }
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier =
+            Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .appClickable(onClick = onClick),
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+            RememberMaterialRoundedSymbol(
+                name = materialSymbolName,
+                tint = MaterialTheme.colorScheme.onSurface,
+                weight = FontWeight.Medium,
+            )
+        }
+    }
+}

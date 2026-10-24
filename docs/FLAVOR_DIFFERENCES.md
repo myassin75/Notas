@@ -4,7 +4,7 @@ Remember is built using four product flavors under the `distribution` dimension:
 
 | Feature / Characteristic | GitHub Flavor (`github`) | F-Droid Flavor (`fdroid`) | Play Store Flavor (`playstore`) | Offline Flavor (`offline`) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Application ID** | `dev.bikram.remember.gh` | `dev.bikram.remember.gh` | `dev.bikram.remember` | `dev.bikram.remember.offline` |
+| **Application ID** | `three.haddad.smartnotas.gh` | `three.haddad.smartnotas.gh` | `three.haddad.smartnotas` | `three.haddad.smartnotas.offline` |
 | **Side-by-Side Installation** | Replaces/blocks F-Droid (shares .gh ID). Can run alongside Play Store & Offline. | Replaces/blocks GitHub (shares .gh ID). Can run alongside Play Store & Offline. | Can run alongside all other flavors | Can run alongside all other flavors |
 | **Internet permission** | Used for GitHub update checks, APK download, changelog fetch, and Google Tasks connect. | Used for F-Droid package API and changelog fetch | Used for Play in-app updates, changelog fetch, and Google Tasks connect. | No internet permission |
 | **Update check source** | GitHub Release API for `bikram-agarwal/Remember` | F-Droid package API for the installed package ID | Google Play Core In-App Updates | You share it to ObtainX, and track upates there |
@@ -28,4 +28,4 @@ All flavors share the same data domain representation, Room database schema, and
 > [!WARNING]
 > **Package-scoped grants do not transfer across application IDs.**
 >
-> The GitHub and F-Droid flavors share `dev.bikram.remember.gh`. The Play Store flavor uses `dev.bikram.remember`. The Offline flavor uses `dev.bikram.remember.offline`. Switching to Offline (or from Offline to another package ID) means restoring a backup into a different app install; re-grant any permissions the new package needs after restore.
+> The GitHub and F-Droid flavors share `three.haddad.smartnotas.gh`. The Play Store flavor uses `three.haddad.smartnotas`. The Offline flavor uses `three.haddad.smartnotas.offline`. Switching to Offline (or from Offline to another package ID) means restoring a backup into a different app install; re-grant any permissions the new package needs after restore.

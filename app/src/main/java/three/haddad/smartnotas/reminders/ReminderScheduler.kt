@@ -1,0 +1,573 @@
+package three.haddad.smartnotas.reminders
+
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import three.haddad.smartnotas.MainActivity
+import three.haddad.smartnotas.R
+import three.haddad.smartnotas.data.ChecklistItemEntity
+import three.haddad.smartnotas.data.Importance
+import three.haddad.smartnotas.data.NoteEntity
+import three.haddad.smartnotas.data.NoteReminder
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.ReminderPrefs
+import three.haddad.smartnotas.data.Visibility
+import three.haddad.smartnotas.data.alertsAsAlarm
+import three.haddad.smartnotas.data.getActiveReminders
+import three.haddad.smartnotas.diagnostics.DiagnosticLog
+import three.haddad.smartnotas.notifications.canPostNotifications
+import three.haddad.smartnotas.notifications.postNotificationIfAllowed
+import three.haddad.smartnotas.ui.edit.iconEmojiPayload
+import java.util.Calendar
+import java.util.concurrent.atomic.AtomicInteger
+
+class ReminderScheduler(
+    private val context: Context,
+    private val reminderPrefs: ReminderPrefs? = null,
+) {
+    private val criticalRepeatStore = CriticalRepeatStore(context)
+
+    @SuppressLint("MissingPermission")
+    fun schedule(
+        noteId: Long,
+        reminderIndex: Int,
+        whenMillis: Long,
+        importance: Importance = Importance.DEFAULT,
+    ) {
+        if (whenMillis <= System.currentTimeMillis()) return
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pi = pendingIntent(noteId, reminderIndex)
+        scheduleWithExactAlarmFallback(
+            canScheduleExactAlarms = am.canScheduleExactAlarms(),
+            scheduleExact = {
+                if (importance.alertsAsAlarm) {
+                    // Alarm clocks bypass Doze and expose the system's next-alarm indicator,
+                    // but still require exact-alarm access, just like setExactAndAllowWhileIdle.
+                    am.setAlarmClock(AlarmManager.AlarmClockInfo(whenMillis, openAppPendingIntent()), pi)
+                } else {
+                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, whenMillis, pi)
+                }
+            },
+            scheduleInexact = {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, whenMillis, pi)
+                val fallbackCount = inexactFallbackScheduleCounter.incrementAndGet()
+                Log.w(TAG, "Scheduled reminder with inexact alarm fallback. fallbackCount=$fallbackCount")
+                DiagnosticLog.record(context, "Scheduled reminder with inexact alarm fallback. fallbackCount=$fallbackCount")
+            },
+        )
+    }
+
+    suspend fun scheduleOrShow(
+        note: NoteEntity,
+        items: List<ChecklistItemEntity> = emptyList(),
+        silentDueNotification: Boolean = false,
+    ) {
+        if (note.trashed || note.archived || note.completedAt != null) {
+            cancel(note.id)
+            cancelNotification(note.id)
+            return
+        }
+        val activeReminders = note.getActiveReminders()
+        if (activeReminders.isEmpty()) {
+            cancel(note.id)
+            return
+        }
+        cancel(note.id)
+        val now = System.currentTimeMillis()
+        val keepUntilDone = keepReminderNotificationsUntilDone()
+        activeReminders.take(MAX_REMINDERS_PER_NOTE).forEachIndexed { index, reminder ->
+            val at = reminder.reminderAt
+            if (at > now) {
+                schedule(note.id, index, at, note.importance)
+            }
+        }
+        val indexToShow = latestDueReminderIndex(note, now)
+        if (indexToShow != null) {
+            ReminderReceiver.showNotification(
+                context = context,
+                note = note,
+                items = items,
+                reminderIndex = indexToShow,
+                keepUntilDone = keepUntilDone,
+                onlyAlertOnce = silentDueNotification,
+                silent = silentDueNotification,
+            )
+        }
+    }
+
+    fun cancel(noteId: Long) {
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        for (index in 0 until MAX_REMINDERS_PER_NOTE) {
+            am.cancel(pendingIntent(noteId, index))
+        }
+    }
+
+    /**
+     * Starts or stops the shared Critical repeat to match [notes], which may be any superset of
+     * the notes that still need it. Cheap to call on every change: a pending tick keeps its time.
+     */
+    suspend fun reconcileCriticalRepeat(
+        notes: List<NoteEntity>,
+        now: Long,
+    ) {
+        if (notes.any { note -> needsCriticalRepeat(note, now) }) {
+            ensureCriticalRepeat(now)
+        } else {
+            cancelCriticalRepeat()
+        }
+    }
+
+    /**
+     * Books the shared Critical repeat unless a tick is already pending. A pending tick is
+     * re-registered at its stored time, which also restores an alarm the system dropped.
+     */
+    suspend fun ensureCriticalRepeat(now: Long) =
+        criticalRepeatMutex.withLock {
+            setCriticalRepeatAlarm(nextCriticalRepeatAt(criticalRepeatStore.nextAt(), now))
+        }
+
+    /** Books the tick after the one that just fired. */
+    suspend fun scheduleNextCriticalRepeat(now: Long) =
+        criticalRepeatMutex.withLock {
+            setCriticalRepeatAlarm(now + CRITICAL_REPEAT_INTERVAL_MILLIS)
+        }
+
+    /** Ends the shared repeat and any pending ring stop: no Critical note still needs either. */
+    suspend fun cancelCriticalRepeat() =
+        criticalRepeatMutex.withLock {
+            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            am.cancel(criticalAlarmPendingIntent(ACTION_REPEAT_CRITICAL, CRITICAL_REPEAT_REQUEST_CODE))
+            am.cancel(criticalAlarmPendingIntent(ACTION_STOP_CRITICAL_RING, CRITICAL_RING_STOP_REQUEST_CODE))
+            criticalRepeatStore.clear()
+        }
+
+    /**
+     * Books the end of the current Critical ring. One shared timer, like the repeat: a later
+     * ring replaces it, so the most recent ring always gets its full duration. Nothing is
+     * persisted because a ring cannot outlive the alarm - reboots and force stops clear the
+     * notification, and with it the sound.
+     */
+    fun scheduleCriticalRingStop(whenMillis: Long) {
+        setCriticalAlarmClock(
+            whenMillis,
+            criticalAlarmPendingIntent(ACTION_STOP_CRITICAL_RING, CRITICAL_RING_STOP_REQUEST_CODE),
+            "critical reminder ring stop",
+        )
+    }
+
+    private suspend fun setCriticalRepeatAlarm(whenMillis: Long) {
+        setCriticalAlarmClock(
+            whenMillis,
+            criticalAlarmPendingIntent(ACTION_REPEAT_CRITICAL, CRITICAL_REPEAT_REQUEST_CODE),
+            "critical reminder repeat",
+        )
+        criticalRepeatStore.setNextAt(whenMillis)
+    }
+
+    // Alarm clocks, like the first fire: the user chose Critical to be woken by it, so neither
+    // the repeat nor the end of a ring may drift under Doze - a late stop would keep ringing.
+    // The cost is the system's next-alarm indicator.
+    @SuppressLint("MissingPermission")
+    private fun setCriticalAlarmClock(
+        whenMillis: Long,
+        pi: PendingIntent,
+        label: String,
+    ) {
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        scheduleWithExactAlarmFallback(
+            canScheduleExactAlarms = am.canScheduleExactAlarms(),
+            scheduleExact = {
+                am.setAlarmClock(AlarmManager.AlarmClockInfo(whenMillis, openAppPendingIntent()), pi)
+            },
+            scheduleInexact = {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, whenMillis, pi)
+                Log.w(TAG, "Scheduled $label with inexact alarm fallback")
+                DiagnosticLog.record(context, "Scheduled $label with inexact alarm fallback")
+            },
+        )
+    }
+
+    private fun criticalAlarmPendingIntent(
+        action: String,
+        requestCode: Int,
+    ): PendingIntent {
+        val intent =
+            Intent(context, CriticalReminderRepeatReceiver::class.java).apply {
+                this.action = action
+            }
+        return PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    fun cancelNotification(noteId: Long) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(pendingRequestCodeForNote(noteId))
+        cancelReminderSlotNotifications(context, noteId)
+    }
+
+    suspend fun refreshNotificationIfActive(
+        note: NoteEntity,
+        items: List<ChecklistItemEntity>,
+    ) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val activeNotificationIds = notificationManager.activeNotifications.map { notification -> notification.id }.toSet()
+        val keepUntilDone = keepReminderNotificationsUntilDone()
+        if (pendingRequestCodeForNote(note.id) in activeNotificationIds) {
+            ReminderReceiver.showNotification(
+                context = context,
+                note = note,
+                items = items,
+                reminderIndex = 0,
+                keepUntilDone = keepUntilDone,
+                onlyAlertOnce = true,
+            )
+            return
+        }
+        val legacyReminderIndex =
+            (0 until MAX_REMINDERS_PER_NOTE)
+                .lastOrNull { index -> pendingRequestCodeForNoteReminder(note.id, index) in activeNotificationIds }
+        if (legacyReminderIndex != null) {
+            ReminderReceiver.showNotification(
+                context = context,
+                note = note,
+                items = items,
+                reminderIndex = legacyReminderIndex,
+                keepUntilDone = keepUntilDone,
+                onlyAlertOnce = true,
+            )
+        }
+    }
+
+    suspend fun refreshSummaryNotification(
+        notes: List<NoteWithItems>,
+        nowMillis: Long,
+    ) {
+        val summaryEnabled = reminderPrefs?.snapshot()?.reminderSummaryNotificationEnabled ?: false
+        if (!summaryEnabled || notes.isEmpty()) {
+            cancelSummaryNotification()
+            return
+        }
+        showSummaryNotification(notes, nowMillis)
+    }
+
+    fun cancelSummaryNotification() {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(SUMMARY_NOTIFICATION_ID)
+    }
+
+    suspend fun keepReminderNotificationsUntilDone(): Boolean = reminderPrefs?.snapshot()?.keepReminderNotificationsUntilDone ?: false
+
+    private fun showSummaryNotification(
+        notes: List<NoteWithItems>,
+        nowMillis: Long,
+    ) {
+        val sortedNotes =
+            notes
+                .filter { noteWithItems -> noteWithItems.note.reminderAt != null }
+                .sortedBy { noteWithItems -> noteWithItems.note.reminderAt }
+        if (sortedNotes.isEmpty()) {
+            cancelSummaryNotification()
+            return
+        }
+        if (!canPostNotifications(context)) {
+            cancelSummaryNotification()
+            DiagnosticLog.record(context, "Reminder summary notification skipped: notifications are not allowed")
+            return
+        }
+
+        val inboxStyle = NotificationCompat.InboxStyle()
+        sortedNotes.take(SUMMARY_MAX_LINES).forEach { noteWithItems ->
+            inboxStyle.addLine(summaryLine(noteWithItems.note, nowMillis))
+        }
+        if (sortedNotes.size > SUMMARY_MAX_LINES) {
+            inboxStyle.setSummaryText(
+                context.resources.getQuantityString(
+                    R.plurals.reminder_summary_more,
+                    sortedNotes.size - SUMMARY_MAX_LINES,
+                    sortedNotes.size - SUMMARY_MAX_LINES,
+                ),
+            )
+        }
+
+        val summaryText =
+            context.resources.getQuantityString(
+                R.plurals.reminder_summary_count,
+                sortedNotes.size,
+                sortedNotes.size,
+            )
+        val notification =
+            NotificationCompat
+                .Builder(context, CHANNEL_ID_SUMMARY)
+                .setSmallIcon(R.drawable.ic_stat_remember)
+                .setContentTitle(context.getString(R.string.reminder_summary_title))
+                .setContentText(summaryText)
+                .setStyle(inboxStyle)
+                .setContentIntent(openAppPendingIntent())
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setSilent(true)
+                .setOnlyAlertOnce(true)
+                .build()
+        postNotificationIfAllowed(
+            context = context,
+            notificationId = SUMMARY_NOTIFICATION_ID,
+            notification = notification,
+            source = "Reminder summary",
+        )
+    }
+
+    private fun summaryLine(
+        note: NoteEntity,
+        nowMillis: Long,
+    ): String {
+        val reminderAt = note.reminderAt ?: nowMillis
+        val title = summaryTitle(note)
+        return context.getString(R.string.reminder_summary_line, summaryTimingLabel(reminderAt, nowMillis), title)
+    }
+
+    private fun summaryTitle(note: NoteEntity): String {
+        if (note.visibility == Visibility.SECRET) return context.getString(R.string.reminder_notification_hidden_title)
+
+        val title = note.title.ifBlank { context.getString(R.string.options_reminder) }
+        val emoji = iconEmojiPayload(note.iconKey) ?: return title
+        return "$emoji $title"
+    }
+
+    private fun summaryTimingLabel(
+        reminderAt: Long,
+        nowMillis: Long,
+    ): String {
+        val todayStart = startOfDay(nowMillis)
+        val tomorrowStart = startOfTomorrow(nowMillis)
+        return when {
+            reminderAt < todayStart -> {
+                val overdueDays = daysBetween(startOfDay(reminderAt), todayStart).coerceAtLeast(1)
+                context.resources.getQuantityString(
+                    R.plurals.reminder_summary_overdue_days,
+                    overdueDays,
+                    overdueDays,
+                )
+            }
+            reminderAt < tomorrowStart -> context.getString(R.string.reminder_summary_due_today)
+            reminderAt - nowMillis < HOUR_MILLIS * 24 -> {
+                val hoursUntil =
+                    ((reminderAt - nowMillis + HOUR_MILLIS - 1) / HOUR_MILLIS)
+                        .coerceAtLeast(1)
+                        .toInt()
+                context.resources.getQuantityString(
+                    R.plurals.reminder_summary_in_hours,
+                    hoursUntil,
+                    hoursUntil,
+                )
+            }
+            else -> {
+                val daysUntil = daysBetween(todayStart, startOfDay(reminderAt)).coerceAtLeast(1)
+                context.resources.getQuantityString(
+                    R.plurals.reminder_summary_in_days,
+                    daysUntil,
+                    daysUntil,
+                )
+            }
+        }
+    }
+
+    private fun openAppPendingIntent(): PendingIntent {
+        val intent =
+            Intent(context, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+        return PendingIntent.getActivity(
+            context,
+            SUMMARY_NOTIFICATION_ID,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    private fun startOfDay(millis: Long): Long {
+        val calendar =
+            Calendar.getInstance().apply {
+                timeInMillis = millis
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+        return calendar.timeInMillis
+    }
+
+    private fun startOfTomorrow(nowMillis: Long): Long {
+        val calendar =
+            Calendar.getInstance().apply {
+                timeInMillis = startOfDay(nowMillis)
+                add(Calendar.DAY_OF_MONTH, 1)
+            }
+        return calendar.timeInMillis
+    }
+
+    private fun daysBetween(
+        startMillis: Long,
+        endMillis: Long,
+    ): Int = ((endMillis - startMillis) / DAY_MILLIS).toInt()
+
+    private fun pendingIntent(
+        noteId: Long,
+        reminderIndex: Int,
+    ): PendingIntent {
+        val intent =
+            Intent(context, ReminderReceiver::class.java).apply {
+                action = ACTION_FIRE_REMINDER
+                putExtra(EXTRA_NOTE_ID, noteId)
+                putExtra(EXTRA_REMINDER_INDEX, reminderIndex)
+            }
+        return PendingIntent.getBroadcast(
+            context,
+            pendingRequestCodeForNoteReminder(noteId, reminderIndex),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
+    companion object {
+        private const val TAG = "ReminderScheduler"
+        const val MAX_REMINDERS_PER_NOTE = three.haddad.smartnotas.data.MAX_REMINDERS_PER_NOTE
+        private val inexactFallbackScheduleCounter = AtomicInteger(0)
+        private val criticalRepeatMutex = Mutex()
+
+        const val ACTION_FIRE_REMINDER = "three.haddad.smartnotas.reminders.FIRE"
+        const val EXTRA_NOTE_ID = "note_id"
+        const val EXTRA_REMINDER_INDEX = "reminder_index"
+        const val ACTION_REPEAT_CRITICAL = "three.haddad.smartnotas.reminders.REPEAT_CRITICAL"
+        const val ACTION_STOP_CRITICAL_RING = "three.haddad.smartnotas.reminders.STOP_CRITICAL_RING"
+
+        // Fixed: one shared repeat and one shared ring stop serve every Critical note. Their
+        // intents target a different receiver and action than the per-note alarms, so they
+        // cannot match one of those codes.
+        private const val CRITICAL_REPEAT_REQUEST_CODE = 0x43524954
+        private const val CRITICAL_RING_STOP_REQUEST_CODE = 0x43525354
+
+        // Channel IDs are versioned (_v2 suffix) because Android freezes channel
+        // settings - importance, sound, vibration - the moment a channel is first
+        // registered, and re-calling createNotificationChannel with the same id can NOT
+        // upgrade an existing low-importance channel to IMPORTANCE_HIGH. Bumping the
+        // suffix forces the system to register a brand-new channel so the HIGH variant
+        // actually delivers heads-up "pop on screen" notifications.
+        const val CHANNEL_ID_LOW = "reminder_low_v2"
+        const val CHANNEL_ID_DEFAULT = "reminder_default_v2"
+        const val CHANNEL_ID_HIGH = "reminder_high_v2"
+        const val CHANNEL_ID_CRITICAL = "reminder_critical_v1"
+        const val CHANNEL_ID_SUMMARY = "reminder_summary_v1"
+        const val SUMMARY_NOTIFICATION_ID = 0x524D4452
+        private const val SUMMARY_MAX_LINES = 7
+        private const val HOUR_MILLIS = 60L * 60L * 1000L
+        private const val DAY_MILLIS = 24L * HOUR_MILLIS
+
+        // Legacy ids - we delete them on app start to clean up the user's notification
+        // settings UI rather than leaving stale channel rows behind.
+        val LEGACY_CHANNEL_IDS: List<String> =
+            listOf(
+                "reminder",
+                "reminder_low",
+                "reminder_default",
+                "reminder_high",
+            )
+
+        val inexactFallbackScheduleCount: Int
+            get() = inexactFallbackScheduleCounter.get()
+
+        /**
+         * Folds a note row id into the int range required for [PendingIntent] request codes and
+         * [android.app.NotificationManager] notification ids. Unlike [Long.toInt], uses the full
+         * 64-bit value (same mix as [Long.hashCode]) so large ids do not wrap or collide by truncation alone.
+         */
+        fun pendingRequestCodeForNote(noteId: Long): Int = noteId.hashCode()
+
+        fun pendingRequestCodeForNoteReminder(
+            noteId: Long,
+            reminderIndex: Int,
+        ): Int {
+            val salted = noteId xor ((reminderIndex.toLong() + 1L) shl 40)
+            return (salted xor (salted ushr 32)).toInt()
+        }
+
+        /**
+         * Distinct request codes for per-note notification action [PendingIntent]s.
+         * Folds [noteId] and [actionIndex] with 64-bit xor before collapsing to [Int], so we avoid
+         * multiplicative overflow from `31 * hash + index` and keep codes disjoint from
+         * [pendingRequestCodeForNote] (which uses [Long.hashCode] of the raw id only).
+         */
+        fun pendingRequestCodeForNoteAction(
+            noteId: Long,
+            actionIndex: Int,
+        ): Int {
+            val salted = noteId xor ((actionIndex.toLong() + 1L) shl 48)
+            return (salted xor (salted ushr 32)).toInt()
+        }
+
+        fun pendingRequestCodeForDismiss(
+            noteId: Long,
+            reminderIndex: Int = 0,
+        ): Int {
+            val salted = noteId xor (0x4B4DL shl 32) xor ((reminderIndex.toLong() + 1L) shl 44)
+            return (salted xor (salted ushr 32)).toInt()
+        }
+
+        fun cancelReminderSlotNotifications(
+            context: Context,
+            noteId: Long,
+        ) {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            for (index in 0 until MAX_REMINDERS_PER_NOTE) {
+                notificationManager.cancel(pendingRequestCodeForNoteReminder(noteId, index))
+            }
+        }
+    }
+}
+
+internal fun scheduleWithExactAlarmFallback(
+    canScheduleExactAlarms: Boolean,
+    scheduleExact: () -> Unit,
+    scheduleInexact: () -> Unit,
+) {
+    if (canScheduleExactAlarms) {
+        try {
+            scheduleExact()
+            return
+        } catch (_: SecurityException) {
+            // Access can be revoked between the permission check and the system call.
+        }
+    }
+    scheduleInexact()
+}
+
+internal fun latestDueReminderIndex(
+    note: NoteEntity,
+    now: Long,
+): Int? {
+    if (note.trashed || note.archived || note.completedAt != null) return null
+
+    var dueReminderIndex: Int? = null
+    var dueReminderAt = Long.MIN_VALUE
+    note.getActiveReminders().forEachIndexed { index, reminder ->
+        val at = reminder.reminderAt
+        if (at <= now && at >= dueReminderAt) {
+            dueReminderIndex = index
+            dueReminderAt = at
+        }
+    }
+    return dueReminderIndex
+}

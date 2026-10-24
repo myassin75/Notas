@@ -1,0 +1,314 @@
+package three.haddad.smartnotas.ui.edit
+
+import android.net.Uri
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dagger.hilt.android.EntryPointAccessors
+import three.haddad.smartnotas.R
+import three.haddad.smartnotas.data.DefaultNotePreferencesState
+import three.haddad.smartnotas.data.Importance
+import three.haddad.smartnotas.data.NoteAction
+import three.haddad.smartnotas.data.NoteAttachmentEntity
+import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteReminder
+import three.haddad.smartnotas.data.ReminderPreferencesState
+import three.haddad.smartnotas.data.ShoulderEntity
+import three.haddad.smartnotas.data.SnoozeType
+import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
+import three.haddad.smartnotas.ui.common.FullScreenHeroImageOverlay
+import three.haddad.smartnotas.ui.common.HeroFraming
+import three.haddad.smartnotas.ui.components.RememberConfirmDialog
+import java.io.File
+import three.haddad.smartnotas.data.Visibility as NoteVisibility
+
+/**
+ * Shared options panel wiring for every content editor. Notes and checklists can
+ * supply different body surfaces, but every option row and option sheet should
+ * enter through this component so behavior cannot drift between the two editors.
+ */
+@Composable
+fun EditorOptionsPanel(
+    shoulder: ShoulderEntity? = null,
+    reminders: List<NoteReminder>,
+    importance: Importance,
+    visibility: NoteVisibility,
+    pictureUri: String?,
+    actions: List<NoteAction>,
+    attachments: List<NoteAttachmentEntity>,
+    notificationsAllowed: Boolean,
+    readOnly: Boolean,
+    createdAt: Long?,
+    updatedAt: Long?,
+    onOpenShoulders: () -> Unit = {},
+    onOpenReminder: () -> Unit,
+    onImportanceChange: (Importance) -> Unit,
+    onVisibilityChange: (NoteVisibility) -> Unit,
+    onOpenPicture: () -> Unit,
+    onBrowsePictureWithApp: () -> Unit,
+    onOpenActions: () -> Unit,
+    onOpenAttachmentsSheet: () -> Unit,
+    onPickAttachment: () -> Unit,
+) {
+    OptionsPanel(
+        shoulder = shoulder,
+        reminders = reminders,
+        importance = importance,
+        visibility = visibility,
+        pictureUri = pictureUri,
+        actions = actions,
+        attachments = attachments,
+        onOpenShoulders = if (readOnly) ({}) else onOpenShoulders,
+        onOpenReminder = if (readOnly) ({}) else onOpenReminder,
+        reminderPermissionMissing = reminders.isNotEmpty() && !notificationsAllowed,
+        onSetImportance = if (readOnly) ({ _ -> }) else onImportanceChange,
+        onSetVisibility = if (readOnly) ({ _ -> }) else onVisibilityChange,
+        onOpenPicture = if (readOnly) ({}) else onOpenPicture,
+        onBrowsePictureWithApp = if (readOnly) ({}) else onBrowsePictureWithApp,
+        onOpenActions = if (readOnly) ({}) else onOpenActions,
+        onOpenAttachments =
+            if (readOnly) {
+                {}
+            } else {
+                {
+                    if (attachments.isEmpty()) {
+                        onPickAttachment()
+                    } else {
+                        onOpenAttachmentsSheet()
+                    }
+                }
+            },
+        readOnly = readOnly,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
+}
+
+@Composable
+fun EditorOptionSheets(
+    contentKind: NoteKind,
+    shoulderPickerOpen: Boolean = false,
+    reminderPickerOpen: Boolean,
+    iconPickerOpen: Boolean,
+    actionsPickerOpen: Boolean,
+    attachmentsPickerOpen: Boolean,
+    notificationPermissionSheetOpen: Boolean,
+    deleteForeverConfirmOpen: Boolean,
+    heroImagePicker: HeroImagePickerController,
+    pendingHeroSession: Pair<String, File?>?,
+    pictureViewer: Pair<String, Long>?,
+    currentPictureHeroFraming: String?,
+    readOnly: Boolean,
+    shoulders: List<ShoulderEntity> = emptyList(),
+    currentShoulderId: Long? = null,
+    noteTitle: String? = null,
+    attachments: List<NoteAttachmentEntity>,
+    currentReminders: List<NoteReminder>,
+    currentIconKey: String?,
+    currentActions: List<NoteAction>,
+    heroImageContentDescription: String,
+    onSelectShoulder: (ShoulderEntity?) -> Unit = {},
+    onCreateShoulder: (String, String) -> Unit = { _, _ -> },
+    onUpdateShoulder: (ShoulderEntity) -> Unit = {},
+    onDeleteShoulder: (ShoulderEntity) -> Unit = {},
+    onReminderChange: (List<NoteReminder>) -> Unit,
+    onIconKeyChange: (String?) -> Unit,
+    onActionsChange: (List<NoteAction>) -> Unit,
+    onAddAttachment: (Uri, String, String?) -> Unit,
+    onRemoveAttachment: (Long) -> Unit,
+    onHeroCommitted: (String, HeroFraming) -> Unit,
+    onPictureChange: (String?) -> Unit,
+    onDeleteForever: () -> Unit,
+    onDismissShoulders: () -> Unit = {},
+    onDismissReminder: () -> Unit,
+    onDismissIcon: () -> Unit,
+    onDismissActions: () -> Unit,
+    onDismissAttachments: () -> Unit,
+    onDismissNotificationPermission: () -> Unit,
+    onDismissPendingHero: () -> Unit,
+    onDismissDeleteForever: () -> Unit,
+    onDismissPictureViewer: () -> Unit,
+) {
+    val context = LocalContext.current
+    val settingsDependencies =
+        remember(context) {
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                SettingsDependenciesEntryPoint::class.java,
+            )
+        }
+    val defaultNotePrefs = remember(settingsDependencies) { settingsDependencies.defaultNotePrefs() }
+    val reminderPrefs = remember(settingsDependencies) { settingsDependencies.reminderPrefs() }
+    val defaultNoteState by defaultNotePrefs.state.collectAsStateWithLifecycle(
+        initialValue = DefaultNotePreferencesState(),
+    )
+    val reminderState by reminderPrefs.state.collectAsStateWithLifecycle(
+        initialValue = ReminderPreferencesState(),
+    )
+    if (shoulderPickerOpen) {
+        ShoulderPickerSheet(
+            shoulders = shoulders,
+            selectedShoulderId = currentShoulderId,
+            noteTitle = noteTitle,
+            onSelectShoulder = { shoulder ->
+                onSelectShoulder(shoulder)
+                onDismissShoulders()
+            },
+            onCreateShoulder = onCreateShoulder,
+            onUpdateShoulder = onUpdateShoulder,
+            onDeleteShoulder = onDeleteShoulder,
+            onDismiss = onDismissShoulders,
+        )
+    }
+    if (reminderPickerOpen) {
+        ReminderPickerSheet(
+            initialReminders = currentReminders,
+            defaultReminderMinutesOfDay = defaultNoteState.defaultReminderMinutesOfDay,
+            defaultRecurrence = defaultNoteState.defaultRecurrence,
+            useDurationPresets = reminderState.snoozeType == SnoozeType.ABSOLUTE,
+            onConfirm = { reminders ->
+                onReminderChange(reminders)
+                onDismissReminder()
+            },
+            onDismiss = onDismissReminder,
+        )
+    }
+    if (iconPickerOpen) {
+        IconPicker(
+            current = currentIconKey,
+            onPick = {
+                onIconKeyChange(it)
+                onDismissIcon()
+            },
+            onDismiss = onDismissIcon,
+            isChecklist = contentKind == NoteKind.LIST,
+        )
+    }
+    if (actionsPickerOpen) {
+        ActionPicker(
+            current = currentActions,
+            onConfirm = {
+                onActionsChange(it)
+                onDismissActions()
+            },
+            onDismiss = onDismissActions,
+        )
+    }
+    if (attachmentsPickerOpen) {
+        AttachmentsSheet(
+            attachments = attachments,
+            onDismiss = onDismissAttachments,
+            onAdd = onAddAttachment,
+            onRemove = onRemoveAttachment,
+        )
+    }
+    if (notificationPermissionSheetOpen) {
+        NotificationPermissionRequiredSheet(
+            onDismiss = onDismissNotificationPermission,
+            titleRes = R.string.notification_permission_required_title,
+            bodyRes = R.string.notification_permission_required_body,
+        )
+    }
+    if (deleteForeverConfirmOpen) {
+        RememberConfirmDialog(
+            title = stringResource(R.string.edit_delete_forever_dialog_title),
+            text = stringResource(R.string.edit_delete_forever_dialog_body),
+            confirmLabel = stringResource(R.string.edit_delete_forever_dialog_confirm),
+            onConfirm = {
+                onDismissDeleteForever()
+                onDeleteForever()
+            },
+            onDismiss = onDismissDeleteForever,
+            destructive = true,
+        )
+    }
+
+    val pendingHeroUri = pendingHeroSession?.first
+    val activeViewerUri = pendingHeroUri ?: pictureViewer?.first
+    FullScreenHeroImageOverlay(
+        visible = activeViewerUri != null,
+        imageUri = activeViewerUri,
+        imageCacheRevision = if (pendingHeroUri != null) 0L else pictureViewer?.second ?: 0L,
+        imageContentDescription = heroImageContentDescription,
+        sharedElementKey = activeViewerUri?.let { uri -> "hero-image-$uri" },
+        initialFraming =
+            if (pendingHeroUri == null) {
+                remember(currentPictureHeroFraming) {
+                    HeroFraming.fromJsonString(currentPictureHeroFraming)
+                }
+            } else {
+                null
+            },
+        startInReframeMode = pendingHeroUri != null,
+        dismissOnCancelReframe = pendingHeroUri != null,
+        dismissAfterCommit = pendingHeroUri == null,
+        onDismiss = {
+            pendingHeroSession?.second?.delete()
+            if (pendingHeroUri != null) {
+                onDismissPendingHero()
+            } else {
+                onDismissPictureViewer()
+            }
+        },
+        onReplace =
+            if (readOnly) {
+                null
+            } else {
+                {
+                    pendingHeroSession?.second?.delete()
+                    if (pendingHeroUri != null) {
+                        onDismissPendingHero()
+                    } else {
+                        onDismissPictureViewer()
+                    }
+                    heroImagePicker.pickWithPhotoPicker()
+                }
+            },
+        onReplaceLongClick =
+            if (readOnly) {
+                null
+            } else {
+                {
+                    pendingHeroSession?.second?.delete()
+                    if (pendingHeroUri != null) {
+                        onDismissPendingHero()
+                    } else {
+                        onDismissPictureViewer()
+                    }
+                    heroImagePicker.browseWithApp()
+                }
+            },
+        onCommitFraming = { framing ->
+            activeViewerUri?.let { uri ->
+                onHeroCommitted(uri, framing)
+            }
+            if (pendingHeroUri != null) {
+                onDismissPendingHero()
+            }
+        },
+        onDelete =
+            if (readOnly) {
+                null
+            } else {
+                {
+                    pendingHeroSession?.second?.delete()
+                    if (pendingHeroUri != null) {
+                        onDismissPendingHero()
+                    } else {
+                        onPictureChange(null)
+                        onDismissPictureViewer()
+                    }
+                }
+            },
+        onEdit =
+            if (readOnly) {
+                null
+            } else {
+                {}
+            },
+    )
+}

@@ -63,14 +63,14 @@
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         tools:targetApi="tiramisu"
-        android:theme="@style/Theme.Remember">
+        android:theme="@style/Theme.SmartNotas">
 
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.Remember.Starting"
+            android:theme="@style/Theme.SmartNotas.Starting"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -87,11 +87,11 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
             <intent-filter>
-                <action android:name="dev.bikram.remember.action.SHORTCUT_NEW_NOTE" />
+                <action android:name="three.haddad.smartnotas.action.SHORTCUT_NEW_NOTE" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
-                <action android:name="dev.bikram.remember.action.SHORTCUT_NEW_LIST" />
+                <action android:name="three.haddad.smartnotas.action.SHORTCUT_NEW_LIST" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
@@ -99,6 +99,24 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="remember" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="smartnotas"
+                    android:host="auth"
+                    android:pathPrefix="/action" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="smartnotas.firebaseapp.com"
+                    android:pathPrefix="/__/auth/action" />
             </intent-filter>
             <meta-data
                 android:name="android.app.shortcuts"
@@ -111,7 +129,7 @@
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.Remember.Translucent" />
+            android:theme="@style/Theme.SmartNotas.Translucent" />
 
         <activity
             android:name=".widget.SelectedNotesWidgetConfigActivity"
@@ -119,7 +137,7 @@
             android:taskAffinity=""
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
-            android:theme="@style/Theme.Remember">
+            android:theme="@style/Theme.SmartNotas">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

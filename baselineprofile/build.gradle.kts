@@ -10,7 +10,7 @@ kotlin {
 }
 
 extensions.configure<TestExtension>("android") {
-    namespace = "dev.bikram.remember.baselineprofile"
+    namespace = "three.haddad.smartnotas.baselineprofile"
     compileSdk {
         version =
             release(37) {

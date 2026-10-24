@@ -40,9 +40,9 @@ Lists contain checkable items you can reorder, and supports one level of nesting
 
 ## Organization
 
-### Tags, stars, pins, archive, and trash
+### Shoulders, pins, archive, and trash
 
-- **Tags** group related notes and lists for quick filtering.
+- **Shoulders** group related notes and lists for quick filtering.
 - **Star** marks important items so they surface easily.
 - **Pin** keeps an item at the very top of the Notes tab.
 - **Archive** removes items from the active list without deleting them.
@@ -52,7 +52,7 @@ Lists contain checkable items you can reorder, and supports one level of nesting
 
 Pinned notes and lists collect in a **Pinned** section at the very top of the Notes tab. The section stays there no matter how you sort or group the list — pinning is about placement, and starring is about marking a favorite, so the two are separate and can be used together.
 - Pin or unpin from the note's bottom bar, by swiping a card right (Pin is the first reveal action by default), or by selecting several notes and using **Pin** in the selection bar.
-- Searching or filtering can hide a pinned item, because those narrow down what the list contains. Changing the sort or grouping never will. 
+- Searching or filtering can hide a pinned item, because those narrow down what the list contains. Changing the sort or grouping never will.
 - Marking a pinned item done moves it to the **Done** section at the bottom, like anything else. It stays pinned, so it returns to the top if you mark it not done again.
 - Duplicating a pinned item does not pin the copy.
 
@@ -154,7 +154,7 @@ Some actions hand off to another app — calls may open the phone app, direction
 ### Available widgets
 
 - **Agenda widget** — shows overdue and upcoming reminders.
-- **Selected notes widget** - showing notes and lists you choose: all, starred, pinned, or selected tag. 
+- **Selected notes widget** - showing notes and lists you choose: all, starred, pinned, or selected tag.
 - **Quick capture widget** — buttons to create a new note or list directly from the home screen.
 
 ### Quick capture notification

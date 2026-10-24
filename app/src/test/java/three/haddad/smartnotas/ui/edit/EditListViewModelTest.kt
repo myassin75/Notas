@@ -1,0 +1,585 @@
+package three.haddad.smartnotas.ui.edit
+
+import androidx.lifecycle.SavedStateHandle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+import three.haddad.smartnotas.data.AttachmentDao
+import three.haddad.smartnotas.data.ChecklistItemDao
+import three.haddad.smartnotas.data.ChecklistItemEntity
+import three.haddad.smartnotas.data.Importance
+import three.haddad.smartnotas.data.NoteAttachmentEntity
+import three.haddad.smartnotas.data.NoteDao
+import three.haddad.smartnotas.data.NoteEntity
+import three.haddad.smartnotas.data.NoteKind
+import three.haddad.smartnotas.data.NoteRepository
+import three.haddad.smartnotas.data.NoteWithItems
+import three.haddad.smartnotas.data.Visibility
+import three.haddad.smartnotas.data.getActiveReminders
+import three.haddad.smartnotas.ui.nav.Routes
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class EditListViewModelTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    @Test
+    fun existing_list_is_not_editable_until_initial_load_finishes() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Existing list")
+
+            val viewModel = editListViewModel(store, noteId = 1L)
+
+            assertFalse(viewModel.loaded.value)
+            advanceUntilIdle()
+            assertTrue(viewModel.loaded.value)
+            assertEquals("Existing list", viewModel.title.value)
+        }
+
+    @Test
+    fun missing_existing_list_blocks_edits_and_saves() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val viewModel = editListViewModel(store, noteId = 99L)
+
+            advanceUntilIdle()
+            assertTrue(viewModel.loaded.value)
+            assertTrue(viewModel.missingNote.value)
+
+            viewModel.setTitle("Must not be created")
+            val undoAction = viewModel.saveIfNeeded("Untitled")
+
+            assertNull(undoAction)
+            assertFalse(store.notes.containsKey(99L))
+        }
+
+    @Test
+    fun external_archive_changes_merge_without_clobbering_local_edits() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Original")
+            val viewModel = editListViewModel(store, noteId = 1L)
+            advanceUntilIdle()
+            viewModel.setTitle("Local title")
+
+            val externalRepository = store.repository()
+            externalRepository.archiveNote(1L)
+            advanceUntilIdle()
+            assertTrue(viewModel.archived.value)
+            assertEquals("Local title", viewModel.title.value)
+
+            externalRepository.deleteForever(1L)
+            advanceUntilIdle()
+            assertTrue(viewModel.missingNote.value)
+        }
+
+    @Test
+    fun checkAll_checks_all_items_in_list() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val viewModel = editListViewModel(store)
+
+            val firstId = viewModel.addItem()
+            val secondId = viewModel.addItem()
+            viewModel.updateItemText(firstId, "Item 1")
+            viewModel.updateItemText(secondId, "Item 2")
+
+            viewModel.checkAll()
+
+            assertEquals(true, viewModel.items.value.all { it.checked })
+        }
+
+    @Test
+    fun uncheckAll_unchecks_all_items_in_list() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val viewModel = editListViewModel(store)
+
+            val firstId = viewModel.addItem()
+            val secondId = viewModel.addItem()
+            viewModel.checkAll()
+            assertEquals(true, viewModel.items.value.all { it.checked })
+
+            viewModel.uncheckAll()
+
+            assertEquals(true, viewModel.items.value.all { !it.checked })
+        }
+
+    @Test
+    fun invalid_reorder_does_not_make_new_draft_saveable() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val viewModel = editListViewModel(store)
+
+            viewModel.reorderWithin(visibleIds = listOf(1L), fromIndex = 0, toIndex = 1)
+            val undoAction = viewModel.saveIfNeeded("Untitled")
+
+            assertNull(undoAction)
+            assertEquals(0, store.notes.size)
+        }
+
+    @Test
+    fun reorder_emits_items_in_new_sort_order() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val viewModel = editListViewModel(store)
+
+            val firstId = viewModel.addItem()
+            val secondId = viewModel.addItem()
+            val thirdId = viewModel.addItem()
+
+            viewModel.reorderWithin(
+                visibleIds = listOf(firstId, secondId, thirdId),
+                fromIndex = 2,
+                toIndex = 0,
+            )
+
+            assertEquals(
+                listOf(thirdId, firstId, secondId),
+                viewModel.items.value.map { item -> item.localId },
+            )
+        }
+
+    @Test
+    fun draft_save_preserves_parent_local_keys() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val viewModel = editListViewModel(store)
+
+            viewModel.addItem()
+            viewModel.updateItemText(localId = -1L, text = "Parent")
+            viewModel.addItem()
+            viewModel.updateItemText(localId = -2L, text = "Child")
+            viewModel.updateItemDetails(localId = -2L, details = "Keep this detail")
+            viewModel.indent(localId = -2L)
+            viewModel.toggleChecked(localId = -2L)
+
+            viewModel.saveIfNeeded("Untitled")
+
+            val savedItems = store.itemsByNote.getValue(1L)
+            val parent = savedItems.first { item -> item.text == "Parent" }
+            val child = savedItems.first { item -> item.text == "Child" }
+            assertEquals(parent.id, child.parentId)
+            assertEquals(1, child.depth)
+            assertEquals("Keep this detail", child.details)
+            assertEquals(true, child.checked)
+        }
+
+    @Test
+    fun duplicate_list_preserves_hierarchy_checked_state_details_and_sort_order() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Original list")
+            store.nextNoteId = 2L
+            store.nextItemId = 12L
+            store.itemsByNote[1L] =
+                mutableListOf(
+                    ChecklistItemEntity(
+                        id = 10L,
+                        noteId = 1L,
+                        text = "Parent",
+                        details = "Parent details",
+                        checked = true,
+                        sortOrder = 20.0,
+                    ),
+                    ChecklistItemEntity(
+                        id = 11L,
+                        noteId = 1L,
+                        text = "Child",
+                        details = "Child details",
+                        checked = true,
+                        sortOrder = 40.0,
+                        parentId = 10L,
+                        depth = 1,
+                    ),
+                )
+
+            val duplicatedNoteId =
+                store.repository().duplicateNote(1L)
+                    ?: error("Expected the source list to be duplicated")
+
+            val duplicatedItems = store.itemsByNote.getValue(duplicatedNoteId)
+            val duplicatedParent = duplicatedItems.first { item -> item.text == "Parent" }
+            val duplicatedChild = duplicatedItems.first { item -> item.text == "Child" }
+            assertEquals("Parent details", duplicatedParent.details)
+            assertEquals(true, duplicatedParent.checked)
+            assertEquals(20.0, duplicatedParent.sortOrder, 0.0)
+            assertEquals("Child details", duplicatedChild.details)
+            assertEquals(true, duplicatedChild.checked)
+            assertEquals(40.0, duplicatedChild.sortOrder, 0.0)
+            assertEquals(duplicatedParent.id, duplicatedChild.parentId)
+            assertEquals(1, duplicatedChild.depth)
+        }
+
+    @Test
+    fun existing_list_hierarchy_change_is_saved() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Existing list")
+            store.itemsByNote[1L] =
+                mutableListOf(
+                    ChecklistItemEntity(
+                        id = 1L,
+                        noteId = 1L,
+                        text = "Parent",
+                        checked = false,
+                        sortOrder = 10.0,
+                    ),
+                    ChecklistItemEntity(
+                        id = 2L,
+                        noteId = 1L,
+                        text = "Child",
+                        checked = false,
+                        sortOrder = 20.0,
+                    ),
+                )
+
+            val viewModel = editListViewModel(store, noteId = 1L)
+            advanceUntilIdle()
+            viewModel.indent(localId = 2L)
+
+            viewModel.saveIfNeeded("Untitled")
+
+            val savedItems = store.itemsByNote.getValue(1L)
+            val parent = savedItems.first { item -> item.text == "Parent" }
+            val child = savedItems.first { item -> item.text == "Child" }
+            assertEquals(parent.id, child.parentId)
+            assertEquals(1, child.depth)
+        }
+
+    @Test
+    fun import_legacy_zero_id_child_preserves_parent_link() =
+        runTest {
+            val store = FakeRepositoryStore()
+            val repository = store.repository()
+
+            val noteId =
+                repository.importNoteWithChildren(
+                    note = noteEntity(id = 0L, title = "Imported list"),
+                    items =
+                        listOf(
+                            ChecklistItemEntity(
+                                id = 42L,
+                                noteId = 0L,
+                                text = "Parent",
+                                checked = false,
+                                sortOrder = 10.0,
+                            ),
+                            ChecklistItemEntity(
+                                id = 0L,
+                                noteId = 0L,
+                                text = "Child",
+                                checked = false,
+                                sortOrder = 20.0,
+                                parentId = 42L,
+                                depth = 1,
+                            ),
+                        ),
+                    attachments = emptyList(),
+                )
+
+            val savedItems = store.itemsByNote.getValue(noteId)
+            val parent = savedItems.first { item -> item.text == "Parent" }
+            val child = savedItems.first { item -> item.text == "Child" }
+            assertEquals(parent.id, child.parentId)
+            assertEquals(1, child.depth)
+        }
+
+    @Test
+    fun existing_list_shoulder_change_is_saved() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Existing list").copy(shoulderId = 5L)
+
+            val viewModel = editListViewModel(store, noteId = 1L)
+            advanceUntilIdle()
+
+            viewModel.setShoulderId(8L)
+            val undoAction = viewModel.saveIfNeeded("Untitled")
+
+            assertTrue(undoAction != null)
+            assertEquals(8L, store.notes[1L]?.shoulderId)
+        }
+
+    @Test
+    fun existing_list_shoulder_removal_is_saved() =
+        runTest {
+            val store = FakeRepositoryStore()
+            store.notes[1L] = noteEntity(id = 1L, title = "Existing list").copy(shoulderId = 5L)
+
+            val viewModel = editListViewModel(store, noteId = 1L)
+            advanceUntilIdle()
+
+            viewModel.setShoulderId(null)
+            val undoAction = viewModel.saveIfNeeded("Untitled")
+
+            assertTrue(undoAction != null)
+            assertNull(store.notes[1L]?.shoulderId)
+        }
+
+    private fun editListViewModel(
+        store: FakeRepositoryStore,
+        noteId: Long? = null,
+    ): EditListViewModel {
+        val savedStateHandle =
+            if (noteId == null) {
+                SavedStateHandle()
+            } else {
+                SavedStateHandle(mapOf(Routes.ARG_ID to noteId))
+            }
+        return EditListViewModel(
+            repository = store.repository(),
+            savedStateHandle = savedStateHandle,
+        )
+    }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainDispatcherRule(
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher(),
+) : TestWatcher() {
+    override fun starting(description: Description) {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    override fun finished(description: Description) {
+        Dispatchers.resetMain()
+    }
+}
+
+internal class FakeRepositoryStore {
+    var nextNoteId = 1L
+    var nextItemId = 1L
+    val notes = LinkedHashMap<Long, NoteEntity>()
+    val itemsByNote = LinkedHashMap<Long, MutableList<ChecklistItemEntity>>()
+    val observedNotes = LinkedHashMap<Long, MutableStateFlow<NoteWithItems?>>()
+    var afterNoteUpdate: suspend () -> Unit = {}
+    var shoulderRepository: three.haddad.smartnotas.data.ShoulderRepository? = null
+
+    fun repository(): NoteRepository =
+        NoteRepository(
+            noteDao = FakeNoteDao(this),
+            itemDao = FakeChecklistItemDao(this),
+            attachmentDao = FakeAttachmentDao(),
+            shoulderRepository = shoulderRepository,
+            clock = { 1_000L },
+            ioDispatcher = Dispatchers.Unconfined,
+            defaultDispatcher = Dispatchers.Unconfined,
+        )
+
+    fun noteWithItems(noteId: Long): NoteWithItems? {
+        val note = notes[noteId] ?: return null
+        val items =
+            itemsByNote[noteId]
+                ?.sortedBy { item -> item.sortOrder }
+                ?: emptyList()
+        return NoteWithItems(note = note, items = items)
+    }
+
+    fun publishNote(noteId: Long) {
+        observedNotes[noteId]?.value = noteWithItems(noteId)
+    }
+}
+
+private class FakeNoteDao(
+    private val store: FakeRepositoryStore,
+) : NoteDao {
+    override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(store.notes.keys.mapNotNull { noteId -> store.noteWithItems(noteId) })
+
+    override fun observeScheduled(): Flow<List<NoteWithItems>> =
+        flowOf(
+            store.notes.keys.mapNotNull { noteId ->
+                store.noteWithItems(noteId)
+            }.filter {
+                it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
+            }
+        )
+
+    override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+    override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+    override fun observe(id: Long): Flow<NoteWithItems?> =
+        store.observedNotes.getOrPut(id) {
+            MutableStateFlow(store.noteWithItems(id))
+        }
+
+    override suspend fun get(id: Long): NoteWithItems? = store.noteWithItems(id)
+
+    override suspend fun getByUuid(uuid: String): NoteWithItems? =
+        store.notes.values.firstOrNull { it.uuid == uuid }?.let { store.noteWithItems(it.id) }
+
+    override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
+        store.notes.values.firstOrNull { it.uuid == uuid }
+
+    override suspend fun allNotes(): List<NoteWithItems> =
+        store.notes.keys
+            .sorted()
+            .mapNotNull { noteId -> store.noteWithItems(noteId) }
+
+    override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
+        allNotes().filter { it.note.ownerId == ownerId }
+
+    override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
+
+    override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+    override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+    override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
+
+    override suspend fun insert(note: NoteEntity): Long {
+        val noteId = if (note.id > 0L) note.id else store.nextNoteId++
+        store.nextNoteId = maxOf(store.nextNoteId, noteId + 1L)
+        store.notes[noteId] = note.copy(id = noteId)
+        store.publishNote(noteId)
+        return noteId
+    }
+
+    override suspend fun update(note: NoteEntity) {
+        store.notes[note.id] = note
+        store.publishNote(note.id)
+        store.afterNoteUpdate()
+    }
+
+    override suspend fun setTrashed(
+        id: Long,
+        trashed: Boolean,
+        updatedAt: Long,
+    ) {
+        store.notes[id]?.let { note ->
+            store.notes[id] = note.copy(trashed = trashed, updatedAt = updatedAt)
+            store.publishNote(id)
+        }
+    }
+
+    override suspend fun setArchived(
+        id: Long,
+        archived: Boolean,
+        updatedAt: Long,
+    ) {
+        store.notes[id]?.let { note ->
+            store.notes[id] = note.copy(archived = archived, updatedAt = updatedAt)
+            store.publishNote(id)
+        }
+    }
+
+    override suspend fun deleteById(id: Long) {
+        store.notes.remove(id)
+        store.itemsByNote.remove(id)
+        store.publishNote(id)
+    }
+
+    override suspend fun allNoteIds(): List<Long> = store.notes.keys.toList()
+
+    override suspend fun countPictureUri(uri: String): Int = 0
+
+    override suspend fun trashedNoteIds(): List<Long> = emptyList()
+
+    override suspend fun archivedNoteIds(): List<Long> = emptyList()
+
+    override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
+
+    override suspend fun deleteAllNotes() {
+        store.notes.clear()
+        store.itemsByNote.clear()
+    }
+
+    override suspend fun emptyTrash() = Unit
+
+    override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
+}
+
+private class FakeChecklistItemDao(
+    private val store: FakeRepositoryStore,
+) : ChecklistItemDao {
+    override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> =
+        store.itemsByNote[noteId]
+            ?.sortedBy { item -> item.sortOrder }
+            ?: emptyList()
+
+    override suspend fun getByUuid(uuid: String): ChecklistItemEntity? =
+        store.itemsByNote.values.flatten().firstOrNull { it.uuid == uuid }
+
+    override suspend fun insert(item: ChecklistItemEntity): Long {
+        val itemId = if (item.id > 0L) item.id else store.nextItemId++
+        store.nextItemId = maxOf(store.nextItemId, itemId + 1L)
+        val savedItem = item.copy(id = itemId)
+        store.itemsByNote.getOrPut(savedItem.noteId) { mutableListOf() }.add(savedItem)
+        return itemId
+    }
+
+    override suspend fun insertAll(items: List<ChecklistItemEntity>) {
+        items.forEach { item -> insert(item) }
+    }
+
+    override suspend fun update(item: ChecklistItemEntity) {
+        val noteItems = store.itemsByNote[item.noteId] ?: return
+        val existingIndex = noteItems.indexOfFirst { existingItem -> existingItem.id == item.id }
+        if (existingIndex >= 0) {
+            noteItems[existingIndex] = item
+        }
+    }
+
+    override suspend fun deleteById(id: Long) {
+        store.itemsByNote.values.forEach { noteItems ->
+            noteItems.removeAll { item -> item.id == id }
+        }
+    }
+
+    override suspend fun deleteForNote(noteId: Long) {
+        store.itemsByNote[noteId] = mutableListOf()
+    }
+}
+
+private class FakeAttachmentDao : AttachmentDao {
+    override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = emptyList()
+
+    override suspend fun insert(attachment: NoteAttachmentEntity): Long = attachment.id
+
+    override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
+
+    override suspend fun getById(id: Long): NoteAttachmentEntity? = null
+
+    override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
+
+    override suspend fun countByUri(uri: String): Int = 0
+
+    override suspend fun deleteById(id: Long) = Unit
+
+    override suspend fun deleteForNote(noteId: Long) = Unit
+}
+
+private fun noteEntity(
+    id: Long,
+    title: String,
+): NoteEntity =
+    NoteEntity(
+        id = id,
+        kind = NoteKind.LIST,
+        title = title,
+        body = "",
+        colorIndex = 0,
+        trashed = false,
+        createdAt = 1L,
+        updatedAt = 1L,
+        importance = Importance.DEFAULT,
+        visibility = Visibility.DEFAULT,
+    )

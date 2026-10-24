@@ -1,0 +1,45 @@
+package three.haddad.smartnotas.data.auth
+
+import android.content.Context
+import kotlinx.coroutines.flow.Flow
+
+interface AuthRepository {
+    val authState: Flow<AuthState>
+    val currentUser: AuthUser?
+
+    suspend fun registerWithEmailAndPassword(
+        email: String,
+        password: String,
+        username: String? = null,
+    ): AuthResult<AuthUser>
+
+    suspend fun loginWithEmailAndPassword(
+        email: String,
+        password: String,
+    ): AuthResult<AuthUser>
+
+    suspend fun signInWithGoogle(context: Context): AuthResult<AuthUser>
+
+    suspend fun sendEmailVerification(): AuthResult<Unit>
+
+    suspend fun reloadUser(): AuthResult<AuthUser>
+
+    suspend fun sendPasswordResetEmail(email: String): AuthResult<Unit>
+
+    suspend fun confirmPasswordReset(
+        actionCode: String,
+        newPassword: String,
+    ): AuthResult<Unit>
+
+    suspend fun verifyPasswordResetCode(actionCode: String): AuthResult<String>
+
+    suspend fun applyActionCode(actionCode: String): AuthResult<Unit>
+
+    suspend fun updatePassword(newPassword: String): AuthResult<Unit>
+
+    suspend fun signOut()
+
+    suspend fun getIdToken(forceRefresh: Boolean = false): String?
+
+    suspend fun syncBackendProfile(): AuthResult<BackendProfile>
+}
