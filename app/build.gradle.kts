@@ -123,6 +123,10 @@ extensions.configure<ApplicationExtension>("android") {
 
     buildTypes {
         debug {
+            val devBackendUrl = project.findProperty("backendApiBaseUrl") as? String
+                ?: System.getenv("BACKEND_API_BASE_URL")
+                ?: "https://smartnotas-api-staging-git-master-hayassin755-glitchs-projects.vercel.app"
+            buildConfigField("String", "BACKEND_API_BASE_URL", "\"$devBackendUrl\"")
         }
         create("devRelease") {
             initWith(getByName("release"))
@@ -137,6 +141,11 @@ extensions.configure<ApplicationExtension>("android") {
                 "proguard-rules.pro",
             )
             matchingFallbacks += listOf("release")
+
+            val stagingBackendUrl = project.findProperty("backendApiBaseUrl") as? String
+                ?: System.getenv("BACKEND_API_BASE_URL")
+                ?: "https://smartnotas-api-staging-git-master-hayassin755-glitchs-projects.vercel.app"
+            buildConfigField("String", "BACKEND_API_BASE_URL", "\"$stagingBackendUrl\"")
         }
         release {
             versionNameSuffix = previewVersionSuffix

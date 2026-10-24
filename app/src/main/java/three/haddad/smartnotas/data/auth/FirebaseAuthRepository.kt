@@ -127,8 +127,10 @@ class FirebaseAuthRepository @Inject constructor(
     override suspend fun signInWithGoogle(context: Context): AuthResult<AuthUser> = withContext(ioDispatcher) {
         checkConfigured()?.let { return@withContext it }
 
-        // Fetch server client ID if configured (from string resources or null)
-        val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+        // Fetch server client ID if configured (from string resources or fallback)
+        val resId = context.resources.getIdentifier("default_web_client_id", "string", "three.haddad.smartnotas").let { id ->
+            if (id != 0) id else context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+        }
         val serverClientId = if (resId != 0) context.getString(resId) else null
 
         if (serverClientId.isNullOrBlank()) {

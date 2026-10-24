@@ -120,33 +120,10 @@ fun WelcomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     if (loginState?.errorMessage != null) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 14.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = palette.error.copy(alpha = 0.1f),
-                            ),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "error",
-                                    size = 20.dp,
-                                    tint = palette.error,
-                                    contentDescription = null,
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = loginState.errorMessage,
-                                    style = NotasTypography.BodyMedium,
-                                    color = palette.error,
-                                )
-                            }
-                        }
+                        AuthErrorBanner(
+                            message = loginState.errorMessage,
+                            modifier = Modifier.padding(bottom = 14.dp),
+                        )
                     }
 
                     PrimaryButton(

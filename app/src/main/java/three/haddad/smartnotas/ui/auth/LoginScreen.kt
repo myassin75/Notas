@@ -127,33 +127,10 @@ fun LoginScreen(
 
                 // Error Banner
                 if (state.errorMessage != null) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = palette.error.copy(alpha = 0.1f),
-                        ),
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RememberMaterialRoundedSymbol(
-                                name = "error",
-                                size = 20.dp,
-                                tint = palette.error,
-                                contentDescription = null,
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = state.errorMessage ?: "",
-                                style = NotasTypography.BodyMedium,
-                                color = palette.error,
-                            )
-                        }
-                    }
+                    AuthErrorBanner(
+                        message = state.errorMessage ?: "",
+                        modifier = Modifier.padding(bottom = 16.dp),
+                    )
                 }
 
                 // Email Field

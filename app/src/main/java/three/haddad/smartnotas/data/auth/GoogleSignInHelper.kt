@@ -52,14 +52,53 @@ object GoogleSignInHelper {
         } catch (_: GetCredentialCancellationException) {
             // User dismissed or cancelled the Google Account picker dialog
             AuthResult.Cancelled
-        } catch (e: NoCredentialException) {
-            AuthResult.Error("No Google accounts found on device. Please sign in to a Google account.", code = "NO_CREDENTIAL", cause = e)
+        } catch (_: NoCredentialException) {
+            // No Google account on device: seamlessly open Android Account Settings so user can add one
+            openAddAccountSettings(context)
         } catch (e: Exception) {
-            AuthResult.Error(
-                message = e.localizedMessage ?: "Google Sign-In failed",
-                code = "SIGN_IN_FAILED",
-                cause = e,
-            )
+            val msg = (e.message ?: "").lowercase()
+            if (msg.contains("no credential") || msg.contains("no account") || msg.contains("no google account")) {
+                openAddAccountSettings(context)
+            } else {
+                AuthResult.Error(
+                    message = e.localizedMessage ?: "Google Sign-In failed",
+                    code = "SIGN_IN_FAILED",
+                    cause = e,
+                )
+            }
+        }
+    }
+
+    private fun openAddAccountSettings(context: Context): AuthResult<AuthCredential> {
+        return try {
+            val addAccountIntent = android.content.Intent(android.provider.Settings.ACTION_ADD_ACCOUNT).apply {
+                putExtra(android.provider.Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(addAccountIntent)
+            AuthResult.Cancelled
+        } catch (_: Exception) {
+            try {
+                val syncIntent = android.content.Intent(android.provider.Settings.ACTION_SYNC_SETTINGS).apply {
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(syncIntent)
+                AuthResult.Cancelled
+            } catch (_: Exception) {
+                try {
+                    val settingsIntent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(settingsIntent)
+                    AuthResult.Cancelled
+                } catch (ex: Exception) {
+                    AuthResult.Error(
+                        "Please add a Google account in Android Settings.",
+                        code = "NO_CREDENTIAL",
+                        cause = ex,
+                    )
+                }
+            }
         }
     }
 }

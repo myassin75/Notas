@@ -156,6 +156,8 @@ class AuthViewModel @Inject constructor(
                 }
                 is AuthResult.Error -> {
                     _registerState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                    // If account already exists, prefill email on Login screen for seamless user flow
+                    _loginState.update { it.copy(email = cleanEmail) }
                 }
                 is AuthResult.Cancelled -> {
                     _registerState.update { it.copy(isLoading = false) }

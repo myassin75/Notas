@@ -80,21 +80,23 @@ fun ForgotPasswordScreen(
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
-                    ) {
-                        RememberMaterialRoundedSymbol(
-                            name = "arrow_back",
-                            size = 20.dp,
-                            tint = palette.primaryText,
-                            contentDescription = "Back",
-                        )
-                    }
+                    if (!state.isLinkSent) {
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
+                        ) {
+                            RememberMaterialRoundedSymbol(
+                                name = "arrow_back",
+                                size = 20.dp,
+                                tint = palette.primaryText,
+                                contentDescription = "Back",
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
 
                     Text(
                         text = "Reset Password",
@@ -125,33 +127,10 @@ fun ForgotPasswordScreen(
 
                     // Error Banner
                     if (state.errorMessage != null) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = palette.error.copy(alpha = 0.1f),
-                            ),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "error",
-                                    size = 20.dp,
-                                    tint = palette.error,
-                                    contentDescription = null,
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = state.errorMessage ?: "",
-                                    style = NotasTypography.BodyMedium,
-                                    color = palette.error,
-                                )
-                            }
-                        }
+                        AuthErrorBanner(
+                            message = state.errorMessage ?: "",
+                            modifier = Modifier.padding(bottom = 16.dp),
+                        )
                     }
 
                     // Email Input
@@ -199,7 +178,7 @@ fun ForgotPasswordScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
-                                    name = "mark_email_read",
+                                    name = "check_circle",
                                     size = 28.dp,
                                     tint = palette.success,
                                     contentDescription = null,
@@ -218,7 +197,7 @@ fun ForgotPasswordScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "We sent an email to ${state.email}. Open the email and click the link to reset your password.",
+                                text = "We sent an email to ${state.email}. Open the email and click the link to reset your password. (Please check your Spam or Junk folder if it does not appear in your inbox).",
                                 style = NotasTypography.Body,
                                 color = palette.secondaryText,
                                 textAlign = TextAlign.Center,
