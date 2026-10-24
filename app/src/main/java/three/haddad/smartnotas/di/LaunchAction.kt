@@ -17,4 +17,9 @@ sealed interface LaunchAction {
     ) : LaunchAction
 
     data object OpenSettingsUpdates : LaunchAction
+
+    data class AuthEmailAction(
+        val mode: String,
+        val oobCode: String,
+    ) : LaunchAction
 }

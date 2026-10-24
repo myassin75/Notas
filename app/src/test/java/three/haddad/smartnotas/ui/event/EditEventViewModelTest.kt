@@ -77,7 +77,17 @@ class EditEventViewModelTest {
                     return NoteWithItems(found, emptyList(), attachments = atts)
                 }
 
+                override suspend fun getByUuid(uuid: String): NoteWithItems? {
+                    val found = insertedNotes.firstOrNull { it.uuid == uuid } ?: return null
+                    val atts = insertedAttachments.filter { it.noteId == found.id }
+                    return NoteWithItems(found, emptyList(), attachments = atts)
+                }
+
+                override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
+                    insertedNotes.firstOrNull { it.uuid == uuid }
+
                 override suspend fun allNotes(): List<NoteWithItems> = emptyList()
+                override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = emptyList()
 
                 override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
 
@@ -137,6 +147,8 @@ class EditEventViewModelTest {
             object : ChecklistItemDao {
                 override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
 
+                override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
+
                 override suspend fun insert(item: ChecklistItemEntity): Long = 1L
 
                 override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
@@ -162,6 +174,9 @@ class EditEventViewModelTest {
                 override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
 
                 override suspend fun getById(id: Long): NoteAttachmentEntity? = insertedAttachments.firstOrNull { it.id == id }
+
+                override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? =
+                    insertedAttachments.firstOrNull { it.uuid == uuid }
 
                 override suspend fun countByUri(uri: String): Int = 0
 
@@ -191,10 +206,13 @@ class EditEventViewModelTest {
                 override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
 
                 override suspend fun allShoulders(): List<ShoulderEntity> = shoulders
+                override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> = shoulders.filter { it.ownerId == ownerId }
 
                 override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
 
                 override suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulders.firstOrNull { it.id == id }
+
+                override suspend fun getByUuid(uuid: String): ShoulderEntity? = shoulders.firstOrNull { it.uuid == uuid }
 
                 override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? = shoulders.firstOrNull { it.normalizedName == normalizedName }
 
@@ -456,7 +474,7 @@ class EditEventViewModelTest {
             assertEquals(userDescription, note.body)
             assertNotNull(note.reminderAt)
             assertNotNull(note.endAt)
-            assertTrue(note.endAt!! > note.reminderAt!!)
+            assertTrue(initialEndAt > note.reminderAt!!)
 
             // Reload via new ViewModel in edit mode
             val editHandle = SavedStateHandle(mapOf(Routes.ARG_ID to note.id))

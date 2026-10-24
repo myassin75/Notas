@@ -1,0 +1,255 @@
+// ==============================================================================================
+// NOTAS PRISMA DATABASE SCHEMA
+// Engine: PostgreSQL
+// Host: Neon / Supabase / AWS RDS
+// ==============================================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Core Domain Enums (Direct Parity with Room Entities)
+// ----------------------------------------------------------------------------------------------
+
+enum NoteKind {
+  NOTE
+  LIST
+}
+
+enum Importance {
+  LOW
+  DEFAULT
+  HIGH
+  CRITICAL
+}
+
+enum Visibility {
+  DEFAULT
+  PRIVATE
+  SECRET
+}
+
+enum BackupStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// ----------------------------------------------------------------------------------------------
+// User Model (Mapped to Firebase Authentication UID)
+// ----------------------------------------------------------------------------------------------
+
+model User {
+  id            String    @id // Firebase Authentication UID
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  displayName   String?
+  photoUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastSyncAt      DateTime?
+  deletionPending Boolean   @default(false)
+  deletedAt       DateTime?
+
+  // Relations
+  notes           Note[]
+  categories      Category[]
+  settings        UserSettings?
+  syncCursors     DeviceSyncCursor[]
+  backups         Backup[]
+
+  @@map("users")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Category / Shoulder Model (Normalized Categorization from Room)
+// ----------------------------------------------------------------------------------------------
+
+model Category {
+  id               String    @id @default(uuid()) // Stable UUID across devices
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  normalizedName   String
+  colorHex         String?
+  clientCreatedAt  DateTime
+  clientUpdatedAt  DateTime
+  serverRevision   BigInt    @default(0)
+  isDeleted        Boolean   @default(false)
+  deletedAt        DateTime?
+
+  notes            Note[]
+
+  @@unique([userId, normalizedName])
+  @@index([userId, serverRevision])
+  @@index([userId, isDeleted])
+  @@map("categories")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Note Model (Complete Parity with NoteEntity)
+// ----------------------------------------------------------------------------------------------
+
+model Note {
+  id                 String          @id @default(uuid()) // Stable UUID across devices
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId         String?
+  category           Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  kind               NoteKind
+  title              String
+  body               String          @default("")
+  colorIndex         Int             @default(0)
+  importance         Importance      @default(DEFAULT)
+  visibility         Visibility      @default(DEFAULT)
+  locked             Boolean         @default(false)
+  iconKey            String?
+  pictureUri         String?
+  pictureHeroFraming String?
+  reminderAt         DateTime?
+  endAt              DateTime?
+  isAllDay           Boolean         @default(false)
+  reminders          Json?           // Array of secondary reminders [{ reminderAt, recurrence, endAt }]
+  recurrence         Json?           // Serialized RecurrenceRule
+  actions            Json?           // Serialized array of NoteAction [{ type, title, details, extra }]
+  pinnedAt           DateTime?
+  completedAt        DateTime?
+  archived           Boolean         @default(false)
+  trashed            Boolean         @default(false)
+  trashedAt          DateTime?
+  clientCreatedAt    DateTime
+  clientUpdatedAt    DateTime
+  serverRevision     BigInt          @default(0)
+  isDeleted          Boolean         @default(false) // Tombstone for sync deletion
+  deletedAt          DateTime?
+
+  checklistItems     ChecklistItem[]
+  attachments        NoteAttachment[]
+
+  @@index([userId, serverRevision])
+  @@index([userId, clientUpdatedAt])
+  @@index([userId, isDeleted])
+  @@index([userId, archived, trashed])
+  @@map("notes")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Checklist Item Model (Parity with ChecklistItemEntity)
+// ----------------------------------------------------------------------------------------------
+
+model ChecklistItem {
+  id             String    @id @default(uuid()) // Stable UUID across devices
+  noteId         String
+  note           Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId         String
+  text           String
+  checked        Boolean   @default(false)
+  sortOrder      Float     @default(0.0)
+  parentId       String?   // Parent row UUID for 1-level hierarchical nesting
+  depth          Int       @default(0)
+  details        String    @default("")
+  serverRevision BigInt    @default(0)
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
+
+  @@index([noteId, sortOrder])
+  @@index([userId, serverRevision])
+  @@map("checklist_items")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Note Attachment Model (Parity with NoteAttachmentEntity)
+// ----------------------------------------------------------------------------------------------
+
+model NoteAttachment {
+  id             String    @id @default(uuid()) // Stable UUID across devices
+  noteId         String
+  note           Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId         String
+  uri            String
+  displayName    String
+  mimeType       String?
+  sizeBytes      BigInt?
+  storageKey     String?   // S3 key for cloud-synced binary files
+  serverRevision BigInt    @default(0)
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
+
+  @@index([noteId])
+  @@index([userId, serverRevision])
+  @@map("note_attachments")
+}
+
+// ----------------------------------------------------------------------------------------------
+// User Settings Model (Theme, Reminders, Defaults, View Options)
+// ----------------------------------------------------------------------------------------------
+
+model UserSettings {
+  userId               String   @id
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  themeSettings        Json?    // AccentTheme, DarkThemeStrategy, OLED, CardContrast
+  reminderSettings     Json?    // Sound, vibration, quietHours, snoozePresets
+  defaultNoteSettings  Json?    // DefaultKind, defaultColorIndex, defaultCategoryId
+  interactionSettings  Json?    // SwipeActions, gestures, feedback
+  viewOptionsSettings  Json?    // CompactView, showDetails, gridColumns
+  clientUpdatedAt      DateTime
+  serverRevision       BigInt   @default(0)
+
+  @@map("user_settings")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Device Sync Cursor Model (Tracking Per-Device Sync Revision Watermarks)
+// ----------------------------------------------------------------------------------------------
+
+model DeviceSyncCursor {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId           String
+  deviceName         String?
+  appVersion         String?
+  lastSyncedRevision BigInt   @default(0)
+  lastSyncedAt       DateTime @default(now())
+  createdAt          DateTime @default(now())
+
+  @@unique([userId, deviceId])
+  @@index([userId, lastSyncedAt])
+  @@map("device_sync_cursors")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Backup Metadata Model (Private S3-Compatible Cloud Backups)
+// ----------------------------------------------------------------------------------------------
+
+model Backup {
+  id               String       @id @default(uuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storageKey       String       @unique // S3 bucket key: backups/<userId>/<backupId>.zip
+  fileName         String
+  sizeBytes        BigInt
+  sha256Checksum   String
+  notesCount       Int          @default(0)
+  tasksCount       Int          @default(0)
+  eventsCount      Int          @default(0)
+  categoriesCount  Int          @default(0)
+  schemaVersion    Int          @default(7)
+  isEncrypted      Boolean      @default(false)
+  status           BackupStatus @default(PENDING)
+  verifiedAt       DateTime?
+  verificationError String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@map("backups")
+}

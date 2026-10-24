@@ -1,0 +1,37 @@
+{
+  "name": "notas-backend",
+  "version": "1.0.0",
+  "description": "Notas Serverless Backend on Vercel with PostgreSQL, Prisma, Firebase Authentication, and S3-Compatible Storage",
+  "private": true,
+  "main": "dist/api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc --noEmit && prisma generate",
+    "lint": "eslint . --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.699.0",
+    "@aws-sdk/s3-request-presigner": "^3.699.0",
+    "@prisma/client": "^5.22.0",
+    "@vercel/node": "^3.2.22",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.7.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "eslint": "^9.14.0",
+    "prisma": "^5.22.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

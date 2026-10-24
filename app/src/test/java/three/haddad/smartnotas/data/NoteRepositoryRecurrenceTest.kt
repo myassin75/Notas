@@ -581,7 +581,14 @@ class NoteRepositoryRecurrenceTest {
 
         override suspend fun get(id: Long): NoteWithItems? = stored.takeIf { it.note.id == id }
 
+        override suspend fun getByUuid(uuid: String): NoteWithItems? = stored.takeIf { it.note.uuid == uuid }
+
+        override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = stored.note.takeIf { it.uuid == uuid }
+
         override suspend fun allNotes(): List<NoteWithItems> = listOf(stored)
+
+        override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
+            listOf(stored).filter { it.note.ownerId == ownerId }
 
         override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> {
             val reminderAt = stored.note.reminderAt ?: return emptyList()
@@ -646,6 +653,8 @@ class NoteRepositoryRecurrenceTest {
     private class FakeChecklistItemDao : ChecklistItemDao {
         override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
 
+        override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
+
         override suspend fun insert(item: ChecklistItemEntity): Long = item.id
 
         override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
@@ -665,6 +674,8 @@ class NoteRepositoryRecurrenceTest {
         override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
 
         override suspend fun getById(id: Long): NoteAttachmentEntity? = null
+
+        override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
 
         override suspend fun countByUri(uri: String): Int = 0
 

@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Fts4
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 import kotlinx.serialization.Serializable
 import three.haddad.smartnotas.R
 
@@ -123,10 +124,16 @@ fun List<NoteReminder>.limitedToReminderSlots(): List<NoteReminder> = take(MAX_R
             onDelete = ForeignKey.SET_NULL,
         ),
     ],
-    indices = [Index("shoulderId")],
+    indices = [
+        Index("shoulderId"),
+        Index(value = ["uuid"], unique = true),
+        Index(value = ["ownerId"]),
+    ],
 )
 data class NoteEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val uuid: String = UUID.randomUUID().toString(),
+    val ownerId: String? = null,
     val kind: NoteKind,
     val title: String,
     val body: String,
@@ -251,10 +258,17 @@ data class NoteFtsEntity(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("noteId"), Index("parentId")],
+    indices = [
+        Index("noteId"),
+        Index("parentId"),
+        Index(value = ["uuid"], unique = true),
+        Index(value = ["ownerId"]),
+    ],
 )
 data class ChecklistItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val uuid: String = UUID.randomUUID().toString(),
+    val ownerId: String? = null,
     val noteId: Long,
     val text: String,
     val checked: Boolean,
@@ -285,10 +299,16 @@ data class ChecklistItemEntity(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("noteId")],
+    indices = [
+        Index("noteId"),
+        Index(value = ["uuid"], unique = true),
+        Index(value = ["ownerId"]),
+    ],
 )
 data class NoteAttachmentEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val uuid: String = UUID.randomUUID().toString(),
+    val ownerId: String? = null,
     val noteId: Long,
     val uri: String,
     val displayName: String,

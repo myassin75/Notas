@@ -9,6 +9,8 @@ class ShoulderRepository
     @Inject
     constructor(
         private val shoulderDao: ShoulderDao,
+        private val tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder? = null,
+        private val authRepository: three.haddad.smartnotas.data.auth.AuthRepository? = null,
     ) {
         fun getAllShoulders(): Flow<List<ShoulderEntity>> = shoulderDao.observeAllShoulders()
 
@@ -24,6 +26,7 @@ class ShoulderRepository
                     name = name,
                     normalizedName = name.trim().lowercase(),
                     colorHex = colorHex,
+                    ownerId = authRepository?.currentUser?.uid,
                     createdAt = timestamp,
                     updatedAt = timestamp,
                 )
@@ -35,6 +38,7 @@ class ShoulderRepository
         }
 
         suspend fun deleteShoulder(shoulder: ShoulderEntity) {
+            tombstoneRecorder?.recordShoulderDeleted(shoulder.uuid)
             shoulderDao.deleteShoulder(shoulder)
         }
     }

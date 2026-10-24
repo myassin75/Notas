@@ -982,7 +982,6 @@ class CalendarViewModel
                                     }
                                 calWeekday == mode.weekday
                             }
-                            else -> false
                         }
                     } else {
                         false
@@ -996,7 +995,6 @@ class CalendarViewModel
                         false
                     }
                 }
-                else -> false
             }
         }
 

@@ -16,11 +16,17 @@ interface ShoulderDao {
     @Query("SELECT * FROM shoulders ORDER BY name COLLATE NOCASE ASC")
     suspend fun allShoulders(): List<ShoulderEntity>
 
+    @Query("SELECT * FROM shoulders WHERE ownerId = :ownerId ORDER BY name COLLATE NOCASE ASC")
+    suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity>
+
     @Query("SELECT * FROM shoulders WHERE id IN (SELECT DISTINCT shoulderId FROM notes WHERE shoulderId IS NOT NULL) ORDER BY name COLLATE NOCASE ASC")
     fun observeActiveShoulders(): Flow<List<ShoulderEntity>>
 
     @Query("SELECT * FROM shoulders WHERE id = :id")
     suspend fun getShoulderById(id: Long): ShoulderEntity?
+
+    @Query("SELECT * FROM shoulders WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): ShoulderEntity?
 
     @Query("SELECT * FROM shoulders WHERE normalizedName = :normalizedName LIMIT 1")
     suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity?

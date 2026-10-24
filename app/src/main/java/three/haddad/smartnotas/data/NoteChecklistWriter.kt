@@ -1,5 +1,7 @@
 package three.haddad.smartnotas.data
 
+import java.util.UUID
+
 /**
  * Persists the checklist rows of a list-kind note, including the two-pass remap that turns a
  * caller's [PersistableChecklistItem.localKey] pointers into the real Room ids Room hands back
@@ -22,6 +24,7 @@ internal class NoteChecklistWriter(
     suspend fun insertHierarchy(
         noteId: Long,
         items: List<PersistableChecklistItem>,
+        ownerId: String? = null,
     ) {
         if (items.isEmpty()) return
         val (parents, children) = items.partition { it.parentLocalKey == null }
@@ -33,6 +36,8 @@ internal class NoteChecklistWriter(
                 itemDao.insert(
                     ChecklistItemEntity(
                         id = 0,
+                        uuid = draft.uuid ?: UUID.randomUUID().toString(),
+                        ownerId = ownerId,
                         noteId = noteId,
                         text = draft.text,
                         details = draft.details,
@@ -53,6 +58,8 @@ internal class NoteChecklistWriter(
                 itemDao.insert(
                     ChecklistItemEntity(
                         id = 0,
+                        uuid = draft.uuid ?: UUID.randomUUID().toString(),
+                        ownerId = ownerId,
                         noteId = noteId,
                         text = draft.text,
                         details = draft.details,
@@ -73,6 +80,7 @@ internal class NoteChecklistWriter(
     suspend fun syncHierarchy(
         noteId: Long,
         items: List<PersistableChecklistItem>,
+        ownerId: String? = null,
     ) {
         val existingItems = itemDao.itemsFor(noteId)
         val existingById = existingItems.associateBy { it.id }
@@ -88,6 +96,8 @@ internal class NoteChecklistWriter(
                 itemDao.update(
                     ChecklistItemEntity(
                         id = existing.id,
+                        uuid = existing.uuid,
+                        ownerId = existing.ownerId,
                         noteId = noteId,
                         text = draft.text,
                         details = draft.details,
@@ -103,6 +113,8 @@ internal class NoteChecklistWriter(
                     itemDao.insert(
                         ChecklistItemEntity(
                             id = 0,
+                            uuid = draft.uuid ?: UUID.randomUUID().toString(),
+                            ownerId = ownerId ?: existingById.values.firstOrNull()?.ownerId,
                             noteId = noteId,
                             text = draft.text,
                             details = draft.details,
@@ -126,6 +138,8 @@ internal class NoteChecklistWriter(
                 itemDao.update(
                     ChecklistItemEntity(
                         id = existing.id,
+                        uuid = existing.uuid,
+                        ownerId = existing.ownerId,
                         noteId = noteId,
                         text = draft.text,
                         details = draft.details,
@@ -141,6 +155,8 @@ internal class NoteChecklistWriter(
                     itemDao.insert(
                         ChecklistItemEntity(
                             id = 0,
+                            uuid = draft.uuid ?: UUID.randomUUID().toString(),
+                            ownerId = ownerId ?: existingById.values.firstOrNull()?.ownerId,
                             noteId = noteId,
                             text = draft.text,
                             details = draft.details,

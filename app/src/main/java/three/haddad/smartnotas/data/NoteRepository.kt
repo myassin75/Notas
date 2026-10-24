@@ -42,6 +42,7 @@ data class PersistableChecklistItem(
     val parentLocalKey: Long? = null,
     val depth: Int = 0,
     val details: String = "",
+    val uuid: String? = null,
 )
 
 /**
@@ -73,6 +74,9 @@ class NoteRepository(
     private val appMediaStorage: AppMediaStorage? = null,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder? = null,
+    private val authRepository: three.haddad.smartnotas.data.auth.AuthRepository? = null,
+    private val ownerIdProvider: () -> String? = { authRepository?.currentUser?.uid },
 ) {
     // NoteRefreshObserver owns widget and summary refreshes after committed database changes.
     // Per-note alarm scheduling/cancellation stays synchronous here to preserve ordering.
@@ -106,6 +110,7 @@ class NoteRepository(
             scheduler = scheduler,
             clock = clock,
             database = database,
+            ownerIdProvider = ownerIdProvider,
         )
 
     private val bulkOperations =
@@ -116,6 +121,7 @@ class NoteRepository(
             database = database,
             reminderCoordinator = reminderCoordinator,
             mediaMaintenance = mediaMaintenance,
+            tombstoneRecorder = tombstoneRecorder,
         )
 
     fun observeActive(): Flow<List<NoteWithItems>> = noteDao.observeActive().flowOn(ioDispatcher)
@@ -338,6 +344,9 @@ class NoteRepository(
 
     suspend fun deleteForever(id: Long) {
         val deletedNote = noteDao.get(id)
+        if (deletedNote != null) {
+            tombstoneRecorder?.recordNoteDeleted(deletedNote)
+        }
         scheduler?.cancel(id)
         scheduler?.cancelNotification(id)
         noteDao.deleteById(id)
@@ -346,6 +355,7 @@ class NoteRepository(
 
     suspend fun emptyTrash() {
         val deletedNotes = noteDao.trashedNoteIds().mapNotNull { trashedId -> noteDao.get(trashedId) }
+        tombstoneRecorder?.recordNotesDeleted(deletedNotes)
         deletedNotes.forEach { deletedNote ->
             val trashedId = deletedNote.note.id
             scheduler?.cancel(trashedId)
@@ -603,13 +613,15 @@ class NoteRepository(
                             sortOrder = item.sortOrder,
                             parentLocalKey = item.parentId,
                             depth = item.depth,
+                            uuid = item.uuid,
                         )
                     },
+                ownerId = note.ownerId,
             )
         }
         attachments.forEach { attachment ->
             attachmentDao.insert(
-                attachment.copy(id = 0, noteId = noteId),
+                attachment.copy(id = 0, noteId = noteId, ownerId = note.ownerId),
             )
         }
         if (!suppressReminderSchedule && !noteWithSynced.trashed) {

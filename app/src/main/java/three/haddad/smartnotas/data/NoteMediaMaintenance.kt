@@ -17,10 +17,12 @@ internal class NoteMediaMaintenance(
         displayName: String,
         mimeType: String?,
     ): Long {
+        val parentOwnerId = noteDao.get(noteId)?.note?.ownerId
         val attachmentId =
             attachmentDao.insert(
                 NoteAttachmentEntity(
                     noteId = noteId,
+                    ownerId = parentOwnerId,
                     uri = uri,
                     displayName = displayName,
                     mimeType = mimeType,

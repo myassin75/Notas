@@ -109,9 +109,13 @@ object RememberModule {
     @Singleton
     fun provideShoulderRepository(
         database: RememberDatabase,
+        tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder,
+        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
     ): ShoulderRepository =
         ShoulderRepository(
             shoulderDao = database.shoulderDao(),
+            tombstoneRecorder = tombstoneRecorder,
+            authRepository = authRepository,
         )
 
     @Provides
@@ -121,6 +125,8 @@ object RememberModule {
         reminderScheduler: ReminderScheduler,
         shoulderRepository: ShoulderRepository,
         appMediaStorage: AppMediaStorage,
+        tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder,
+        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         @DefaultDispatcher defaultDispatcher: CoroutineDispatcher,
     ): NoteRepository =
@@ -134,6 +140,8 @@ object RememberModule {
             appMediaStorage = appMediaStorage,
             ioDispatcher = ioDispatcher,
             defaultDispatcher = defaultDispatcher,
+            tombstoneRecorder = tombstoneRecorder,
+            authRepository = authRepository,
         )
 
     @Provides
@@ -274,6 +282,130 @@ object RememberModule {
         AppStartupWarmup(
             applicationScope = applicationScope,
             noteRepository = noteRepository,
+            ioDispatcher = ioDispatcher,
+        )
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        @ApplicationContext context: Context,
+        backendApiClient: three.haddad.smartnotas.data.auth.BackendApiClient,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): three.haddad.smartnotas.data.auth.AuthRepository =
+        three.haddad.smartnotas.data.auth.FirebaseAuthRepository(
+            context = context,
+            backendApiClient = backendApiClient,
+            ioDispatcher = ioDispatcher,
+        )
+
+    @Provides
+    @Singleton
+    fun provideSyncStateStore(
+        @ApplicationContext context: Context,
+    ): three.haddad.smartnotas.data.sync.SyncStateStore =
+        three.haddad.smartnotas.data.sync.SyncStateStore(context)
+
+    @Provides
+    @Singleton
+    fun provideSyncTombstoneRecorder(
+        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
+        syncStateStore: three.haddad.smartnotas.data.sync.SyncStateStore,
+    ): three.haddad.smartnotas.data.sync.SyncTombstoneRecorder =
+        three.haddad.smartnotas.data.sync.DefaultSyncTombstoneRecorder(
+            authRepository = authRepository,
+            syncStateStore = syncStateStore,
+        )
+
+    @Provides
+    @Singleton
+    fun provideSyncApiClient(): three.haddad.smartnotas.data.sync.SyncApiClient =
+        three.haddad.smartnotas.data.sync.SyncApiClient()
+
+    @Provides
+    @Singleton
+    fun provideSyncEngine(
+        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
+        syncStateStore: three.haddad.smartnotas.data.sync.SyncStateStore,
+        syncApiClient: three.haddad.smartnotas.data.sync.SyncApiClient,
+        database: RememberDatabase,
+        reminderScheduler: ReminderScheduler,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): three.haddad.smartnotas.data.sync.SyncEngine =
+        three.haddad.smartnotas.data.sync.SyncEngine(
+            authRepository = authRepository,
+            syncStateStore = syncStateStore,
+            syncApiClient = syncApiClient,
+            database = database,
+            noteDao = database.noteDao(),
+            itemDao = database.checklistItemDao(),
+            attachmentDao = database.attachmentDao(),
+            shoulderDao = database.shoulderDao(),
+            scheduler = reminderScheduler,
+            ioDispatcher = ioDispatcher,
+        )
+
+    @Provides
+    @Singleton
+    fun provideBackupApiClient(): three.haddad.smartnotas.data.backup.BackupApiClient =
+        three.haddad.smartnotas.data.backup.BackupApiClient()
+
+    @Provides
+    @Singleton
+    fun provideCloudBackupManager(
+        @ApplicationContext context: Context,
+        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
+        backupApiClient: three.haddad.smartnotas.data.backup.BackupApiClient,
+        database: RememberDatabase,
+        reminderScheduler: ReminderScheduler,
+        noteRepository: NoteRepository,
+        themePrefs: ThemePrefs,
+        notesUiPrefs: NotesUiPrefs,
+        viewOptionsPrefs: ViewOptionsPrefs,
+        lockPrefs: LockPrefs,
+        interactionPrefs: InteractionPrefs,
+        backupPrefs: BackupPrefs,
+        quickCapturePrefs: QuickCapturePrefs,
+        reminderPrefs: ReminderPrefs,
+        defaultNotePrefs: DefaultNotePrefs,
+        updatePrefs: UpdatePrefs,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): three.haddad.smartnotas.data.backup.CloudBackupManager =
+        three.haddad.smartnotas.data.backup.CloudBackupManager(
+            context = context,
+            authRepository = authRepository,
+            backupApiClient = backupApiClient,
+            noteDao = database.noteDao(),
+            shoulderDao = database.shoulderDao(),
+            itemDao = database.checklistItemDao(),
+            attachmentDao = database.attachmentDao(),
+            noteRepository = noteRepository,
+            themePrefs = themePrefs,
+            notesUiPrefs = notesUiPrefs,
+            viewOptionsPrefs = viewOptionsPrefs,
+            lockPrefs = lockPrefs,
+            interactionPrefs = interactionPrefs,
+            backupPrefs = backupPrefs,
+            quickCapturePrefs = quickCapturePrefs,
+            reminderPrefs = reminderPrefs,
+            defaultNotePrefs = defaultNotePrefs,
+            updatePrefs = updatePrefs,
+            database = database,
+            scheduler = reminderScheduler,
+            ioDispatcher = ioDispatcher,
+        )
+
+    @Provides
+    @Singleton
+    fun provideAttachmentStorageManager(
+        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
+        backupApiClient: three.haddad.smartnotas.data.backup.BackupApiClient,
+        database: RememberDatabase,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): three.haddad.smartnotas.data.backup.AttachmentStorageManager =
+        three.haddad.smartnotas.data.backup.AttachmentStorageManager(
+            authRepository = authRepository,
+            backupApiClient = backupApiClient,
+            attachmentDao = database.attachmentDao(),
             ioDispatcher = ioDispatcher,
         )
 }

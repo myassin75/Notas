@@ -20,6 +20,7 @@ internal class NoteBulkOperations(
     private val database: RememberDatabase?,
     private val reminderCoordinator: NoteReminderCoordinator,
     private val mediaMaintenance: NoteMediaMaintenance,
+    private val tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder? = null,
 ) {
     private suspend fun runInTransaction(block: suspend () -> Unit) {
         if (database != null) database.withTransaction { block() } else block()
@@ -113,6 +114,7 @@ internal class NoteBulkOperations(
     suspend fun deleteForever(ids: Collection<Long>) {
         if (ids.isEmpty()) return
         val deletedNotes = ids.mapNotNull { id -> noteDao.get(id) }
+        tombstoneRecorder?.recordNotesDeleted(deletedNotes)
         ids.forEach { id ->
             scheduler?.cancel(id)
             scheduler?.cancelNotification(id)

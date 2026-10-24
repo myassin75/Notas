@@ -99,6 +99,11 @@ extensions.configure<ApplicationExtension>("android") {
             "PLAY_STORE_URL",
             "\"https://play.google.com/store/apps/details?id=$rememberApplicationId\"",
         )
+        buildConfigField(
+            "String",
+            "BACKEND_API_BASE_URL",
+            "\"https://api.smartnotas.com\"",
+        )
     }
 
     androidResources {
@@ -319,9 +324,13 @@ dependencies {
     implementation(libs.documentfile)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.splashscreen)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.google.id)
     debugImplementation(libs.androidx.ui.tooling)
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
@@ -330,3 +339,9 @@ dependencies {
     add("playstoreImplementation", "com.google.android.play:review:2.0.2")
     add("playstoreImplementation", "com.google.android.play:review-ktx:2.0.2")
 }
+
+val googleServicesJson = file("google-services.json")
+if (googleServicesJson.isFile) {
+    apply(plugin = "com.google.gms.google-services")
+}
+

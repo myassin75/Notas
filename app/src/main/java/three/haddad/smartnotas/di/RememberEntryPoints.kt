@@ -46,6 +46,10 @@ interface SettingsDependenciesEntryPoint {
 
     fun backupIo(): BackupIo
 
+    fun cloudBackupManager(): three.haddad.smartnotas.data.backup.CloudBackupManager
+
+    fun authRepository(): three.haddad.smartnotas.data.auth.AuthRepository
+
     fun themePrefs(): ThemePrefs
 
     fun notesUiPrefs(): NotesUiPrefs

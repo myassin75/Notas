@@ -423,10 +423,19 @@ private class FakeNoteDao(
 
     override suspend fun get(id: Long): NoteWithItems? = store.noteWithItems(id)
 
+    override suspend fun getByUuid(uuid: String): NoteWithItems? =
+        store.notes.values.firstOrNull { it.uuid == uuid }?.let { store.noteWithItems(it.id) }
+
+    override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
+        store.notes.values.firstOrNull { it.uuid == uuid }
+
     override suspend fun allNotes(): List<NoteWithItems> =
         store.notes.keys
             .sorted()
             .mapNotNull { noteId -> store.noteWithItems(noteId) }
+
+    override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
+        allNotes().filter { it.note.ownerId == ownerId }
 
     override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
 
@@ -506,6 +515,9 @@ private class FakeChecklistItemDao(
             ?.sortedBy { item -> item.sortOrder }
             ?: emptyList()
 
+    override suspend fun getByUuid(uuid: String): ChecklistItemEntity? =
+        store.itemsByNote.values.flatten().firstOrNull { it.uuid == uuid }
+
     override suspend fun insert(item: ChecklistItemEntity): Long {
         val itemId = if (item.id > 0L) item.id else store.nextItemId++
         store.nextItemId = maxOf(store.nextItemId, itemId + 1L)
@@ -545,6 +557,8 @@ private class FakeAttachmentDao : AttachmentDao {
     override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
 
     override suspend fun getById(id: Long): NoteAttachmentEntity? = null
+
+    override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
 
     override suspend fun countByUri(uri: String): Int = 0
 

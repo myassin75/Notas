@@ -19,6 +19,7 @@ internal class NoteContentWriter(
     private val scheduler: ReminderScheduler?,
     private val clock: () -> Long,
     private val database: RememberDatabase?,
+    private val ownerIdProvider: () -> String? = { null },
 ) {
     suspend fun createNote(
         title: String,
@@ -27,10 +28,12 @@ internal class NoteContentWriter(
         options: NoteOptions,
     ): Long {
         val now = clock()
+        val currentOwnerId = ownerIdProvider()
         val resolvedReminders = reminderCoordinator.resolveUpdatedReminders(null, options)
         val unsyncedNote =
             NoteEntity(
                 kind = NoteKind.NOTE,
+                ownerId = currentOwnerId,
                 title = title,
                 body = body,
                 colorIndex = colorIndex,
@@ -70,11 +73,13 @@ internal class NoteContentWriter(
         options: NoteOptions,
     ): Long {
         val now = clock()
+        val currentOwnerId = ownerIdProvider()
         val validItems = items.map { it.trim() }.filter { it.isNotEmpty() }
         val resolvedReminders = reminderCoordinator.resolveUpdatedReminders(null, options)
         val unsyncedNote =
             NoteEntity(
                 kind = NoteKind.LIST,
+                ownerId = currentOwnerId,
                 title = title,
                 body = "",
                 checklistText = checklistSearchText(validItems),
@@ -104,6 +109,7 @@ internal class NoteContentWriter(
                 validItems.mapIndexed { index, text ->
                     ChecklistItemEntity(
                         noteId = id,
+                        ownerId = currentOwnerId,
                         text = text,
                         details = "",
                         checked = false,
@@ -130,11 +136,13 @@ internal class NoteContentWriter(
         options: NoteOptions,
     ): Long {
         val now = clock()
+        val currentOwnerId = ownerIdProvider()
         val validItems = items.filter { item -> item.text.isNotBlank() || item.details.isNotBlank() }
         val resolvedReminders = reminderCoordinator.resolveUpdatedReminders(null, options)
         val unsyncedNote =
             NoteEntity(
                 kind = NoteKind.LIST,
+                ownerId = currentOwnerId,
                 title = title,
                 body = "",
                 checklistText =
@@ -164,7 +172,7 @@ internal class NoteContentWriter(
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
         val id = noteDao.insert(noteEntity)
-        checklistWriter.insertHierarchy(noteId = id, items = validItems)
+        checklistWriter.insertHierarchy(noteId = id, items = validItems, ownerId = currentOwnerId)
         if (noteEntity.reminderAt != null) {
             val createdNoteWithItems = noteDao.get(id)
             if (createdNoteWithItems != null) {
@@ -265,7 +273,7 @@ internal class NoteContentWriter(
                     )
                 val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
                 noteDao.update(noteEntity)
-                checklistWriter.syncHierarchy(noteId = id, items = items)
+                checklistWriter.syncHierarchy(noteId = id, items = items, ownerId = existing.ownerId)
                 true
             }
         }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -79,8 +80,16 @@ import three.haddad.smartnotas.ui.history.HistorySection
 import three.haddad.smartnotas.ui.home.HomeRoute
 import three.haddad.smartnotas.ui.main.MainTab
 import three.haddad.smartnotas.ui.main.MainTabScaffold
+import three.haddad.smartnotas.ui.auth.AuthViewModel
+import three.haddad.smartnotas.ui.auth.ForgotPasswordScreen
+import three.haddad.smartnotas.ui.auth.LoginScreen
+import three.haddad.smartnotas.ui.auth.RegisterScreen
+import three.haddad.smartnotas.ui.auth.SetNewPasswordScreen
+import three.haddad.smartnotas.ui.auth.VerifyEmailScreen
+import three.haddad.smartnotas.ui.auth.WelcomeScreen
 import three.haddad.smartnotas.ui.onboarding.OnboardingPermissionsScreen
 import three.haddad.smartnotas.ui.onboarding.OnboardingTitleScreen
+import three.haddad.smartnotas.ui.profile.GuestProfileScreen
 import three.haddad.smartnotas.ui.settings.DevOptionsRoute
 import three.haddad.smartnotas.ui.settings.RememberUpdateViewModel
 import three.haddad.smartnotas.ui.settings.SettingsRoute
@@ -88,6 +97,16 @@ import three.haddad.smartnotas.ui.theme.LocalReducedMotion
 import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
 
 object Routes {
+    const val WELCOME = "welcome"
+    const val GUEST_PROFILE = "guestProfile"
+    const val REGISTER = "register"
+    const val LOGIN = "login"
+    const val VERIFY_EMAIL = "verifyEmail"
+    const val FORGOT_PASSWORD = "forgotPassword"
+    const val SET_NEW_PASSWORD = "setNewPassword"
+    const val ARG_EMAIL = "email"
+    const val ARG_ACTION_CODE = "actionCode"
+
     const val ONBOARDING_TITLE = "onboardingTitle"
     const val ONBOARDING_PERMISSIONS = "onboardingPermissions"
     const val EXTERNAL_LAUNCH = "externalLaunch"
@@ -136,6 +155,31 @@ object Routes {
      * `Screen.Faq.createRoute(focusSection)`.
      */
     fun help(focusSection: String = ""): String = "$HELP?$ARG_FOCUS_SECTION=$focusSection"
+
+    fun verifyEmail(email: String = "", actionCode: String = ""): String {
+        val params = mutableListOf<String>()
+        if (email.isNotEmpty()) {
+            val encoded = java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8.toString())
+            params.add("$ARG_EMAIL=$encoded")
+        }
+        if (actionCode.isNotEmpty()) {
+            val encoded = java.net.URLEncoder.encode(actionCode, java.nio.charset.StandardCharsets.UTF_8.toString())
+            params.add("$ARG_ACTION_CODE=$encoded")
+        }
+        return if (params.isNotEmpty()) {
+            "$VERIFY_EMAIL?${params.joinToString("&")}"
+        } else {
+            VERIFY_EMAIL
+        }
+    }
+
+    fun setNewPassword(actionCode: String = ""): String =
+        if (actionCode.isNotEmpty()) {
+            val encoded = java.net.URLEncoder.encode(actionCode, java.nio.charset.StandardCharsets.UTF_8.toString())
+            "$SET_NEW_PASSWORD?$ARG_ACTION_CODE=$encoded"
+        } else {
+            SET_NEW_PASSWORD
+        }
 
     fun editContent(
         id: Long?,
@@ -478,7 +522,7 @@ fun RememberNavGraph(
     val lockedStartDestination =
         remember(introSeenAtLaunch, initialExternalLaunch) {
             when {
-                !introSeenAtLaunch -> Routes.ONBOARDING_TITLE
+                !introSeenAtLaunch -> Routes.WELCOME
                 initialExternalLaunch -> Routes.EXTERNAL_LAUNCH
                 else -> Routes.HOME
             }
@@ -526,35 +570,52 @@ fun RememberNavGraph(
     // nothing pending and parked on the start destination.
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(launchFlow, currentOnboardingState.hasSeenIntro, lifecycleOwner) {
-        if (!currentOnboardingState.hasSeenIntro) return@LaunchedEffect
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             launchFlow?.collectLatest { action ->
                 if (action == null) return@collectLatest
                 var handled = false
                 try {
                     when (action) {
-                        is LaunchAction.NewNote -> navController.navigate(Routes.editNote(null, action.prefill))
-                        LaunchAction.NewList -> navController.navigate(Routes.editList(null))
-                        is LaunchAction.OpenNote -> {
-                            val note = repository.get(action.id)
-                            if (note == null) {
-                                if (action.externalLaunch) {
-                                    navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) {
-                                            inclusive = true
-                                        }
-                                        launchSingleTop = true
-                                    }
-                                }
-                                handled = true
-                                return@collectLatest
+                        is LaunchAction.AuthEmailAction -> {
+                            when (action.mode) {
+                                "resetPassword" -> navController.navigate(Routes.setNewPassword(action.oobCode))
+                                "verifyEmail" -> navController.navigate(Routes.verifyEmail(actionCode = action.oobCode))
                             }
-                            navController.openEditRouteFor(note, externalLaunch = action.externalLaunch)
+                        }
+                        is LaunchAction.NewNote -> {
+                            if (currentOnboardingState.hasSeenIntro) {
+                                navController.navigate(Routes.editNote(null, action.prefill))
+                            }
+                        }
+                        LaunchAction.NewList -> {
+                            if (currentOnboardingState.hasSeenIntro) {
+                                navController.navigate(Routes.editList(null))
+                            }
+                        }
+                        is LaunchAction.OpenNote -> {
+                            if (currentOnboardingState.hasSeenIntro) {
+                                val note = repository.get(action.id)
+                                if (note == null) {
+                                    if (action.externalLaunch) {
+                                        navController.navigate(Routes.HOME) {
+                                            popUpTo(navController.graph.id) {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    handled = true
+                                    return@collectLatest
+                                }
+                                navController.openEditRouteFor(note, externalLaunch = action.externalLaunch)
+                            }
                         }
                         LaunchAction.OpenSettingsUpdates -> {
-                            openSettingsRoot()
-                            openSettingsUpdatesRequest += 1
-                            updateVm.requestOpenSheet()
+                            if (currentOnboardingState.hasSeenIntro) {
+                                openSettingsRoot()
+                                openSettingsUpdatesRequest += 1
+                                updateVm.requestOpenSheet()
+                            }
                         }
                     }
                     handled = true
@@ -607,35 +668,191 @@ fun RememberNavGraph(
                 },
             ) {
                 composable(
-                    route = Routes.ONBOARDING_TITLE,
-                    enterTransition = {
-                        if (initialState.destination.route == Routes.ONBOARDING_PERMISSIONS) {
-                            if (reducedMotion) {
-                                EnterTransition.None
-                            } else {
-                                slideInHorizontally(animationSpec = navSpatialSpec) { -it } +
-                                    fadeIn(animationSpec = navFadeInSpec)
-                            }
-                        } else {
-                            null
-                        }
-                    },
-                    exitTransition = {
-                        if (targetState.destination.route == Routes.ONBOARDING_PERMISSIONS) {
-                            if (reducedMotion) {
-                                ExitTransition.None
-                            } else {
-                                slideOutHorizontally(animationSpec = navSpatialSpec) { -it / 3 } +
-                                    fadeOut(animationSpec = navFadeOutSpec)
-                            }
-                        } else {
-                            null
-                        }
-                    },
+                    route = Routes.WELCOME,
                 ) {
-                    OnboardingTitleScreen(
-                        onLetsBegin = {
+                    val context = LocalContext.current
+                    val authVm: AuthViewModel = hiltViewModel()
+                    WelcomeScreen(
+                        viewModel = authVm,
+                        onCreateAccount = { navController.navigate(Routes.REGISTER) },
+                        onLogin = { navController.navigate(Routes.LOGIN) },
+                        onGoogleSignIn = {
+                            authVm.signInWithGoogle(context) {
+                                onboardingScope.launch {
+                                    onboardingPrefs.markIntroSeen()
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onSkipForNow = {
                             navController.navigate(Routes.ONBOARDING_PERMISSIONS)
+                        },
+                    )
+                }
+
+                composable(
+                    route = Routes.ONBOARDING_TITLE,
+                ) {
+                    val context = LocalContext.current
+                    val authVm: AuthViewModel = hiltViewModel()
+                    WelcomeScreen(
+                        viewModel = authVm,
+                        onCreateAccount = { navController.navigate(Routes.REGISTER) },
+                        onLogin = { navController.navigate(Routes.LOGIN) },
+                        onGoogleSignIn = {
+                            authVm.signInWithGoogle(context) {
+                                onboardingScope.launch {
+                                    onboardingPrefs.markIntroSeen()
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onSkipForNow = {
+                            navController.navigate(Routes.ONBOARDING_PERMISSIONS)
+                        },
+                    )
+                }
+
+                composable(route = Routes.GUEST_PROFILE) {
+                    GuestProfileScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onCreateAccountClick = { navController.navigate(Routes.REGISTER) },
+                        onLoginClick = { navController.navigate(Routes.LOGIN) },
+                    )
+                }
+
+                composable(route = Routes.REGISTER) {
+                    val context = LocalContext.current
+                    val authVm: AuthViewModel = hiltViewModel()
+                    RegisterScreen(
+                        viewModel = authVm,
+                        onBackClick = { navController.popBackStack() },
+                        onLoginClick = { navController.navigate(Routes.LOGIN) },
+                        onGoogleSignInClick = {
+                            authVm.signInWithGoogle(context) {
+                                onboardingScope.launch {
+                                    onboardingPrefs.markIntroSeen()
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onRegisteredSuccess = { email ->
+                            navController.navigate(Routes.verifyEmail(email))
+                        },
+                    )
+                }
+
+                composable(
+                    route = "${Routes.VERIFY_EMAIL}?${Routes.ARG_EMAIL}={${Routes.ARG_EMAIL}}&${Routes.ARG_ACTION_CODE}={${Routes.ARG_ACTION_CODE}}",
+                    arguments = listOf(
+                        navArgument(Routes.ARG_EMAIL) {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                        navArgument(Routes.ARG_ACTION_CODE) {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                    ),
+                ) { entry ->
+                    val email = entry.arguments?.getString(Routes.ARG_EMAIL).orEmpty()
+                    val actionCode = entry.arguments?.getString(Routes.ARG_ACTION_CODE).orEmpty().ifBlank { null }
+                    val authVm: AuthViewModel = hiltViewModel()
+                    VerifyEmailScreen(
+                        email = email,
+                        actionCode = actionCode,
+                        viewModel = authVm,
+                        onBackClick = { navController.popBackStack() },
+                        onChangeEmailClick = { navController.popBackStack() },
+                        onVerifiedSuccess = {
+                            onboardingScope.launch {
+                                onboardingPrefs.markIntroSeen()
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(navController.graph.id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        },
+                    )
+                }
+
+                composable(route = Routes.LOGIN) {
+                    val context = LocalContext.current
+                    val authVm: AuthViewModel = hiltViewModel()
+                    LoginScreen(
+                        viewModel = authVm,
+                        onBackClick = { navController.popBackStack() },
+                        onRegisterClick = { navController.navigate(Routes.REGISTER) },
+                        onForgotPasswordClick = { navController.navigate(Routes.FORGOT_PASSWORD) },
+                        onGoogleSignInClick = {
+                            authVm.signInWithGoogle(context) {
+                                onboardingScope.launch {
+                                    onboardingPrefs.markIntroSeen()
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(navController.graph.id) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onLoginSuccess = {
+                            onboardingScope.launch {
+                                onboardingPrefs.markIntroSeen()
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(navController.graph.id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        },
+                    )
+                }
+
+                composable(route = Routes.FORGOT_PASSWORD) {
+                    val authVm: AuthViewModel = hiltViewModel()
+                    ForgotPasswordScreen(
+                        viewModel = authVm,
+                        onBackClick = { navController.popBackStack() },
+                        onBackToLoginClick = { navController.popBackStack() },
+                    )
+                }
+
+                composable(
+                    route = "${Routes.SET_NEW_PASSWORD}?${Routes.ARG_ACTION_CODE}={${Routes.ARG_ACTION_CODE}}",
+                    arguments = listOf(
+                        navArgument(Routes.ARG_ACTION_CODE) {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                    ),
+                ) { entry ->
+                    val actionCode = entry.arguments?.getString(Routes.ARG_ACTION_CODE).orEmpty().ifBlank { null }
+                    val authVm: AuthViewModel = hiltViewModel()
+                    SetNewPasswordScreen(
+                        actionCode = actionCode,
+                        viewModel = authVm,
+                        onBackClick = { navController.popBackStack() },
+                        onBackToLoginClick = {
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        },
+                        onRequestNewLinkClick = {
+                            navController.navigate(Routes.FORGOT_PASSWORD)
                         },
                     )
                 }
@@ -847,10 +1064,11 @@ fun RememberNavGraph(
                         if (useDualPaneMode) {
                             SettingsTwoPaneRoute(
                                 paneScaffoldDirective = paneScaffoldDirective,
-                                onOpenIntro = { navController.navigate(Routes.ONBOARDING_TITLE) },
+                                onOpenIntro = { navController.navigate(Routes.WELCOME) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
                                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
+                                onOpenGuestProfile = { navController.navigate(Routes.GUEST_PROFILE) },
                                 updateVm = updateVm,
                                 onUpdateCheckStarted = handleUpdateCheckStarted,
                                 onShareApp = shareApp,
@@ -859,10 +1077,11 @@ fun RememberNavGraph(
                             )
                         } else {
                             SettingsRoute(
-                                onOpenIntro = { navController.navigate(Routes.ONBOARDING_TITLE) },
+                                onOpenIntro = { navController.navigate(Routes.WELCOME) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
                                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
+                                onOpenGuestProfile = { navController.navigate(Routes.GUEST_PROFILE) },
                                 updateVm = updateVm,
                                 onUpdateCheckStarted = handleUpdateCheckStarted,
                                 highlightSectionKey = settingsHighlightSection,

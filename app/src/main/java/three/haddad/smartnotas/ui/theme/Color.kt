@@ -1,6 +1,7 @@
 package three.haddad.smartnotas.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 /**
  * NUVORA Color System Tokens.
@@ -484,7 +485,10 @@ data class SemanticPalette(
     val error: Color,
     val success: Color,
     val warning: Color,
-)
+) {
+    val stroke: Color get() = cardBorder
+    val notasBackground: Color get() = if (cardSurface == ThemeColors.LightSurface) NotasTokens.LightBackground else NotasTokens.DarkBackground
+}
 
 /**
  * Resolves the centralized [SemanticPalette] for a given [three.haddad.smartnotas.data.AccentTheme]
@@ -611,4 +615,92 @@ fun resolveSemanticPalette(
         warning = Color(0xFFFFD188),
     )
 }
+
+/**
+ * Notas Figma Design Tokens extracted directly from the Figma project references.
+ *
+ * Preserves the intended minimalist, high-contrast monochrome aesthetic of Notas:
+ * - Background: #F5F5F5
+ * - Card surface: #FFFFFF
+ * - Input surface: #FAFAFA
+ * - Borders & dividers: #E5E5E5
+ * - Primary action & text: #000000
+ * - Secondary text: #737373 and #6B7280
+ * - Semantic error/destructive: #EF4444
+ * - Semantic success: #10B981
+ * - Semantic warning: #F59E0B
+ * - Semantic info: #3B82F6
+ *
+ * Metrics:
+ * - Button height: 56dp, radius: 28dp (pill shape)
+ * - Input height: 48dp, radius: 12dp
+ * - Card radius: 22dp - 24dp
+ * - Avatar: 64dp (profile) / 80dp (edit profile)
+ * - BottomSheet handle: 36x4dp, radius: 100dp
+ */
+object NotasTokens {
+    // -----------------------------------------------------------------------------------------
+    // Light Mode Palette (Direct Figma Reference)
+    // -----------------------------------------------------------------------------------------
+    val LightBackground = Color(0xFFF5F5F5)
+    val LightCardSurface = Color(0xFFFFFFFF)
+    val LightInputSurface = Color(0xFFFAFAFA)
+    val LightBorder = Color(0xFFE5E5E5)
+    val LightPrimary = Color(0xFF000000)
+    val LightOnPrimary = Color(0xFFFFFFFF)
+    val LightSecondaryText = Color(0xFF737373)
+    val LightMutedText = Color(0xFF6B7280)
+
+    // -----------------------------------------------------------------------------------------
+    // Semantic Status Tokens
+    // -----------------------------------------------------------------------------------------
+    val SemanticError = Color(0xFFEF4444)
+    val SemanticSuccess = Color(0xFF10B981)
+    val SemanticWarning = Color(0xFFF59E0B)
+    val SemanticInfo = Color(0xFF3B82F6)
+
+    val Error = SemanticError
+    val Success = SemanticSuccess
+    val Warning = SemanticWarning
+    val Info = SemanticInfo
+
+    // -----------------------------------------------------------------------------------------
+    // Dark Mode Palette (Preserving theme and dark mode adaptability)
+    // -----------------------------------------------------------------------------------------
+    val DarkBackground = Color(0xFF121216)
+    val DarkCardSurface = Color(0xFF1B1B22)
+    val DarkInputSurface = Color(0xFF15151C)
+    val DarkBorder = Color(0xFF2C2C36)
+    val DarkPrimary = Color(0xFFFFFFFF)
+    val DarkOnPrimary = Color(0xFF000000)
+    val DarkSecondaryText = Color(0xFFA6A4B4)
+    val DarkMutedText = Color(0xFF8E8B99)
+
+    // -----------------------------------------------------------------------------------------
+    // Dimensions & Geometry
+    // -----------------------------------------------------------------------------------------
+    val ButtonHeight = 56.dp
+    val ButtonRadius = 28.dp
+    val InputHeight = 48.dp
+    val InputRadius = 12.dp
+    val CardRadius = 22.dp
+    val CardRadiusLarge = 24.dp
+    val AvatarSize = 64.dp
+    val AvatarSizeLarge = 80.dp
+    val SheetHandleWidth = 36.dp
+    val SheetHandleHeight = 4.dp
+    val SheetHandleRadius = 100.dp
+
+    // -----------------------------------------------------------------------------------------
+    // Google 4-Color Brand Tokens
+    // -----------------------------------------------------------------------------------------
+    object Google {
+        val Red = Color(0xFFEA4335)
+        val Yellow = Color(0xFFFBBC05)
+        val Green = Color(0xFF34A853)
+        val Blue = Color(0xFF4285F4)
+    }
+}
+
+
 

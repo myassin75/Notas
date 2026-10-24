@@ -70,7 +70,13 @@ class CalendarDetailsViewModelTest {
 
                 override suspend fun get(id: Long): NoteWithItems? = noteFlow.value
 
+                override suspend fun getByUuid(uuid: String): NoteWithItems? = noteFlow.value?.takeIf { it.note.uuid == uuid }
+
+                override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = noteFlow.value?.note?.takeIf { it.uuid == uuid }
+
                 override suspend fun allNotes(): List<NoteWithItems> = emptyList()
+
+                override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = emptyList()
 
                 override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
 
@@ -125,6 +131,8 @@ class CalendarDetailsViewModelTest {
             object : ChecklistItemDao {
                 override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
 
+                override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
+
                 override suspend fun insert(item: ChecklistItemEntity): Long = 1L
 
                 override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
@@ -145,6 +153,8 @@ class CalendarDetailsViewModelTest {
                 override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
 
                 override suspend fun getById(id: Long): NoteAttachmentEntity? = null
+
+                override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
 
                 override suspend fun countByUri(uri: String): Int = 0
 

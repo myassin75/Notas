@@ -419,6 +419,7 @@ fun SettingsTwoPaneRoute(
     onOpenHelp: () -> Unit,
     onOpenDevOptions: () -> Unit,
     onOpenHistory: () -> Unit = {},
+    onOpenGuestProfile: () -> Unit = {},
     updateVm: RememberUpdateViewModel,
     onUpdateCheckStarted: () -> Unit,
     onShareApp: () -> Unit,
@@ -439,6 +440,7 @@ fun SettingsTwoPaneRoute(
             onOpenHelp = onOpenHelp,
             onOpenDevOptions = onOpenDevOptions,
             onOpenHistory = onOpenHistory,
+            onOpenGuestProfile = onOpenGuestProfile,
             updateVm = updateVm,
             onUpdateCheckStarted = onUpdateCheckStarted,
             highlightSectionKey = highlightSectionKey,
@@ -525,6 +527,7 @@ fun SettingsTwoPaneRoute(
                             onOpenDevOptions = {
                                 showSection(SettingsSectionKey.DevOptions)
                             },
+                            onOpenGuestProfile = onOpenGuestProfile,
                             updateVm = updateVm,
                             onUpdateCheckStarted = onUpdateCheckStarted,
                             selectedSectionKey = selectedSectionKey,

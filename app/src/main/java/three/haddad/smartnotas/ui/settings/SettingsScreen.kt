@@ -131,8 +131,12 @@ import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
 import three.haddad.smartnotas.ui.components.settings.GroupedListItem
 import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
 import three.haddad.smartnotas.ui.feedback.appClickable
+import three.haddad.smartnotas.ui.components.SettingsRow
+import three.haddad.smartnotas.ui.components.SettingsRowCard
+import three.haddad.smartnotas.ui.components.UserAvatar
 import three.haddad.smartnotas.ui.modifiers.PillBottomBarHeight
 import three.haddad.smartnotas.ui.modifiers.PillBottomScrimExtra
+import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
 import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
 import three.haddad.smartnotas.ui.modifiers.rememberContentOverflowScrollEnabled
 import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
@@ -255,6 +259,7 @@ fun SettingsRoute(
     onOpenHelp: () -> Unit = {},
     onOpenDevOptions: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
+    onOpenGuestProfile: () -> Unit = {},
     onBack: () -> Unit = {},
     updateVm: RememberUpdateViewModel = hiltViewModel(),
     onUpdateCheckStarted: () -> Unit = {},
@@ -286,6 +291,8 @@ fun SettingsRoute(
     val defaultNotePrefs = settingsDependencies.defaultNotePrefs()
     val backupPrefs = settingsDependencies.backupPrefs()
     val backupIo = settingsDependencies.backupIo()
+    val cloudBackupManager = settingsDependencies.cloudBackupManager()
+    val authRepository = settingsDependencies.authRepository()
     val themePrefs = settingsDependencies.themePrefs()
     val notesUiPrefs = settingsDependencies.notesUiPrefs()
     val viewOptionsPrefs = settingsDependencies.viewOptionsPrefs()
@@ -815,6 +822,34 @@ fun SettingsRoute(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = settingsScrollEnabled,
                 ) {
+                    if (selectedSectionKey == null) {
+                        item(key = "guest_profile_card") {
+                            val palette = LocalSemanticPalette.current
+                            SettingsRowCard {
+                                SettingsRow(
+                                    title = "Guest User",
+                                    subtitle = "Sign in to sync & back up your notes",
+                                    leadingIcon = {
+                                        UserAvatar(
+                                            initials = "G",
+                                            size = 36.dp,
+                                        )
+                                    },
+                                    trailingContent = {
+                                        RememberMaterialRoundedSymbol(
+                                            name = "chevron_right",
+                                            size = 20.dp,
+                                            tint = palette.secondaryText,
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    onClick = onOpenGuestProfile,
+                                    showDivider = false,
+                                )
+                            }
+                        }
+                    }
+
                     if (includeSettingsSection(SettingsSectionKey.History)) {
                         item(key = "history") {
                             SettingsExpandableSection(
@@ -995,6 +1030,44 @@ fun SettingsRoute(
                                     deviceCredentialAvailable = deviceCredentialAvailable,
                                     snackbarHostState = snackbarHostState,
                                     scope = scope,
+                                )
+                            }
+                        }
+                    }
+
+                    if (includeSettingsSection(SettingsSectionKey.Backup)) {
+                        item(key = "backup") {
+                            SettingsExpandableSection(
+                                sectionKey = SettingsSectionKey.Backup.routeKey,
+                                materialSymbolName = SettingsSectionKey.Backup.iconName,
+                                title = stringResource(SettingsSectionKey.Backup.titleRes),
+                                collapsedSectionKeys = visibleCollapsedSectionKeys,
+                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
+                                showHeader = showSectionHeaders,
+                                highlightedSectionKey = activeSectionHighlightKey,
+                            ) {
+                                BackupSection(
+                                    backupState = backupState,
+                                    backupPrefs = backupPrefs,
+                                    backupIo = backupIo,
+                                    cloudBackupManager = cloudBackupManager,
+                                    authRepository = authRepository,
+                                    snackbarHostState = snackbarHostState,
+                                    scope = scope,
+                                    onPickLocalFolder = {
+                                        pendingBackupFolderTarget = BackupFolderTarget.Local
+                                        folderLauncher.launch(null)
+                                    },
+                                    onPickCloudFolder = {
+                                        pendingBackupFolderTarget = BackupFolderTarget.Cloud
+                                        folderLauncher.launch(null)
+                                    },
+                                    onLaunchImportMerge = {
+                                        importMergeLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
+                                    },
+                                    onLaunchImportReplace = {
+                                        importReplaceLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
+                                    },
                                 )
                             }
                         }

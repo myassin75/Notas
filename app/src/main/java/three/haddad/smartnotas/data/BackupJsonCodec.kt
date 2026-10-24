@@ -2,6 +2,7 @@ package three.haddad.smartnotas.data
 
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.UUID
 
 internal fun JSONObject.optLongOrNull(key: String): Long? = if (has(key) && !isNull(key)) getLong(key) else null
 
@@ -11,6 +12,8 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
     val note = n.note
     return JSONObject().apply {
         put("id", note.id)
+        put("uuid", note.uuid)
+        note.ownerId?.let { put("ownerId", it) }
         put("kind", note.kind.name)
         put("title", note.title)
         put("body", note.body)
@@ -63,6 +66,8 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
                     put(
                         JSONObject().apply {
                             put("id", it2.id)
+                            put("uuid", it2.uuid)
+                            it2.ownerId?.let { put("ownerId", it) }
                             put("text", it2.text)
                             put("details", it2.details)
                             put("checked", it2.checked)
@@ -80,6 +85,8 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
                 n.attachments.forEach { a ->
                     put(
                         JSONObject().apply {
+                            put("uuid", a.uuid)
+                            a.ownerId?.let { put("ownerId", it) }
                             put("uri", a.uri)
                             put("displayName", a.displayName)
                             a.mimeType?.let { put("mimeType", it) }
@@ -109,8 +116,12 @@ internal fun encodeReminderForBackup(reminder: NoteReminder): JSONObject {
 
 internal fun decodeNoteEntity(o: JSONObject): NoteEntity {
     val kind = NoteKind.valueOf(o.optString("kind", "NOTE"))
+    val uuid = o.optStringOrNull("uuid")?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+    val ownerId = o.optStringOrNull("ownerId")
     return NoteEntity(
         id = o.optLong("id", 0L).takeIf { it > 0 } ?: 0L,
+        uuid = uuid,
+        ownerId = ownerId,
         kind = kind,
         title = o.optString("title", ""),
         body = o.optString("body", ""),
@@ -201,9 +212,13 @@ internal fun decodeChecklistItems(o: JSONObject): List<ChecklistItemEntity> {
             } else {
                 null
             }
+        val uuid = jo.optStringOrNull("uuid")?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        val ownerId = jo.optStringOrNull("ownerId")
         ChecklistItemEntity(
             id = jo.optLong("id", 0L),
+            uuid = uuid,
             noteId = 0L,
+            ownerId = ownerId,
             text = jo.optString("text", ""),
             details = jo.optString("details", ""),
             checked = jo.optBoolean("checked", false),
@@ -218,9 +233,13 @@ internal fun decodeAttachmentMetas(o: JSONObject): List<NoteAttachmentEntity> {
     val arr = o.optJSONArray("attachments") ?: return emptyList()
     return List(arr.length()) { idx ->
         val a = arr.getJSONObject(idx)
+        val uuid = a.optStringOrNull("uuid")?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        val ownerId = a.optStringOrNull("ownerId")
         NoteAttachmentEntity(
             id = 0L,
+            uuid = uuid,
             noteId = 0L,
+            ownerId = ownerId,
             uri = a.optString("uri", ""),
             displayName = a.optString("displayName", ""),
             mimeType = a.optStringOrNull("mimeType"),
@@ -247,3 +266,25 @@ internal fun decodeActions(a: JSONArray): List<NoteAction> {
 }
 
 internal fun decodeStringArray(a: JSONArray): List<String> = List(a.length()) { a.optString(it, "") }.filter { it.isNotBlank() }
+
+internal fun encodeShoulderForBackup(s: ShoulderEntity): JSONObject =
+    JSONObject().apply {
+        put("id", s.id)
+        put("uuid", s.uuid)
+        s.ownerId?.let { put("ownerId", it) }
+        put("name", s.name)
+        put("normalizedName", s.normalizedName)
+        put("createdAt", s.createdAt)
+        put("updatedAt", s.updatedAt)
+    }
+
+internal fun decodeShoulderEntity(o: JSONObject): ShoulderEntity =
+    ShoulderEntity(
+        id = o.optLong("id", 0L).takeIf { it > 0 } ?: 0L,
+        uuid = o.optStringOrNull("uuid")?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString(),
+        ownerId = o.optStringOrNull("ownerId"),
+        name = o.optString("name", ""),
+        normalizedName = o.optString("normalizedName", ""),
+        createdAt = o.optLong("createdAt", System.currentTimeMillis()),
+        updatedAt = o.optLong("updatedAt", System.currentTimeMillis()),
+    )

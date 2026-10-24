@@ -1203,6 +1203,24 @@
     <string name="cloud_provider_dropbox">Dropbox</string>
     <string name="cloud_provider_box">Box</string>
     <string name="cloud_provider_folder_path">%1$s / %2$s</string>
+    <string name="settings_cloud_backup_header">Notas Cloud Backup</string>
+    <string name="settings_cloud_backup_desc">Private cloud backup and attachment storage tied to your account</string>
+    <string name="settings_cloud_backup_no_backups">No cloud backups available yet.</string>
+    <string name="settings_cloud_backup_now">Back Up to Cloud</string>
+    <string name="settings_cloud_restore_latest">Restore from Cloud</string>
+    <string name="settings_cloud_backup_in_progress">Backing up notes (%1$d%%)...</string>
+    <string name="settings_cloud_backup_verifying">Verifying backup checksum...</string>
+    <string name="settings_cloud_backup_completed">Cloud backup completed successfully</string>
+    <string name="settings_cloud_restore_in_progress">Restoring notes (%1$d%%)...</string>
+    <string name="settings_cloud_restore_completed">Cloud backup restored successfully</string>
+    <string name="settings_cloud_backup_failed">Cloud backup failed</string>
+    <string name="settings_cloud_restore_failed">Restore failed</string>
+    <string name="settings_cloud_backup_guest_hint">Sign in to enable private cloud backup and attachment storage.</string>
+    <string name="settings_cloud_restore_confirm_title">Restore from cloud?</string>
+    <string name="settings_cloud_restore_confirm_body">Restoring will update your account notes from this cloud backup. Local guest notes and files will be preserved. Proceed?</string>
+    <string name="settings_cloud_attachments_synced">Cloud attachments synced</string>
+    <string name="settings_cloud_attachments_pending">Attachment upload pending</string>
+    <string name="settings_cloud_attachments_failed">Attachment upload failed</string>
 
     <!-- Settings: security -->
     <string name="settings_app_lock_title">App lock</string>

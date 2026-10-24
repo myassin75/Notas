@@ -1,0 +1,59 @@
+package three.haddad.smartnotas.data.auth
+
+import android.content.Context
+import android.content.ContextWrapper
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.io.IOException
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class FirebaseAuthRepositoryTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Test
+    fun unconfiguredFirebase_returnsFirebaseNotConfiguredError() = runTest(testDispatcher) {
+        val fakeContext = object : ContextWrapper(null) {}
+        val fakeApiClient = BackendApiClient { throw IOException("No network in test") }
+
+        val repository = FirebaseAuthRepository(
+            context = fakeContext,
+            backendApiClient = fakeApiClient,
+            ioDispatcher = testDispatcher,
+        )
+
+        assertNull(repository.currentUser)
+
+        val regResult = repository.registerWithEmailAndPassword("test@example.com", "Password123")
+        assertTrue(regResult is AuthResult.Error)
+        assertEquals("FIREBASE_NOT_CONFIGURED", (regResult as AuthResult.Error).code)
+
+        val loginResult = repository.loginWithEmailAndPassword("test@example.com", "Password123")
+        assertTrue(loginResult is AuthResult.Error)
+        assertEquals("FIREBASE_NOT_CONFIGURED", (loginResult as AuthResult.Error).code)
+
+        val resetResult = repository.sendPasswordResetEmail("test@example.com")
+        assertTrue(resetResult is AuthResult.Error)
+        assertEquals("FIREBASE_NOT_CONFIGURED", (resetResult as AuthResult.Error).code)
+
+        val verifyResult = repository.sendEmailVerification()
+        assertTrue(verifyResult is AuthResult.Error)
+        assertEquals("FIREBASE_NOT_CONFIGURED", (verifyResult as AuthResult.Error).code)
+
+        val googleResult = repository.signInWithGoogle(fakeContext)
+        assertTrue(googleResult is AuthResult.Error)
+        assertEquals("FIREBASE_NOT_CONFIGURED", (googleResult as AuthResult.Error).code)
+
+        // Sign out should not crash
+        repository.signOut()
+
+        // Token should be null
+        val token = repository.getIdToken()
+        assertNull(token)
+    }
+}

@@ -82,7 +82,10 @@ class CalendarAcceptanceTest {
             override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
             override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
             override suspend fun get(id: Long): NoteWithItems? = null
+            override suspend fun getByUuid(uuid: String): NoteWithItems? = null
+            override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = null
             override suspend fun allNotes(): List<NoteWithItems> = emptyList()
+            override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = emptyList()
             override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
             override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
             override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
@@ -104,6 +107,7 @@ class CalendarAcceptanceTest {
 
         val fakeItemDao = object : ChecklistItemDao {
             override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
+            override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
             override suspend fun insert(item: ChecklistItemEntity): Long = 1L
             override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
             override suspend fun update(item: ChecklistItemEntity) = Unit
@@ -116,6 +120,7 @@ class CalendarAcceptanceTest {
             override suspend fun insert(attachment: NoteAttachmentEntity): Long = 1L
             override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
             override suspend fun getById(id: Long): NoteAttachmentEntity? = null
+            override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
             override suspend fun countByUri(uri: String): Int = 0
             override suspend fun deleteById(id: Long) = Unit
             override suspend fun deleteForNote(noteId: Long) = Unit

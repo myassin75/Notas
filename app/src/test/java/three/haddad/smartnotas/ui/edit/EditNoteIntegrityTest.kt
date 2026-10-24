@@ -195,9 +195,14 @@ class EditNoteIntegrityTest {
 
         override suspend fun allShoulders(): List<ShoulderEntity> = shoulders.toList()
 
+        override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> =
+            shoulders.filter { it.ownerId == ownerId }
+
         override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = flowOf(shoulders)
 
         override suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulders.firstOrNull { it.id == id }
+
+        override suspend fun getByUuid(uuid: String): ShoulderEntity? = shoulders.firstOrNull { it.uuid == uuid }
 
         override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? =
             shoulders.firstOrNull { it.normalizedName == normalizedName }

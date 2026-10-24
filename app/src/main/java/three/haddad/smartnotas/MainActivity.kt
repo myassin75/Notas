@@ -205,6 +205,15 @@ class MainActivity : FragmentActivity() {
             intent.removeExtra(EXTRA_OPEN_SETTINGS_UPDATES)
             return
         }
+        val dataUri = intent.data
+        if (dataUri != null) {
+            val mode = dataUri.getQueryParameter("mode")
+            val oobCode = dataUri.getQueryParameter("oobCode")
+            if (!mode.isNullOrBlank() && !oobCode.isNullOrBlank()) {
+                pendingLaunch.value = LaunchAction.AuthEmailAction(mode = mode, oobCode = oobCode)
+                return
+            }
+        }
         when (intent.action) {
             Intent.ACTION_SEND -> {
                 val text = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()

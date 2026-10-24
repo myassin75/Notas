@@ -17,6 +17,7 @@ import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
+import java.util.UUID
 
 class Converters {
     private val json =
@@ -79,7 +80,7 @@ class Converters {
         NoteFtsEntity::class,
         ShoulderEntity::class,
     ],
-    version = 7,
+    version = 9,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -96,7 +97,16 @@ abstract class RememberDatabase : RoomDatabase() {
         fun build(context: Context): RememberDatabase =
             Room
                 .databaseBuilder(context, RememberDatabase::class.java, "remember.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7,
+                    MIGRATION_7_8,
+                    MIGRATION_8_9,
+                )
                 .fallbackToDestructiveMigration(false)
                 .build()
 
@@ -360,6 +370,69 @@ abstract class RememberDatabase : RoomDatabase() {
                             }
                         }
                     }
+                }
+            }
+
+        internal val MIGRATION_7_8 =
+            object : Migration(7, 8) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 1. Shoulders table: add uuid column, populate existing rows, and create unique index
+                    db.execSQL("ALTER TABLE `shoulders` ADD COLUMN `uuid` TEXT NOT NULL DEFAULT ''")
+                    populateTableUuids(db, "shoulders")
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_shoulders_uuid` ON `shoulders` (`uuid`)")
+
+                    // 2. Notes table: add uuid column, populate existing rows, and create unique index
+                    db.execSQL("ALTER TABLE `notes` ADD COLUMN `uuid` TEXT NOT NULL DEFAULT ''")
+                    populateTableUuids(db, "notes")
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_notes_uuid` ON `notes` (`uuid`)")
+
+                    // 3. Checklist Items table: add uuid column, populate existing rows, and create unique index
+                    db.execSQL("ALTER TABLE `checklist_items` ADD COLUMN `uuid` TEXT NOT NULL DEFAULT ''")
+                    populateTableUuids(db, "checklist_items")
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_checklist_items_uuid` ON `checklist_items` (`uuid`)")
+
+                    // 4. Attachments table: add uuid column, populate existing rows, and create unique index
+                    db.execSQL("ALTER TABLE `attachments` ADD COLUMN `uuid` TEXT NOT NULL DEFAULT ''")
+                    populateTableUuids(db, "attachments")
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_attachments_uuid` ON `attachments` (`uuid`)")
+                }
+
+                private fun populateTableUuids(
+                    db: SupportSQLiteDatabase,
+                    tableName: String,
+                ) {
+                    db.query("SELECT id FROM `$tableName`").use { cursor ->
+                        val idColumn = cursor.getColumnIndexOrThrow("id")
+                        while (cursor.moveToNext()) {
+                            val id = cursor.getLong(idColumn)
+                            val uuid = UUID.randomUUID().toString()
+                            db.execSQL(
+                                "UPDATE `$tableName` SET `uuid` = ? WHERE `id` = ?",
+                                arrayOf<Any?>(uuid, id),
+                            )
+                        }
+                    }
+                }
+            }
+
+        internal val MIGRATION_8_9 =
+            object : Migration(8, 9) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 1. Shoulders table: add ownerId column and index
+                    db.execSQL("ALTER TABLE `shoulders` ADD COLUMN `ownerId` TEXT DEFAULT NULL")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_shoulders_ownerId` ON `shoulders` (`ownerId`)")
+
+                    // 2. Notes table: add ownerId column and index
+                    db.execSQL("ALTER TABLE `notes` ADD COLUMN `ownerId` TEXT DEFAULT NULL")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_notes_ownerId` ON `notes` (`ownerId`)")
+
+                    // 3. Checklist Items table: add ownerId column and index
+                    db.execSQL("ALTER TABLE `checklist_items` ADD COLUMN `ownerId` TEXT DEFAULT NULL")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_checklist_items_ownerId` ON `checklist_items` (`ownerId`)")
+
+                    // 4. Attachments table: add ownerId column and index
+                    db.execSQL("ALTER TABLE `attachments` ADD COLUMN `ownerId` TEXT DEFAULT NULL")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_attachments_ownerId` ON `attachments` (`ownerId`)")
                 }
             }
 

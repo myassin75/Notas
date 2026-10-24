@@ -56,10 +56,22 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
     suspend fun get(id: Long): NoteWithItems?
 
+    @Transaction
+    @Query("SELECT * FROM notes WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): NoteWithItems?
+
+    @Query("SELECT * FROM notes WHERE uuid = :uuid LIMIT 1")
+    suspend fun getNoteEntityByUuid(uuid: String): NoteEntity?
+
     /** One consistent snapshot of all shelves, including their checklist rows and attachments. */
     @Transaction
     @Query("SELECT * FROM notes ORDER BY id ASC")
     suspend fun allNotes(): List<NoteWithItems>
+
+    /** Snapshot of notes strictly belonging to an authenticated owner for sync push. */
+    @Transaction
+    @Query("SELECT * FROM notes WHERE ownerId = :ownerId ORDER BY id ASC")
+    suspend fun notesForOwner(ownerId: String): List<NoteWithItems>
 
     @Transaction
     @Query(
@@ -198,6 +210,9 @@ interface ChecklistItemDao {
     @Query("SELECT * FROM checklist_items WHERE noteId = :noteId ORDER BY sortOrder ASC")
     suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity>
 
+    @Query("SELECT * FROM checklist_items WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): ChecklistItemEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: ChecklistItemEntity): Long
 
@@ -227,6 +242,9 @@ interface AttachmentDao {
 
     @Query("SELECT * FROM attachments WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): NoteAttachmentEntity?
+
+    @Query("SELECT * FROM attachments WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): NoteAttachmentEntity?
 
     @Query("SELECT COUNT(*) FROM attachments WHERE uri = :uri")
     suspend fun countByUri(uri: String): Int
