@@ -24,7 +24,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import three.haddad.smartnotas.data.AttachmentDao
 import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.BackupPrefs
 import three.haddad.smartnotas.data.ChecklistItemDao
 import three.haddad.smartnotas.data.ChecklistItemEntity
 import three.haddad.smartnotas.data.DefaultNotePrefs
@@ -334,7 +333,6 @@ class CloudBackupManagerTest {
             viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
             lockPrefs = LockPrefs(fakeContext),
             interactionPrefs = InteractionPrefs(fakeContext),
-            backupPrefs = BackupPrefs(fakeContext),
             quickCapturePrefs = QuickCapturePrefs(fakeContext),
             reminderPrefs = ReminderPrefs(fakeContext),
             defaultNotePrefs = DefaultNotePrefs(fakeContext),

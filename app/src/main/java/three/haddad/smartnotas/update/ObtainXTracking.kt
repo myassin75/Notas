@@ -45,8 +45,6 @@ internal fun buildObtainXTrackingJson(
         when (flavor) {
             "github" -> RELEASES_GITHUB_URL to """-github\.apk$"""
             "offline" -> RELEASES_GITHUB_URL to """-offline\.apk$"""
-            // The F-Droid listing, so F-Droid users keep getting F-Droid-published builds.
-            "fdroid" -> "https://f-droid.org/packages/$releaseAppId" to null
             else -> return null
         }
     return buildJsonObject {
@@ -54,9 +52,7 @@ internal fun buildObtainXTrackingJson(
         put("url", url)
         put("author", TRACKED_APP_AUTHOR)
         put("name", TRACKED_APP_NAME)
-        if (apkFilterRegEx != null) {
-            put("additionalSettings", buildJsonObject { put("apkFilterRegEx", apkFilterRegEx) }.toString())
-        }
+        put("additionalSettings", buildJsonObject { put("apkFilterRegEx", apkFilterRegEx) }.toString())
     }.toString()
 }
 

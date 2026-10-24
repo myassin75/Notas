@@ -6,7 +6,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlarmManager
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -50,7 +49,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -106,9 +104,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
-import three.haddad.smartnotas.backup.RememberBackupWork
-import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.BackupPreferencesState
 import three.haddad.smartnotas.data.DefaultNotePreferencesState
 import three.haddad.smartnotas.data.InteractionState
 import three.haddad.smartnotas.data.LockPrefs
@@ -150,15 +145,6 @@ import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
 import three.haddad.smartnotas.update.RememberUpdateInfo
 import three.haddad.smartnotas.update.RememberUpdateState
 
-private enum class BackupFolderTarget {
-    Local,
-    Cloud,
-}
-
-private data class PendingRestore(
-    val uri: Uri,
-    val mediaSummary: BackupIo.RestoreMediaSummary,
-)
 
 private const val SETTINGS_SECTION_EXPAND_SETTLE_DELAY_MS = 900L
 
@@ -289,8 +275,6 @@ fun SettingsRoute(
     val quickCapturePrefs = settingsDependencies.quickCapturePrefs()
     val reminderPrefs = settingsDependencies.reminderPrefs()
     val defaultNotePrefs = settingsDependencies.defaultNotePrefs()
-    val backupPrefs = settingsDependencies.backupPrefs()
-    val backupIo = settingsDependencies.backupIo()
     val cloudBackupManager = settingsDependencies.cloudBackupManager()
     val authRepository = settingsDependencies.authRepository()
     val themePrefs = settingsDependencies.themePrefs()
@@ -338,9 +322,6 @@ fun SettingsRoute(
         }
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val backupState by backupPrefs.state.collectAsStateWithLifecycle(
-        initialValue = BackupPreferencesState(),
-    )
     val updateState by updatePrefs.state.collectAsStateWithLifecycle(
         initialValue = UpdatePreferencesState(),
     )
@@ -359,7 +340,6 @@ fun SettingsRoute(
     val heightFraction = if (isLandscape) 0.95f else 0.85f
     val maxUpdateSheetHeight = (configuration.screenHeightDp * heightFraction).dp
 
-    var pendingRestore by remember { mutableStateOf<PendingRestore?>(null) }
     val showUpdateSheet by updateVm.showUpdateSheet.collectAsStateWithLifecycle()
     val isCheckingUpdate by updateVm.isCheckingUpdate.collectAsStateWithLifecycle()
     val updateCheckFinishedWithoutResult by updateVm.updateCheckFinishedWithoutResult.collectAsStateWithLifecycle()
@@ -389,73 +369,6 @@ fun SettingsRoute(
         updateVm.adoptGlobalUpdateIfNone(globalUpdateInfo)
     }
 
-    var pendingBackupFolderTarget by rememberSaveable { mutableStateOf<BackupFolderTarget?>(null) }
-    val folderLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocumentTree(),
-        ) { uri: Uri? ->
-            val target = pendingBackupFolderTarget
-            pendingBackupFolderTarget = null
-            if (uri != null) {
-                val permissionGranted =
-                    runCatching {
-                        context.contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                        )
-                        true
-                    }.getOrDefault(false)
-
-                if (!permissionGranted && uri.toString().startsWith("content://")) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = resources.getString(R.string.settings_export_folder_permission_failed),
-                            duration = SnackbarDuration.Short,
-                        )
-                    }
-                    return@rememberLauncherForActivityResult
-                }
-
-                scope.launch {
-                    when (target) {
-                        BackupFolderTarget.Cloud -> backupPrefs.setCloudExportFolderUri(uri.toString())
-                        BackupFolderTarget.Local -> backupPrefs.setExportFolderUri(uri.toString())
-                        null -> return@launch
-                    }
-                    RememberBackupWork.updateSchedule(context, backupPrefs.snapshot())
-                }
-            }
-        }
-
-    val importMergeLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-        ) { uri: Uri? ->
-            if (uri != null) {
-                scope.launch {
-                    val count = backupIo.importFrom(uri, preserveIdsForNotes = false)
-                    val message = resources.getQuantityString(R.plurals.toast_imported_notes, count, count)
-                    snackbarHostState.showSnackbar(
-                        message = message,
-                        duration = SnackbarDuration.Short,
-                    )
-                }
-            }
-        }
-    val importReplaceLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-        ) { uri: Uri? ->
-            if (uri != null) {
-                scope.launch {
-                    pendingRestore =
-                        PendingRestore(
-                            uri = uri,
-                            mediaSummary = backupIo.inspectRestoreMedia(uri),
-                        )
-                }
-            }
-        }
 
     var notificationsGranted by rememberSaveable {
         mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
@@ -576,11 +489,7 @@ fun SettingsRoute(
         updateVm.openSheetAndCheck()
     }
     val downloadUpdate = { availableUpdate: RememberUpdateInfo ->
-        if (BuildConfig.FLAVOR == "fdroid") {
-            openFdroidPackagePage(context)
-        } else {
-            updateVm.downloadOrInstall(availableUpdate, context as? ComponentActivity, playInAppUpdateLauncher)
-        }
+        updateVm.downloadOrInstall(availableUpdate, context as? ComponentActivity, playInAppUpdateLauncher)
     }
     LaunchedEffect(openSheetRequested) {
         if (!BuildConfig.CHECK_UPDATES) return@LaunchedEffect
@@ -678,7 +587,6 @@ fun SettingsRoute(
                 downloadProgress = downloadProgress,
                 changelogState = updateSheetChangelog,
                 showGithubExtraUi = BuildConfig.FLAVOR == "github",
-                useFdroidUpdates = BuildConfig.FLAVOR == "fdroid",
                 usePlayInAppUpdates = BuildConfig.USE_PLAY_IN_APP_UPDATES,
                 onDownloadClick = downloadUpdate,
                 onSkipVersionClick = { updateInfo?.let { availableUpdate -> updateVm.skipVersion(availableUpdate) } },
@@ -1047,27 +955,10 @@ fun SettingsRoute(
                                 highlightedSectionKey = activeSectionHighlightKey,
                             ) {
                                 BackupSection(
-                                    backupState = backupState,
-                                    backupPrefs = backupPrefs,
-                                    backupIo = backupIo,
                                     cloudBackupManager = cloudBackupManager,
                                     authRepository = authRepository,
                                     snackbarHostState = snackbarHostState,
                                     scope = scope,
-                                    onPickLocalFolder = {
-                                        pendingBackupFolderTarget = BackupFolderTarget.Local
-                                        folderLauncher.launch(null)
-                                    },
-                                    onPickCloudFolder = {
-                                        pendingBackupFolderTarget = BackupFolderTarget.Cloud
-                                        folderLauncher.launch(null)
-                                    },
-                                    onLaunchImportMerge = {
-                                        importMergeLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
-                                    },
-                                    onLaunchImportReplace = {
-                                        importReplaceLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
-                                    },
                                 )
                             }
                         }
@@ -1108,72 +999,7 @@ fun SettingsRoute(
             }
         }
 
-        pendingRestore?.let { restore ->
-            AlertDialog(
-                onDismissRequest = { pendingRestore = null },
-                title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(stringResource(R.string.settings_restore_confirm_body))
-                        if (restore.mediaSummary.hasMissingMedia) {
-                            Text(
-                                text = stringResource(R.string.settings_restore_media_missing_warning),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                        }
-                    }
-                },
-                confirmButton = {
-                    RememberTextButton(
-                        onClick = {
-                            pendingRestore = null
-                            scope.launch {
-                                val restoreResult = backupIo.restoreFullReplace(restore.uri)
-                                Toast
-                                    .makeText(
-                                        context,
-                                        resources.getQuantityString(
-                                            R.plurals.toast_imported_notes,
-                                            restoreResult.noteCount,
-                                            restoreResult.noteCount,
-                                        ),
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                if (restoreResult.settingsOutcome.foldersNeedingReselection > 0) {
-                                    snackbarHostState.showSnackbar(
-                                        resources.getQuantityString(
-                                            R.plurals.settings_restore_folders_need_reselection,
-                                            restoreResult.settingsOutcome.foldersNeedingReselection,
-                                            restoreResult.settingsOutcome.foldersNeedingReselection,
-                                        ),
-                                    )
-                                }
-                                if (restoreResult.settingsOutcome.automationsDisabled) {
-                                    snackbarHostState.showSnackbar(
-                                        resources.getString(R.string.settings_restore_automation_disabled_no_folder),
-                                    )
-                                }
-                            }
-                        },
-                    ) {
-                        // Restore replaces existing data, so keep this low-emphasis + error-colored.
-                        Text(
-                            text = stringResource(R.string.settings_restore_go_ahead),
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                },
-                dismissButton = {
-                    RememberTextButton(onClick = { pendingRestore = null }) {
-                        Text(
-                            text = stringResource(R.string.common_cancel),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-            )
-        }
+
     }
 }
 
@@ -1265,24 +1091,6 @@ private fun notificationsAppSettingsIntent(context: Context): Intent =
         putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
     }
 
-private fun openFdroidPackagePage(context: Context) {
-    val fdroidIntent =
-        Intent(Intent.ACTION_VIEW, "fdroid.app:${context.packageName}".toUri()).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-    try {
-        context.startActivity(fdroidIntent)
-    } catch (_: ActivityNotFoundException) {
-        val webIntent =
-            Intent(
-                Intent.ACTION_VIEW,
-                "https://f-droid.org/packages/${context.packageName}/".toUri(),
-            ).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        context.startActivity(webIntent)
-    }
-}
 
 /**
  * Index of a section's item within the settings list, derived from declaration order and the

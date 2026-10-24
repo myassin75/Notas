@@ -19,9 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import java.util.Locale
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -637,7 +640,7 @@ private fun EditShoulderContent(
 
     val initialHex =
         remember(shoulder) {
-            shoulder?.colorHex?.let { if (it.startsWith("#")) it.uppercase() else "#${it.uppercase()}" }
+            shoulder?.colorHex?.let { if (it.startsWith("#")) it.uppercase(Locale.ROOT) else "#${it.uppercase(Locale.ROOT)}" }
                 ?: formatColorToHex(hsvToRgb(initialHsv[0], initialHsv[1], initialHsv[2]))
         }
     var hexInput by remember(shoulder) { mutableStateOf(initialHex) }
@@ -677,6 +680,7 @@ private fun EditShoulderContent(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -846,18 +850,22 @@ private fun EditShoulderContent(
                         .pointerInput(hue) {
                             detectDragGestures(
                                 onDragStart = { offset ->
-                                    val x = (offset.x / size.width).coerceIn(0f, 1f)
-                                    val y = (offset.y / size.height).coerceIn(0f, 1f)
-                                    saturation = x
-                                    brightness = 1f - y
-                                    hexInput = formatColorToHex(hsvToRgb(hue, x, 1f - y))
+                                    if (size.width > 0 && size.height > 0) {
+                                        val x = (offset.x / size.width).coerceIn(0f, 1f)
+                                        val y = (offset.y / size.height).coerceIn(0f, 1f)
+                                        saturation = x
+                                        brightness = 1f - y
+                                        hexInput = formatColorToHex(hsvToRgb(hue, x, 1f - y))
+                                    }
                                 },
                                 onDrag = { change, _ ->
-                                    val x = (change.position.x / size.width).coerceIn(0f, 1f)
-                                    val y = (change.position.y / size.height).coerceIn(0f, 1f)
-                                    saturation = x
-                                    brightness = 1f - y
-                                    hexInput = formatColorToHex(hsvToRgb(hue, x, 1f - y))
+                                    if (size.width > 0 && size.height > 0) {
+                                        val x = (change.position.x / size.width).coerceIn(0f, 1f)
+                                        val y = (change.position.y / size.height).coerceIn(0f, 1f)
+                                        saturation = x
+                                        brightness = 1f - y
+                                        hexInput = formatColorToHex(hsvToRgb(hue, x, 1f - y))
+                                    }
                                 },
                             )
                         },
@@ -886,15 +894,19 @@ private fun EditShoulderContent(
                 )
 
                 // Circle handle
-                val handleX = saturation
-                val handleY = 1f - brightness
+                val handleX = saturation.coerceIn(0f, 1f)
+                val handleY = (1f - brightness).coerceIn(0f, 1f)
 
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val cx = handleX * size.width
-                    val cy = handleY * size.height
-                    drawCircle(Color.White, radius = 10.dp.toPx(), center = Offset(cx, cy))
-                    drawCircle(Color.Black.copy(alpha = 0.3f), radius = 10.dp.toPx(), center = Offset(cx, cy), style = Stroke(2.dp.toPx()))
-                    drawCircle(currentColor, radius = 7.dp.toPx(), center = Offset(cx, cy))
+                    if (size.width > 0 && size.height > 0) {
+                        val cx = (handleX * size.width).coerceIn(0f, size.width)
+                        val cy = (handleY * size.height).coerceIn(0f, size.height)
+                        if (cx.isFinite() && cy.isFinite()) {
+                            drawCircle(Color.White, radius = 10.dp.toPx(), center = Offset(cx, cy))
+                            drawCircle(Color.Black.copy(alpha = 0.3f), radius = 10.dp.toPx(), center = Offset(cx, cy), style = Stroke(2.dp.toPx()))
+                            drawCircle(currentColor, radius = 7.dp.toPx(), center = Offset(cx, cy))
+                        }
+                    }
                 }
             }
         }
@@ -945,25 +957,34 @@ private fun EditShoulderContent(
                         ).pointerInput(Unit) {
                             detectDragGestures(
                                 onDragStart = { offset ->
-                                    val x = (offset.x / size.width).coerceIn(0f, 1f)
-                                    val newHue = x * 360f
-                                    hue = newHue
-                                    hexInput = formatColorToHex(hsvToRgb(newHue, saturation, brightness))
+                                    if (size.width > 0) {
+                                        val x = (offset.x / size.width).coerceIn(0f, 1f)
+                                        val newHue = (x * 360f).coerceIn(0f, 360f)
+                                        hue = newHue
+                                        hexInput = formatColorToHex(hsvToRgb(newHue, saturation, brightness))
+                                    }
                                 },
                                 onDrag = { change, _ ->
-                                    val x = (change.position.x / size.width).coerceIn(0f, 1f)
-                                    val newHue = x * 360f
-                                    hue = newHue
-                                    hexInput = formatColorToHex(hsvToRgb(newHue, saturation, brightness))
+                                    if (size.width > 0) {
+                                        val x = (change.position.x / size.width).coerceIn(0f, 1f)
+                                        val newHue = (x * 360f).coerceIn(0f, 360f)
+                                        hue = newHue
+                                        hexInput = formatColorToHex(hsvToRgb(newHue, saturation, brightness))
+                                    }
                                 },
                             )
                         },
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val handleX = (hue / 360f) * size.width
-                    drawCircle(Color.White, radius = 10.dp.toPx(), center = Offset(handleX, size.height / 2f))
-                    drawCircle(Color.Black.copy(alpha = 0.2f), radius = 10.dp.toPx(), center = Offset(handleX, size.height / 2f), style = Stroke(2.dp.toPx()))
+                    if (size.width > 0 && size.height > 0) {
+                        val handleX = ((hue / 360f) * size.width).coerceIn(0f, size.width)
+                        val cy = size.height / 2f
+                        if (handleX.isFinite() && cy.isFinite()) {
+                            drawCircle(Color.White, radius = 10.dp.toPx(), center = Offset(handleX, cy))
+                            drawCircle(Color.Black.copy(alpha = 0.2f), radius = 10.dp.toPx(), center = Offset(handleX, cy), style = Stroke(2.dp.toPx()))
+                        }
+                    }
                 }
             }
         }
@@ -1136,7 +1157,7 @@ private fun EditShoulderContent(
                         .clip(CircleShape)
                         .clickable(enabled = canSave) {
                             if (canSave) {
-                                val finalHex = if (hexInput.startsWith("#")) hexInput.uppercase() else "#${hexInput.uppercase()}"
+                                val finalHex = if (hexInput.startsWith("#")) hexInput.uppercase(Locale.ROOT) else "#${hexInput.uppercase(Locale.ROOT)}"
                                 onSave(name.trim(), finalHex)
                             }
                         },

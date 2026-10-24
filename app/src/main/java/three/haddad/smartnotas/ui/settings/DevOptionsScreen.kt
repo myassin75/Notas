@@ -84,9 +84,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
-import three.haddad.smartnotas.backup.RememberBackupWork
 import three.haddad.smartnotas.data.ActionType
-import three.haddad.smartnotas.data.BackupPreferencesState
 import three.haddad.smartnotas.data.Importance
 import three.haddad.smartnotas.data.NoteAction
 import three.haddad.smartnotas.data.NoteOptions
@@ -216,12 +214,10 @@ fun DevOptionsRoute(
     val defaultNotePrefs = deps.defaultNotePrefs()
     val quickCapturePrefs = deps.quickCapturePrefs()
     val lockPrefs = deps.lockPrefs()
-    val backupPrefs = deps.backupPrefs()
     val rememberUpdateState = deps.rememberUpdateState()
 
     val scope = rememberCoroutineScope()
     val isEnabled by devModePrefs.isEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val backupState by backupPrefs.state.collectAsStateWithLifecycle(initialValue = BackupPreferencesState())
     val hasMockNotesFlow =
         remember(noteRepository) {
             noteRepository
@@ -365,7 +361,6 @@ fun DevOptionsRoute(
                     defaultNotePrefs.reset()
                     quickCapturePrefs.reset()
                     lockPrefs.reset()
-                    backupPrefs.reset()
                     updatePrefs.reset()
                     onboardingPrefs.resetIntroSeen()
                     devModePrefs.setEnabled(false)
@@ -473,7 +468,7 @@ fun DevOptionsRoute(
                         Spacer(Modifier.height(8.dp))
                         DevInfoCard(
                             title = stringResource(R.string.dev_options_section_permissions_storage),
-                            rows = permissionsAndStorageRows(context, backupState),
+                            rows = permissionsAndStorageRows(context),
                         )
                         Spacer(Modifier.height(8.dp))
                         val stats = dbStats
@@ -626,12 +621,6 @@ fun DevOptionsRoute(
                         },
                         actions =
                             listOf(
-                                DevAction(stringResource(R.string.dev_options_sync_backup_worker)) {
-                                    scope.launch {
-                                        RememberBackupWork.updateSchedule(context, backupPrefs.snapshot())
-                                        Toast.makeText(context, resources.getString(R.string.dev_options_toast_workers_synced), Toast.LENGTH_SHORT).show()
-                                    }
-                                },
                                 DevAction(stringResource(R.string.dev_options_sync_update_worker)) {
                                     scope.launch {
                                         UpdateCheckWorkScheduler(context.applicationContext, updatePrefs).syncFromPreferences()
@@ -1376,18 +1365,12 @@ private fun countWithOptionalSize(
 
 private fun permissionsAndStorageRows(
     context: Context,
-    backupState: BackupPreferencesState,
 ): List<Pair<String, String>> {
     val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     val uriPermissions = context.contentResolver.persistedUriPermissions
     val readGrants = uriPermissions.count { it.isReadPermission }
     val writeGrants = uriPermissions.count { it.isWritePermission }
-    val backupDestinations =
-        listOf(
-            backupState.exportFolderUri,
-            backupState.cloudExportFolderUri,
-        ).count { it.isNotBlank() }
 
     return listOf(
         context.getString(R.string.dev_options_info_notifications_enabled) to
@@ -1410,7 +1393,6 @@ private fun permissionsAndStorageRows(
                 readGrants,
                 writeGrants,
             ),
-        context.getString(R.string.dev_options_info_backup_destinations) to backupDestinations.toString(),
     )
 }
 

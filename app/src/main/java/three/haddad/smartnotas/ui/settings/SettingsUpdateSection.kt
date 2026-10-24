@@ -91,7 +91,6 @@ internal fun UpdateCheckBottomSheetContent(
     downloadProgress: Float?,
     changelogState: ChangelogUiState,
     showGithubExtraUi: Boolean,
-    useFdroidUpdates: Boolean,
     usePlayInAppUpdates: Boolean,
     onDownloadClick: (RememberUpdateInfo) -> Unit,
     onSkipVersionClick: () -> Unit,
@@ -169,10 +168,6 @@ internal fun UpdateCheckBottomSheetContent(
                             Text(
                                 text =
                                     when {
-                                        useFdroidUpdates -> {
-                                            stringResource(R.string.settings_open_fdroid)
-                                        }
-
                                         usePlayInAppUpdates && availableUpdate.isPlayStoreUpdateInProgress -> {
                                             stringResource(R.string.settings_update_resume_play)
                                         }
@@ -872,7 +867,6 @@ internal fun TrackUpdatesViaObtainXRow(modifier: Modifier = Modifier) {
     val subtitleRes =
         when {
             !obtainXInstalled -> R.string.settings_track_updates_via_obtainx_get_desc
-            BuildConfig.FLAVOR == "fdroid" -> R.string.settings_track_updates_via_obtainx_desc_fdroid
             else -> R.string.settings_track_updates_via_obtainx_desc
         }
     Row(

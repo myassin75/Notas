@@ -73,8 +73,6 @@ import three.haddad.smartnotas.ui.feedback.appCombinedClickable
 import three.haddad.smartnotas.ui.theme.pillShape
 import three.haddad.smartnotas.update.OBTAINX_PACKAGE_ID
 
-private const val FILEPIPE_FDROID_PACKAGE_ID = "dev.bikram.filepipe.gh"
-
 private data class AboutAppRoute(
     val packageId: String,
     val portfolioUrl: String,
@@ -83,7 +81,6 @@ private data class AboutAppRoute(
     val copyUrl: String
         get() =
             when (BuildConfig.FLAVOR) {
-                "fdroid" -> "fdroid.app:$packageId"
                 "playstore" -> playStoreUrl.ifBlank { portfolioUrl }
                 else -> portfolioUrl
             }
@@ -219,12 +216,10 @@ private fun AboutSettingsBlock(
     val profileUrl = stringResource(R.string.about_author_github_profile_url)
     val useGithubLikeAboutLinks =
         BuildConfig.FLAVOR == "github" ||
-            BuildConfig.FLAVOR == "fdroid" ||
             BuildConfig.FLAVOR == "offline"
     val buildFlavorLabel =
         when (BuildConfig.FLAVOR) {
             "github" -> stringResource(R.string.build_flavor_github)
-            "fdroid" -> stringResource(R.string.build_flavor_fdroid)
             "offline" -> stringResource(R.string.build_flavor_offline)
             "playstore" -> stringResource(R.string.build_flavor_playstore)
             else -> BuildConfig.FLAVOR
@@ -618,14 +613,6 @@ private fun openAboutAppRoute(
     route: AboutAppRoute,
 ) {
     when (BuildConfig.FLAVOR) {
-        "fdroid" -> {
-            try {
-                context.startActivity(aboutViewIntent("fdroid.app:${route.packageId}"))
-            } catch (_: ActivityNotFoundException) {
-                context.startActivity(aboutViewIntent(route.portfolioUrl))
-            }
-        }
-
         "playstore" -> {
             val targetUrl = route.playStoreUrl.ifBlank { route.portfolioUrl }
             context.startActivity(aboutViewIntent(targetUrl))

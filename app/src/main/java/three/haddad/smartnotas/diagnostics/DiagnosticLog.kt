@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.BuildConfig
 import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.BackupPrefs
 import three.haddad.smartnotas.data.DefaultNotePrefs
 import three.haddad.smartnotas.data.InteractionPrefs
 import three.haddad.smartnotas.data.LockPrefs
@@ -208,12 +207,11 @@ object DiagnosticLog {
             val interaction = InteractionPrefs(context).state.first()
             val reminder = ReminderPrefs(context).snapshot()
             val defaultNote = DefaultNotePrefs(context).snapshot()
-            val backup = BackupPrefs(context).snapshot()
             val update = UpdatePrefs(context).snapshot()
             val quickCapture = QuickCapturePrefs(context).snapshot()
             val onboarding = OnboardingPrefs(context).state.first()
             val lock = LockPrefs(context).state.first()
-            PreferencesSnapshot(theme, notesUi, interaction, reminder, defaultNote, backup, update, quickCapture, onboarding, lock)
+            PreferencesSnapshot(theme, notesUi, interaction, reminder, defaultNote, update, quickCapture, onboarding, lock)
         }.getOrNull()
 
     private fun StringBuilder.appendPreferencesSnapshot(
@@ -268,12 +266,7 @@ object DiagnosticLog {
             ),
         )
 
-        // Backup.
-        appendLine(context.getString(R.string.diagnostics_auto_export_on_change_format, snapshot.backup.autoExportOnChange.toString()))
-        appendLine(context.getString(R.string.diagnostics_scheduled_export_enabled_format, snapshot.backup.scheduledExportEnabled.toString()))
-        appendLine(context.getString(R.string.diagnostics_include_media_in_backup_format, snapshot.backup.includeMediaInBackup.toString()))
-        appendLine(context.getString(R.string.diagnostics_local_backup_folder_format, redactedLocation(context, snapshot.backup.exportFolderUri)))
-        appendLine(context.getString(R.string.diagnostics_cloud_backup_folder_format, redactedLocation(context, snapshot.backup.cloudExportFolderUri)))
+
 
         // Updates.
         appendLine(context.getString(R.string.diagnostics_update_check_schedule_format, snapshot.update.updateCheckSchedule.toString()))
@@ -532,7 +525,6 @@ object DiagnosticLog {
         val interaction: three.haddad.smartnotas.data.InteractionState,
         val reminder: three.haddad.smartnotas.data.ReminderPreferencesState,
         val defaultNote: three.haddad.smartnotas.data.DefaultNotePreferencesState,
-        val backup: three.haddad.smartnotas.data.BackupPreferencesState,
         val update: three.haddad.smartnotas.data.UpdatePreferencesState,
         val quickCapture: three.haddad.smartnotas.data.QuickCaptureState,
         val onboarding: three.haddad.smartnotas.data.OnboardingState,

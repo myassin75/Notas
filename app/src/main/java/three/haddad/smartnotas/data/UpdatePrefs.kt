@@ -19,12 +19,7 @@ enum class UpdateCheckSchedule {
     NEVER,
 }
 
-fun defaultUpdateCheckSchedule(): UpdateCheckSchedule =
-    if (BuildConfig.FLAVOR == "fdroid") {
-        UpdateCheckSchedule.NEVER
-    } else {
-        UpdateCheckSchedule.AT_APP_START
-    }
+fun defaultUpdateCheckSchedule(): UpdateCheckSchedule = UpdateCheckSchedule.AT_APP_START
 
 data class UpdatePreferencesState(
     val updateCheckSchedule: UpdateCheckSchedule = defaultUpdateCheckSchedule(),

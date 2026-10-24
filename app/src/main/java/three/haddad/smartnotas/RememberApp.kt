@@ -16,9 +16,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.backup.BackupExportCoordinator
-import three.haddad.smartnotas.backup.RememberBackupWork
-import three.haddad.smartnotas.data.BackupPrefs
 import three.haddad.smartnotas.data.NoteRepository
 import three.haddad.smartnotas.data.QuickCapturePrefs
 import three.haddad.smartnotas.data.ReminderPrefs
@@ -46,10 +43,6 @@ class RememberApp :
     Application(),
     Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
-
-    @Inject lateinit var backupExportCoordinator: BackupExportCoordinator
-
-    @Inject lateinit var backupPrefs: BackupPrefs
 
     @Inject lateinit var noteRepository: NoteRepository
 
@@ -104,10 +97,7 @@ class RememberApp :
             refreshActiveNotifications = noteRepository::refreshActiveReminderNotifications,
             refreshCriticalRepeat = noteRepository::refreshCriticalReminderRepeat,
         )
-        observeQuickCapturePref()
-        backupExportCoordinator.start()
         applicationScope.launch {
-            RememberBackupWork.updateSchedule(this@RememberApp, backupPrefs.snapshot())
             updateCheckWorkScheduler.syncFromPreferences()
             runCatching {
                 runStartupUpdateCheck()

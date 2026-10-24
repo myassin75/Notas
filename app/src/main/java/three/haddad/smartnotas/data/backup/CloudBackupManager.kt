@@ -13,7 +13,6 @@ import org.json.JSONObject
 import three.haddad.smartnotas.backup.SettingsBackup
 import three.haddad.smartnotas.data.AttachmentDao
 import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.BackupPrefs
 import three.haddad.smartnotas.data.ChecklistItemDao
 import three.haddad.smartnotas.data.DefaultNotePrefs
 import three.haddad.smartnotas.data.InteractionPrefs
@@ -74,7 +73,6 @@ class CloudBackupManager @Inject constructor(
     private val viewOptionsPrefs: three.haddad.smartnotas.data.ViewOptionsPrefs,
     private val lockPrefs: LockPrefs,
     private val interactionPrefs: InteractionPrefs,
-    private val backupPrefs: BackupPrefs,
     private val quickCapturePrefs: QuickCapturePrefs,
     private val reminderPrefs: ReminderPrefs,
     private val defaultNotePrefs: DefaultNotePrefs,
@@ -147,7 +145,6 @@ class CloudBackupManager @Inject constructor(
                         viewOptionsPrefs,
                         lockPrefs,
                         interactionPrefs,
-                        backupPrefs,
                         quickCapturePrefs,
                         reminderPrefs,
                         defaultNotePrefs,
@@ -467,7 +464,6 @@ class CloudBackupManager @Inject constructor(
                         viewOptionsPrefs,
                         lockPrefs,
                         interactionPrefs,
-                        backupPrefs,
                         quickCapturePrefs,
                         reminderPrefs,
                         defaultNotePrefs,

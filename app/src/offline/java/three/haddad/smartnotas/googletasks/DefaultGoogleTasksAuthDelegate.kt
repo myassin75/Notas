@@ -5,7 +5,7 @@ import android.content.Intent
 
 object DefaultGoogleTasksAuthDelegate : GoogleTasksAuthDelegate {
     private val unavailable =
-        UnsupportedOperationException("Google account import is not available in the F-Droid build")
+        UnsupportedOperationException("Google account import is not available in the offline build")
 
     override suspend fun authorize(
         context: Context,

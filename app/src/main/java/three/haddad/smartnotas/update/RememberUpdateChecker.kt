@@ -59,14 +59,10 @@ class RememberUpdateChecker
         private val json = Json { ignoreUnknownKeys = true }
 
         /**
-         * GitHub Releases check, or the F-Droid package API on the fdroid flavor. Network/HTTP/parse
-         * errors propagate so callers can tell "check failed" from "up to date".
+         * GitHub Releases check. Network/HTTP/parse errors propagate so callers can tell "check failed" from "up to date".
          */
         suspend fun checkForUpdate(): RememberUpdateInfo? =
             withContext(Dispatchers.IO) {
-                if (BuildConfig.FLAVOR == "fdroid") {
-                    return@withContext checkFdroidForUpdate()
-                }
                 checkGithubReleaseForUpdateBlocking(BuildConfig.GITHUB_REPO, BuildConfig.VERSION_NAME)
             }
 
@@ -120,52 +116,7 @@ class RememberUpdateChecker
                 remoteApkFileName = apkAsset.name,
                 remoteApkAssetUpdatedAt = apkAsset.updatedAt,
             )
-
-        private fun checkFdroidForUpdate(): RememberUpdateInfo? {
-            val connection =
-                URL("https://f-droid.org/api/v1/packages/${context.packageName}").openConnection() as HttpURLConnection
-            connection.instanceFollowRedirects = true
-            connection.connectTimeout = 15_000
-            connection.readTimeout = 20_000
-            connection.setRequestProperty("Accept", "application/json")
-            val responseText =
-                try {
-                    connection.connect()
-                    if (connection.responseCode !in 200..299) {
-                        error("F-Droid returned HTTP ${connection.responseCode}")
-                    }
-                    connection.inputStream.bufferedReader().use { reader -> reader.readText() }
-                } finally {
-                    connection.disconnect()
-                }
-            val packageJson = json.parseToJsonElement(responseText).jsonObject
-            val packages =
-                (packageJson["packages"] as? JsonArray)
-                    ?: (packageJson["versions"] as? JsonArray)
-                    ?: return null
-            val latestPackage =
-                packages
-                    .mapNotNull { element -> element as? JsonObject }
-                    .mapNotNull { element ->
-                        val versionCode = element.longOrNull("versionCode") ?: return@mapNotNull null
-                        val versionName = (element["versionName"] as? JsonPrimitive)?.contentOrNull.orEmpty()
-                        FdroidPackageVersion(versionCode = versionCode, versionName = versionName)
-                    }.filter { version -> version.versionCode > BuildConfig.VERSION_CODE.toLong() }
-                    .maxByOrNull { version -> version.versionCode }
-                    ?: return null
-
-            return RememberUpdateInfo(
-                versionName = latestPackage.versionName.ifBlank { latestPackage.versionCode.toString() },
-                downloadUrl = "",
-                releaseNotes = "",
-            )
-        }
     }
-
-private data class FdroidPackageVersion(
-    val versionCode: Long,
-    val versionName: String,
-)
 
 private fun JsonObject.longOrNull(key: String): Long? {
     val element = this[key] as? JsonPrimitive ?: return null

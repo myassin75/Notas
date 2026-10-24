@@ -3,8 +3,6 @@ package three.haddad.smartnotas.di
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.BackupPrefs
 import three.haddad.smartnotas.data.DefaultNotePrefs
 import three.haddad.smartnotas.data.DevModePrefs
 import three.haddad.smartnotas.data.InteractionPrefs
@@ -42,9 +40,7 @@ interface SettingsDependenciesEntryPoint {
 
     fun defaultNotePrefs(): DefaultNotePrefs
 
-    fun backupPrefs(): BackupPrefs
 
-    fun backupIo(): BackupIo
 
     fun cloudBackupManager(): three.haddad.smartnotas.data.backup.CloudBackupManager
 
@@ -115,8 +111,6 @@ interface DevOptionsDependenciesEntryPoint {
     fun quickCapturePrefs(): QuickCapturePrefs
 
     fun lockPrefs(): LockPrefs
-
-    fun backupPrefs(): BackupPrefs
 
     fun rememberUpdateState(): RememberUpdateState
 }

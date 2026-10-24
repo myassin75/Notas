@@ -13,11 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.backup.BackupExportCoordinator
-import three.haddad.smartnotas.backup.NoteBackupDirtyTracker
 import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.BackupPrefs
 import three.haddad.smartnotas.data.DefaultNotePrefs
 import three.haddad.smartnotas.data.DevModePrefs
 import three.haddad.smartnotas.data.InteractionPrefs
@@ -162,11 +158,6 @@ object RememberModule {
         @ApplicationContext context: Context,
     ): InteractionPrefs = InteractionPrefs(context)
 
-    @Provides
-    @Singleton
-    fun provideBackupPrefs(
-        @ApplicationContext context: Context,
-    ): BackupPrefs = BackupPrefs(context)
 
     @Provides
     @Singleton
@@ -180,38 +171,7 @@ object RememberModule {
         @ApplicationContext context: Context,
     ): UpdatePrefs = UpdatePrefs(context)
 
-    @Provides
-    @Singleton
-    fun provideBackupIo(
-        @ApplicationContext context: Context,
-        noteRepository: NoteRepository,
-        themePrefs: ThemePrefs,
-        notesUiPrefs: NotesUiPrefs,
-        viewOptionsPrefs: ViewOptionsPrefs,
-        lockPrefs: LockPrefs,
-        interactionPrefs: InteractionPrefs,
-        backupPrefs: BackupPrefs,
-        quickCapturePrefs: QuickCapturePrefs,
-        reminderPrefs: ReminderPrefs,
-        defaultNotePrefs: DefaultNotePrefs,
-        updatePrefs: UpdatePrefs,
-        updateCheckWorkScheduler: UpdateCheckWorkScheduler,
-    ): BackupIo =
-        BackupIo(
-            context = context,
-            repository = noteRepository,
-            themePrefs = themePrefs,
-            notesUiPrefs = notesUiPrefs,
-            viewOptionsPrefs = viewOptionsPrefs,
-            lockPrefs = lockPrefs,
-            interactionPrefs = interactionPrefs,
-            backupPrefs = backupPrefs,
-            quickCapturePrefs = quickCapturePrefs,
-            reminderPrefs = reminderPrefs,
-            defaultNotePrefs = defaultNotePrefs,
-            updatePrefs = updatePrefs,
-            updateCheckWorkScheduler = updateCheckWorkScheduler,
-        )
+
 
     @Provides
     @Singleton
@@ -238,28 +198,7 @@ object RememberModule {
     @Singleton
     fun provideGoogleTasksImporter(noteRepository: NoteRepository): GoogleTasksImporter = GoogleTasksImporter(repository = noteRepository)
 
-    @Provides
-    @Singleton
-    fun provideNoteBackupDirtyTracker(
-        @ApplicationContext context: Context,
-    ): NoteBackupDirtyTracker = NoteBackupDirtyTracker(context)
 
-    @Provides
-    @Singleton
-    fun provideBackupExportCoordinator(
-        backupPrefs: BackupPrefs,
-        backupIo: BackupIo,
-        noteRepository: NoteRepository,
-        @ApplicationScope applicationScope: CoroutineScope,
-        noteBackupDirtyTracker: NoteBackupDirtyTracker,
-    ): BackupExportCoordinator =
-        BackupExportCoordinator(
-            backupPrefs = backupPrefs,
-            backupIo = backupIo,
-            noteRepository = noteRepository,
-            applicationScope = applicationScope,
-            noteBackupDirtyTracker = noteBackupDirtyTracker,
-        )
 
     @Provides
     @Singleton
@@ -363,7 +302,6 @@ object RememberModule {
         viewOptionsPrefs: ViewOptionsPrefs,
         lockPrefs: LockPrefs,
         interactionPrefs: InteractionPrefs,
-        backupPrefs: BackupPrefs,
         quickCapturePrefs: QuickCapturePrefs,
         reminderPrefs: ReminderPrefs,
         defaultNotePrefs: DefaultNotePrefs,
@@ -384,7 +322,6 @@ object RememberModule {
             viewOptionsPrefs = viewOptionsPrefs,
             lockPrefs = lockPrefs,
             interactionPrefs = interactionPrefs,
-            backupPrefs = backupPrefs,
             quickCapturePrefs = quickCapturePrefs,
             reminderPrefs = reminderPrefs,
             defaultNotePrefs = defaultNotePrefs,

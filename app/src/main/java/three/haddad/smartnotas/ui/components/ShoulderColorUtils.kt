@@ -45,7 +45,7 @@ internal fun formatColorToHex(color: Color): String {
     val r = (color.red * 255f + 0.5f).toInt().coerceIn(0, 255)
     val g = (color.green * 255f + 0.5f).toInt().coerceIn(0, 255)
     val b = (color.blue * 255f + 0.5f).toInt().coerceIn(0, 255)
-    return String.format("#%02X%02X%02X", r, g, b)
+    return String.format(java.util.Locale.ROOT, "#%02X%02X%02X", r, g, b)
 }
 
 internal fun rgbToHsv(r: Float, g: Float, b: Float): FloatArray {
@@ -64,10 +64,13 @@ internal fun rgbToHsv(r: Float, g: Float, b: Float): FloatArray {
 }
 
 internal fun hsvToRgb(h: Float, s: Float, v: Float): Color {
-    val c = v * s
-    val x = c * (1f - abs(((h % 360f + 360f) % 360f / 60f) % 2f - 1f))
-    val m = v - c
-    val (r1, g1, b1) = when (((h % 360f + 360f) % 360f / 60f).toInt()) {
+    val clampedH = (h % 360f + 360f) % 360f
+    val clampedS = s.coerceIn(0f, 1f)
+    val clampedV = v.coerceIn(0f, 1f)
+    val c = clampedV * clampedS
+    val x = c * (1f - abs((clampedH / 60f) % 2f - 1f))
+    val m = clampedV - c
+    val (r1, g1, b1) = when ((clampedH / 60f).toInt()) {
         0 -> Triple(c, x, 0f)
         1 -> Triple(x, c, 0f)
         2 -> Triple(0f, c, x)
@@ -75,7 +78,11 @@ internal fun hsvToRgb(h: Float, s: Float, v: Float): Color {
         4 -> Triple(x, 0f, c)
         else -> Triple(c, 0f, x)
     }
-    return Color(r1 + m, g1 + m, b1 + m)
+    return Color(
+        (r1 + m).coerceIn(0f, 1f),
+        (g1 + m).coerceIn(0f, 1f),
+        (b1 + m).coerceIn(0f, 1f),
+    )
 }
 
 internal fun parseHsvFromHex(

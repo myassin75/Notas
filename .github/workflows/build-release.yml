@@ -23,11 +23,6 @@ name: Build and release
 on:
   workflow_dispatch:
     inputs:
-      build_fdroid:
-        description: "Build F-Droid APK."
-        required: true
-        default: true
-        type: boolean
       build_github:
         description: "Build GitHub APK."
         required: true
@@ -98,7 +93,7 @@ jobs:
       - name: Validate build target
         run: |
           set -euo pipefail
-          if [ "${{ inputs.build_fdroid }}" != "true" ] && [ "${{ inputs.build_github }}" != "true" ] && [ "${{ inputs.build_offline }}" != "true" ] && [ "${{ inputs.build_playstore }}" != "true" ]; then
+          if [ "${{ inputs.build_github }}" != "true" ] && [ "${{ inputs.build_offline }}" != "true" ] && [ "${{ inputs.build_playstore }}" != "true" ]; then
             echo "Enable at least one build toggle."
             exit 1
           fi
@@ -136,9 +131,6 @@ jobs:
           set -euo pipefail
           gradle_tasks=()
           gradle_arguments=()
-          if [ "${{ inputs.build_fdroid }}" = "true" ]; then
-            gradle_tasks+=(":app:assembleFdroidRelease")
-          fi
           if [ "${{ inputs.build_github }}" = "true" ]; then
             gradle_tasks+=(":app:assembleGithubRelease")
           fi
@@ -160,19 +152,9 @@ jobs:
           out="release-assets"
           mkdir -p "$out"
 
-          fdroid_apk="app/build/outputs/apk/fdroid/release/app-fdroid-release.apk"
           github_apk="app/build/outputs/apk/github/release/app-github-release.apk"
           offline_apk="app/build/outputs/apk/offline/release/app-offline-release.apk"
           play_aab="app/build/outputs/bundle/playstoreRelease/app-playstore-release.aab"
-
-          if [ "${{ inputs.build_fdroid }}" = "true" ]; then
-            if [ ! -f "$fdroid_apk" ]; then
-              echo "Expected F-Droid flavor APK not found: $fdroid_apk"
-              find app/build/outputs/apk -name '*.apk' -print || true
-              exit 1
-            fi
-            cp "$fdroid_apk" "$out/remember-v${version}-fdroid.apk"
-          fi
 
           if [ "${{ inputs.build_github }}" = "true" ]; then
             if [ ! -f "$github_apk" ]; then

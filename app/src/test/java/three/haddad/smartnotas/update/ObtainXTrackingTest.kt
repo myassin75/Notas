@@ -45,18 +45,8 @@ class ObtainXTrackingTest {
     }
 
     @Test
-    fun fdroidTracksTheFdroidListingWithoutAnApkFilter() {
-        val payload = payload("fdroid", "three.haddad.smartnotas.gh")
-        assertEquals(
-            "https://f-droid.org/packages/three.haddad.smartnotas.gh",
-            payload.getValue("url").jsonPrimitive.content,
-        )
-        assertFalse(payload.containsKey("additionalSettings"))
-    }
-
-    @Test
     fun noPayloadOverridesTheSourceOrPinsAnApkIndex() {
-        for ((flavor, appId) in listOf("github" to "a.gh", "offline" to "a.offline", "fdroid" to "a.gh")) {
+        for ((flavor, appId) in listOf("github" to "a.gh", "offline" to "a.offline")) {
             val payload = payload(flavor, appId)
             assertFalse(payload.containsKey("overrideSource"))
             assertFalse(payload.containsKey("preferredApkIndex"))

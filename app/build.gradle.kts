@@ -166,13 +166,6 @@ extensions.configure<ApplicationExtension>("android") {
             buildConfigField("Boolean", "USE_PLAY_IN_APP_UPDATES", "false")
             buildConfigField("Boolean", "GOOGLE_TASKS_CONNECT_ENABLED", "true")
         }
-        create("fdroid") {
-            dimension = "distribution"
-            applicationIdSuffix = ".gh"
-            buildConfigField("Boolean", "CHECK_UPDATES", "true")
-            buildConfigField("Boolean", "USE_PLAY_IN_APP_UPDATES", "false")
-            buildConfigField("Boolean", "GOOGLE_TASKS_CONNECT_ENABLED", "false")
-        }
         create("offline") {
             dimension = "distribution"
             applicationIdSuffix = ".offline"
@@ -213,10 +206,6 @@ extensions.configure<ApplicationExtension>("android") {
         getByName("androidTest") {
             assets.directories.add("$projectDir/schemas")
         }
-        getByName("fdroid") {
-            java.directories.add("src/github/java")
-            kotlin.directories.add("src/github/java")
-        }
         getByName("github") {
             java.directories.add("src/nonfdroid/java")
             kotlin.directories.add("src/nonfdroid/java")
@@ -224,8 +213,8 @@ extensions.configure<ApplicationExtension>("android") {
         getByName("offline") {
             java.directories.add("src/github/java")
             kotlin.directories.add("src/github/java")
-            java.directories.add("src/fdroid/java")
-            kotlin.directories.add("src/fdroid/java")
+            java.directories.add("src/offline/java")
+            kotlin.directories.add("src/offline/java")
         }
         getByName("playstore") {
             java.directories.add("src/nonfdroid/java")

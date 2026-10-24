@@ -2,6 +2,7 @@ package three.haddad.smartnotas.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.first
 import org.json.JSONObject
 
 /**
- * Cover image, adaptive note themes, and note content on cards.
+ * Cover image, adaptive note themes, note content on cards, and first day of week.
  *
  * These used to be stored in [ThemePrefs]. [migrateFromThemePrefsIfNeeded] moves an existing
  * install across, and [importFromBackup] still accepts them inside an older theme backup.
@@ -18,6 +19,7 @@ data class NotesUiState(
     val heroOnCards: Boolean = true,
     val adaptiveNoteThemes: Boolean = true,
     val showNoteContentOnCards: Boolean = true,
+    val firstDayOfWeek: String = "MONDAY",
 )
 
 class NotesUiPrefs(
@@ -27,6 +29,7 @@ class NotesUiPrefs(
         val HERO_ON_CARDS = booleanPreferencesKey("hero_on_cards")
         val ADAPTIVE_NOTE_THEMES = booleanPreferencesKey("adaptive_note_themes")
         val SHOW_NOTE_CONTENT_ON_CARDS = booleanPreferencesKey("show_note_content_on_cards")
+        val FIRST_DAY_OF_WEEK = stringPreferencesKey("first_day_of_week")
     }
 
     val state: Flow<NotesUiState> =
@@ -39,6 +42,7 @@ class NotesUiPrefs(
                 adaptiveNoteThemes = notesUi[Keys.ADAPTIVE_NOTE_THEMES] ?: theme[Keys.ADAPTIVE_NOTE_THEMES] ?: true,
                 showNoteContentOnCards =
                     notesUi[Keys.SHOW_NOTE_CONTENT_ON_CARDS] ?: theme[Keys.SHOW_NOTE_CONTENT_ON_CARDS] ?: true,
+                firstDayOfWeek = notesUi[Keys.FIRST_DAY_OF_WEEK] ?: "MONDAY",
             )
         }
 
@@ -52,6 +56,10 @@ class NotesUiPrefs(
 
     suspend fun setShowNoteContentOnCards(value: Boolean) {
         context.notesUiPrefsDataStore.edit { it[Keys.SHOW_NOTE_CONTENT_ON_CARDS] = value }
+    }
+
+    suspend fun setFirstDayOfWeek(value: String) {
+        context.notesUiPrefsDataStore.edit { it[Keys.FIRST_DAY_OF_WEEK] = value }
     }
 
     /**
@@ -88,6 +96,10 @@ class NotesUiPrefs(
             put(
                 Keys.SHOW_NOTE_CONTENT_ON_CARDS.name,
                 notesUi[Keys.SHOW_NOTE_CONTENT_ON_CARDS] ?: theme[Keys.SHOW_NOTE_CONTENT_ON_CARDS] ?: true,
+            )
+            put(
+                Keys.FIRST_DAY_OF_WEEK.name,
+                notesUi[Keys.FIRST_DAY_OF_WEEK] ?: "MONDAY",
             )
         }
     }
@@ -133,6 +145,12 @@ class NotesUiPrefs(
                 booleanOrNull(json, Keys.SHOW_NOTE_CONTENT_ON_CARDS.name)
                     ?: booleanOrNull(legacyThemeJson, Keys.SHOW_NOTE_CONTENT_ON_CARDS.name)
             )?.let { value -> mutable[Keys.SHOW_NOTE_CONTENT_ON_CARDS] = value }
+            if (json != null && json.has(Keys.FIRST_DAY_OF_WEEK.name)) {
+                val day = json.optString(Keys.FIRST_DAY_OF_WEEK.name)
+                if (day.isNotBlank()) {
+                    mutable[Keys.FIRST_DAY_OF_WEEK] = day
+                }
+            }
         }
     }
 

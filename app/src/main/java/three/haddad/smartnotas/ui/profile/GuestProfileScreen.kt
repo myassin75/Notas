@@ -17,28 +17,50 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import three.haddad.smartnotas.data.NoteKind
 import three.haddad.smartnotas.data.NoteRepository
+import three.haddad.smartnotas.data.NotesUiPrefs
+import three.haddad.smartnotas.data.NotesUiState
+import three.haddad.smartnotas.data.ThemeMode
+import three.haddad.smartnotas.data.ThemePrefs
+import three.haddad.smartnotas.data.ThemeState
+import three.haddad.smartnotas.notifications.appNotificationSettingsIntent
+import three.haddad.smartnotas.notifications.canPostNotifications
 import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
 import three.haddad.smartnotas.ui.components.AccountHeader
 import three.haddad.smartnotas.ui.components.PrimaryButton
@@ -59,6 +81,8 @@ data class GuestProfileStats(
 @HiltViewModel
 class GuestProfileViewModel @Inject constructor(
     noteRepository: NoteRepository,
+    private val themePrefs: ThemePrefs? = null,
+    private val notesUiPrefs: NotesUiPrefs? = null,
 ) : ViewModel() {
     val stats: StateFlow<GuestProfileStats> = noteRepository.observeActive()
         .map { list ->
@@ -73,6 +97,32 @@ class GuestProfileViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = GuestProfileStats(),
         )
+
+    val themeState: StateFlow<ThemeState> = themePrefs?.state
+        ?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ThemeState(),
+        ) ?: MutableStateFlow(ThemeState())
+
+    val notesUiState: StateFlow<NotesUiState> = notesUiPrefs?.state
+        ?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = NotesUiState(),
+        ) ?: MutableStateFlow(NotesUiState())
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch {
+            themePrefs?.setThemeMode(mode)
+        }
+    }
+
+    fun setFirstDayOfWeek(day: String) {
+        viewModelScope.launch {
+            notesUiPrefs?.setFirstDayOfWeek(day)
+        }
+    }
 }
 
 /**
@@ -83,15 +133,33 @@ fun GuestProfileScreen(
     onBackClick: () -> Unit,
     onCreateAccountClick: () -> Unit,
     onLoginClick: () -> Unit,
-    onNotificationsClick: () -> Unit = {},
-    onAppearanceClick: () -> Unit = {},
-    onStartOfWeekClick: () -> Unit = {},
+    onNotificationsClick: (() -> Unit)? = null,
+    onAppearanceClick: (() -> Unit)? = null,
+    onStartOfWeekClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: GuestProfileViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val palette = LocalSemanticPalette.current
     val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val themeState by viewModel.themeState.collectAsStateWithLifecycle()
+    val notesUiState by viewModel.notesUiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+
+    var showAppearanceDialog by remember { mutableStateOf(false) }
+    var showStartOfWeekDialog by remember { mutableStateOf(false) }
+
+    var notificationsEnabled by remember { mutableStateOf(canPostNotifications(context)) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notificationsEnabled = canPostNotifications(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Box(
         modifier = modifier
@@ -251,24 +319,170 @@ fun GuestProfileScreen(
             ) {
                 SettingsRow(
                     title = "Notifications",
-                    valueText = "On",
-                    onClick = onNotificationsClick,
+                    valueText = if (notificationsEnabled) "On" else "Off",
+                    onClick = {
+                        if (onNotificationsClick != null) {
+                            onNotificationsClick()
+                        } else {
+                            context.startActivity(appNotificationSettingsIntent(context))
+                        }
+                    },
                 )
                 SettingsRow(
                     title = "Appearance",
-                    valueText = "Light",
-                    onClick = onAppearanceClick,
+                    valueText = when (themeState.themeMode) {
+                        ThemeMode.LIGHT -> "Light"
+                        ThemeMode.DARK, ThemeMode.BLACK -> "Dark"
+                        ThemeMode.SYSTEM -> "System"
+                    },
+                    onClick = {
+                        if (onAppearanceClick != null) {
+                            onAppearanceClick()
+                        } else {
+                            showAppearanceDialog = true
+                        }
+                    },
                 )
                 SettingsRow(
                     title = "Start of week",
-                    valueText = "Monday",
+                    valueText = when (notesUiState.firstDayOfWeek.uppercase()) {
+                        "SUNDAY" -> "Sunday"
+                        "SATURDAY" -> "Saturday"
+                        else -> "Monday"
+                    },
                     showDivider = false,
-                    onClick = onStartOfWeekClick,
+                    onClick = {
+                        if (onStartOfWeekClick != null) {
+                            onStartOfWeekClick()
+                        } else {
+                            showStartOfWeekDialog = true
+                        }
+                    },
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (showAppearanceDialog) {
+        AlertDialog(
+            onDismissRequest = { showAppearanceDialog = false },
+            title = {
+                Text(
+                    text = "Appearance",
+                    style = NotasTypography.SectionTitle,
+                    color = palette.primaryText,
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    listOf(
+                        ThemeMode.LIGHT to "Light",
+                        ThemeMode.DARK to "Dark",
+                        ThemeMode.SYSTEM to "System default",
+                    ).forEach { (mode, label) ->
+                        val isSelected = (themeState.themeMode == mode || (mode == ThemeMode.DARK && themeState.themeMode == ThemeMode.BLACK))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.setThemeMode(mode)
+                                    showAppearanceDialog = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = label,
+                                style = NotasTypography.BodyMedium,
+                                color = palette.primaryText,
+                            )
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    viewModel.setThemeMode(mode)
+                                    showAppearanceDialog = false
+                                },
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showAppearanceDialog = false }) {
+                    Text("Cancel", color = palette.secondaryText)
+                }
+            },
+            containerColor = palette.cardSurface,
+            shape = RoundedCornerShape(NotasTokens.CardRadius),
+        )
+    }
+
+    if (showStartOfWeekDialog) {
+        AlertDialog(
+            onDismissRequest = { showStartOfWeekDialog = false },
+            title = {
+                Text(
+                    text = "Start of week",
+                    style = NotasTypography.SectionTitle,
+                    color = palette.primaryText,
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    listOf(
+                        "MONDAY" to "Monday",
+                        "SUNDAY" to "Sunday",
+                        "SATURDAY" to "Saturday",
+                    ).forEach { (key, label) ->
+                        val isSelected = notesUiState.firstDayOfWeek.equals(key, ignoreCase = true)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.setFirstDayOfWeek(key)
+                                    showStartOfWeekDialog = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = label,
+                                style = NotasTypography.BodyMedium,
+                                color = palette.primaryText,
+                            )
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    viewModel.setFirstDayOfWeek(key)
+                                    showStartOfWeekDialog = false
+                                },
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showStartOfWeekDialog = false }) {
+                    Text("Cancel", color = palette.secondaryText)
+                }
+            },
+            containerColor = palette.cardSurface,
+            shape = RoundedCornerShape(NotasTokens.CardRadius),
+        )
     }
 }
 

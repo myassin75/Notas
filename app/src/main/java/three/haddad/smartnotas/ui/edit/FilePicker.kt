@@ -26,7 +26,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.R
 import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.BackupPrefs
 import java.io.File
 import java.io.IOException
 
@@ -99,7 +98,7 @@ fun finalizeHeroImageToPrivateStorage(
     val heroesDir = File(context.filesDir, "note_heroes").apply { mkdirs() }
     val destFile = File(heroesDir, "cover_${System.currentTimeMillis()}.jpg")
     scope.launch(Dispatchers.IO) {
-        val compress = BackupPrefs(context).state.first().compressImages
+        val compress = true
         val mimeType = context.contentResolver.getType(sourceUri)
         val isImage = mimeType?.startsWith("image/") == true
         val copyResult =

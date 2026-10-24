@@ -6,7 +6,6 @@
     <string name="app_tagline">Notes, tasks &amp; reminders — all in one place</string>
     <string name="app_version_format">%1$s v%2$s</string>
     <string name="about_build_variant_format">%1$s, %2$s</string>
-    <string name="build_flavor_fdroid">F-Droid</string>
     <string name="build_flavor_github">GitHub</string>
     <string name="build_flavor_offline">Offline</string>
     <string name="build_flavor_playstore">PlayStore</string>
@@ -1244,7 +1243,6 @@
     <string name="settings_notify_new_updates">Get notification for new updates</string>
     <string name="settings_track_updates_via_obtainx">Track updates via ObtainX</string>
     <string name="settings_track_updates_via_obtainx_desc">Let ObtainX track and install updates for this app</string>
-    <string name="settings_track_updates_via_obtainx_desc_fdroid">Let ObtainX check F-Droid for updates of this app</string>
     <string name="settings_track_updates_via_obtainx_get_desc">Get ObtainX to receive updates automatically</string>
     <string name="settings_notify_updates_need_auto_check">Enable \"Automatically check for updates\" first</string>
     <string name="settings_notify_updates_enable_notifications">Allow notifications for SmartNotas</string>
@@ -1256,7 +1254,6 @@
     <string name="settings_changelog_previous">Previous</string>
     <string name="settings_changelog_next">Next</string>
     <string name="settings_changelog_page_indicator">%1$d of %2$d</string>
-    <string name="settings_open_fdroid">Open F-Droid</string>
     <string name="settings_download_install">Download update (v%1$s)</string>
     <string name="settings_downloading">Downloading…</string>
     <string name="settings_downloading_percent">Downloading %1$d%%</string>

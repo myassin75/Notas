@@ -31,7 +31,6 @@ class AppMediaStorage
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
-        private val backupPrefs: BackupPrefs,
     ) {
         private val fileProviderAuthority: String
             get() = "${context.packageName}.fileprovider"
@@ -51,7 +50,7 @@ class AppMediaStorage
                         destinationDirectory,
                         "${System.currentTimeMillis()}_${safeFileName(displayName, mimeType)}",
                     )
-                val compress = backupPrefs.state.first().compressImages
+                val compress = true
                 val isImage = mimeType?.startsWith("image/") == true
                 var finalMimeType = mimeType
                 var finalDisplayName = displayName
