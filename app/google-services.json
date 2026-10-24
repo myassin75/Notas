@@ -62,6 +62,122 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155454904018:android:d616c858169e1de7853f0b",
+        "android_client_info": {
+          "package_name": "three.haddad.smartnotas.gh"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ7rQ-BZd_dR0NeIyHJ6KUOLbElOuv8IE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155454904018:android:d616c858169e1de7853f0b",
+        "android_client_info": {
+          "package_name": "three.haddad.smartnotas.offline"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ7rQ-BZd_dR0NeIyHJ6KUOLbElOuv8IE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155454904018:android:d616c858169e1de7853f0b",
+        "android_client_info": {
+          "package_name": "three.haddad.smartnotas.offline.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ7rQ-BZd_dR0NeIyHJ6KUOLbElOuv8IE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155454904018:android:d616c858169e1de7853f0b",
+        "android_client_info": {
+          "package_name": "three.haddad.smartnotas.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ7rQ-BZd_dR0NeIyHJ6KUOLbElOuv8IE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155454904018-d6uobftu1r3v1rfdq6efnds3rc9e7gtt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
