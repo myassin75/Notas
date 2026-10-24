@@ -27,12 +27,43 @@ sealed interface AuthResult<out T> {
 }
 
 /**
- * Observable authentication state from Firebase.
+ * Observable authentication state from Firebase (legacy / core).
  */
 sealed interface AuthState {
     data object Loading : AuthState
     data object Unauthenticated : AuthState
     data class Authenticated(val user: AuthUser) : AuthState
+}
+
+/**
+ * Explicit and reliable end-to-end application authentication lifecycle states.
+ */
+sealed interface AppAuthState {
+    /** Initializing Firebase Auth & session persistence */
+    data object Initializing : AppAuthState
+
+    /** Unauthenticated state (No active Firebase session) */
+    data object Unauthenticated : AppAuthState
+
+    /** Intentional Guest state */
+    data object Guest : AppAuthState
+
+    /** Authentication operation is in progress */
+    data object Authenticating : AppAuthState
+
+    /** Authenticated with Firebase, actively loading or syncing profile from backend */
+    data class LoadingProfile(val user: AuthUser) : AppAuthState
+
+    /** Fully authenticated with Firebase identity and synchronized backend profile */
+    data class Authenticated(val user: AuthUser, val backendProfile: BackendProfile? = null) : AppAuthState
+
+    /** Recoverable authentication or backend profile sync error (retains Firebase identity) */
+    data class RecoverableError(
+        val user: AuthUser?,
+        val message: String,
+        val code: String? = null,
+        val canRetry: Boolean = true,
+    ) : AppAuthState
 }
 
 /**

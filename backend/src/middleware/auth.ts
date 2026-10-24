@@ -30,27 +30,64 @@ export async function authenticate(
     picture: decodedToken.picture,
   };
 
-  // Upsert user record in PostgreSQL to ensure foreign keys exist
+  // Upsert or re-key user record in PostgreSQL to ensure foreign keys exist
   try {
-    const userRecord = await prisma.user.upsert({
+    let userRecord = await prisma.user.findUnique({
       where: { id: authenticatedUser.uid },
-      update: {
-        email: authenticatedUser.email,
-        emailVerified: authenticatedUser.emailVerified,
-        displayName: authenticatedUser.name ?? undefined,
-        photoUrl: authenticatedUser.picture ?? undefined,
-      },
-      create: {
-        id: authenticatedUser.uid,
-        email: authenticatedUser.email,
-        emailVerified: authenticatedUser.emailVerified,
-        displayName: authenticatedUser.name,
-        photoUrl: authenticatedUser.picture,
-      },
     });
 
+    if (userRecord) {
+      userRecord = await prisma.user.update({
+        where: { id: authenticatedUser.uid },
+        data: {
+          email: authenticatedUser.email,
+          emailVerified: authenticatedUser.emailVerified,
+          displayName: authenticatedUser.name ?? undefined,
+          photoUrl: authenticatedUser.picture ?? undefined,
+        },
+      });
+    } else {
+      // UID not found. Check if an account with this email exists (e.g. recreated in Firebase Console)
+      const existingByEmail = authenticatedUser.email
+        ? await prisma.user.findUnique({ where: { email: authenticatedUser.email } })
+        : null;
+
+      if (existingByEmail) {
+        logger.info('Re-keying existing PostgreSQL user to new authoritative Firebase UID', {
+          oldUid: existingByEmail.id,
+          newUid: authenticatedUser.uid,
+          email: authenticatedUser.email,
+        });
+
+        // Foreign keys (categories, notes, etc.) have ON UPDATE CASCADE
+        await prisma.$executeRaw`
+          UPDATE users
+          SET id = ${authenticatedUser.uid},
+              "emailVerified" = ${authenticatedUser.emailVerified},
+              "displayName" = ${authenticatedUser.name ?? existingByEmail.displayName},
+              "photoUrl" = ${authenticatedUser.picture ?? existingByEmail.photoUrl},
+              "updatedAt" = NOW()
+          WHERE email = ${authenticatedUser.email}
+        `;
+
+        userRecord = await prisma.user.findUnique({
+          where: { id: authenticatedUser.uid },
+        });
+      } else {
+        userRecord = await prisma.user.create({
+          data: {
+            id: authenticatedUser.uid,
+            email: authenticatedUser.email,
+            emailVerified: authenticatedUser.emailVerified,
+            displayName: authenticatedUser.name,
+            photoUrl: authenticatedUser.picture,
+          },
+        });
+      }
+    }
+
     // If account deletion is in progress, disallow write/sync operations unless completing deletion
-    if (userRecord.deletionPending && req.method?.toUpperCase() !== 'DELETE') {
+    if (userRecord?.deletionPending && req.method?.toUpperCase() !== 'DELETE') {
       throw new ForbiddenError('Account is pending deletion and cannot process new requests.');
     }
   } catch (error) {

@@ -14,9 +14,12 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import three.haddad.smartnotas.di.IoDispatcher
@@ -44,8 +47,13 @@ class FirebaseAuthRepository @Inject constructor(
         }
     }
 
+    private val repositoryScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + ioDispatcher)
+
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     override val authState: Flow<AuthState> = _authState.asStateFlow()
+
+    private val _appAuthState = MutableStateFlow<AppAuthState>(AppAuthState.Initializing)
+    override val appAuthState: Flow<AppAuthState> = _appAuthState.asStateFlow()
 
     override val currentUser: AuthUser?
         get() = auth?.currentUser?.toAuthUser()
@@ -54,12 +62,31 @@ class FirebaseAuthRepository @Inject constructor(
         auth?.addAuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
             if (user != null) {
-                _authState.value = AuthState.Authenticated(user.toAuthUser())
+                val authUser = user.toAuthUser()
+                _authState.value = AuthState.Authenticated(authUser)
+                _appAuthState.value = AppAuthState.LoadingProfile(authUser)
+                repositoryScope.launch {
+                    when (val profileResult = syncBackendProfile()) {
+                        is AuthResult.Success -> {
+                            _appAuthState.value = AppAuthState.Authenticated(authUser, profileResult.data)
+                        }
+                        is AuthResult.Error -> {
+                            _appAuthState.value = AppAuthState.RecoverableError(
+                                user = authUser,
+                                message = profileResult.message,
+                                code = profileResult.code,
+                            )
+                        }
+                        is AuthResult.Cancelled -> Unit
+                    }
+                }
             } else {
                 _authState.value = AuthState.Unauthenticated
+                _appAuthState.value = AppAuthState.Guest
             }
         } ?: run {
             _authState.value = AuthState.Unauthenticated
+            _appAuthState.value = AppAuthState.Guest
         }
     }
 
@@ -242,6 +269,7 @@ class FirebaseAuthRepository @Inject constructor(
     override suspend fun signOut() {
         auth?.signOut()
         _authState.value = AuthState.Unauthenticated
+        _appAuthState.value = AppAuthState.Guest
     }
 
     override suspend fun getIdToken(forceRefresh: Boolean): String? = withContext(ioDispatcher) {
@@ -254,7 +282,14 @@ class FirebaseAuthRepository @Inject constructor(
 
     override suspend fun syncBackendProfile(): AuthResult<BackendProfile> = withContext(ioDispatcher) {
         val idToken = getIdToken() ?: return@withContext AuthResult.Error("User is not authenticated with Firebase", code = "UNAUTHENTICATED")
-        backendApiClient.getProfile(idToken)
+        val result = backendApiClient.getProfile(idToken)
+        val user = currentUser
+        if (result is AuthResult.Success && user != null) {
+            _appAuthState.value = AppAuthState.Authenticated(user, result.data)
+        } else if (result is AuthResult.Error && user != null) {
+            _appAuthState.value = AppAuthState.RecoverableError(user, result.message, result.code)
+        }
+        result
     }
 
     private fun <T> mapFirebaseException(e: Exception): AuthResult<T> {

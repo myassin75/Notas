@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     val authState: Flow<AuthState>
+    val appAuthState: Flow<AppAuthState> get() = kotlinx.coroutines.flow.emptyFlow()
     val currentUser: AuthUser?
 
     suspend fun registerWithEmailAndPassword(

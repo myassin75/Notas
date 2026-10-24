@@ -49,8 +49,18 @@ class FirebaseAuthRepositoryTest {
         assertTrue(googleResult is AuthResult.Error)
         assertEquals("FIREBASE_NOT_CONFIGURED", (googleResult as AuthResult.Error).code)
 
-        // Sign out should not crash
+        // Initial state should transition to Guest when Firebase is not configured
+        val appState = (repository.appAuthState as kotlinx.coroutines.flow.StateFlow).value
+        assertEquals(AppAuthState.Guest, appState)
+
+        // Sign out should not crash and preserve Guest state
         repository.signOut()
+        assertEquals(AppAuthState.Guest, (repository.appAuthState as kotlinx.coroutines.flow.StateFlow).value)
+
+        // Profile sync without logged-in user returns UNAUTHENTICATED error
+        val syncResult = repository.syncBackendProfile()
+        assertTrue(syncResult is AuthResult.Error)
+        assertEquals("UNAUTHENTICATED", (syncResult as AuthResult.Error).code)
 
         // Token should be null
         val token = repository.getIdToken()

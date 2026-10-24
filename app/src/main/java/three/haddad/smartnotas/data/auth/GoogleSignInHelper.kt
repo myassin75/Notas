@@ -52,53 +52,30 @@ object GoogleSignInHelper {
         } catch (_: GetCredentialCancellationException) {
             // User dismissed or cancelled the Google Account picker dialog
             AuthResult.Cancelled
-        } catch (_: NoCredentialException) {
-            // No Google account on device: seamlessly open Android Account Settings so user can add one
-            openAddAccountSettings(context)
-        } catch (e: Exception) {
-            val msg = (e.message ?: "").lowercase()
-            if (msg.contains("no credential") || msg.contains("no account") || msg.contains("no google account")) {
-                openAddAccountSettings(context)
+        } catch (e: NoCredentialException) {
+            AuthResult.Error(
+                message = "No eligible Google account or OAuth credential found on this device. Please verify that a Google account is logged in on your device and that your signing certificate SHA-1 fingerprint is registered in Firebase Console.",
+                code = "NO_CREDENTIAL",
+                cause = e,
+            )
+        } catch (e: androidx.credentials.exceptions.GetCredentialCustomException) {
+            val msg = e.message.orEmpty()
+            val friendlyMsg = if (msg.contains("10") || msg.contains("16") || msg.contains("28436") || msg.contains("DeveloperError", ignoreCase = true)) {
+                "Google Sign-In configuration error: Package name or signing certificate SHA-1 fingerprint is not recognized by Google Play Services. Please verify the SHA-1 in Firebase Console."
             } else {
-                AuthResult.Error(
-                    message = e.localizedMessage ?: "Google Sign-In failed",
-                    code = "SIGN_IN_FAILED",
-                    cause = e,
-                )
+                e.localizedMessage ?: "Google Sign-In failed"
             }
-        }
-    }
-
-    private fun openAddAccountSettings(context: Context): AuthResult<AuthCredential> {
-        return try {
-            val addAccountIntent = android.content.Intent(android.provider.Settings.ACTION_ADD_ACCOUNT).apply {
-                putExtra(android.provider.Settings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(addAccountIntent)
-            AuthResult.Cancelled
-        } catch (_: Exception) {
-            try {
-                val syncIntent = android.content.Intent(android.provider.Settings.ACTION_SYNC_SETTINGS).apply {
-                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(syncIntent)
-                AuthResult.Cancelled
-            } catch (_: Exception) {
-                try {
-                    val settingsIntent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    context.startActivity(settingsIntent)
-                    AuthResult.Cancelled
-                } catch (ex: Exception) {
-                    AuthResult.Error(
-                        "Please add a Google account in Android Settings.",
-                        code = "NO_CREDENTIAL",
-                        cause = ex,
-                    )
-                }
-            }
+            AuthResult.Error(
+                message = friendlyMsg,
+                code = "OAUTH_CONFIG_ERROR",
+                cause = e,
+            )
+        } catch (e: Exception) {
+            AuthResult.Error(
+                message = e.localizedMessage ?: "Google Sign-In failed",
+                code = "SIGN_IN_FAILED",
+                cause = e,
+            )
         }
     }
 }

@@ -277,6 +277,9 @@ fun SettingsRoute(
     val defaultNotePrefs = settingsDependencies.defaultNotePrefs()
     val cloudBackupManager = settingsDependencies.cloudBackupManager()
     val authRepository = settingsDependencies.authRepository()
+    val authState by authRepository.authState
+        .collectAsStateWithLifecycle(initialValue = three.haddad.smartnotas.data.auth.AuthState.Unauthenticated)
+    val currentAuthUser = (authState as? three.haddad.smartnotas.data.auth.AuthState.Authenticated)?.user ?: authRepository.currentUser
     val themePrefs = settingsDependencies.themePrefs()
     val notesUiPrefs = settingsDependencies.notesUiPrefs()
     val viewOptionsPrefs = settingsDependencies.viewOptionsPrefs()
@@ -733,13 +736,33 @@ fun SettingsRoute(
                     if (selectedSectionKey == null) {
                         item(key = "guest_profile_card") {
                             val palette = LocalSemanticPalette.current
+                            val user = currentAuthUser
+                            val title = if (user != null) {
+                                user.displayName?.takeIf { it.isNotBlank() } ?: user.email
+                            } else {
+                                "Guest User"
+                            }
+                            val subtitle = if (user != null) {
+                                if (user.displayName.isNullOrBlank()) "Signed in" else user.email
+                            } else {
+                                "Sign in to sync & back up your notes"
+                            }
+                            val initials = if (user != null) {
+                                user.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.toString() }?.take(2)?.joinToString("")?.uppercase()?.ifBlank { null }
+                                    ?: user.email.firstOrNull()?.uppercase()
+                                    ?: "U"
+                            } else {
+                                "G"
+                            }
+
                             SettingsRowCard {
                                 SettingsRow(
-                                    title = "Guest User",
-                                    subtitle = "Sign in to sync & back up your notes",
+                                    title = title,
+                                    subtitle = subtitle,
                                     leadingIcon = {
                                         UserAvatar(
-                                            initials = "G",
+                                            initials = initials,
+                                            photoUrl = user?.photoUrl,
                                             size = 36.dp,
                                         )
                                     },

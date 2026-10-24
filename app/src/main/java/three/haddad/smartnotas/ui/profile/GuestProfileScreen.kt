@@ -72,6 +72,11 @@ import three.haddad.smartnotas.ui.theme.NotasTokens
 import three.haddad.smartnotas.ui.theme.NotasTypography
 import javax.inject.Inject
 
+import three.haddad.smartnotas.data.auth.AuthRepository
+import three.haddad.smartnotas.data.auth.AuthState
+import three.haddad.smartnotas.data.auth.AppAuthState
+import three.haddad.smartnotas.data.auth.AuthUser
+
 data class GuestProfileStats(
     val notesCount: Int = 0,
     val tasksCount: Int = 0,
@@ -81,6 +86,7 @@ data class GuestProfileStats(
 @HiltViewModel
 class GuestProfileViewModel @Inject constructor(
     noteRepository: NoteRepository,
+    val authRepository: AuthRepository? = null,
     private val themePrefs: ThemePrefs? = null,
     private val notesUiPrefs: NotesUiPrefs? = null,
 ) : ViewModel() {
@@ -97,6 +103,35 @@ class GuestProfileViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = GuestProfileStats(),
         )
+
+    val authState: StateFlow<AuthState> = authRepository?.authState
+        ?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AuthState.Loading,
+        ) ?: MutableStateFlow(AuthState.Unauthenticated)
+
+    val appAuthState: StateFlow<AppAuthState> = authRepository?.appAuthState
+        ?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AppAuthState.Initializing,
+        ) ?: MutableStateFlow(AppAuthState.Guest)
+
+    val currentUser: AuthUser?
+        get() = authRepository?.currentUser
+
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository?.signOut()
+        }
+    }
+
+    fun syncBackendProfile() {
+        viewModelScope.launch {
+            authRepository?.syncBackendProfile()
+        }
+    }
 
     val themeState: StateFlow<ThemeState> = themePrefs?.state
         ?.stateIn(
@@ -133,6 +168,7 @@ fun GuestProfileScreen(
     onBackClick: () -> Unit,
     onCreateAccountClick: () -> Unit,
     onLoginClick: () -> Unit,
+    onVerifyEmailClick: ((email: String) -> Unit)? = null,
     onNotificationsClick: (() -> Unit)? = null,
     onAppearanceClick: (() -> Unit)? = null,
     onStartOfWeekClick: (() -> Unit)? = null,
@@ -142,6 +178,11 @@ fun GuestProfileScreen(
     val context = LocalContext.current
     val palette = LocalSemanticPalette.current
     val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val appAuthState by viewModel.appAuthState.collectAsStateWithLifecycle()
+    val currentUser = (authState as? AuthState.Authenticated)?.user ?: viewModel.currentUser
+    val isAuth = currentUser != null
+
     val themeState by viewModel.themeState.collectAsStateWithLifecycle()
     val notesUiState by viewModel.notesUiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -199,12 +240,12 @@ fun GuestProfileScreen(
 
                 Column {
                     Text(
-                        text = "Profile",
+                        text = if (isAuth) "Account" else "Profile",
                         style = NotasTypography.SectionTitle,
                         color = palette.primaryText,
                     )
                     Text(
-                        text = "Your personal space in Notas",
+                        text = if (isAuth) "Your Notas Cloud Profile" else "Your personal space in Notas",
                         style = NotasTypography.Caption,
                         color = palette.secondaryText,
                     )
@@ -213,7 +254,7 @@ fun GuestProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Guest Profile Card
+            // Profile Card (Authenticated vs Guest)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(NotasTokens.CardRadius),
@@ -226,16 +267,32 @@ fun GuestProfileScreen(
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    AccountHeader(
-                        displayName = "Guest",
-                        subtitle = "Using Notas without an account",
-                        initials = "G",
-                        badgeText = "Data stored on this device only",
-                    )
+                    if (currentUser != null) {
+                        val displayName = currentUser.displayName?.takeIf { it.isNotBlank() } ?: currentUser.email
+                        val initials = currentUser.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.toString() }?.take(2)?.joinToString("")?.uppercase()?.ifBlank { null }
+                            ?: currentUser.email.firstOrNull()?.uppercase()
+                            ?: "U"
+                        val badgeText = if (currentUser.isEmailVerified) "Email Verified" else "Email Unverified"
+
+                        AccountHeader(
+                            displayName = displayName,
+                            subtitle = currentUser.email,
+                            initials = initials,
+                            photoUrl = currentUser.photoUrl,
+                            badgeText = badgeText,
+                        )
+                    } else {
+                        AccountHeader(
+                            displayName = "Guest",
+                            subtitle = "Using Notas without an account",
+                            initials = "G",
+                            badgeText = "Data stored on this device only",
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Local Stats Columns (Notes, Tasks, Events)
+                    // Stats Columns (Notes, Tasks, Events)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -252,59 +309,138 @@ fun GuestProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Backup & Sync Promo Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(NotasTokens.CardRadius),
-                colors = CardDefaults.cardColors(containerColor = palette.cardSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
+            if (currentUser != null) {
+                // Authenticated: Cloud Sync & Account Actions Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(NotasTokens.CardRadius),
+                    colors = CardDefaults.cardColors(containerColor = palette.cardSurface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
                 ) {
-                    Text(
-                        text = "Backup & sync",
-                        style = NotasTypography.CardHeader,
-                        color = palette.primaryText,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Keep your ideas with you",
-                        style = NotasTypography.BodyMedium,
-                        color = palette.primaryText,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Online backup requires an account",
-                        style = NotasTypography.Label,
-                        color = palette.secondaryText,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Create an account or log in to back up to your private server and sync across devices.",
-                        style = NotasTypography.Body,
-                        color = palette.secondaryText,
-                    )
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
                     ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            PrimaryButton(
-                                text = "Create account",
-                                onClick = onCreateAccountClick,
-                            )
+                        Text(
+                            text = "Cloud Sync & Account",
+                            style = NotasTypography.CardHeader,
+                            color = palette.primaryText,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = when (val state = appAuthState) {
+                                is AppAuthState.LoadingProfile -> "Synchronizing profile with Notas Cloud..."
+                                is AppAuthState.Authenticated -> "Cloud sync active & connected"
+                                is AppAuthState.RecoverableError -> "Sync status: ${state.message}"
+                                else -> "Connected to Notas Cloud"
+                            },
+                            style = NotasTypography.BodyMedium,
+                            color = if (appAuthState is AppAuthState.RecoverableError) palette.error else palette.primaryText,
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Your private notes and settings are backed up to your account.",
+                            style = NotasTypography.Body,
+                            color = palette.secondaryText,
+                        )
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                SecondaryButton(
+                                    text = "Sync Now",
+                                    onClick = { viewModel.syncBackendProfile() },
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                PrimaryButton(
+                                    text = "Sign Out",
+                                    onClick = { viewModel.signOut() },
+                                )
+                            }
                         }
-                        Box(modifier = Modifier.weight(1f)) {
-                            SecondaryButton(
-                                text = "Log in",
-                                onClick = onLoginClick,
-                            )
+                    }
+                }
+
+                if (!currentUser.isEmailVerified && onVerifyEmailClick != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    SettingsRowCard {
+                        SettingsRow(
+                            title = "Verify Email Address",
+                            subtitle = "Verify ${currentUser.email} to secure your cloud sync.",
+                            trailingContent = {
+                                RememberMaterialRoundedSymbol(
+                                    name = "chevron_right",
+                                    size = 20.dp,
+                                    tint = palette.primaryAction,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = { onVerifyEmailClick(currentUser.email) },
+                            showDivider = false,
+                        )
+                    }
+                }
+            } else {
+                // Guest: Backup & Sync Promo Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(NotasTokens.CardRadius),
+                    colors = CardDefaults.cardColors(containerColor = palette.cardSurface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                    ) {
+                        Text(
+                            text = "Backup & sync",
+                            style = NotasTypography.CardHeader,
+                            color = palette.primaryText,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Keep your ideas with you",
+                            style = NotasTypography.BodyMedium,
+                            color = palette.primaryText,
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Online backup requires an account",
+                            style = NotasTypography.Label,
+                            color = palette.secondaryText,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Create an account or log in to back up to your private server and sync across devices.",
+                            style = NotasTypography.Body,
+                            color = palette.secondaryText,
+                        )
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                PrimaryButton(
+                                    text = "Create account",
+                                    onClick = onCreateAccountClick,
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                SecondaryButton(
+                                    text = "Log in",
+                                    onClick = onLoginClick,
+                                )
+                            }
                         }
                     }
                 }

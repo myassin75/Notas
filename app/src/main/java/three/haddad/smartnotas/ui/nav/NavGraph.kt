@@ -726,6 +726,7 @@ fun RememberNavGraph(
                         onBackClick = { navController.popBackStack() },
                         onCreateAccountClick = { navController.navigate(Routes.REGISTER) },
                         onLoginClick = { navController.navigate(Routes.LOGIN) },
+                        onVerifyEmailClick = { email -> navController.navigate(Routes.verifyEmail(email)) },
                     )
                 }
 
