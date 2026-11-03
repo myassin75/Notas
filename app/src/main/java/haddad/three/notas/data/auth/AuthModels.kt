@@ -94,3 +94,9 @@ data class BackendApiError(
     val code: String,
     val message: String,
 )
+
+@Serializable
+data class SendVerificationEmailResponse(
+    val message: String,
+    val email: String? = null,
+)

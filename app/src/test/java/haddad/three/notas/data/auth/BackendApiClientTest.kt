@@ -168,4 +168,70 @@ class BackendApiClientTest {
         assertEquals("NETWORK_ERROR", error.code)
         assertNotNull(error.cause)
     }
+
+    @Test
+    fun sendVerificationEmail_success200_returnsSuccess() = runTest {
+        var requestedUrl: String? = null
+        val jsonPayload = """{"success":true,"data":{"message":"Verification email sent successfully","email":"user@example.com"}}"""
+        val fakeConnection = FakeHttpURLConnection(
+            code = 200,
+            responseStream = ByteArrayInputStream(jsonPayload.toByteArray()),
+        )
+
+        val client = BackendApiClient(
+            httpFactory = { url ->
+                requestedUrl = url
+                fakeConnection
+            },
+            customBaseUrl = "https://notas-backend-iota.vercel.app",
+        )
+
+        val result = client.sendVerificationEmail("valid-id-token")
+        assertTrue(result is AuthResult.Success)
+        assertEquals("https://notas-backend-iota.vercel.app/api/v1/auth/send-verification-email", requestedUrl)
+    }
+
+    @Test
+    fun sendVerificationEmail_400BadRequest_returnsErrorWithBackendMessage() = runTest {
+        val errorJson = """{"success":false,"error":{"code":"EMAIL_ALREADY_VERIFIED","message":"Email address is already verified"}}"""
+        val fakeConnection = FakeHttpURLConnection(
+            code = 400,
+            errStream = ByteArrayInputStream(errorJson.toByteArray()),
+        )
+
+        val client = BackendApiClient { fakeConnection }
+        val result = client.sendVerificationEmail("verified-token")
+
+        assertTrue(result is AuthResult.Error)
+        val error = result as AuthResult.Error
+        assertEquals("BAD_REQUEST", error.code)
+        assertEquals("Email address is already verified", error.message)
+    }
+
+    @Test
+    fun sendVerificationEmail_429RateLimit_returnsRateLimitError() = runTest {
+        val fakeConnection = FakeHttpURLConnection(
+            code = 429,
+            errStream = ByteArrayInputStream("Rate limit exceeded".toByteArray()),
+        )
+
+        val client = BackendApiClient { fakeConnection }
+        val result = client.sendVerificationEmail("spam-token")
+
+        assertTrue(result is AuthResult.Error)
+        val error = result as AuthResult.Error
+        assertEquals("RATE_LIMIT", error.code)
+    }
+
+    @Test
+    fun sendVerificationEmail_networkError_returnsNetworkError() = runTest {
+        val client = BackendApiClient {
+            throw IOException("Socket timeout")
+        }
+        val result = client.sendVerificationEmail("sample-token")
+
+        assertTrue(result is AuthResult.Error)
+        val error = result as AuthResult.Error
+        assertEquals("NETWORK_ERROR", error.code)
+    }
 }

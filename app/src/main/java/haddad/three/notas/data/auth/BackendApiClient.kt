@@ -95,4 +95,45 @@ class BackendApiClient(
             )
         }
     }
+
+    suspend fun sendVerificationEmail(idToken: String): AuthResult<Unit> = withContext(Dispatchers.IO) {
+        val endpoint = "$baseUrl/api/v1/auth/send-verification-email"
+
+        try {
+            val connection = httpFactory(endpoint).apply {
+                requestMethod = "POST"
+                instanceFollowRedirects = false
+                setRequestProperty("Authorization", "Bearer $idToken")
+                setRequestProperty("Accept", "application/json")
+                setRequestProperty("Content-Type", "application/json")
+            }
+
+            val statusCode = connection.responseCode
+            val stream = if (statusCode in 200..299) connection.inputStream else connection.errorStream
+            val responseBody = stream?.bufferedReader()?.use(BufferedReader::readText).orEmpty()
+
+            when (statusCode) {
+                in 200..299 -> AuthResult.Success(Unit)
+                400 -> {
+                    val errorMsg = try {
+                        val apiResponse = json.decodeFromString<BackendApiResponse<SendVerificationEmailResponse>>(responseBody)
+                        apiResponse.error?.message ?: "Bad Request (HTTP 400)"
+                    } catch (_: Exception) {
+                        "Bad Request (HTTP 400)"
+                    }
+                    AuthResult.Error(errorMsg, code = "BAD_REQUEST")
+                }
+                401 -> AuthResult.Error("Unauthorized: Session has expired. Please sign in again.", code = "UNAUTHORIZED")
+                429 -> AuthResult.Error("Rate limit exceeded. Please wait a moment before requesting another verification email.", code = "RATE_LIMIT")
+                in 500..599 -> AuthResult.Error("Backend server error ($statusCode). Please try again later.", code = "SERVER_ERROR")
+                else -> AuthResult.Error("HTTP request failed with status $statusCode", code = "HTTP_$statusCode")
+            }
+        } catch (e: Exception) {
+            AuthResult.Error(
+                message = e.localizedMessage ?: "Network error connecting to backend",
+                code = "NETWORK_ERROR",
+                cause = e,
+            )
+        }
+    }
 }

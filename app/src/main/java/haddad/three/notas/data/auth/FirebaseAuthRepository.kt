@@ -189,6 +189,9 @@ class FirebaseAuthRepository @Inject constructor(
 
         try {
             val user = auth!!.currentUser ?: return@withContext AuthResult.Error("No user currently logged in", code = "UNAUTHENTICATED")
+            if (user.isEmailVerified) {
+                return@withContext AuthResult.Success(Unit)
+            }
             sendVerificationEmailToUser(user)
             AuthResult.Success(Unit)
         } catch (e: Exception) {
@@ -215,6 +218,30 @@ class FirebaseAuthRepository @Inject constructor(
     }
 
     private suspend fun sendVerificationEmailToUser(user: FirebaseUser) {
+        if (user.isEmailVerified) return
+
+        // 1. Primary path: Dispatch custom branded HTML email via Notas backend
+        try {
+            val idToken = user.getIdToken(false).awaitResult()?.token
+            if (!idToken.isNullOrBlank()) {
+                val backendResult = backendApiClient.sendVerificationEmail(idToken)
+                if (backendResult is AuthResult.Success) {
+                    return
+                }
+                android.util.Log.w(
+                    "FirebaseAuthRepository",
+                    "Custom backend verification email returned: ${(backendResult as? AuthResult.Error)?.message}. Falling back to Firebase SDK."
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.w(
+                "FirebaseAuthRepository",
+                "Custom backend email verification failed; falling back to Firebase SDK",
+                e,
+            )
+        }
+
+        // 2. Fallback path: Firebase Auth client SDK with ActionCodeSettings
         val settings = buildActionCodeSettings()
         if (settings != null) {
             try {
@@ -228,6 +255,8 @@ class FirebaseAuthRepository @Inject constructor(
                 )
             }
         }
+
+        // 3. Last-resort fallback: Standard Firebase client SDK verification email
         user.sendEmailVerification().awaitResult()
     }
 

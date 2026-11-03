@@ -22,8 +22,10 @@ import {
   handleGetAttachmentDownloadUrl,
   handleDeleteAttachment,
 } from './routes/attachments.js';
+import { handleSendVerificationEmail } from './routes/auth.js';
 
 const rateLimiter = rateLimit({ windowMs: 60 * 1000, maxRequests: 120 });
+const verifyEmailRateLimiter = rateLimit({ windowMs: 60 * 1000, maxRequests: 5, keyPrefix: 'verify-email' });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const startTime = Date.now();
@@ -113,6 +115,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (cleanPath === 'me/stats' && method === 'GET') {
       return await handleGetStats(authReq, res);
+    }
+
+    // 2. Auth & Verification Email Endpoints
+    if (
+      (cleanPath === 'auth/send-verification-email' || cleanPath === 'me/send-verification-email') &&
+      method === 'POST'
+    ) {
+      await verifyEmailRateLimiter(req, res);
+      return await handleSendVerificationEmail(authReq, res);
     }
 
     // 2. Sync Endpoints (/api/v1/sync)
