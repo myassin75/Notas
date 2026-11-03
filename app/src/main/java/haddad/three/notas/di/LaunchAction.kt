@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.di
+package haddad.three.notas.di
 
 sealed interface LaunchAction {
     data class NewNote(

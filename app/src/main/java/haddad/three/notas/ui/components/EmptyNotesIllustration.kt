@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -33,16 +33,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.theme.LocalReducedMotion
-import three.haddad.smartnotas.ui.theme.MorphPolygonShape
-import three.haddad.smartnotas.ui.theme.RoundedPolygonShape
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.theme.LocalReducedMotion
+import haddad.three.notas.ui.theme.MorphPolygonShape
+import haddad.three.notas.ui.theme.RoundedPolygonShape
 
 @Composable
 fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
     val isSmallLandscape = isSmallLandscape()
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val sizeDp = if (isSmallLandscape) 96.dp else 120.dp
     val primaryColor = MaterialTheme.colorScheme.primary
     val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f) else MaterialTheme.colorScheme.surface

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import com.google.android.play.core.appupdate.AppUpdateInfo
 

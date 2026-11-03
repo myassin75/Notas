@@ -1,7 +1,7 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.auth.AuthRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.auth.AuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

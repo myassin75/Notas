@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -44,10 +44,10 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.feedback.appClickable
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.feedback.appClickable
 
 // Intent.EXTRA_SHORTCUT_* constants are deprecated on the SDK; keys are stable for CREATE_SHORTCUT results.
 private const val EXTRA_LEGACY_SHORTCUT_INTENT = "android.intent.extra.shortcut.INTENT"

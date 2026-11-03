@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.auth
+package haddad.three.notas.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,14 +35,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.GoogleSignInButton
-import three.haddad.smartnotas.ui.components.NotasTextField
-import three.haddad.smartnotas.ui.components.PasswordTextField
-import three.haddad.smartnotas.ui.components.PrimaryButton
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.NotasTokens
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.GoogleSignInButton
+import haddad.three.notas.ui.components.NotasTextField
+import haddad.three.notas.ui.components.PasswordTextField
+import haddad.three.notas.ui.components.PrimaryButton
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 
 /**
  * Login screen matching Notas Figma reference (Node 46:2066).
@@ -130,6 +130,7 @@ fun LoginScreen(
                     AuthErrorBanner(
                         message = state.errorMessage ?: "",
                         modifier = Modifier.padding(bottom = 16.dp),
+                        onDismiss = viewModel::clearErrors,
                     )
                 }
 

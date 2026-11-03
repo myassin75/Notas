@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.search
+package haddad.three.notas.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,13 +14,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.SearchHistoryEntry
-import three.haddad.smartnotas.data.SearchPreferences
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ShoulderRepository
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.SearchHistoryEntry
+import haddad.three.notas.data.SearchPreferences
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
 import java.util.Calendar
 import javax.inject.Inject
 

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -71,22 +71,22 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.domain.checklist.EditableItem
-import three.haddad.smartnotas.ui.common.NotePageBackground
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.rememberNotificationsAllowed
-import three.haddad.smartnotas.ui.components.NoteActionBottomBarContent
-import three.haddad.smartnotas.ui.components.NoteShelfState
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.modifiers.applyToFullBleedLayer
-import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
-import three.haddad.smartnotas.ui.theme.LocalAdaptiveNoteThemes
-import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.domain.checklist.EditableItem
+import haddad.three.notas.ui.common.NotePageBackground
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.rememberNotificationsAllowed
+import haddad.three.notas.ui.components.NoteActionBottomBarContent
+import haddad.three.notas.ui.components.NoteShelfState
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.modifiers.applyToFullBleedLayer
+import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
+import haddad.three.notas.ui.theme.LocalAdaptiveNoteThemes
+import haddad.three.notas.ui.theme.LocalSnackbarHostState
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import java.io.File
 
 private enum class FocusField { TITLE, DETAILS }

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.annotation.SuppressLint
 import android.app.AlarmManager
@@ -10,21 +10,21 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import three.haddad.smartnotas.MainActivity
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.data.alertsAsAlarm
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.notifications.canPostNotifications
-import three.haddad.smartnotas.notifications.postNotificationIfAllowed
-import three.haddad.smartnotas.ui.edit.iconEmojiPayload
+import haddad.three.notas.MainActivity
+import haddad.three.notas.R
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.alertsAsAlarm
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.notifications.canPostNotifications
+import haddad.three.notas.notifications.postNotificationIfAllowed
+import haddad.three.notas.ui.edit.iconEmojiPayload
 import java.util.Calendar
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -444,15 +444,15 @@ class ReminderScheduler(
 
     companion object {
         private const val TAG = "ReminderScheduler"
-        const val MAX_REMINDERS_PER_NOTE = three.haddad.smartnotas.data.MAX_REMINDERS_PER_NOTE
+        const val MAX_REMINDERS_PER_NOTE = haddad.three.notas.data.MAX_REMINDERS_PER_NOTE
         private val inexactFallbackScheduleCounter = AtomicInteger(0)
         private val criticalRepeatMutex = Mutex()
 
-        const val ACTION_FIRE_REMINDER = "three.haddad.smartnotas.reminders.FIRE"
+        const val ACTION_FIRE_REMINDER = "haddad.three.notas.reminders.FIRE"
         const val EXTRA_NOTE_ID = "note_id"
         const val EXTRA_REMINDER_INDEX = "reminder_index"
-        const val ACTION_REPEAT_CRITICAL = "three.haddad.smartnotas.reminders.REPEAT_CRITICAL"
-        const val ACTION_STOP_CRITICAL_RING = "three.haddad.smartnotas.reminders.STOP_CRITICAL_RING"
+        const val ACTION_REPEAT_CRITICAL = "haddad.three.notas.reminders.REPEAT_CRITICAL"
+        const val ACTION_STOP_CRITICAL_RING = "haddad.three.notas.reminders.STOP_CRITICAL_RING"
 
         // Fixed: one shared repeat and one shared ring stop serve every Critical note. Their
         // intents target a different receiver and action than the per-note alarms, so they

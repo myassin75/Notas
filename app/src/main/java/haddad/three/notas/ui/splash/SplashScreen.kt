@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.splash
+package haddad.three.notas.ui.splash
 
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 
 /**
  * Visual design tokens sampled from the approved reference design.

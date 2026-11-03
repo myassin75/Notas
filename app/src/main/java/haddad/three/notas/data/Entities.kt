@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import androidx.annotation.StringRes
 import androidx.room.Entity
@@ -8,7 +8,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 import kotlinx.serialization.Serializable
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 
 @Serializable
 enum class NoteKind { NOTE, LIST }
@@ -154,7 +154,7 @@ data class NoteEntity(
     val importance: Importance = Importance.DEFAULT,
     val visibility: Visibility = Visibility.DEFAULT,
     val pictureUri: String? = null,
-    /** JSON from [three.haddad.smartnotas.ui.common.HeroFraming.toJsonString]; null = legacy center crop. */
+    /** JSON from [haddad.three.notas.ui.common.HeroFraming.toJsonString]; null = legacy center crop. */
     val pictureHeroFraming: String? = null,
     val locked: Boolean = false,
     val iconKey: String? = null,

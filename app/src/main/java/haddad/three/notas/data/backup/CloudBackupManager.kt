@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.backup
+package haddad.three.notas.data.backup
 
 import android.content.Context
 import androidx.room.withTransaction
@@ -10,35 +10,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import three.haddad.smartnotas.backup.SettingsBackup
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.RememberDatabase
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.ShoulderDao
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.decodeAttachmentMetas
-import three.haddad.smartnotas.data.decodeChecklistItems
-import three.haddad.smartnotas.data.decodeNoteEntity
-import three.haddad.smartnotas.data.decodeShoulderEntity
-import three.haddad.smartnotas.data.encodeNoteForBackup
-import three.haddad.smartnotas.data.encodeShoulderForBackup
-import three.haddad.smartnotas.di.IoDispatcher
-import three.haddad.smartnotas.reminders.ReminderScheduler
+import haddad.three.notas.backup.SettingsBackup
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.BackupIo
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.RememberDatabase
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.decodeAttachmentMetas
+import haddad.three.notas.data.decodeChecklistItems
+import haddad.three.notas.data.decodeNoteEntity
+import haddad.three.notas.data.decodeShoulderEntity
+import haddad.three.notas.data.encodeNoteForBackup
+import haddad.three.notas.data.encodeShoulderForBackup
+import haddad.three.notas.di.IoDispatcher
+import haddad.three.notas.reminders.ReminderScheduler
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -70,7 +70,7 @@ class CloudBackupManager @Inject constructor(
     private val noteRepository: NoteRepository,
     private val themePrefs: ThemePrefs,
     private val notesUiPrefs: NotesUiPrefs,
-    private val viewOptionsPrefs: three.haddad.smartnotas.data.ViewOptionsPrefs,
+    private val viewOptionsPrefs: haddad.three.notas.data.ViewOptionsPrefs,
     private val lockPrefs: LockPrefs,
     private val interactionPrefs: InteractionPrefs,
     private val quickCapturePrefs: QuickCapturePrefs,

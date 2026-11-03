@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.BorderStroke
@@ -55,25 +55,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.Morph
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.ui.common.HeroFramedImage
-import three.haddad.smartnotas.ui.common.HeroFraming
-import three.haddad.smartnotas.ui.common.MarkdownText
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.edit.NoteIcon
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.nav.noteMorphContainer
-import three.haddad.smartnotas.ui.theme.LocalHeroOnCards
-import three.haddad.smartnotas.ui.theme.LocalShowNoteContentOnCards
-import three.haddad.smartnotas.ui.theme.MorphPolygonShape
-import three.haddad.smartnotas.ui.theme.NoteColors
-import three.haddad.smartnotas.ui.theme.elevatedCardColors
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.ui.common.HeroFramedImage
+import haddad.three.notas.ui.common.HeroFraming
+import haddad.three.notas.ui.common.MarkdownText
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
+import haddad.three.notas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
+import haddad.three.notas.ui.edit.NoteIcon
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.nav.noteMorphContainer
+import haddad.three.notas.ui.theme.LocalHeroOnCards
+import haddad.three.notas.ui.theme.LocalShowNoteContentOnCards
+import haddad.three.notas.ui.theme.MorphPolygonShape
+import haddad.three.notas.ui.theme.NoteColors
+import haddad.three.notas.ui.theme.elevatedCardColors
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -247,7 +247,7 @@ fun NoteCard(
         } else {
             Modifier
         }
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val noteAccent =
         remember(model.colorIndex, isDark) {
             if (!NoteColors.isNone(model.colorIndex)) {
@@ -578,7 +578,7 @@ private fun MetadataRow(
                 remember(model.shoulderColorHex, fallbackPrimary) {
                     parseNoteColorHex(model.shoulderColorHex, fallbackPrimary)
                 }
-            val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+            val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
             val (badgeBg, badgeFg) = remember(chipColor, isDark) { readableBadgeColors(chipColor, isDark) }
             Surface(
                 shape = CircleShape,

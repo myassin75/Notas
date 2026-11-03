@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.auth
+package haddad.three.notas.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,11 +35,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.PrimaryButton
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.NotasTokens
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.PrimaryButton
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 
 /**
  * Verify Email screen matching Notas Figma reference (Node 46:2010).

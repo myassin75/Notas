@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.di
+package haddad.three.notas.di
 
 import android.content.Context
 import dagger.Module
@@ -13,29 +13,29 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.DevModePrefs
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.OnboardingPrefs
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.RememberDatabase
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.SearchPreferences
-import three.haddad.smartnotas.data.ShoulderRepository
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.googletasks.GoogleTasksApi
-import three.haddad.smartnotas.googletasks.GoogleTasksImportPrefs
-import three.haddad.smartnotas.googletasks.GoogleTasksImporter
-import three.haddad.smartnotas.googletasks.GoogleTasksRepository
-import three.haddad.smartnotas.reminders.ReminderScheduler
-import three.haddad.smartnotas.ui.lock.AppLockSession
-import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
+import haddad.three.notas.data.AppMediaStorage
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.DevModePrefs
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.OnboardingPrefs
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.RememberDatabase
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.SearchPreferences
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.googletasks.GoogleTasksApi
+import haddad.three.notas.googletasks.GoogleTasksImportPrefs
+import haddad.three.notas.googletasks.GoogleTasksImporter
+import haddad.three.notas.googletasks.GoogleTasksRepository
+import haddad.three.notas.reminders.ReminderScheduler
+import haddad.three.notas.ui.lock.AppLockSession
+import haddad.three.notas.update.UpdateCheckWorkScheduler
 import javax.inject.Singleton
 
 @Module
@@ -105,8 +105,8 @@ object RememberModule {
     @Singleton
     fun provideShoulderRepository(
         database: RememberDatabase,
-        tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder,
-        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
+        tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder,
+        authRepository: haddad.three.notas.data.auth.AuthRepository,
     ): ShoulderRepository =
         ShoulderRepository(
             shoulderDao = database.shoulderDao(),
@@ -121,8 +121,8 @@ object RememberModule {
         reminderScheduler: ReminderScheduler,
         shoulderRepository: ShoulderRepository,
         appMediaStorage: AppMediaStorage,
-        tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder,
-        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
+        tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder,
+        authRepository: haddad.three.notas.data.auth.AuthRepository,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         @DefaultDispatcher defaultDispatcher: CoroutineDispatcher,
     ): NoteRepository =
@@ -228,10 +228,10 @@ object RememberModule {
     @Singleton
     fun provideAuthRepository(
         @ApplicationContext context: Context,
-        backendApiClient: three.haddad.smartnotas.data.auth.BackendApiClient,
+        backendApiClient: haddad.three.notas.data.auth.BackendApiClient,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): three.haddad.smartnotas.data.auth.AuthRepository =
-        three.haddad.smartnotas.data.auth.FirebaseAuthRepository(
+    ): haddad.three.notas.data.auth.AuthRepository =
+        haddad.three.notas.data.auth.FirebaseAuthRepository(
             context = context,
             backendApiClient = backendApiClient,
             ioDispatcher = ioDispatcher,
@@ -241,36 +241,36 @@ object RememberModule {
     @Singleton
     fun provideSyncStateStore(
         @ApplicationContext context: Context,
-    ): three.haddad.smartnotas.data.sync.SyncStateStore =
-        three.haddad.smartnotas.data.sync.SyncStateStore(context)
+    ): haddad.three.notas.data.sync.SyncStateStore =
+        haddad.three.notas.data.sync.SyncStateStore(context)
 
     @Provides
     @Singleton
     fun provideSyncTombstoneRecorder(
-        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
-        syncStateStore: three.haddad.smartnotas.data.sync.SyncStateStore,
-    ): three.haddad.smartnotas.data.sync.SyncTombstoneRecorder =
-        three.haddad.smartnotas.data.sync.DefaultSyncTombstoneRecorder(
+        authRepository: haddad.three.notas.data.auth.AuthRepository,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+    ): haddad.three.notas.data.sync.SyncTombstoneRecorder =
+        haddad.three.notas.data.sync.DefaultSyncTombstoneRecorder(
             authRepository = authRepository,
             syncStateStore = syncStateStore,
         )
 
     @Provides
     @Singleton
-    fun provideSyncApiClient(): three.haddad.smartnotas.data.sync.SyncApiClient =
-        three.haddad.smartnotas.data.sync.SyncApiClient()
+    fun provideSyncApiClient(): haddad.three.notas.data.sync.SyncApiClient =
+        haddad.three.notas.data.sync.SyncApiClient()
 
     @Provides
     @Singleton
     fun provideSyncEngine(
-        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
-        syncStateStore: three.haddad.smartnotas.data.sync.SyncStateStore,
-        syncApiClient: three.haddad.smartnotas.data.sync.SyncApiClient,
+        authRepository: haddad.three.notas.data.auth.AuthRepository,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+        syncApiClient: haddad.three.notas.data.sync.SyncApiClient,
         database: RememberDatabase,
         reminderScheduler: ReminderScheduler,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): three.haddad.smartnotas.data.sync.SyncEngine =
-        three.haddad.smartnotas.data.sync.SyncEngine(
+    ): haddad.three.notas.data.sync.SyncEngine =
+        haddad.three.notas.data.sync.SyncEngine(
             authRepository = authRepository,
             syncStateStore = syncStateStore,
             syncApiClient = syncApiClient,
@@ -285,15 +285,15 @@ object RememberModule {
 
     @Provides
     @Singleton
-    fun provideBackupApiClient(): three.haddad.smartnotas.data.backup.BackupApiClient =
-        three.haddad.smartnotas.data.backup.BackupApiClient()
+    fun provideBackupApiClient(): haddad.three.notas.data.backup.BackupApiClient =
+        haddad.three.notas.data.backup.BackupApiClient()
 
     @Provides
     @Singleton
     fun provideCloudBackupManager(
         @ApplicationContext context: Context,
-        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
-        backupApiClient: three.haddad.smartnotas.data.backup.BackupApiClient,
+        authRepository: haddad.three.notas.data.auth.AuthRepository,
+        backupApiClient: haddad.three.notas.data.backup.BackupApiClient,
         database: RememberDatabase,
         reminderScheduler: ReminderScheduler,
         noteRepository: NoteRepository,
@@ -307,8 +307,8 @@ object RememberModule {
         defaultNotePrefs: DefaultNotePrefs,
         updatePrefs: UpdatePrefs,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): three.haddad.smartnotas.data.backup.CloudBackupManager =
-        three.haddad.smartnotas.data.backup.CloudBackupManager(
+    ): haddad.three.notas.data.backup.CloudBackupManager =
+        haddad.three.notas.data.backup.CloudBackupManager(
             context = context,
             authRepository = authRepository,
             backupApiClient = backupApiClient,
@@ -334,12 +334,12 @@ object RememberModule {
     @Provides
     @Singleton
     fun provideAttachmentStorageManager(
-        authRepository: three.haddad.smartnotas.data.auth.AuthRepository,
-        backupApiClient: three.haddad.smartnotas.data.backup.BackupApiClient,
+        authRepository: haddad.three.notas.data.auth.AuthRepository,
+        backupApiClient: haddad.three.notas.data.backup.BackupApiClient,
         database: RememberDatabase,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): three.haddad.smartnotas.data.backup.AttachmentStorageManager =
-        three.haddad.smartnotas.data.backup.AttachmentStorageManager(
+    ): haddad.three.notas.data.backup.AttachmentStorageManager =
+        haddad.three.notas.data.backup.AttachmentStorageManager(
             authRepository = authRepository,
             backupApiClient = backupApiClient,
             attachmentDao = database.attachmentDao(),

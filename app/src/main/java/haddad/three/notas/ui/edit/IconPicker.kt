@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.res.Resources
 import android.widget.Toast
@@ -115,20 +115,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ICON_PICKER_MAX_STARRED
-import three.haddad.smartnotas.data.IconPickerPrefs
-import three.haddad.smartnotas.data.IconPickerStarredState
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.RememberInlineSearchField
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.components.RememberToggleButton
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.data.ICON_PICKER_MAX_STARRED
+import haddad.three.notas.data.IconPickerPrefs
+import haddad.three.notas.data.IconPickerStarredState
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.RememberInlineSearchField
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.components.RememberToggleButton
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import java.util.Locale
 
 private data class IconPickerAssets(

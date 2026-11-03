@@ -1,9 +1,9 @@
-package three.haddad.smartnotas.data.auth
+package haddad.three.notas.data.auth
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import three.haddad.smartnotas.BuildConfig
+import haddad.three.notas.BuildConfig
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -20,6 +20,7 @@ class BackendApiClient(
         (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 10000
             readTimeout = 10000
+            instanceFollowRedirects = false
         }
     })
     private val json = Json {
@@ -34,6 +35,7 @@ class BackendApiClient(
         try {
             val connection = httpFactory(endpoint).apply {
                 requestMethod = "GET"
+                instanceFollowRedirects = false
                 setRequestProperty("Authorization", "Bearer $idToken")
                 setRequestProperty("Accept", "application/json")
             }
@@ -49,6 +51,17 @@ class BackendApiClient(
                         AuthResult.Success(apiResponse.data)
                     } else {
                         AuthResult.Error(apiResponse.error?.message ?: "Unknown backend error")
+                    }
+                }
+                in listOf(301, 302, 307, 308) -> {
+                    val location = connection.getHeaderField("Location").orEmpty()
+                    if (location.contains("vercel.com") || location.contains("sso")) {
+                        AuthResult.Error(
+                            "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard.",
+                            code = "DEPLOYMENT_PROTECTION_REDIRECT"
+                        )
+                    } else {
+                        AuthResult.Error("Unexpected HTTP redirect to $location", code = "REDIRECT_$statusCode")
                     }
                 }
                 401 -> AuthResult.Error("Unauthorized: Session has expired. Please sign in again.", code = "UNAUTHORIZED")

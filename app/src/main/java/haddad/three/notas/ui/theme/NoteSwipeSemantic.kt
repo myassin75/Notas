@@ -1,8 +1,8 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import three.haddad.smartnotas.data.NoteSwipeAction
+import haddad.three.notas.data.NoteSwipeAction
 
 fun NoteSwipeAction.swipeActionAccent(): Color =
     when (this) {

@@ -1,11 +1,11 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.auth.BackendApiResponse
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.auth.BackendApiResponse
 import java.io.BufferedReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -25,6 +25,7 @@ open class SyncApiClient(
         (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 15000
             readTimeout = 20000
+            instanceFollowRedirects = false
         }
     })
 
@@ -44,6 +45,7 @@ open class SyncApiClient(
         try {
             val connection = httpFactory(endpoint).apply {
                 requestMethod = "POST"
+                instanceFollowRedirects = false
                 doOutput = true
                 setRequestProperty("Authorization", "Bearer $idToken")
                 setRequestProperty("Content-Type", "application/json; charset=utf-8")
@@ -72,6 +74,19 @@ open class SyncApiClient(
                             statusCode = statusCode,
                         )
                     }
+                }
+                in listOf(301, 302, 307, 308) -> {
+                    val location = connection.getHeaderField("Location").orEmpty()
+                    val msg = if (location.contains("vercel.com") || location.contains("sso")) {
+                        "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard."
+                    } else {
+                        "Unexpected HTTP redirect to $location"
+                    }
+                    SyncResult.Error(
+                        message = msg,
+                        code = "DEPLOYMENT_PROTECTION_REDIRECT",
+                        statusCode = statusCode,
+                    )
                 }
                 401 -> SyncResult.Unauthorized
                 429 -> SyncResult.RateLimited
@@ -106,6 +121,7 @@ open class SyncApiClient(
         try {
             val connection = httpFactory(endpoint).apply {
                 requestMethod = "GET"
+                instanceFollowRedirects = false
                 setRequestProperty("Authorization", "Bearer $idToken")
                 setRequestProperty("Accept", "application/json")
             }
@@ -126,6 +142,19 @@ open class SyncApiClient(
                             statusCode = statusCode,
                         )
                     }
+                }
+                in listOf(301, 302, 307, 308) -> {
+                    val location = connection.getHeaderField("Location").orEmpty()
+                    val msg = if (location.contains("vercel.com") || location.contains("sso")) {
+                        "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard."
+                    } else {
+                        "Unexpected HTTP redirect to $location"
+                    }
+                    SyncResult.Error(
+                        message = msg,
+                        code = "DEPLOYMENT_PROTECTION_REDIRECT",
+                        statusCode = statusCode,
+                    )
                 }
                 401 -> SyncResult.Unauthorized
                 429 -> SyncResult.RateLimited

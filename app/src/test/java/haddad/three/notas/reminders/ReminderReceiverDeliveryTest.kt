@@ -1,11 +1,11 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
 
 class ReminderReceiverDeliveryTest {
     @Test

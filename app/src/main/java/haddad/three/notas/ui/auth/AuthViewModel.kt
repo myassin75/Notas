@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.auth
+package haddad.three.notas.ui.auth
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthResult
-import three.haddad.smartnotas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
 import javax.inject.Inject
 
 data class RegisterUiState(
@@ -93,6 +93,17 @@ class AuthViewModel @Inject constructor(
 
     private val _verifyEmailState = MutableStateFlow(VerifyEmailUiState())
     val verifyEmailState: StateFlow<VerifyEmailUiState> = _verifyEmailState.asStateFlow()
+
+    val currentUser: haddad.three.notas.data.auth.AuthUser?
+        get() = authRepository.currentUser
+
+    fun clearErrors() {
+        _loginState.update { it.copy(errorMessage = null, emailError = null, passwordError = null) }
+        _registerState.update { it.copy(errorMessage = null, usernameError = null, emailError = null, passwordError = null) }
+        _forgotPasswordState.update { it.copy(errorMessage = null, emailError = null) }
+        _verifyEmailState.update { it.copy(errorMessage = null) }
+        _setNewPasswordState.update { it.copy(errorMessage = null, newPasswordError = null, confirmPasswordError = null) }
+    }
 
     private var verifyTimerJob: Job? = null
     private var forgotTimerJob: Job? = null

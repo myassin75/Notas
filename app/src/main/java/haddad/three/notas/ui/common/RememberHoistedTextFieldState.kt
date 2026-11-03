@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState

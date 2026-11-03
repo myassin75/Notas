@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar
+package haddad.three.notas.ui.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.LocalIsDark
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -109,7 +109,7 @@ fun CalendarDayCell(
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textOutOfMonth = CalendarDesignTokens.resolveOutOfMonthText(isDark)
-    val semanticPalette = three.haddad.smartnotas.ui.theme.LocalSemanticPalette.current
+    val semanticPalette = haddad.three.notas.ui.theme.LocalSemanticPalette.current
 
     val lightAccent = if (isDark) semanticPalette.primaryAction else MaterialTheme.colorScheme.primary
     val onLightAccent = if (isDark) semanticPalette.primaryActionForeground else MaterialTheme.colorScheme.onPrimary

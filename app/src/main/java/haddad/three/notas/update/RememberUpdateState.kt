@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.di.ApplicationScope
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.di.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 

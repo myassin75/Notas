@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.widget
+package haddad.three.notas.widget
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
@@ -63,19 +63,19 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
-import three.haddad.smartnotas.MainActivity
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.data.pinned
-import three.haddad.smartnotas.di.NotesWidgetEntryPoint
-import three.haddad.smartnotas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.edit.NoteIcon
-import three.haddad.smartnotas.ui.edit.resolveNoteIcon
-import three.haddad.smartnotas.ui.home.sortNotes
+import haddad.three.notas.MainActivity
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.pinned
+import haddad.three.notas.di.NotesWidgetEntryPoint
+import haddad.three.notas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
+import haddad.three.notas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
+import haddad.three.notas.ui.edit.NoteIcon
+import haddad.three.notas.ui.edit.resolveNoteIcon
+import haddad.three.notas.ui.home.sortNotes
 import java.util.Calendar
 
 /**

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui
+package haddad.three.notas.ui
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
@@ -6,12 +6,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.OnboardingState
-import three.haddad.smartnotas.data.UpdatePreferencesState
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.update.AppReviewLauncher
-import three.haddad.smartnotas.update.InAppRatingAutoPrompt
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.OnboardingState
+import haddad.three.notas.data.UpdatePreferencesState
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.update.AppReviewLauncher
+import haddad.three.notas.update.InAppRatingAutoPrompt
 
 /**
  * Play flavor: when eligible, requests Google's in-app review flow without a custom pre-prompt.

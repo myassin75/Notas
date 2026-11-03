@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import androidx.room.withTransaction
 import kotlinx.coroutines.CoroutineDispatcher
@@ -6,16 +6,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.RememberDatabase
-import three.haddad.smartnotas.data.ShoulderDao
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.di.IoDispatcher
-import three.haddad.smartnotas.reminders.ReminderScheduler
-import three.haddad.smartnotas.ui.components.SyncStatus
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.RememberDatabase
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.di.IoDispatcher
+import haddad.three.notas.reminders.ReminderScheduler
+import haddad.three.notas.ui.components.SyncStatus
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -85,7 +85,6 @@ class SyncEngine @Inject constructor(
             val modifiedNotes = localNotes.filter { it.note.ownerId == user.uid && it.note.updatedAt > lastPushedAt }
 
             val tombstones = syncStateStore.getTombstones(user.uid)
-            val pushedTombstoneUuids = mutableSetOf<String>()
 
             val categoriesToPush = mutableListOf<CategorySyncDto>()
             val notesToPush = mutableListOf<NoteSyncDto>()
@@ -110,7 +109,6 @@ class SyncEngine @Inject constructor(
                         isDeleted = true,
                     ),
                 )
-                pushedTombstoneUuids.add(ct.uuid)
             }
 
             // Map modified notes
@@ -124,7 +122,6 @@ class SyncEngine @Inject constructor(
                 val noteUuid = noteWithItems.note.uuid
 
                 val extraDeletedItems = itemTombstonesByNoteUuid[noteUuid]?.map { itemTombstone ->
-                    pushedTombstoneUuids.add(itemTombstone.uuid)
                     ChecklistItemSyncDto(
                         id = itemTombstone.uuid,
                         text = "",
@@ -133,7 +130,6 @@ class SyncEngine @Inject constructor(
                 }.orEmpty()
 
                 val extraDeletedAttachments = attTombstonesByNoteUuid[noteUuid]?.map { attTombstone ->
-                    pushedTombstoneUuids.add(attTombstone.uuid)
                     AttachmentSyncDto(
                         id = attTombstone.uuid,
                         uri = "",
@@ -164,71 +160,121 @@ class SyncEngine @Inject constructor(
                         isDeleted = true,
                     ),
                 )
-                pushedTombstoneUuids.add(nt.uuid)
             }
 
-            // Push in chunks if needed (max 500 per batch per backend validation)
+            // Push in bounded batches (max 500 records per model per backend validation).
+            // Audit AUD-24: the previous implementation pushed only `take(500)` of each list
+            // yet advanced the lastPushedAt watermark over the FULL modified lists, so records
+            // 501+ were silently skipped until their next edit. We now drain in batches and
+            // advance the watermark ONLY after a complete drain (every batch applied, minus
+            // accumulated conflicts). A partial drain leaves the watermark untouched — the
+            // remainder is re-pushed on the next sync, which is safe because applies are
+            // idempotent under last-write-wins revision comparison.
             if (categoriesToPush.isNotEmpty() || notesToPush.isNotEmpty()) {
                 val deviceId = syncStateStore.getOrCreateDeviceId()
-                val pushPayload = SyncPushRequestDto(
-                    deviceId = deviceId,
-                    deviceName = android.os.Build.MODEL,
-                    appVersion = BuildConfig.VERSION_NAME,
-                    categories = categoriesToPush.take(500),
-                    notes = notesToPush.take(500),
-                )
+                val accumulatedConflictIds = mutableSetOf<String>()
+                var catCursor = 0
+                var noteCursor = 0
+                var pushCycles = 0
+                val maxPushCycles = 100
 
-                var pushResult = syncApiClient.pushSync(currentToken, pushPayload)
+                while ((catCursor < categoriesToPush.size || noteCursor < notesToPush.size) && pushCycles < maxPushCycles) {
+                    pushCycles++
 
-                if (pushResult is SyncResult.Unauthorized) {
-                    val refreshedToken = authRepository.getIdToken(forceRefresh = true)
-                    if (refreshedToken != null) {
-                        currentToken = refreshedToken
-                        pushResult = syncApiClient.pushSync(currentToken, pushPayload)
+                    val catBatch = categoriesToPush.drop(catCursor).take(500)
+                    val noteBatch = notesToPush.drop(noteCursor).take(500)
+                    val batchCatIds = catBatch.map { it.id }.toSet()
+                    val batchNoteIds = noteBatch.map { it.id }.toSet()
+
+                    val pushPayload = SyncPushRequestDto(
+                        deviceId = deviceId,
+                        deviceName = android.os.Build.MODEL,
+                        appVersion = BuildConfig.VERSION_NAME,
+                        categories = catBatch,
+                        notes = noteBatch,
+                    )
+
+                    var pushResult = syncApiClient.pushSync(currentToken, pushPayload)
+
+                    if (pushResult is SyncResult.Unauthorized) {
+                        val refreshedToken = authRepository.getIdToken(forceRefresh = true)
+                        if (refreshedToken != null) {
+                            currentToken = refreshedToken
+                            pushResult = syncApiClient.pushSync(currentToken, pushPayload)
+                        }
+                    }
+
+                    when (pushResult) {
+                        is SyncResult.Success -> {
+                            val pushData = pushResult.data
+                            val batchConflictIds = pushData.conflicts.map { it.id }.toSet()
+                            accumulatedConflictIds.addAll(batchConflictIds)
+
+                            // Record sanitized conflicts for observability and UI status
+                            if (pushData.conflicts.isNotEmpty()) {
+                                syncStateStore.recordConflicts(user.uid, pushData.conflicts)
+                            }
+
+                            // Only tombstones carried by THIS batch are candidates for removal:
+                            // top-level tombstones map to their own record id, child tombstones
+                            // (checklist items / attachments) ride inside their parent note DTO
+                            // and are confirmed indirectly via the parent note id.
+                            val batchChildTombstones = noteBatch.filter { !it.isDeleted }.flatMap { note ->
+                                (itemTombstonesByNoteUuid[note.id].orEmpty() +
+                                    attTombstonesByNoteUuid[note.id].orEmpty())
+                            }
+                            val batchTombstones =
+                                categoryTombstones.filter { it.uuid in batchCatIds } +
+                                    noteTombstones.filter { it.uuid in batchNoteIds } +
+                                    batchChildTombstones
+
+                            // Retain rejected/conflicted tombstones; remove only confirmed applied ones
+                            val confirmedBatchTombstones = batchTombstones.filter {
+                                it.uuid !in batchConflictIds &&
+                                    (it.noteUuid == null || it.noteUuid !in batchConflictIds)
+                            }
+                            if (confirmedBatchTombstones.isNotEmpty()) {
+                                syncStateStore.removeTombstones(
+                                    user.uid,
+                                    confirmedBatchTombstones.map { it.uuid }.toSet(),
+                                )
+                            }
+
+                            catCursor += catBatch.size
+                            noteCursor += noteBatch.size
+                        }
+                        is SyncResult.Unauthorized -> {
+                            syncStateStore.updateSyncStatus(SyncStatus.SESSION_EXPIRED)
+                            return@withContext SyncResult.Unauthorized
+                        }
+                        is SyncResult.RateLimited -> {
+                            syncStateStore.updateSyncStatus(SyncStatus.NETWORK_ERROR)
+                            return@withContext SyncResult.RateLimited
+                        }
+                        is SyncResult.Error -> {
+                            syncStateStore.updateSyncStatus(SyncStatus.NETWORK_ERROR)
+                            return@withContext pushResult
+                        }
+                        SyncResult.Offline -> {
+                            syncStateStore.updateSyncStatus(SyncStatus.OFFLINE)
+                            return@withContext SyncResult.Offline
+                        }
                     }
                 }
 
-                when (pushResult) {
-                    is SyncResult.Success -> {
-                        val pushData = pushResult.data
-                        val conflictingIds = pushData.conflicts.map { it.id }.toSet()
+                val fullyDrained = catCursor >= categoriesToPush.size && noteCursor >= notesToPush.size
 
-                        // Record sanitized conflicts for observability and UI status
-                        if (pushData.conflicts.isNotEmpty()) {
-                            syncStateStore.recordConflicts(user.uid, pushData.conflicts)
+                // Advance watermark only for confirmed applied modifications on a complete drain
+                if (fullyDrained) {
+                    val appliedShoulders = modifiedShoulders.filter { it.uuid !in accumulatedConflictIds }
+                    val appliedNotes = modifiedNotes.filter { it.note.uuid !in accumulatedConflictIds }
+                    val appliedTimestamps = appliedShoulders.map { it.updatedAt } + appliedNotes.map { it.note.updatedAt }
+
+                    if (appliedTimestamps.isNotEmpty()) {
+                        val maxAppliedTime = appliedTimestamps.maxOrNull() ?: lastPushedAt
+                        if (maxAppliedTime > lastPushedAt) {
+                            syncStateStore.setLastPushedAt(user.uid, maxAppliedTime)
                         }
-
-                        // Retain rejected/conflicted tombstones; remove only confirmed applied ones
-                        val confirmedTombstoneUuids = pushedTombstoneUuids - conflictingIds
-                        syncStateStore.removeTombstones(user.uid, confirmedTombstoneUuids)
-
-                        // Advance watermark only for confirmed applied modifications
-                        val appliedShoulders = modifiedShoulders.filter { it.uuid !in conflictingIds }
-                        val appliedNotes = modifiedNotes.filter { it.note.uuid !in conflictingIds }
-                        val appliedTimestamps = appliedShoulders.map { it.updatedAt } + appliedNotes.map { it.note.updatedAt }
-
-                        if (appliedTimestamps.isNotEmpty()) {
-                            val maxAppliedTime = appliedTimestamps.maxOrNull() ?: lastPushedAt
-                            if (maxAppliedTime > lastPushedAt) {
-                                syncStateStore.setLastPushedAt(user.uid, maxAppliedTime)
-                            }
-                        }
-                    }
-                    is SyncResult.Unauthorized -> {
-                        syncStateStore.updateSyncStatus(SyncStatus.SESSION_EXPIRED)
-                        return@withContext SyncResult.Unauthorized
-                    }
-                    is SyncResult.RateLimited -> {
-                        syncStateStore.updateSyncStatus(SyncStatus.NETWORK_ERROR)
-                        return@withContext SyncResult.RateLimited
-                    }
-                    is SyncResult.Error -> {
-                        syncStateStore.updateSyncStatus(SyncStatus.NETWORK_ERROR)
-                        return@withContext pushResult
-                    }
-                    SyncResult.Offline -> {
-                        syncStateStore.updateSyncStatus(SyncStatus.OFFLINE)
-                        return@withContext SyncResult.Offline
                     }
                 }
             }

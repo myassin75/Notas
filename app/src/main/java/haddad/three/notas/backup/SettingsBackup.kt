@@ -1,15 +1,15 @@
-package three.haddad.smartnotas.backup
+package haddad.three.notas.backup
 
 import org.json.JSONObject
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.data.ViewOptionsPrefs
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.data.ViewOptionsPrefs
 
 object SettingsBackup {
     const val KEY_THEME = "theme_prefs"

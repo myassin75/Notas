@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -16,13 +16,13 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.MarkdownInlineInteraction
-import three.haddad.smartnotas.ui.common.MarkdownInlineInteractionBuilder
-import three.haddad.smartnotas.ui.common.MarkdownInlineProjection
-import three.haddad.smartnotas.ui.common.MarkdownStyler
-import three.haddad.smartnotas.ui.common.markdownCardPreview
-import three.haddad.smartnotas.ui.common.parseMarkdownDocument
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.MarkdownInlineInteraction
+import haddad.three.notas.ui.common.MarkdownInlineInteractionBuilder
+import haddad.three.notas.ui.common.MarkdownInlineProjection
+import haddad.three.notas.ui.common.MarkdownStyler
+import haddad.three.notas.ui.common.markdownCardPreview
+import haddad.three.notas.ui.common.parseMarkdownDocument
 
 class MarkdownConsistencyTest {
     private val styler =

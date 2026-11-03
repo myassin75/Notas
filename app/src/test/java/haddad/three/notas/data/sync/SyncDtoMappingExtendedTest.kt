@@ -1,18 +1,18 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.Visibility
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.Visibility
 import java.time.Instant
 
 class SyncDtoMappingExtendedTest {

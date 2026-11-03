@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 /**
  * Owns a note's picture and attachment rows plus the app-storage files behind them. Split out of

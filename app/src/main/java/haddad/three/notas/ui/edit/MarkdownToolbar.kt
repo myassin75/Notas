@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -35,11 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.components.RememberTextButton
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.domain.checklist
+package haddad.three.notas.domain.checklist
 
 /**
  * Editable checklist row during list editing.

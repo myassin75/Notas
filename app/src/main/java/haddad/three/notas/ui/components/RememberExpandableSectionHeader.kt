@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -30,10 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 @Composable
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

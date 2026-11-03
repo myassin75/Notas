@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.auth
+package haddad.three.notas.ui.auth
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
@@ -20,12 +20,12 @@ import org.junit.Assert.assertTrue
 import android.content.ContextWrapper
 import org.junit.Before
 import org.junit.Test
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthResult
-import three.haddad.smartnotas.data.auth.AuthState
-import three.haddad.smartnotas.data.auth.AuthUser
-import three.haddad.smartnotas.data.auth.BackendProfile
-import three.haddad.smartnotas.ui.nav.Routes
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+import haddad.three.notas.data.auth.BackendProfile
+import haddad.three.notas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {

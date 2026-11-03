@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
-import three.haddad.smartnotas.BuildConfig
+import haddad.three.notas.BuildConfig
 
 enum class UpdateCheckSchedule {
     AT_APP_START,

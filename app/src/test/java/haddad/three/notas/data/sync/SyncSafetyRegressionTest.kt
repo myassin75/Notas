@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -17,21 +17,21 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ShoulderDao
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthResult
-import three.haddad.smartnotas.data.auth.AuthState
-import three.haddad.smartnotas.data.auth.AuthUser
-import three.haddad.smartnotas.data.auth.BackendProfile
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+import haddad.three.notas.data.auth.BackendProfile
 import java.net.HttpURLConnection
 import java.net.URL
 

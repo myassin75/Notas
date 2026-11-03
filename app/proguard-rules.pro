@@ -1,7 +1,7 @@
 # Add project specific ProGuard rules here.
--keep class three.haddad.smartnotas.widget.** extends androidx.glance.appwidget.action.ActionCallback { *; }
--keep class three.haddad.smartnotas.widget.** extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
--keep class three.haddad.smartnotas.widget.** extends androidx.glance.appwidget.GlanceAppWidget { *; }
+-keep class haddad.three.notas.widget.** extends androidx.glance.appwidget.action.ActionCallback { *; }
+-keep class haddad.three.notas.widget.** extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }
+-keep class haddad.three.notas.widget.** extends androidx.glance.appwidget.GlanceAppWidget { *; }
 
 # Kotlinx Serialization preservation for sync and cloud backup DTOs
 -keepattributes *Annotation*, InnerClasses

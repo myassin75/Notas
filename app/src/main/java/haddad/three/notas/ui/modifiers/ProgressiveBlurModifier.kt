@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.modifiers
+package haddad.three.notas.ui.modifiers
 
 import android.annotation.SuppressLint
 import android.graphics.RenderEffect
@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.ui.theme.LocalBlurBars
-import three.haddad.smartnotas.ui.theme.ProgressiveBlurStyle
+import haddad.three.notas.ui.theme.LocalBlurBars
+import haddad.three.notas.ui.theme.ProgressiveBlurStyle
 
 private val dualEdgeBlurAgsl =
     """

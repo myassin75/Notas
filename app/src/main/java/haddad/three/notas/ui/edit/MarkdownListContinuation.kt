@@ -1,10 +1,10 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.parseMarkdownLine
-import three.haddad.smartnotas.ui.common.parseMarkdownLines
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.parseMarkdownLine
+import haddad.three.notas.ui.common.parseMarkdownLines
 
 /**
  * Continues a bullet, checklist or numbered list when the user presses enter, outdenting or

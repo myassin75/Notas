@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,16 +19,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteSwipeAction
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.data.pinned
-import three.haddad.smartnotas.ui.common.BulkUndoableAction
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteSwipeAction
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.data.pinned
+import haddad.three.notas.ui.common.BulkUndoableAction
 import javax.inject.Inject
 
 sealed interface HomeEvent {

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.feedback
+package haddad.three.notas.ui.feedback
 
 import android.os.VibrationEffect
 import android.os.VibratorManager

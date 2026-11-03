@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.backup
+package haddad.three.notas.data.backup
 
 import android.content.Context
 import android.content.ContextWrapper
@@ -22,32 +22,32 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.BackupIo
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.ShoulderDao
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthResult
-import three.haddad.smartnotas.data.auth.AuthState
-import three.haddad.smartnotas.data.auth.AuthUser
-import three.haddad.smartnotas.data.auth.BackendProfile
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.BackupIo
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+import haddad.three.notas.data.auth.BackendProfile
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -298,7 +298,7 @@ class CloudBackupManagerTest {
         attachmentDao = FakeAttachmentDao()
         backupApiClient = MockBackupApiClient()
 
-        val shoulderRepository = three.haddad.smartnotas.data.ShoulderRepository(
+        val shoulderRepository = haddad.three.notas.data.ShoulderRepository(
             shoulderDao = shoulderDao,
             tombstoneRecorder = null,
             authRepository = authRepository,

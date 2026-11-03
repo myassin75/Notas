@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar
+package haddad.three.notas.ui.calendar
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
@@ -16,16 +16,16 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.MonthlyMode
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.RecurrenceUnit
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.di.DefaultDispatcher
-import three.haddad.smartnotas.ui.theme.NoteColors
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.MonthlyMode
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.RecurrenceUnit
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.di.DefaultDispatcher
+import haddad.three.notas.ui.theme.NoteColors
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate

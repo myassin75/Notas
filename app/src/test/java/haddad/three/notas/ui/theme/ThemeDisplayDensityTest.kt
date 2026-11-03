@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

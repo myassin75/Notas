@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.widget
+package haddad.three.notas.widget
 
 import androidx.annotation.Keep
 import androidx.glance.appwidget.GlanceAppWidget

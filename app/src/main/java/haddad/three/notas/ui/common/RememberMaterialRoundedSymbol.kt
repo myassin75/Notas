@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 
 // Two shared FontFamilies backed by app/src/main/res/font/. Both files are
 // custom-built subsets of Google Material Symbols Rounded (~100-300 KB each)

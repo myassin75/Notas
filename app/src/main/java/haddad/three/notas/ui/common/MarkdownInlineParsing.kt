@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 internal fun String.indexOfMarkdownClosingMarker(
     marker: String,

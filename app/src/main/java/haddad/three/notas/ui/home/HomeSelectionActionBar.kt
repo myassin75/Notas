@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -27,12 +27,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

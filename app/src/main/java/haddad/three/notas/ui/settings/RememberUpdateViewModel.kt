@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.content.Context
 import android.content.Intent
@@ -17,21 +17,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.di.IoDispatcher
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
-import three.haddad.smartnotas.update.PlayInAppUpdateProgressController
-import three.haddad.smartnotas.update.PlayInAppUpdateStarter
-import three.haddad.smartnotas.update.PlayStoreUpdateChecker
-import three.haddad.smartnotas.update.PlayUpdateSessionHandle
-import three.haddad.smartnotas.update.RememberUpdateChecker
-import three.haddad.smartnotas.update.RememberUpdateInfo
-import three.haddad.smartnotas.update.RememberUpdateState
-import three.haddad.smartnotas.update.UpdateAvailableNotifier
-import three.haddad.smartnotas.update.notificationDedupeKey
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.di.IoDispatcher
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.update.PlayInAppUpdateBannerUiState
+import haddad.three.notas.update.PlayInAppUpdateProgressController
+import haddad.three.notas.update.PlayInAppUpdateStarter
+import haddad.three.notas.update.PlayStoreUpdateChecker
+import haddad.three.notas.update.PlayUpdateSessionHandle
+import haddad.three.notas.update.RememberUpdateChecker
+import haddad.three.notas.update.RememberUpdateInfo
+import haddad.three.notas.update.RememberUpdateState
+import haddad.three.notas.update.UpdateAvailableNotifier
+import haddad.three.notas.update.notificationDedupeKey
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -206,7 +206,7 @@ class RememberUpdateViewModel
                                     cacheApkFile = apkFile,
                                     displayName =
                                         availableUpdate.remoteApkFileName.ifBlank {
-                                            "SmartNotas-${availableUpdate.versionName}.apk"
+                                            "Notas-${availableUpdate.versionName}.apk"
                                         },
                                 )
                             }.onFailure { throwable ->

@@ -3,7 +3,7 @@
 // shipped yet). Scoped to this source set so other deprecated-API uses elsewhere still get flagged.
 @file:Suppress("DEPRECATION")
 
-package three.haddad.smartnotas.googletasks
+package haddad.three.notas.googletasks
 
 import android.accounts.Account
 import android.content.Context

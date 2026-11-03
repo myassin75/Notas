@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import android.graphics.Canvas
 import androidx.compose.foundation.Image

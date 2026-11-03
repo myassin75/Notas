@@ -1,10 +1,10 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import three.haddad.smartnotas.data.AccentTheme
+import haddad.three.notas.data.AccentTheme
 
 /**
  * Builds the complete, semantic Material 3 [ColorScheme] for a given [AccentTheme]

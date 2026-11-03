@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 
 /**
  * Read-only badge displayed at the top of the Edit Note / Edit List body whenever the note is

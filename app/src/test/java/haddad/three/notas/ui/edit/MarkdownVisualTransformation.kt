@@ -1,11 +1,11 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
-import three.haddad.smartnotas.ui.common.MarkdownStyler
+import haddad.three.notas.ui.common.MarkdownStyler
 
 /** Keep the existing parser regression assertions while the field uses OutputTransformation. */
 @Suppress("DEPRECATION")

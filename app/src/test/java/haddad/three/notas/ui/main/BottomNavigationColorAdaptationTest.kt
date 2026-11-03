@@ -1,15 +1,15 @@
-package three.haddad.smartnotas.ui.main
+package haddad.three.notas.ui.main
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.ui.theme.ThemeColors
-import three.haddad.smartnotas.ui.theme.buildColorScheme
-import three.haddad.smartnotas.ui.theme.resolveSemanticPalette
+import haddad.three.notas.R
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.ui.theme.ThemeColors
+import haddad.three.notas.ui.theme.buildColorScheme
+import haddad.three.notas.ui.theme.resolveSemanticPalette
 
 /**
  * Unit tests verifying the NUVORA Bottom Navigation color adaptation:

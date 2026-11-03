@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.Intent
 import android.graphics.drawable.Drawable

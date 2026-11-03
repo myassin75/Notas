@@ -3,7 +3,7 @@
     androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class,
 )
 
-package three.haddad.smartnotas.ui.modifiers
+package haddad.three.notas.ui.modifiers
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode

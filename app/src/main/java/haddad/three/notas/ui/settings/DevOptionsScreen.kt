@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.app.AlarmManager
 import android.app.NotificationManager
@@ -82,32 +82,32 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ActionType
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.PersistableChecklistItem
-import three.haddad.smartnotas.di.DevOptionsDependenciesEntryPoint
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.reminders.ReminderReceiver
-import three.haddad.smartnotas.reminders.ReminderScheduler
-import three.haddad.smartnotas.trash.RememberTrashSweepWork
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberConfirmDialog
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.RememberOutlinedButton
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
-import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
-import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
-import three.haddad.smartnotas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
-import three.haddad.smartnotas.ui.nav.LocalNavAnimatedVisibilityScope
-import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
-import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
+import haddad.three.notas.data.ActionType
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.PersistableChecklistItem
+import haddad.three.notas.di.DevOptionsDependenciesEntryPoint
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.reminders.ReminderReceiver
+import haddad.three.notas.reminders.ReminderScheduler
+import haddad.three.notas.trash.RememberTrashSweepWork
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberConfirmDialog
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.RememberOutlinedButton
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListColumn
+import haddad.three.notas.ui.components.settings.GroupedListItem
+import haddad.three.notas.ui.modifiers.applyToScrollableList
+import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
+import haddad.three.notas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
+import haddad.three.notas.ui.nav.LocalNavAnimatedVisibilityScope
+import haddad.three.notas.ui.nav.LocalSharedTransitionScope
+import haddad.three.notas.update.UpdateCheckWorkScheduler
 import java.time.Instant
 
 private data class DbStats(
@@ -1175,7 +1175,7 @@ private fun fireNotifBigPicture(
 private fun fireNotifOverdue(
     context: Context,
     noteRepository: NoteRepository,
-    reminderPrefs: three.haddad.smartnotas.data.ReminderPrefs,
+    reminderPrefs: haddad.three.notas.data.ReminderPrefs,
     scope: CoroutineScope,
 ) {
     scope.launch(Dispatchers.IO) {

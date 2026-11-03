@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -68,10 +68,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -297,7 +297,7 @@ fun FullScreenHeroImageOverlay(
                 intrinsic.width > 0f &&
                 intrinsic.height > 0f &&
                 imageState is AsyncImagePainter.State.Success
-        val sharedScope = three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope.current
+        val sharedScope = haddad.three.notas.ui.nav.LocalSharedTransitionScope.current
         val imageModifier =
             if (sharedScope != null && effectiveSharedKey != null) {
                 with(sharedScope) {

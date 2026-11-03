@@ -1,6 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -67,12 +67,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.feedback.LocalHapticEnabled
-import three.haddad.smartnotas.ui.feedback.performLongPressHaptic
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.feedback.LocalHapticEnabled
+import haddad.three.notas.ui.feedback.performLongPressHaptic
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 /**
  * Note/list action state. Exactly one of [archived]/[trashed] is expected to be true; when both

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import three.haddad.smartnotas.notifications.canPostNotifications
+import haddad.three.notas.notifications.canPostNotifications
 
 @Composable
 fun rememberNotificationsAllowed(): Boolean {

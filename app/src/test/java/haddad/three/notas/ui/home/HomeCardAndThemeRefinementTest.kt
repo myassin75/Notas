@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
@@ -7,18 +7,18 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.GroupBy
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.matches
-import three.haddad.smartnotas.ui.components.readableBadgeColors
-import three.haddad.smartnotas.ui.components.toNoteCardUiModel
-import three.haddad.smartnotas.ui.theme.NoteColors
-import three.haddad.smartnotas.ui.theme.resolveSemanticPalette
+import haddad.three.notas.data.GroupBy
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.matches
+import haddad.three.notas.ui.components.readableBadgeColors
+import haddad.three.notas.ui.components.toNoteCardUiModel
+import haddad.three.notas.ui.theme.NoteColors
+import haddad.three.notas.ui.theme.resolveSemanticPalette
 
 /**
  * Validates NUVORA Home Screen & Note Cards refinement acceptance criteria:
@@ -179,7 +179,7 @@ class HomeCardAndThemeRefinementTest {
 
     @Test
     fun light_mode_semantic_palettes_remain_consistent() {
-        val themes = three.haddad.smartnotas.data.AccentTheme.entries
+        val themes = haddad.three.notas.data.AccentTheme.entries
         themes.forEach { theme ->
             val palette = resolveSemanticPalette(accentTheme = theme, darkTheme = false, isOledBlack = false)
             assertNotNull(palette.primaryAction)

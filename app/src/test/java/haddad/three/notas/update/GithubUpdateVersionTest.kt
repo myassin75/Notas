@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

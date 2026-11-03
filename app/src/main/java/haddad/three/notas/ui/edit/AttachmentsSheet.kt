@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.net.Uri
 import androidx.compose.animation.animateColorAsState
@@ -35,16 +35,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberConfirmDialog
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.components.RememberOutlinedButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.feedback.appClickable
+import haddad.three.notas.R
+import haddad.three.notas.data.AppMediaStorage
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberConfirmDialog
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.components.RememberOutlinedButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.feedback.appClickable
 
 @Composable
 fun AttachmentsSheet(

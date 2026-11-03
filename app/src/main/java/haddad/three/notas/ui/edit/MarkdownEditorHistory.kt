@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateListOf

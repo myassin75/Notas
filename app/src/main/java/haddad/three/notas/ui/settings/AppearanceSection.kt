@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -50,17 +50,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.data.ThemeMode
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.ThemeState
-import three.haddad.smartnotas.data.effectiveDarkTheme
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberButton
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.ThemeColors
+import haddad.three.notas.R
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.data.ThemeMode
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.ThemeState
+import haddad.three.notas.data.effectiveDarkTheme
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.ThemeColors
 
 private val AccentTheme.seedColor: Color
     get() =

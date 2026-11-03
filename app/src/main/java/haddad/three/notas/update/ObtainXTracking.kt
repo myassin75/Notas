@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -7,15 +7,15 @@ import android.net.Uri
 import androidx.core.net.toUri
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
 
 /** ObtainX, the author's Obtainium fork. Its GitHub and F-Droid builds share this package id. */
 internal const val OBTAINX_PACKAGE_ID = "dev.bikram.obtainx"
 
 private const val RELEASES_GITHUB_URL = "https://github.com/${BuildConfig.GITHUB_REPO}"
 private const val TRACKED_APP_AUTHOR = "bikram-agarwal"
-private const val TRACKED_APP_NAME = "SmartNotas"
+private const val TRACKED_APP_NAME = "Notas"
 private const val DEV_RELEASE_APPLICATION_ID_SUFFIX = ".dev"
 
 /** Play builds are updated by Play; every other flavor can hand itself to ObtainX. */

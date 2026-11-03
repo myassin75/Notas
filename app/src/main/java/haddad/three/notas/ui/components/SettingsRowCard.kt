@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -22,10 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.NotasTokens
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 
 /**
  * Grouped settings card container matching Notas Figma references (Nodes 3:3, 3:828, 3:916, 14:317).

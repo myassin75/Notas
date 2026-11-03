@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 private val markdownHorizontalRuleLine = Regex("""^\s*([-*_])(?:\s*\1){2,}\s*$""")
 

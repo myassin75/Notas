@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer

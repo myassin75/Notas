@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

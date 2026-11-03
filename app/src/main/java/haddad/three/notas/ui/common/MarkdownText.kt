@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -45,12 +45,12 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.feedback.LocalHapticEnabled
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.feedback.performLongPressHaptic
+import haddad.three.notas.R
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.feedback.LocalHapticEnabled
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.feedback.performLongPressHaptic
 
 private val MarkdownChecklistContinuationLineRegex = Regex("""^\s{4,}(.+)$""")
 private const val MARKDOWN_PREVIEW_HORIZONTAL_RULE = "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"

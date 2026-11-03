@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 /** Source ranges are half-open and always refer to the unchanged Markdown string. */
 internal data class MarkdownInlineSpan(

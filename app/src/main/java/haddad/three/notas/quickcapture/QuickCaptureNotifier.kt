@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.quickcapture
+package haddad.three.notas.quickcapture
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -11,8 +11,8 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import three.haddad.smartnotas.MainActivity
-import three.haddad.smartnotas.R
+import haddad.three.notas.MainActivity
+import haddad.three.notas.R
 
 /**
  * Manages the always-visible "New note" notification that the user can tap from anywhere on the

@@ -1,7 +1,7 @@
-package three.haddad.smartnotas.ui.help
+package haddad.three.notas.ui.help
 
 import androidx.annotation.StringRes
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 
 data class HelpSection(
     val title: String,

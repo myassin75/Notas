@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -72,7 +72,7 @@ fun glassContainerColor(
     }
 
     val themeState = LocalThemeState.current
-    val isOledBlack = themeState.blackThemeActive(isDark) || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK
+    val isOledBlack = themeState.blackThemeActive(isDark) || themeState.accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK
 
     return when (variant) {
         GlassVariant.StandardCard ->

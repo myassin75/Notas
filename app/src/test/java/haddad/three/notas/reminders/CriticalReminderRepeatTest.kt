@@ -1,14 +1,14 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.CriticalRingDuration
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
+import haddad.three.notas.data.CriticalRingDuration
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
 
 class CriticalReminderRepeatTest {
     private val now = 10_000_000L

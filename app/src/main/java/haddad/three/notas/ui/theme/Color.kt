@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -491,30 +491,30 @@ data class SemanticPalette(
 }
 
 /**
- * Resolves the centralized [SemanticPalette] for a given [three.haddad.smartnotas.data.AccentTheme]
+ * Resolves the centralized [SemanticPalette] for a given [haddad.three.notas.data.AccentTheme]
  * under Light Mode, Dark Mode, or OLED Pure Black Mode.
  */
 fun resolveSemanticPalette(
-    accentTheme: three.haddad.smartnotas.data.AccentTheme,
+    accentTheme: haddad.three.notas.data.AccentTheme,
     darkTheme: Boolean,
     isOledBlack: Boolean = false,
 ): SemanticPalette {
     if (!darkTheme) {
         val (primaryAction, primaryActionFg, selectedContainer) =
             when (accentTheme) {
-                three.haddad.smartnotas.data.AccentTheme.MAROON ->
+                haddad.three.notas.data.AccentTheme.MAROON ->
                     Triple(ThemeColors.Maroon.LightPrimary, ThemeColors.Maroon.LightOnPrimary, ThemeColors.Maroon.LightPrimaryContainer)
-                three.haddad.smartnotas.data.AccentTheme.ROYAL_BLUE ->
+                haddad.three.notas.data.AccentTheme.ROYAL_BLUE ->
                     Triple(ThemeColors.RoyalBlue.LightPrimary, ThemeColors.RoyalBlue.LightOnPrimary, ThemeColors.RoyalBlue.LightPrimaryContainer)
-                three.haddad.smartnotas.data.AccentTheme.FOREST_GREEN ->
+                haddad.three.notas.data.AccentTheme.FOREST_GREEN ->
                     Triple(ThemeColors.ForestGreen.LightPrimary, ThemeColors.ForestGreen.LightOnPrimary, ThemeColors.ForestGreen.LightPrimaryContainer)
-                three.haddad.smartnotas.data.AccentTheme.DARK_BROWN ->
+                haddad.three.notas.data.AccentTheme.DARK_BROWN ->
                     Triple(ThemeColors.DarkBrown.LightPrimary, ThemeColors.DarkBrown.LightOnPrimary, ThemeColors.DarkBrown.LightPrimaryContainer)
-                three.haddad.smartnotas.data.AccentTheme.OCEAN_TEAL ->
+                haddad.three.notas.data.AccentTheme.OCEAN_TEAL ->
                     Triple(ThemeColors.OceanTeal.LightPrimary, ThemeColors.OceanTeal.LightOnPrimary, ThemeColors.OceanTeal.LightPrimaryContainer)
-                three.haddad.smartnotas.data.AccentTheme.PURE_BLACK ->
+                haddad.three.notas.data.AccentTheme.PURE_BLACK ->
                     Triple(ThemeColors.PureBlack.LightPrimary, ThemeColors.PureBlack.LightOnPrimary, ThemeColors.PureBlack.LightPrimaryContainer)
-                three.haddad.smartnotas.data.AccentTheme.AMETHYST ->
+                haddad.three.notas.data.AccentTheme.AMETHYST ->
                     Triple(ThemeColors.Amethyst.LightPrimary, ThemeColors.Amethyst.LightOnPrimary, ThemeColors.Amethyst.LightPrimaryContainer)
             }
 
@@ -540,58 +540,58 @@ fun resolveSemanticPalette(
     // Dark Mode Semantic Palette
     val ambientTint =
         when (accentTheme) {
-            three.haddad.smartnotas.data.AccentTheme.MAROON -> Color(0xFF481016)
-            three.haddad.smartnotas.data.AccentTheme.ROYAL_BLUE -> Color(0xFF141E42)
-            three.haddad.smartnotas.data.AccentTheme.FOREST_GREEN -> Color(0xFF102814)
-            three.haddad.smartnotas.data.AccentTheme.DARK_BROWN -> Color(0xFF321C0E)
-            three.haddad.smartnotas.data.AccentTheme.OCEAN_TEAL -> Color(0xFF112B30)
-            three.haddad.smartnotas.data.AccentTheme.PURE_BLACK -> Color(0xFF202028)
-            three.haddad.smartnotas.data.AccentTheme.AMETHYST -> Color(0xFF34153A)
+            haddad.three.notas.data.AccentTheme.MAROON -> Color(0xFF481016)
+            haddad.three.notas.data.AccentTheme.ROYAL_BLUE -> Color(0xFF141E42)
+            haddad.three.notas.data.AccentTheme.FOREST_GREEN -> Color(0xFF102814)
+            haddad.three.notas.data.AccentTheme.DARK_BROWN -> Color(0xFF321C0E)
+            haddad.three.notas.data.AccentTheme.OCEAN_TEAL -> Color(0xFF112B30)
+            haddad.three.notas.data.AccentTheme.PURE_BLACK -> Color(0xFF202028)
+            haddad.three.notas.data.AccentTheme.AMETHYST -> Color(0xFF34153A)
         }
 
     val (primaryAction, primaryActionFg) =
         when (accentTheme) {
-            three.haddad.smartnotas.data.AccentTheme.MAROON ->
+            haddad.three.notas.data.AccentTheme.MAROON ->
                 Pair(ThemeColors.Maroon.DarkPrimary, ThemeColors.Maroon.DarkOnPrimary)
-            three.haddad.smartnotas.data.AccentTheme.ROYAL_BLUE ->
+            haddad.three.notas.data.AccentTheme.ROYAL_BLUE ->
                 Pair(ThemeColors.RoyalBlue.DarkPrimary, ThemeColors.RoyalBlue.DarkOnPrimary)
-            three.haddad.smartnotas.data.AccentTheme.FOREST_GREEN ->
+            haddad.three.notas.data.AccentTheme.FOREST_GREEN ->
                 Pair(ThemeColors.ForestGreen.DarkPrimary, ThemeColors.ForestGreen.DarkOnPrimary)
-            three.haddad.smartnotas.data.AccentTheme.DARK_BROWN ->
+            haddad.three.notas.data.AccentTheme.DARK_BROWN ->
                 Pair(ThemeColors.DarkBrown.DarkPrimary, ThemeColors.DarkBrown.DarkOnPrimary)
-            three.haddad.smartnotas.data.AccentTheme.OCEAN_TEAL ->
+            haddad.three.notas.data.AccentTheme.OCEAN_TEAL ->
                 Pair(ThemeColors.OceanTeal.DarkPrimary, ThemeColors.OceanTeal.DarkOnPrimary)
-            three.haddad.smartnotas.data.AccentTheme.PURE_BLACK ->
+            haddad.three.notas.data.AccentTheme.PURE_BLACK ->
                 Pair(Color(0xFFD4D4DE), Color(0xFF16161C))
-            three.haddad.smartnotas.data.AccentTheme.AMETHYST ->
+            haddad.three.notas.data.AccentTheme.AMETHYST ->
                 Pair(ThemeColors.Amethyst.DarkPrimary, ThemeColors.Amethyst.DarkOnPrimary)
         }
 
     val selectedContainer = primaryAction.copy(alpha = 0.16f)
 
     val cardSurface =
-        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+        if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF141418)
         } else {
             Color(0xFF1B1B22)
         }
 
     val cardBorder =
-        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+        if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF282832).copy(alpha = 0.60f)
         } else {
             Color(0xFF2C2C36).copy(alpha = 0.65f)
         }
 
     val modalSurface =
-        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+        if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF16161C).copy(alpha = 0.98f)
         } else {
             Color(0xFF1E1D25).copy(alpha = 0.96f)
         }
 
     val inputSurface =
-        if (isOledBlack || accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK) {
+        if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF101014)
         } else {
             Color(0xFF15151C)

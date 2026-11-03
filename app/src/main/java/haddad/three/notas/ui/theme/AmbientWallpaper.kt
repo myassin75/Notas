@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import three.haddad.smartnotas.data.AccentTheme
+import haddad.three.notas.data.AccentTheme
 
 /**
  * Ambient wallpaper color definition for an accent theme.

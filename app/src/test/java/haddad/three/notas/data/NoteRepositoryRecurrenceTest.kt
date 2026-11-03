@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -8,10 +8,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.ui.edit.MonthlyKind
-import three.haddad.smartnotas.ui.edit.ReminderDraft
-import three.haddad.smartnotas.ui.edit.toDraft
-import three.haddad.smartnotas.ui.edit.toReminder
+import haddad.three.notas.ui.edit.MonthlyKind
+import haddad.three.notas.ui.edit.ReminderDraft
+import haddad.three.notas.ui.edit.toDraft
+import haddad.three.notas.ui.edit.toReminder
 import java.util.Calendar
 
 class NoteRepositoryRecurrenceTest {

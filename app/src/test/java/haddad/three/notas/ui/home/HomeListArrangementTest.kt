@@ -1,18 +1,18 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.GroupBy
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.SortDir
-import three.haddad.smartnotas.data.SortKey
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.matches
+import haddad.three.notas.data.GroupBy
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.SortDir
+import haddad.three.notas.data.SortKey
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.matches
 
 /**
  * Covers the section-precedence contract in [arrangeItems], with an emphasis on the pinning

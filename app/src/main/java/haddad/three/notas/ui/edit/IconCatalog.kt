@@ -1,9 +1,9 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import three.haddad.smartnotas.data.NoteKind
+import haddad.three.notas.data.NoteKind
 import java.util.Locale
 
 /** Stored in note `iconKey`; payload is one emoji grapheme (keyboard / picker). */

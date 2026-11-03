@@ -1,8 +1,8 @@
-package three.haddad.smartnotas.ui.calendar
+package haddad.three.notas.ui.calendar
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth

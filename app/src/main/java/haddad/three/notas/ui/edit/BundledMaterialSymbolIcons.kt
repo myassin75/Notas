@@ -1,6 +1,6 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 
 /**
  * Curated final icon picker catalog generated from localdocs/semi-final-icon-catalog.html.

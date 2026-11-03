@@ -1,16 +1,16 @@
-package three.haddad.smartnotas.ui.history
+package haddad.three.notas.ui.history
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.ui.theme.buildColorScheme
-import three.haddad.smartnotas.ui.theme.resolveSemanticPalette
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.ui.theme.buildColorScheme
+import haddad.three.notas.ui.theme.resolveSemanticPalette
 import kotlin.math.max
 import kotlin.math.min
 

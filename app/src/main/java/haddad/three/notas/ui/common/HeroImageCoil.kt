@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import android.content.Context
 import androidx.compose.runtime.Composable

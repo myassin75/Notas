@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.trash
+package haddad.three.notas.trash
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
@@ -6,8 +6,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.diagnostics.DiagnosticLog
 
 /**
  * Periodically deletes notes that have been in the trash for longer than

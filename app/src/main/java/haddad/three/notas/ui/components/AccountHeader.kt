@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,10 +28,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.NotasTokens
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import coil3.compose.SubcomposeAsyncImage
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 
 /**
  * Circular user avatar displaying user initials or downloaded profile image.
@@ -56,11 +57,37 @@ fun UserAvatar(
         contentAlignment = Alignment.Center,
     ) {
         if (!photoUrl.isNullOrBlank()) {
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = photoUrl,
                 contentDescription = "Avatar",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
+                loading = {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = initials.trim(),
+                            style = if (size >= NotasTokens.AvatarSizeLarge) {
+                                NotasTypography.ScreenTitle
+                            } else {
+                                NotasTypography.ModalTitle
+                            },
+                            color = palette.secondaryText,
+                        )
+                    }
+                },
+                error = {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = initials.trim(),
+                            style = if (size >= NotasTokens.AvatarSizeLarge) {
+                                NotasTypography.ScreenTitle
+                            } else {
+                                NotasTypography.ModalTitle
+                            },
+                            color = palette.primaryText,
+                        )
+                    }
+                },
             )
         } else {
             Text(
@@ -111,6 +138,9 @@ fun AccountHeader(
             text = displayName,
             style = NotasTypography.ModalTitle,
             color = palette.primaryText,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -119,6 +149,9 @@ fun AccountHeader(
             text = subtitle,
             style = NotasTypography.Helper,
             color = palette.secondaryText,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
 
         if (!badgeText.isNullOrBlank()) {

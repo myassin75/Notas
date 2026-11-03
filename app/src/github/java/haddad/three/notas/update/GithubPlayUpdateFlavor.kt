@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import android.app.Activity
 import androidx.activity.ComponentActivity

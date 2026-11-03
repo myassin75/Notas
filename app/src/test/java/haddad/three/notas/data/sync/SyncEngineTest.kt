@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -17,22 +17,22 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ShoulderDao
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthResult
-import three.haddad.smartnotas.data.auth.AuthState
-import three.haddad.smartnotas.data.auth.AuthUser
-import three.haddad.smartnotas.data.auth.BackendProfile
-import three.haddad.smartnotas.ui.components.SyncStatus
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+import haddad.three.notas.data.auth.BackendProfile
+import haddad.three.notas.ui.components.SyncStatus
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -209,6 +209,13 @@ class SyncEngineTest {
         var pushCallCount = 0
         var fetchCallCount = 0
         var lastPushedPayload: SyncPushRequestDto? = null
+        val pushedPayloads = mutableListOf<SyncPushRequestDto>()
+
+        /**
+         * Optional FIFO queue of push results. When non-empty each push call consumes the
+         * next entry (multi-batch drainage); when empty `pushResultToReturn` is used.
+         */
+        val pushResultQueue = ArrayDeque<SyncResult<SyncPushResponseDto>>()
 
         var pushResultToReturn: SyncResult<SyncPushResponseDto> = SyncResult.Success(
             SyncPushResponseDto(
@@ -228,8 +235,9 @@ class SyncEngineTest {
 
         override suspend fun pushSync(idToken: String, payload: SyncPushRequestDto): SyncResult<SyncPushResponseDto> {
             pushCallCount++
+            pushedPayloads.add(payload)
             lastPushedPayload = payload
-            return pushResultToReturn
+            return if (pushResultQueue.isNotEmpty()) pushResultQueue.removeFirst() else pushResultToReturn
         }
 
         override suspend fun fetchChanges(idToken: String, sinceRevision: String, limit: Int): SyncResult<SyncChangesResponseDto> {
@@ -515,5 +523,194 @@ class SyncEngineTest {
 
         // Token refresh was attempted
         assertEquals(1, authRepo.tokenRefreshCallCount)
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Audit AUD-01 regressions: watermark must only advance over records that were
+    // actually pushed. The old implementation sent only `take(500)` per list but advanced
+    // the watermark over the FULL modified lists, permanently skipping records 501+.
+    // ---------------------------------------------------------------------------------
+    @Test
+    fun `push is drained in batches and watermark advances to max applied after full drain`() = runTest {
+        val user = AuthUser(uid = "user-1", email = "user@test.com", isEmailVerified = true)
+        val authRepo = FakeAuthRepository(user = user)
+        val stateStore = SyncStateStore(MemoryPreferencesDataStore())
+        val apiClient = MockSyncApiClient()
+        val noteDao = InMemoryNoteDao()
+        val itemDao = InMemoryChecklistItemDao()
+        val attachmentDao = InMemoryAttachmentDao()
+        val shoulderDao = InMemoryShoulderDao()
+
+        val engine = SyncEngine(
+            authRepository = authRepo,
+            syncStateStore = stateStore,
+            syncApiClient = apiClient,
+            database = null,
+            noteDao = noteDao,
+            itemDao = itemDao,
+            attachmentDao = attachmentDao,
+            shoulderDao = shoulderDao,
+            ioDispatcher = StandardTestDispatcher(testScheduler),
+        )
+
+        // 600 modified notes => two batches of 500 + 100
+        val maxUpdatedAt = 100_000L + 599L
+        repeat(600) { i ->
+            noteDao.insert(
+                NoteEntity(
+                    id = i + 1L,
+                    uuid = "note-uuid-$i",
+                    ownerId = "user-1",
+                    kind = NoteKind.NOTE,
+                    title = "Note $i",
+                    body = "",
+                    colorIndex = 0,
+                    trashed = false,
+                    createdAt = 90_000L,
+                    updatedAt = 100_000L + i,
+                ),
+            )
+        }
+
+        val result = engine.synchronize()
+
+        assertTrue(result is SyncResult.Success)
+        assertEquals(2, apiClient.pushCallCount)
+        assertEquals(500, apiClient.pushedPayloads[0].notes.size)
+        assertEquals(100, apiClient.pushedPayloads[1].notes.size)
+
+        // First-batch boundaries: records 501+ only appear in the second batch
+        assertTrue(apiClient.pushedPayloads[0].notes.any { it.id == "note-uuid-0" })
+        assertFalse(apiClient.pushedPayloads[0].notes.any { it.id == "note-uuid-599" })
+        assertTrue(apiClient.pushedPayloads[1].notes.any { it.id == "note-uuid-599" })
+
+        // Complete drain: watermark advanced to the max applied updatedAt
+        assertEquals(maxUpdatedAt, stateStore.getLastPushedAt("user-1"))
+    }
+
+    @Test
+    fun `watermark does not advance when a batch fails mid-drain`() = runTest {
+        val user = AuthUser(uid = "user-1", email = "user@test.com", isEmailVerified = true)
+        val authRepo = FakeAuthRepository(user = user)
+        val stateStore = SyncStateStore(MemoryPreferencesDataStore())
+        val apiClient = MockSyncApiClient()
+        val noteDao = InMemoryNoteDao()
+        val itemDao = InMemoryChecklistItemDao()
+        val attachmentDao = InMemoryAttachmentDao()
+        val shoulderDao = InMemoryShoulderDao()
+
+        val engine = SyncEngine(
+            authRepository = authRepo,
+            syncStateStore = stateStore,
+            syncApiClient = apiClient,
+            database = null,
+            noteDao = noteDao,
+            itemDao = itemDao,
+            attachmentDao = attachmentDao,
+            shoulderDao = shoulderDao,
+            ioDispatcher = StandardTestDispatcher(testScheduler),
+        )
+
+        val maxUpdatedAt = 100_000L + 599L
+        repeat(600) { i ->
+            noteDao.insert(
+                NoteEntity(
+                    id = i + 1L,
+                    uuid = "note-uuid-$i",
+                    ownerId = "user-1",
+                    kind = NoteKind.NOTE,
+                    title = "Note $i",
+                    body = "",
+                    colorIndex = 0,
+                    trashed = false,
+                    createdAt = 90_000L,
+                    updatedAt = 100_000L + i,
+                ),
+            )
+        }
+
+        // Batch 1 applies, batch 2 fails mid-drain
+        apiClient.pushResultQueue.addLast(
+            SyncResult.Success(
+                SyncPushResponseDto(
+                    serverRevision = "r1",
+                    appliedCount = SyncAppliedCountDto(categories = 0, notes = 500),
+                ),
+            ),
+        )
+        apiClient.pushResultQueue.addLast(SyncResult.Error("network drop during batch 2"))
+
+        val result = engine.synchronize()
+
+        assertTrue(result is SyncResult.Error)
+        assertEquals(2, apiClient.pushCallCount)
+
+        // Records 501..600 were never applied — advancing the watermark over them would
+        // orphan them forever (the original defect). Watermark stays untouched so the
+        // next sync re-pushes the entire pending set (idempotent under LWW).
+        assertEquals(0L, stateStore.getLastPushedAt("user-1"))
+        // Sanity: the failed run must not have reported a state beyond what was applied
+        assertFalse(stateStore.getLastPushedAt("user-1") >= maxUpdatedAt)
+    }
+
+    @Test
+    fun `watermark skips records rejected by the server`() = runTest {
+        val user = AuthUser(uid = "user-1", email = "user@test.com", isEmailVerified = true)
+        val authRepo = FakeAuthRepository(user = user)
+        val stateStore = SyncStateStore(MemoryPreferencesDataStore())
+        val apiClient = MockSyncApiClient()
+        val noteDao = InMemoryNoteDao()
+        val itemDao = InMemoryChecklistItemDao()
+        val attachmentDao = InMemoryAttachmentDao()
+        val shoulderDao = InMemoryShoulderDao()
+
+        val engine = SyncEngine(
+            authRepository = authRepo,
+            syncStateStore = stateStore,
+            syncApiClient = apiClient,
+            database = null,
+            noteDao = noteDao,
+            itemDao = itemDao,
+            attachmentDao = attachmentDao,
+            shoulderDao = shoulderDao,
+            ioDispatcher = StandardTestDispatcher(testScheduler),
+        )
+
+        noteDao.insert(
+            NoteEntity(
+                id = 1L,
+                uuid = "note-uuid-conflicted",
+                ownerId = "user-1",
+                kind = NoteKind.NOTE,
+                title = "Stale local edit",
+                body = "",
+                colorIndex = 0,
+                trashed = false,
+                createdAt = 0L,
+                updatedAt = 5000L,
+            ),
+        )
+
+        apiClient.pushResultToReturn = SyncResult.Success(
+            SyncPushResponseDto(
+                serverRevision = "1000",
+                appliedCount = SyncAppliedCountDto(categories = 0, notes = 0),
+                conflicts = listOf(
+                    SyncPushConflictDto(
+                        entityType = "note",
+                        id = "note-uuid-conflicted",
+                        serverRevision = "900",
+                        reason = "Stale revision",
+                    ),
+                ),
+            ),
+        )
+
+        val result = engine.synchronize()
+
+        assertTrue(result is SyncResult.Success)
+        assertEquals(1, apiClient.pushCallCount)
+        // The only modified record was conflicted — nothing was applied, so the watermark must not move
+        assertEquals(0L, stateStore.getLastPushedAt("user-1"))
     }
 }

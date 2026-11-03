@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components.text
+package haddad.three.notas.ui.components.text
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.event
+package haddad.three.notas.ui.event
 
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
@@ -14,18 +14,18 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ShoulderRepository
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.ui.nav.Routes
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.ui.nav.Routes
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime

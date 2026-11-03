@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,15 +13,15 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.ShoulderDao
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.ShoulderRepository
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.data.withSyncedPrimaryReminder
-import three.haddad.smartnotas.ui.nav.Routes
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.data.withSyncedPrimaryReminder
+import haddad.three.notas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditNoteIntegrityTest {

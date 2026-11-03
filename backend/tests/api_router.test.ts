@@ -63,7 +63,7 @@ describe('API Router — Security, CORS, Health & Payload Guard', () => {
   it('handles CORS preflight OPTIONS request with 204 No Content', async () => {
     const req = {
       method: 'OPTIONS',
-      headers: { origin: 'https://app.smartnotas.com' },
+      headers: { origin: 'https://app.notas.com' },
       query: {},
     } as unknown as VercelRequest;
 

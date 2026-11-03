@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
-import three.haddad.smartnotas.ui.theme.CustomFontStorage
+import haddad.three.notas.ui.theme.CustomFontStorage
 
 enum class ThemeMode {
     SYSTEM,
@@ -53,13 +53,13 @@ enum class AccentTheme(
     val seedHex: String,
     @param:androidx.annotation.StringRes val titleRes: Int,
 ) {
-    MAROON("maroon", "Maroon", "#800000", three.haddad.smartnotas.R.string.appearance_accent_maroon),
-    ROYAL_BLUE("royal_blue", "Royal Blue", "#04147D", three.haddad.smartnotas.R.string.appearance_accent_royal_blue),
-    FOREST_GREEN("forest_green", "Forest Green", "#047D06", three.haddad.smartnotas.R.string.appearance_accent_forest_green),
-    DARK_BROWN("dark_brown", "Dark Brown", "#4D2002", three.haddad.smartnotas.R.string.appearance_accent_dark_brown),
-    OCEAN_TEAL("ocean_teal", "Ocean Teal", "#29A4AB", three.haddad.smartnotas.R.string.appearance_accent_ocean_teal),
-    PURE_BLACK("pure_black", "Pure Black", "#000000", three.haddad.smartnotas.R.string.appearance_accent_pure_black),
-    AMETHYST("amethyst", "Amethyst", "#98549C", three.haddad.smartnotas.R.string.appearance_accent_amethyst),
+    MAROON("maroon", "Maroon", "#800000", haddad.three.notas.R.string.appearance_accent_maroon),
+    ROYAL_BLUE("royal_blue", "Royal Blue", "#04147D", haddad.three.notas.R.string.appearance_accent_royal_blue),
+    FOREST_GREEN("forest_green", "Forest Green", "#047D06", haddad.three.notas.R.string.appearance_accent_forest_green),
+    DARK_BROWN("dark_brown", "Dark Brown", "#4D2002", haddad.three.notas.R.string.appearance_accent_dark_brown),
+    OCEAN_TEAL("ocean_teal", "Ocean Teal", "#29A4AB", haddad.three.notas.R.string.appearance_accent_ocean_teal),
+    PURE_BLACK("pure_black", "Pure Black", "#000000", haddad.three.notas.R.string.appearance_accent_pure_black),
+    AMETHYST("amethyst", "Amethyst", "#98549C", haddad.three.notas.R.string.appearance_accent_amethyst),
     ;
 
     companion object {

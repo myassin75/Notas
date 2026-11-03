@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.auth
+package haddad.three.notas.data.auth
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

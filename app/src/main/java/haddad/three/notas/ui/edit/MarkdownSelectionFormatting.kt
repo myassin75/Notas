@@ -1,13 +1,13 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.MarkdownInlineKind
-import three.haddad.smartnotas.ui.common.MarkdownInlineProjection
-import three.haddad.smartnotas.ui.common.parseMarkdownDocument
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.MarkdownInlineKind
+import haddad.three.notas.ui.common.MarkdownInlineProjection
+import haddad.three.notas.ui.common.parseMarkdownDocument
 
 /** Rebuild only affected lines when inserting raw delimiters would cross existing wrappers. */
 internal fun preserveMarkdownSelectionFormatting(

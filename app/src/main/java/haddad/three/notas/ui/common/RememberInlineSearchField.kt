@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -31,8 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.theme.LocalIsDark
+import haddad.three.notas.R
+import haddad.three.notas.ui.theme.LocalIsDark
 
 @Composable
 fun RememberInlineSearchField(

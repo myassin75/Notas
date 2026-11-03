@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.modifiers
+package haddad.three.notas.ui.modifiers
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable

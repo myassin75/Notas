@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 internal fun checklistSearchText(items: Iterable<String>): String =
     items

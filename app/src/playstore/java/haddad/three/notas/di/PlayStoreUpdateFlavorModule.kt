@@ -1,18 +1,18 @@
-package three.haddad.smartnotas.di
+package haddad.three.notas.di
 
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import three.haddad.smartnotas.update.AppReviewLauncher
-import three.haddad.smartnotas.update.PlayInAppUpdateProgressController
-import three.haddad.smartnotas.update.PlayInAppUpdateSession
-import three.haddad.smartnotas.update.PlayInAppUpdateStarter
-import three.haddad.smartnotas.update.PlayStoreAppReviewLauncher
-import three.haddad.smartnotas.update.PlayStorePlayInAppUpdateCoordinator
-import three.haddad.smartnotas.update.PlayStoreUpdateChecker
-import three.haddad.smartnotas.update.PlayStoreUpdateCheckerImpl
-import three.haddad.smartnotas.update.PlayUpdateSessionHandle
+import haddad.three.notas.update.AppReviewLauncher
+import haddad.three.notas.update.PlayInAppUpdateProgressController
+import haddad.three.notas.update.PlayInAppUpdateSession
+import haddad.three.notas.update.PlayInAppUpdateStarter
+import haddad.three.notas.update.PlayStoreAppReviewLauncher
+import haddad.three.notas.update.PlayStorePlayInAppUpdateCoordinator
+import haddad.three.notas.update.PlayStoreUpdateChecker
+import haddad.three.notas.update.PlayStoreUpdateCheckerImpl
+import haddad.three.notas.update.PlayUpdateSessionHandle
 import javax.inject.Singleton
 
 @Module

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -57,8 +57,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.ui.common.rememberMarkdownStyler
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.common.rememberMarkdownStyler
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import kotlin.math.roundToInt
 
 internal enum class MarkdownEditorDisplayMode { MarkdownCode, LivePreview }
@@ -281,7 +281,7 @@ internal fun MarkdownTextEditor(
             decorator = { innerTextField ->
                 Box(modifier = Modifier.fillMaxWidth()) {
                     if (state.markdown.isEmpty()) {
-                        val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+                        val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
                         Text(
                             text = bodyPlaceholder,
                             style = editorTextStyle.copy(color = editorTextStyle.color.copy(alpha = if (isDark) 0.45f else 0.40f)),

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,21 +26,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthState
-import three.haddad.smartnotas.data.backup.CloudBackupManager
-import three.haddad.smartnotas.data.backup.CloudBackupResult
-import three.haddad.smartnotas.data.backup.CloudBackupStatus
-import three.haddad.smartnotas.data.backup.CloudBackupUiState
-import three.haddad.smartnotas.data.backup.isLoading
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberActionLabel
-import three.haddad.smartnotas.ui.components.RememberOutlinedButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
+import haddad.three.notas.R
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.backup.CloudBackupManager
+import haddad.three.notas.data.backup.CloudBackupResult
+import haddad.three.notas.data.backup.CloudBackupStatus
+import haddad.three.notas.data.backup.CloudBackupUiState
+import haddad.three.notas.data.backup.isLoading
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberActionLabel
+import haddad.three.notas.ui.components.RememberOutlinedButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListColumn
+import haddad.three.notas.ui.components.settings.GroupedListItem
 
 /**
  * Cloud Backup & Private Attachment Storage section for Notas.

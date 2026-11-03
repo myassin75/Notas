@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.auth
+package haddad.three.notas.data.auth
 
 import android.content.Context
 import com.google.android.gms.tasks.Task
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.di.IoDispatcher
+import haddad.three.notas.di.IoDispatcher
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -155,8 +155,8 @@ class FirebaseAuthRepository @Inject constructor(
         checkConfigured()?.let { return@withContext it }
 
         // Fetch server client ID if configured (from string resources or fallback)
-        val resId = context.resources.getIdentifier("default_web_client_id", "string", "three.haddad.smartnotas").let { id ->
-            if (id != 0) id else context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+        val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName).let { id ->
+            if (id != 0) id else context.resources.getIdentifier("default_web_client_id", "string", "haddad.three.notas")
         }
         val serverClientId = if (resId != 0) context.getString(resId) else null
 
@@ -281,8 +281,15 @@ class FirebaseAuthRepository @Inject constructor(
     }
 
     override suspend fun syncBackendProfile(): AuthResult<BackendProfile> = withContext(ioDispatcher) {
-        val idToken = getIdToken() ?: return@withContext AuthResult.Error("User is not authenticated with Firebase", code = "UNAUTHENTICATED")
-        val result = backendApiClient.getProfile(idToken)
+        var idToken = getIdToken() ?: return@withContext AuthResult.Error("User is not authenticated with Firebase", code = "UNAUTHENTICATED")
+        var result = backendApiClient.getProfile(idToken)
+        if (result is AuthResult.Error && result.code == "UNAUTHORIZED") {
+            val refreshedToken = getIdToken(forceRefresh = true)
+            if (refreshedToken != null) {
+                idToken = refreshedToken
+                result = backendApiClient.getProfile(idToken)
+            }
+        }
         val user = currentUser
         if (result is AuthResult.Success && user != null) {
             _appAuthState.value = AppAuthState.Authenticated(user, result.data)

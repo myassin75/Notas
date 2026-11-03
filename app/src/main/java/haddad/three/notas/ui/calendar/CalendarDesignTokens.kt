@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar
+package haddad.three.notas.ui.calendar
 
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -82,7 +82,7 @@ object CalendarDesignTokens {
 
     @Composable
     fun resolveCardBg(isDark: Boolean = false): Color =
-        three.haddad.smartnotas.ui.theme.glassContainerColor(three.haddad.smartnotas.ui.theme.GlassVariant.StandardCard, isDark)
+        haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark)
 
     @Composable
     fun resolveCardBorder(isDark: Boolean = false): Color =

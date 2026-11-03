@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
@@ -14,8 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownInlineProjection
-import three.haddad.smartnotas.ui.common.parseMarkdownDocument
+import haddad.three.notas.ui.common.MarkdownInlineProjection
+import haddad.three.notas.ui.common.parseMarkdownDocument
 
 /**
  * The field owns the document. Input, toolbar commands and history operate on it immediately;

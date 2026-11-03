@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.Dispatchers
@@ -20,19 +20,19 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.ChecklistItemDao
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteDao
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.ui.nav.Routes
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditListViewModelTest {
@@ -371,7 +371,7 @@ internal class FakeRepositoryStore {
     val itemsByNote = LinkedHashMap<Long, MutableList<ChecklistItemEntity>>()
     val observedNotes = LinkedHashMap<Long, MutableStateFlow<NoteWithItems?>>()
     var afterNoteUpdate: suspend () -> Unit = {}
-    var shoulderRepository: three.haddad.smartnotas.data.ShoulderRepository? = null
+    var shoulderRepository: haddad.three.notas.data.ShoulderRepository? = null
 
     fun repository(): NoteRepository =
         NoteRepository(

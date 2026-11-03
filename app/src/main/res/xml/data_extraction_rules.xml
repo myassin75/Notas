@@ -1,25 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
+        <!-- NOTE_HEROES (AUD-08): note images are potentially sensitive user content -->
         <exclude
             domain="file"
             path="note_heroes/" />
+        <!-- NOTE_ATTACHMENTS (AUD-08): never leave the device via cloud backup -->
         <exclude
             domain="file"
             path="note_attachments/" />
+        <!-- REMEMBER_BACKUP (AUD-08): app-managed export files -->
         <exclude
             domain="file"
             path="remember_backup/" />
+        <!-- DataStore/preferences (AUD-08): sync state, device IDs and sync metadata -->
+        <exclude
+            domain="file"
+            path="datastore/" />
+        <!-- Room database (AUD-08): contains the full note corpus (notes, checklist
+             items, attachment metadata) — must never leave the device via cloud backup
+             or device transfer. Includes WAL/SHM sidecar files and any journal. -->
+        <exclude
+            domain="database"
+            path="remember.db" />
+        <exclude
+            domain="database"
+            path="remember.db-wal" />
+        <exclude
+            domain="database"
+            path="remember.db-shm" />
+        <!-- SharedPreferences (AUD-08): any preference-stored sync cache or device
+             identity stays on the device. -->
+        <exclude
+            domain="sharedpref"
+            path="." />
     </cloud-backup>
     <device-transfer>
+        <!-- NOTE_HEROES (AUD-08): note images are potentially sensitive user content -->
         <exclude
             domain="file"
             path="note_heroes/" />
+        <!-- NOTE_ATTACHMENTS (AUD-08): never leave the device via cloud backup -->
         <exclude
             domain="file"
             path="note_attachments/" />
+        <!-- REMEMBER_BACKUP (AUD-08): app-managed export files -->
         <exclude
             domain="file"
             path="remember_backup/" />
+        <!-- DataStore/preferences (AUD-08): sync state, device IDs and sync metadata -->
+        <exclude
+            domain="file"
+            path="datastore/" />
+        <!-- Room database (AUD-08): contains the full note corpus (notes, checklist
+             items, attachment metadata) — must never leave the device via cloud backup
+             or device transfer. Includes WAL/SHM sidecar files and any journal. -->
+        <exclude
+            domain="database"
+            path="remember.db" />
+        <exclude
+            domain="database"
+            path="remember.db-wal" />
+        <exclude
+            domain="database"
+            path="remember.db-shm" />
+        <!-- SharedPreferences (AUD-08): any preference-stored sync cache or device
+             identity stays on the device. -->
+        <exclude
+            domain="sharedpref"
+            path="." />
     </device-transfer>
 </data-extraction-rules>

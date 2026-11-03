@@ -1,10 +1,10 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
-import three.haddad.smartnotas.data.NotesUiState
-import three.haddad.smartnotas.data.ThemeState
+import haddad.three.notas.data.NotesUiState
+import haddad.three.notas.data.ThemeState
 
 val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> { error("No SnackbarHostState provided") }
 
@@ -54,7 +54,7 @@ val LocalThemeState = compositionLocalOf { ThemeState() }
  */
 val LocalSemanticPalette = staticCompositionLocalOf<SemanticPalette> {
     resolveSemanticPalette(
-        accentTheme = three.haddad.smartnotas.data.AccentTheme.PURE_BLACK,
+        accentTheme = haddad.three.notas.data.AccentTheme.PURE_BLACK,
         darkTheme = false,
         isOledBlack = false,
     )

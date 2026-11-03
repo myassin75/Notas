@@ -2,7 +2,7 @@
 
 ## 1. Overview & Technology Stack
 
-Notas backend is a serverless, highly scalable API built to provide cloud synchronization, multi-device sync, and secure private backups for the **SmartNotas** Android application.
+Notas backend is a serverless, highly scalable API built to provide cloud synchronization, multi-device sync, and secure private backups for the **Notas** Android application.
 
 - **Platform:** Vercel Serverless Functions (`@vercel/node`)
 - **Runtime:** Node.js (>= 20) with TypeScript (`target: ES2022`, `NodeNext`)

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.help
+package haddad.three.notas.ui.help
 
 import android.content.Context
 import androidx.lifecycle.ViewModel

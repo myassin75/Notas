@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar.details
+package haddad.three.notas.ui.calendar.details
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline

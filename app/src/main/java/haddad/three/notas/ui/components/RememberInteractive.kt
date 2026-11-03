@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
@@ -63,11 +63,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.ui.common.LocalAllowCompactControls
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.feedback.LocalHapticEnabled
-import three.haddad.smartnotas.ui.feedback.performLongPressHaptic
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.common.LocalAllowCompactControls
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.feedback.LocalHapticEnabled
+import haddad.three.notas.ui.feedback.performLongPressHaptic
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 @Composable
 fun rememberResponsiveActionButtonSize(

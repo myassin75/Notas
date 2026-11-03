@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.app.AlarmManager
 import android.content.Context
@@ -7,7 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import three.haddad.smartnotas.data.Importance
+import haddad.three.notas.data.Importance
 
 @RunWith(AndroidJUnit4::class)
 class ReminderAlarmInstrumentedTest {

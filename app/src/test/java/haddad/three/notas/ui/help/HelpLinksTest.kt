@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.help
+package haddad.three.notas.ui.help
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

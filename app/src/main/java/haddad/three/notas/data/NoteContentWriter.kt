@@ -1,7 +1,7 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import androidx.room.withTransaction
-import three.haddad.smartnotas.reminders.ReminderScheduler
+import haddad.three.notas.reminders.ReminderScheduler
 
 /**
  * The create / update half of [NoteRepository]: turns a screen's title, body, colour, checklist

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 sealed interface PlayInAppUpdateBannerUiState {
     data object Hidden : PlayInAppUpdateBannerUiState

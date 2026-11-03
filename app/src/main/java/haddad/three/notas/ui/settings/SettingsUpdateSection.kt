@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -60,25 +60,25 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.UpdateCheckSchedule
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isLandscape
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberOutlinedButton
-import three.haddad.smartnotas.ui.components.RememberSwitch
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
-import three.haddad.smartnotas.ui.components.text.SimpleMarkdown
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.theme.compactControlShape
-import three.haddad.smartnotas.ui.theme.pillShape
-import three.haddad.smartnotas.update.RememberUpdateInfo
-import three.haddad.smartnotas.update.isObtainXInstalled
-import three.haddad.smartnotas.update.supportsObtainXTracking
-import three.haddad.smartnotas.update.trackUpdatesViaObtainX
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
+import haddad.three.notas.data.UpdateCheckSchedule
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isLandscape
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberOutlinedButton
+import haddad.three.notas.ui.components.RememberSwitch
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListColumn
+import haddad.three.notas.ui.components.settings.GroupedListItem
+import haddad.three.notas.ui.components.text.SimpleMarkdown
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.theme.compactControlShape
+import haddad.three.notas.ui.theme.pillShape
+import haddad.three.notas.update.RememberUpdateInfo
+import haddad.three.notas.update.isObtainXInstalled
+import haddad.three.notas.update.supportsObtainXTracking
+import haddad.three.notas.update.trackUpdatesViaObtainX
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

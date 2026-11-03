@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.nav
+package haddad.three.notas.ui.nav
 
 import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
@@ -56,45 +56,44 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.OnboardingPrefs
-import three.haddad.smartnotas.di.LaunchAction
-import three.haddad.smartnotas.googletasks.GoogleTasksImportRoute
-import three.haddad.smartnotas.ui.common.LocalSystemPaneScaffoldDirective
-import three.haddad.smartnotas.ui.common.LocalSystemWindowAdaptiveInfo
-import three.haddad.smartnotas.ui.common.rememberNotificationsAllowed
-import three.haddad.smartnotas.ui.common.rememberShareAppAction
-import three.haddad.smartnotas.ui.common.supportsMultiPaneLayout
-import three.haddad.smartnotas.ui.components.UpdateChromeState
-import three.haddad.smartnotas.ui.components.alertChromeSummary
-import three.haddad.smartnotas.ui.edit.EditListRoute
-import three.haddad.smartnotas.ui.edit.EditNoteRoute
-import three.haddad.smartnotas.ui.help.HelpScreen
-import three.haddad.smartnotas.ui.help.HelpViewModel
-import three.haddad.smartnotas.ui.help.LocalOpenHelp
-import three.haddad.smartnotas.ui.history.HistoryRoute
-import three.haddad.smartnotas.ui.history.HistorySection
-import three.haddad.smartnotas.ui.home.HomeRoute
-import three.haddad.smartnotas.ui.main.MainTab
-import three.haddad.smartnotas.ui.main.MainTabScaffold
-import three.haddad.smartnotas.ui.auth.AuthViewModel
-import three.haddad.smartnotas.ui.auth.ForgotPasswordScreen
-import three.haddad.smartnotas.ui.auth.LoginScreen
-import three.haddad.smartnotas.ui.auth.RegisterScreen
-import three.haddad.smartnotas.ui.auth.SetNewPasswordScreen
-import three.haddad.smartnotas.ui.auth.VerifyEmailScreen
-import three.haddad.smartnotas.ui.auth.WelcomeScreen
-import three.haddad.smartnotas.ui.onboarding.OnboardingPermissionsScreen
-import three.haddad.smartnotas.ui.onboarding.OnboardingTitleScreen
-import three.haddad.smartnotas.ui.profile.GuestProfileScreen
-import three.haddad.smartnotas.ui.settings.DevOptionsRoute
-import three.haddad.smartnotas.ui.settings.RememberUpdateViewModel
-import three.haddad.smartnotas.ui.settings.SettingsRoute
-import three.haddad.smartnotas.ui.theme.LocalReducedMotion
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.OnboardingPrefs
+import haddad.three.notas.di.LaunchAction
+import haddad.three.notas.googletasks.GoogleTasksImportRoute
+import haddad.three.notas.ui.common.LocalSystemPaneScaffoldDirective
+import haddad.three.notas.ui.common.LocalSystemWindowAdaptiveInfo
+import haddad.three.notas.ui.common.rememberNotificationsAllowed
+import haddad.three.notas.ui.common.rememberShareAppAction
+import haddad.three.notas.ui.common.supportsMultiPaneLayout
+import haddad.three.notas.ui.components.UpdateChromeState
+import haddad.three.notas.ui.components.alertChromeSummary
+import haddad.three.notas.ui.edit.EditListRoute
+import haddad.three.notas.ui.edit.EditNoteRoute
+import haddad.three.notas.ui.help.HelpScreen
+import haddad.three.notas.ui.help.HelpViewModel
+import haddad.three.notas.ui.help.LocalOpenHelp
+import haddad.three.notas.ui.history.HistoryRoute
+import haddad.three.notas.ui.history.HistorySection
+import haddad.three.notas.ui.home.HomeRoute
+import haddad.three.notas.ui.main.MainTab
+import haddad.three.notas.ui.main.MainTabScaffold
+import haddad.three.notas.ui.auth.AuthViewModel
+import haddad.three.notas.ui.auth.ForgotPasswordScreen
+import haddad.three.notas.ui.auth.LoginScreen
+import haddad.three.notas.ui.auth.RegisterScreen
+import haddad.three.notas.ui.auth.SetNewPasswordScreen
+import haddad.three.notas.ui.auth.VerifyEmailScreen
+import haddad.three.notas.ui.auth.WelcomeScreen
+import haddad.three.notas.ui.onboarding.OnboardingPermissionsScreen
+import haddad.three.notas.ui.profile.GuestProfileScreen
+import haddad.three.notas.ui.settings.DevOptionsRoute
+import haddad.three.notas.ui.settings.RememberUpdateViewModel
+import haddad.three.notas.ui.settings.SettingsRoute
+import haddad.three.notas.ui.theme.LocalReducedMotion
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 object Routes {
     const val WELCOME = "welcome"
@@ -674,16 +673,23 @@ fun RememberNavGraph(
                     val authVm: AuthViewModel = hiltViewModel()
                     WelcomeScreen(
                         viewModel = authVm,
-                        onCreateAccount = { navController.navigate(Routes.REGISTER) },
-                        onLogin = { navController.navigate(Routes.LOGIN) },
+                        onCreateAccount = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.REGISTER)
+                        },
+                        onLogin = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.LOGIN)
+                        },
                         onGoogleSignIn = {
                             authVm.signInWithGoogle(context) {
-                                onboardingScope.launch {
-                                    onboardingPrefs.markIntroSeen()
+                                if (onboardingState?.hasSeenIntro != true) {
+                                    navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                        popUpTo(Routes.WELCOME) { inclusive = true }
+                                    }
+                                } else {
                                     navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) {
-                                            inclusive = true
-                                        }
+                                        popUpTo(navController.graph.id) { inclusive = true }
                                     }
                                 }
                             }
@@ -701,16 +707,23 @@ fun RememberNavGraph(
                     val authVm: AuthViewModel = hiltViewModel()
                     WelcomeScreen(
                         viewModel = authVm,
-                        onCreateAccount = { navController.navigate(Routes.REGISTER) },
-                        onLogin = { navController.navigate(Routes.LOGIN) },
+                        onCreateAccount = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.REGISTER)
+                        },
+                        onLogin = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.LOGIN)
+                        },
                         onGoogleSignIn = {
                             authVm.signInWithGoogle(context) {
-                                onboardingScope.launch {
-                                    onboardingPrefs.markIntroSeen()
+                                if (onboardingState?.hasSeenIntro != true) {
+                                    navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                        popUpTo(Routes.ONBOARDING_TITLE) { inclusive = true }
+                                    }
+                                } else {
                                     navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) {
-                                            inclusive = true
-                                        }
+                                        popUpTo(navController.graph.id) { inclusive = true }
                                     }
                                 }
                             }
@@ -735,16 +748,23 @@ fun RememberNavGraph(
                     val authVm: AuthViewModel = hiltViewModel()
                     RegisterScreen(
                         viewModel = authVm,
-                        onBackClick = { navController.popBackStack() },
-                        onLoginClick = { navController.navigate(Routes.LOGIN) },
+                        onBackClick = {
+                            authVm.clearErrors()
+                            navController.popBackStack()
+                        },
+                        onLoginClick = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.LOGIN)
+                        },
                         onGoogleSignInClick = {
                             authVm.signInWithGoogle(context) {
-                                onboardingScope.launch {
-                                    onboardingPrefs.markIntroSeen()
+                                if (onboardingState?.hasSeenIntro != true) {
+                                    navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                        popUpTo(Routes.REGISTER) { inclusive = true }
+                                    }
+                                } else {
                                     navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) {
-                                            inclusive = true
-                                        }
+                                        popUpTo(navController.graph.id) { inclusive = true }
                                     }
                                 }
                             }
@@ -778,12 +798,13 @@ fun RememberNavGraph(
                         onBackClick = { navController.popBackStack() },
                         onChangeEmailClick = { navController.popBackStack() },
                         onVerifiedSuccess = {
-                            onboardingScope.launch {
-                                onboardingPrefs.markIntroSeen()
+                            if (onboardingState?.hasSeenIntro != true) {
+                                navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                    popUpTo(Routes.VERIFY_EMAIL) { inclusive = true }
+                                }
+                            } else {
                                 navController.navigate(Routes.HOME) {
-                                    popUpTo(navController.graph.id) {
-                                        inclusive = true
-                                    }
+                                    popUpTo(navController.graph.id) { inclusive = true }
                                 }
                             }
                         },
@@ -795,28 +816,43 @@ fun RememberNavGraph(
                     val authVm: AuthViewModel = hiltViewModel()
                     LoginScreen(
                         viewModel = authVm,
-                        onBackClick = { navController.popBackStack() },
-                        onRegisterClick = { navController.navigate(Routes.REGISTER) },
-                        onForgotPasswordClick = { navController.navigate(Routes.FORGOT_PASSWORD) },
+                        onBackClick = {
+                            authVm.clearErrors()
+                            navController.popBackStack()
+                        },
+                        onRegisterClick = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.REGISTER)
+                        },
+                        onForgotPasswordClick = {
+                            authVm.clearErrors()
+                            navController.navigate(Routes.FORGOT_PASSWORD)
+                        },
                         onGoogleSignInClick = {
                             authVm.signInWithGoogle(context) {
-                                onboardingScope.launch {
-                                    onboardingPrefs.markIntroSeen()
+                                if (onboardingState?.hasSeenIntro != true) {
+                                    navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                        popUpTo(Routes.LOGIN) { inclusive = true }
+                                    }
+                                } else {
                                     navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) {
-                                            inclusive = true
-                                        }
+                                        popUpTo(navController.graph.id) { inclusive = true }
                                     }
                                 }
                             }
                         },
                         onLoginSuccess = {
-                            onboardingScope.launch {
-                                onboardingPrefs.markIntroSeen()
+                            val isVerified = authVm.currentUser?.isEmailVerified ?: true
+                            val email = authVm.currentUser?.email.orEmpty()
+                            if (!isVerified) {
+                                navController.navigate(Routes.verifyEmail(email))
+                            } else if (onboardingState?.hasSeenIntro != true) {
+                                navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                    popUpTo(Routes.LOGIN) { inclusive = true }
+                                }
+                            } else {
                                 navController.navigate(Routes.HOME) {
-                                    popUpTo(navController.graph.id) {
-                                        inclusive = true
-                                    }
+                                    popUpTo(navController.graph.id) { inclusive = true }
                                 }
                             }
                         },
@@ -1017,7 +1053,7 @@ fun RememberNavGraph(
                     fadeInSpec = navFadeInSpec,
                     fadeOutSpec = navFadeOutSpec,
                 ) {
-                    three.haddad.smartnotas.ui.calendar.CalendarRoute(
+                    haddad.three.notas.ui.calendar.CalendarRoute(
                         onOpenItemDetails = { itemId, isTask ->
                             navController.navigate(Routes.calendarDetails(id = itemId, isTask = isTask)) {
                                 launchSingleTop = true
@@ -1044,7 +1080,7 @@ fun RememberNavGraph(
                     fadeInSpec = navFadeInSpec,
                     fadeOutSpec = navFadeOutSpec,
                 ) {
-                    three.haddad.smartnotas.ui.search.SearchRoute(
+                    haddad.three.notas.ui.search.SearchRoute(
                         onOpenNote = { item ->
                             navController.openEditRouteFor(item)
                         },
@@ -1416,7 +1452,7 @@ fun RememberNavGraph(
                         }
                     },
                 ) {
-                    three.haddad.smartnotas.ui.calendar.details.CalendarDetailsRoute(
+                    haddad.three.notas.ui.calendar.details.CalendarDetailsRoute(
                         onBack = { navController.popBackStack() },
                         onEditItem = { noteWithItems ->
                             if (noteWithItems.note.kind == NoteKind.LIST) {

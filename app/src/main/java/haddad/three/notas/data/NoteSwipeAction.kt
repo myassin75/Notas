@@ -1,8 +1,8 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 /** Actions assignable to horizontal swipe on a note card in the main list. */
 enum class NoteSwipeAction(
-    /** Google Material Symbols ligature for [three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol]. */
+    /** Google Material Symbols ligature for [haddad.three.notas.ui.common.RememberMaterialRoundedSymbol]. */
     val materialSymbolName: String,
 ) {
     EDIT("edit"),

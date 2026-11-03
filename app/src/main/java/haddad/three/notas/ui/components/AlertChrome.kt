@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -60,12 +60,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.graphics.shapes.Morph
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.LocalAllowCompactControls
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.theme.MorphPolygonShape
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.LocalAllowCompactControls
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.theme.MorphPolygonShape
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import kotlin.math.roundToInt
 
 /** Fallback width for bars anchored to the FAB, where the room to their right isn't known. */

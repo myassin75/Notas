@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.lock
+package haddad.three.notas.ui.lock
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,9 +23,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.components.RememberTextButton
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.components.RememberTextButton
 
 private val PinInputTransformation =
     InputTransformation {

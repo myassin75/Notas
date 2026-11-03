@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
@@ -32,18 +32,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.toPersistentSet
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.FilterType
-import three.haddad.smartnotas.data.GroupBy
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.SortDir
-import three.haddad.smartnotas.data.SortKey
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberCheckbox
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberInputChip
+import haddad.three.notas.R
+import haddad.three.notas.data.FilterType
+import haddad.three.notas.data.GroupBy
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.SortDir
+import haddad.three.notas.data.SortKey
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberCheckbox
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberInputChip
 
 private val ActiveChipHeight = 32.dp
 
@@ -77,15 +77,15 @@ internal fun ActiveFilterChips(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // "All" Chip
-            val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
-            val semantic = three.haddad.smartnotas.ui.theme.LocalSemanticPalette.current
+            val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
+            val semantic = haddad.three.notas.ui.theme.LocalSemanticPalette.current
             val allSelected = filter.shoulderId == null
             val allBg =
                 if (allSelected) {
                     if (isDark) semantic.selectedStateContainer else MaterialTheme.colorScheme.primaryContainer
                 } else {
-                    three.haddad.smartnotas.ui.theme.glassContainerColor(
-                        variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                    haddad.three.notas.ui.theme.glassContainerColor(
+                        variant = haddad.three.notas.ui.theme.GlassVariant.Chip,
                         isDark = isDark,
                     )
                 }
@@ -93,8 +93,8 @@ internal fun ActiveFilterChips(
                 if (allSelected) {
                     if (isDark) BorderStroke(1.dp, semantic.primaryAction.copy(alpha = 0.5f)) else null
                 } else {
-                    three.haddad.smartnotas.ui.theme.glassBorderStroke(
-                        variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                    haddad.three.notas.ui.theme.glassBorderStroke(
+                        variant = haddad.three.notas.ui.theme.GlassVariant.Chip,
                         isDark = isDark,
                     )
                 }
@@ -146,13 +146,13 @@ internal fun ActiveFilterChips(
             activeShoulders.forEach { shoulder ->
                 val selected = filter.shoulderId == shoulder.id
                 val shoulderColor = parseColorHex(shoulder.colorHex, MaterialTheme.colorScheme.primary)
-                val (badgeBg, badgeText) = three.haddad.smartnotas.ui.components.readableBadgeColors(shoulderColor, isDark)
+                val (badgeBg, badgeText) = haddad.three.notas.ui.components.readableBadgeColors(shoulderColor, isDark)
                 val chipBg =
                     if (selected) {
                         badgeBg
                     } else {
-                        three.haddad.smartnotas.ui.theme.glassContainerColor(
-                            variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                        haddad.three.notas.ui.theme.glassContainerColor(
+                            variant = haddad.three.notas.ui.theme.GlassVariant.Chip,
                             isDark = isDark,
                         )
                     }
@@ -160,8 +160,8 @@ internal fun ActiveFilterChips(
                     if (selected) {
                         BorderStroke(1.dp, badgeText.copy(alpha = 0.5f))
                     } else {
-                        three.haddad.smartnotas.ui.theme.glassBorderStroke(
-                            variant = three.haddad.smartnotas.ui.theme.GlassVariant.Chip,
+                        haddad.three.notas.ui.theme.glassBorderStroke(
+                            variant = haddad.three.notas.ui.theme.GlassVariant.Chip,
                             isDark = isDark,
                         )
                     }

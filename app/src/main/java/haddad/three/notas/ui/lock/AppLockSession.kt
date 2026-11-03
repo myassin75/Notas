@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.lock
+package haddad.three.notas.ui.lock
 
 import android.os.SystemClock
 import androidx.lifecycle.DefaultLifecycleObserver

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.toTextFieldBuffer
@@ -9,7 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.ui.common.MarkdownStyler
+import haddad.three.notas.ui.common.MarkdownStyler
 
 class MarkdownEditorTransactionsTest {
     private val styler =

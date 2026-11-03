@@ -1,6 +1,6 @@
 @file:Suppress("ConfigurationScreenWidthHeight")
 
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -102,48 +102,48 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.DefaultNotePreferencesState
-import three.haddad.smartnotas.data.InteractionState
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.QuickCaptureState
-import three.haddad.smartnotas.data.ReminderPreferencesState
-import three.haddad.smartnotas.data.UpdateCheckSchedule
-import three.haddad.smartnotas.data.UpdatePreferencesState
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.ui.common.AppBottomSheetDragHandle
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isLandscape
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionIconSize
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
-import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.components.SettingsRow
-import three.haddad.smartnotas.ui.components.SettingsRowCard
-import three.haddad.smartnotas.ui.components.UserAvatar
-import three.haddad.smartnotas.ui.modifiers.PillBottomBarHeight
-import three.haddad.smartnotas.ui.modifiers.PillBottomScrimExtra
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
-import three.haddad.smartnotas.ui.modifiers.rememberContentOverflowScrollEnabled
-import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
-import three.haddad.smartnotas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
-import three.haddad.smartnotas.ui.nav.LocalNavAnimatedVisibilityScope
-import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
-import three.haddad.smartnotas.ui.theme.LocalNotesUiState
-import three.haddad.smartnotas.ui.theme.LocalThemeState
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
-import three.haddad.smartnotas.update.RememberUpdateInfo
-import three.haddad.smartnotas.update.RememberUpdateState
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
+import haddad.three.notas.data.DefaultNotePreferencesState
+import haddad.three.notas.data.InteractionState
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.QuickCaptureState
+import haddad.three.notas.data.ReminderPreferencesState
+import haddad.three.notas.data.UpdateCheckSchedule
+import haddad.three.notas.data.UpdatePreferencesState
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.di.SettingsDependenciesEntryPoint
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.ui.common.AppBottomSheetDragHandle
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isLandscape
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
+import haddad.three.notas.ui.components.rememberResponsiveActionIconSize
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListColumn
+import haddad.three.notas.ui.components.settings.GroupedListItem
+import haddad.three.notas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.components.SettingsRow
+import haddad.three.notas.ui.components.SettingsRowCard
+import haddad.three.notas.ui.components.UserAvatar
+import haddad.three.notas.ui.modifiers.PillBottomBarHeight
+import haddad.three.notas.ui.modifiers.PillBottomScrimExtra
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.modifiers.applyToScrollableList
+import haddad.three.notas.ui.modifiers.rememberContentOverflowScrollEnabled
+import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
+import haddad.three.notas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
+import haddad.three.notas.ui.nav.LocalNavAnimatedVisibilityScope
+import haddad.three.notas.ui.nav.LocalSharedTransitionScope
+import haddad.three.notas.ui.theme.LocalNotesUiState
+import haddad.three.notas.ui.theme.LocalThemeState
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.update.PlayInAppUpdateBannerUiState
+import haddad.three.notas.update.RememberUpdateInfo
+import haddad.three.notas.update.RememberUpdateState
 
 
 private const val SETTINGS_SECTION_EXPAND_SETTLE_DELAY_MS = 900L
@@ -278,8 +278,8 @@ fun SettingsRoute(
     val cloudBackupManager = settingsDependencies.cloudBackupManager()
     val authRepository = settingsDependencies.authRepository()
     val authState by authRepository.authState
-        .collectAsStateWithLifecycle(initialValue = three.haddad.smartnotas.data.auth.AuthState.Unauthenticated)
-    val currentAuthUser = (authState as? three.haddad.smartnotas.data.auth.AuthState.Authenticated)?.user ?: authRepository.currentUser
+        .collectAsStateWithLifecycle(initialValue = haddad.three.notas.data.auth.AuthState.Unauthenticated)
+    val currentAuthUser = (authState as? haddad.three.notas.data.auth.AuthState.Authenticated)?.user ?: authRepository.currentUser
     val themePrefs = settingsDependencies.themePrefs()
     val notesUiPrefs = settingsDependencies.notesUiPrefs()
     val viewOptionsPrefs = settingsDependencies.viewOptionsPrefs()

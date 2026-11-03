@@ -1,4 +1,4 @@
-package three.haddad.smartnotas
+package haddad.three.notas
 
 import android.app.Activity
 import android.content.Intent
@@ -40,37 +40,37 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.InteractionState
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.NotesUiState
-import three.haddad.smartnotas.data.OnboardingPrefs
-import three.haddad.smartnotas.data.OnboardingState
-import three.haddad.smartnotas.data.ShoulderRepository
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.ThemeState
-import three.haddad.smartnotas.data.UpdatePreferencesState
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.data.effectiveDarkTheme
-import three.haddad.smartnotas.di.ApplicationScope
-import three.haddad.smartnotas.di.LaunchAction
-import three.haddad.smartnotas.ui.InAppRatingAutoPromptHost
-import three.haddad.smartnotas.ui.common.LocalSystemPaneScaffoldDirective
-import three.haddad.smartnotas.ui.common.LocalSystemWindowAdaptiveInfo
-import three.haddad.smartnotas.ui.components.UpdateChromeState
-import three.haddad.smartnotas.ui.lock.AppLockSession
-import three.haddad.smartnotas.ui.lock.LockScreen
-import three.haddad.smartnotas.ui.nav.RememberNavGraph
-import three.haddad.smartnotas.ui.settings.RememberUpdateViewModel
-import three.haddad.smartnotas.ui.splash.SplashScreen
-import three.haddad.smartnotas.ui.theme.RememberTheme
-import three.haddad.smartnotas.update.AppReviewLauncher
-import three.haddad.smartnotas.update.PlayInAppUpdateBannerUiState
-import three.haddad.smartnotas.update.PlayInAppUpdateProgressController
-import three.haddad.smartnotas.update.RememberUpdateState
-import three.haddad.smartnotas.update.notificationDedupeKey
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.InteractionState
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.NotesUiState
+import haddad.three.notas.data.OnboardingPrefs
+import haddad.three.notas.data.OnboardingState
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.ThemeState
+import haddad.three.notas.data.UpdatePreferencesState
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.data.effectiveDarkTheme
+import haddad.three.notas.di.ApplicationScope
+import haddad.three.notas.di.LaunchAction
+import haddad.three.notas.ui.InAppRatingAutoPromptHost
+import haddad.three.notas.ui.common.LocalSystemPaneScaffoldDirective
+import haddad.three.notas.ui.common.LocalSystemWindowAdaptiveInfo
+import haddad.three.notas.ui.components.UpdateChromeState
+import haddad.three.notas.ui.lock.AppLockSession
+import haddad.three.notas.ui.lock.LockScreen
+import haddad.three.notas.ui.nav.RememberNavGraph
+import haddad.three.notas.ui.settings.RememberUpdateViewModel
+import haddad.three.notas.ui.splash.SplashScreen
+import haddad.three.notas.ui.theme.RememberTheme
+import haddad.three.notas.update.AppReviewLauncher
+import haddad.three.notas.update.PlayInAppUpdateBannerUiState
+import haddad.three.notas.update.PlayInAppUpdateProgressController
+import haddad.three.notas.update.RememberUpdateState
+import haddad.three.notas.update.notificationDedupeKey
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -105,8 +105,8 @@ class MainActivity : FragmentActivity() {
     lateinit var applicationScope: CoroutineScope
 
     companion object {
-        const val ACTION_SHORTCUT_NEW_NOTE = "three.haddad.smartnotas.action.SHORTCUT_NEW_NOTE"
-        const val ACTION_SHORTCUT_NEW_LIST = "three.haddad.smartnotas.action.SHORTCUT_NEW_LIST"
+        const val ACTION_SHORTCUT_NEW_NOTE = "haddad.three.notas.action.SHORTCUT_NEW_NOTE"
+        const val ACTION_SHORTCUT_NEW_LIST = "haddad.three.notas.action.SHORTCUT_NEW_LIST"
         const val EXTRA_OPEN_NOTE_ID = "open_note_id"
 
         /**
@@ -357,7 +357,7 @@ private fun AppRoot(
                     )
                 }
                 CompositionLocalProvider(
-                    three.haddad.smartnotas.ui.theme.LocalSnackbarHostState provides snackbarHostState,
+                    haddad.three.notas.ui.theme.LocalSnackbarHostState provides snackbarHostState,
                 ) {
                     val currentUpdateInfo = updateInfo
                     val updateKey = currentUpdateInfo?.notificationDedupeKey()

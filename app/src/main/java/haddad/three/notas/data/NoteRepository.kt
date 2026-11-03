@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import androidx.room.withTransaction
 import kotlinx.coroutines.CoroutineDispatcher
@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import three.haddad.smartnotas.di.DefaultDispatcher
-import three.haddad.smartnotas.di.IoDispatcher
-import three.haddad.smartnotas.reminders.ReminderScheduler
+import haddad.three.notas.di.DefaultDispatcher
+import haddad.three.notas.di.IoDispatcher
+import haddad.three.notas.reminders.ReminderScheduler
 import java.util.Locale
 
 data class NoteOptions(
@@ -74,8 +74,8 @@ class NoteRepository(
     private val appMediaStorage: AppMediaStorage? = null,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     @param:DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    private val tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder? = null,
-    private val authRepository: three.haddad.smartnotas.data.auth.AuthRepository? = null,
+    private val tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder? = null,
+    private val authRepository: haddad.three.notas.data.auth.AuthRepository? = null,
     private val ownerIdProvider: () -> String? = { authRepository?.currentUser?.uid },
 ) {
     // NoteRefreshObserver owns widget and summary refreshes after committed database changes.

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.widget
+package haddad.three.notas.widget
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
@@ -53,12 +53,12 @@ import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ShoulderRepository
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.ThemeState
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.RememberTheme
+import haddad.three.notas.R
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.ThemeState
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.RememberTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint

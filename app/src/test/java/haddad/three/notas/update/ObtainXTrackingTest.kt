@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -30,16 +30,16 @@ class ObtainXTrackingTest {
 
     @Test
     fun githubTracksGithubReleasesWithGithubApkFilter() {
-        val payload = payload("github", "three.haddad.smartnotas.gh")
-        assertEquals("three.haddad.smartnotas.gh", payload.getValue("id").jsonPrimitive.content)
+        val payload = payload("github", "haddad.three.notas.gh")
+        assertEquals("haddad.three.notas.gh", payload.getValue("id").jsonPrimitive.content)
         assertEquals("https://github.com/bikram-agarwal/Remember", payload.getValue("url").jsonPrimitive.content)
         assertEquals("""-github\.apk$""", apkFilterRegEx(payload).pattern)
     }
 
     @Test
     fun offlineTracksGithubReleasesWithOfflineApkFilter() {
-        val payload = payload("offline", "three.haddad.smartnotas.offline")
-        assertEquals("three.haddad.smartnotas.offline", payload.getValue("id").jsonPrimitive.content)
+        val payload = payload("offline", "haddad.three.notas.offline")
+        assertEquals("haddad.three.notas.offline", payload.getValue("id").jsonPrimitive.content)
         assertEquals("https://github.com/bikram-agarwal/Remember", payload.getValue("url").jsonPrimitive.content)
         assertEquals("""-offline\.apk$""", apkFilterRegEx(payload).pattern)
     }
@@ -55,14 +55,14 @@ class ObtainXTrackingTest {
 
     @Test
     fun playStoreBuildsAreNotOfferedTracking() {
-        assertNull(buildObtainXTrackingJson("playstore", "three.haddad.smartnotas"))
+        assertNull(buildObtainXTrackingJson("playstore", "haddad.three.notas"))
     }
 
     @Test
     fun releaseApplicationIdDropsOnlyTheDevReleaseSuffix() {
-        assertEquals("three.haddad.smartnotas.gh", releaseApplicationId("three.haddad.smartnotas.gh.dev"))
-        assertEquals("three.haddad.smartnotas.offline", releaseApplicationId("three.haddad.smartnotas.offline"))
-        assertEquals("three.haddad.smartnotas.gh", releaseApplicationId("three.haddad.smartnotas.gh"))
+        assertEquals("haddad.three.notas.gh", releaseApplicationId("haddad.three.notas.gh.dev"))
+        assertEquals("haddad.three.notas.offline", releaseApplicationId("haddad.three.notas.offline"))
+        assertEquals("haddad.three.notas.gh", releaseApplicationId("haddad.three.notas.gh"))
     }
 
     @Test
@@ -76,7 +76,7 @@ class ObtainXTrackingTest {
                 "offline" to "remember-v1.9.0-offline.apk",
             )
         for ((flavor, expected) in cases) {
-            val filter = apkFilterRegEx(payload(flavor, "three.haddad.smartnotas.$flavor"))
+            val filter = apkFilterRegEx(payload(flavor, "haddad.three.notas.$flavor"))
             val kept = assets.filter { name -> filter.containsMatchIn(name) || filter.containsMatchIn(downloadBase + name) }
             assertEquals(listOf(expected), kept)
         }

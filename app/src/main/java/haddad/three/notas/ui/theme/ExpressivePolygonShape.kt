@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Matrix

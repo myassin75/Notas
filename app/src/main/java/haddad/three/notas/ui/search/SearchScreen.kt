@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.search
+package haddad.three.notas.ui.search
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -74,18 +74,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.compositeOver
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.SearchHistoryEntry
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.parseNoteColorHex
-import three.haddad.smartnotas.ui.components.readableBadgeColors
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.NoteColors
-import three.haddad.smartnotas.ui.theme.elevatedCardColors
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.SearchHistoryEntry
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.parseNoteColorHex
+import haddad.three.notas.ui.components.readableBadgeColors
+import haddad.three.notas.ui.settings.SettingsDesignTokens
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.NoteColors
+import haddad.three.notas.ui.theme.elevatedCardColors
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date

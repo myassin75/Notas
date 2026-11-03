@@ -1,10 +1,10 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import android.content.Context
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import three.haddad.smartnotas.data.ThemeState
+import haddad.three.notas.data.ThemeState
 
 internal data class RememberColorResolution(
     val colorScheme: ColorScheme,

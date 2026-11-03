@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -44,20 +44,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.InteractionState
-import three.haddad.smartnotas.data.NoteLayoutMode
-import three.haddad.smartnotas.data.NoteSwipeAction
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.ui.common.RememberInlineSearchField
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.NoteCardUiModel
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.SwipeableRememberNoteCard
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import three.haddad.smartnotas.ui.theme.semanticPalette
+import haddad.three.notas.R
+import haddad.three.notas.data.InteractionState
+import haddad.three.notas.data.NoteLayoutMode
+import haddad.three.notas.data.NoteSwipeAction
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.ui.common.RememberInlineSearchField
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.NoteCardUiModel
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.SwipeableRememberNoteCard
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.theme.semanticPalette
 
 /**
  * Top-bar title that doubles as the search entry point. Renders a single Row of:

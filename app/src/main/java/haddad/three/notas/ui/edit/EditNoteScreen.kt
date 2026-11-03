@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,16 +35,16 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.ui.common.NotePageBackground
-import three.haddad.smartnotas.ui.common.rememberNotificationsAllowed
-import three.haddad.smartnotas.ui.components.NoteActionBottomBarContent
-import three.haddad.smartnotas.ui.components.NoteShelfState
-import three.haddad.smartnotas.ui.modifiers.applyToFullBleedLayer
-import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
-import three.haddad.smartnotas.ui.theme.LocalAdaptiveNoteThemes
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.ui.common.NotePageBackground
+import haddad.three.notas.ui.common.rememberNotificationsAllowed
+import haddad.three.notas.ui.components.NoteActionBottomBarContent
+import haddad.three.notas.ui.components.NoteShelfState
+import haddad.three.notas.ui.modifiers.applyToFullBleedLayer
+import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
+import haddad.three.notas.ui.theme.LocalAdaptiveNoteThemes
 import java.io.File
 
 @Composable

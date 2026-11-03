@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -55,14 +55,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.domain.formatTimeOfDay
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.GlassVariant
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.LocalThemeState
-import three.haddad.smartnotas.ui.theme.glassContainerColor
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.domain.formatTimeOfDay
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.GlassVariant
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.LocalThemeState
+import haddad.three.notas.ui.theme.glassContainerColor
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime

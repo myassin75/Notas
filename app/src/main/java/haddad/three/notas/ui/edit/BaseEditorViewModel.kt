@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
@@ -11,24 +11,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.DefaultNotePreferencesState
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.data.pinned
-import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
-import three.haddad.smartnotas.ui.common.HeroFraming
-import three.haddad.smartnotas.ui.nav.Routes
-import three.haddad.smartnotas.data.Visibility as NoteVisibility
+import haddad.three.notas.data.AppMediaStorage
+import haddad.three.notas.data.DefaultNotePreferencesState
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.data.pinned
+import haddad.three.notas.di.SettingsDependenciesEntryPoint
+import haddad.three.notas.ui.common.HeroFraming
+import haddad.three.notas.ui.nav.Routes
+import haddad.three.notas.data.Visibility as NoteVisibility
 
 /**
  * Shared owner of every persisted field, setter, and note-lifecycle action common to both the
@@ -61,7 +61,7 @@ abstract class BaseEditorViewModel(
     val title: StateFlow<String> = _title.asStateFlow()
 
     /**
-     * Snapshot of the underlying note's [three.haddad.smartnotas.data.NoteEntity.completedAt] as a
+     * Snapshot of the underlying note's [haddad.three.notas.data.NoteEntity.completedAt] as a
      * boolean. Driven by the live DB observer started in the subclass `init`, so external
      * completion via swipe / notification action / repository.markCompleted is reflected here too.
      */
@@ -69,7 +69,7 @@ abstract class BaseEditorViewModel(
     val completed: StateFlow<Boolean> = _completed.asStateFlow()
 
     /**
-     * Snapshot of [three.haddad.smartnotas.data.NoteEntity.pinnedAt] as a boolean. Unlike [starred],
+     * Snapshot of [haddad.three.notas.data.NoteEntity.pinnedAt] as a boolean. Unlike [starred],
      * pinning is NOT part of the editor draft: it writes through immediately via
      * [NoteRepository.setPinned] and comes back through the live observer, the same way
      * [completed] and [archived] do. Pinning is placement, not content, so it should never
@@ -188,7 +188,7 @@ abstract class BaseEditorViewModel(
     val hasUnsavedChanges: StateFlow<Boolean> = persistence.hasUnsavedChanges
 
     protected var loadedId: Long? = noteId
-    protected var originalNote: three.haddad.smartnotas.data.NoteEntity? = null
+    protected var originalNote: haddad.three.notas.data.NoteEntity? = null
     private var remindersEditedLocally = false
     private var visibilityEditedLocally = false
     private var importanceEditedLocally = false
@@ -228,7 +228,7 @@ abstract class BaseEditorViewModel(
         _loaded.value = true
     }
 
-    protected fun acceptPersistedSnapshot(note: three.haddad.smartnotas.data.NoteEntity?) {
+    protected fun acceptPersistedSnapshot(note: haddad.three.notas.data.NoteEntity?) {
         originalNote = note
         remindersEditedLocally = note != null && _reminders.value != note.getActiveReminders()
     }
@@ -643,7 +643,7 @@ abstract class BaseEditorViewModel(
                     SettingsDependenciesEntryPoint::class.java,
                 ).reminderPrefs()
         val keepUntilDone = reminderPrefs.snapshot().keepReminderNotificationsUntilDone
-        three.haddad.smartnotas.reminders.ReminderReceiver.showNotification(
+        haddad.three.notas.reminders.ReminderReceiver.showNotification(
             context = context,
             note = noteWithItems.note,
             items = noteWithItems.items,
@@ -652,7 +652,7 @@ abstract class BaseEditorViewModel(
         android.widget.Toast
             .makeText(
                 context,
-                context.getString(three.haddad.smartnotas.R.string.notification_created),
+                context.getString(haddad.three.notas.R.string.notification_created),
                 android.widget.Toast.LENGTH_SHORT,
             ).show()
     }

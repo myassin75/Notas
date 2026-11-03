@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.Context
 import android.content.Intent
@@ -69,39 +69,39 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ActionType
-import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.RecurrenceUnit
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.labelRes
-import three.haddad.smartnotas.data.recycleNoteActionIconBitmap
-import three.haddad.smartnotas.data.toNoteActionIconDrawable
-import three.haddad.smartnotas.domain.formatTimeOfDay
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.ResponsiveActionLayout
-import three.haddad.smartnotas.ui.common.rememberBottomSheetStateWithUnsavedChanges
-import three.haddad.smartnotas.ui.common.responsiveActionLayout
-import three.haddad.smartnotas.ui.components.RememberButton
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.components.RememberUnsavedChangesDialog
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.help.HELP_FOCUS_IMPORTANCE
-import three.haddad.smartnotas.ui.help.HELP_FOCUS_VISIBILITY
-import three.haddad.smartnotas.ui.help.LocalOpenHelp
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.data.ActionType
+import haddad.three.notas.data.AppMediaStorage
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.RecurrenceUnit
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.labelRes
+import haddad.three.notas.data.recycleNoteActionIconBitmap
+import haddad.three.notas.data.toNoteActionIconDrawable
+import haddad.three.notas.domain.formatTimeOfDay
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.ResponsiveActionLayout
+import haddad.three.notas.ui.common.rememberBottomSheetStateWithUnsavedChanges
+import haddad.three.notas.ui.common.responsiveActionLayout
+import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.components.RememberUnsavedChangesDialog
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.help.HELP_FOCUS_IMPORTANCE
+import haddad.three.notas.ui.help.HELP_FOCUS_VISIBILITY
+import haddad.three.notas.ui.help.LocalOpenHelp
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import java.text.DateFormat
 import java.util.Date
-import three.haddad.smartnotas.data.Visibility as NoteVisibility
+import haddad.three.notas.data.Visibility as NoteVisibility
 
 private val OPTION_CELL_HEIGHT = 56.dp
 private const val STARRED_WATERMARK_ALPHA = 0.28f

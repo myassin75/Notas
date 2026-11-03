@@ -4,7 +4,7 @@ Remember is built using three product flavors under the `distribution` dimension
 
 | Feature / Characteristic | GitHub Flavor (`github`) | Play Store Flavor (`playstore`) | Offline Flavor (`offline`) |
 | :--- | :--- | :--- | :--- |
-| **Application ID** | `three.haddad.smartnotas.gh` | `three.haddad.smartnotas` | `three.haddad.smartnotas.offline` |
+| **Application ID** | `haddad.three.notas.gh` | `haddad.three.notas` | `haddad.three.notas.offline` |
 | **Side-by-Side Installation** | Can run alongside Play Store & Offline. | Can run alongside all other flavors | Can run alongside all other flavors |
 | **Internet permission** | Used for GitHub update checks, APK download, changelog fetch, and Google Tasks connect. | Used for Play in-app updates, changelog fetch, and Google Tasks connect. | No internet permission |
 | **Update check source** | GitHub Release API for `bikram-agarwal/Remember` | Google Play Core In-App Updates | You share it to ObtainX, and track upates there |
@@ -28,4 +28,4 @@ All flavors share the same data domain representation, Room database schema, and
 > [!WARNING]
 > **Package-scoped grants do not transfer across application IDs.**
 >
-> The GitHub flavor uses `three.haddad.smartnotas.gh`. The Play Store flavor uses `three.haddad.smartnotas`. The Offline flavor uses `three.haddad.smartnotas.offline`. Switching to Offline (or from Offline to another package ID) means restoring a backup into a different app install; re-grant any permissions the new package needs after restore.
+> The GitHub flavor uses `haddad.three.notas.gh`. The Play Store flavor uses `haddad.three.notas`. The Offline flavor uses `haddad.three.notas.offline`. Switching to Offline (or from Offline to another package ID) means restoring a backup into a different app install; re-grant any permissions the new package needs after restore.

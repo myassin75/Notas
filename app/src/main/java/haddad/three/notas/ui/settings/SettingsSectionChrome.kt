@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
@@ -40,14 +40,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberSwitch
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberSwitch
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 object SettingsDesignTokens {
-    val ScreenBg: Color @Composable get() = if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
-    val CardBg: Color @Composable get() = if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) three.haddad.smartnotas.ui.theme.glassContainerColor(three.haddad.smartnotas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
+    val ScreenBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
+    val CardBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
     val PrimaryPurple: Color @Composable get() = MaterialTheme.colorScheme.primary
     val SoftLavender: Color @Composable get() = MaterialTheme.colorScheme.primaryContainer
     val TextPrimary: Color @Composable get() = MaterialTheme.colorScheme.onSurface
@@ -70,9 +70,9 @@ fun SettingsSectionCard(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val containerColor =
-        if (isDark) three.haddad.smartnotas.ui.theme.glassContainerColor(three.haddad.smartnotas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
+        if (isDark) haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
     val borderStroke =
         if (isDark) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)) else null
 

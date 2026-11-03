@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,14 +28,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NotesFilter
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.emptyStateSpacing
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.components.EmptyNotesIllustration
-import three.haddad.smartnotas.ui.components.RememberButton
-import three.haddad.smartnotas.ui.components.RememberOutlinedButton
+import haddad.three.notas.R
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.emptyStateSpacing
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.components.EmptyNotesIllustration
+import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.components.RememberOutlinedButton
 
 @Composable
 internal fun NotesEmptyState(
@@ -92,7 +92,7 @@ internal fun NotesEmptyState(
             }
             if (showCreateActions) {
                 Spacer(Modifier.height(24.dp))
-                val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+                val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color =

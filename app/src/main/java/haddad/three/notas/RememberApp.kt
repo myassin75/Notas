@@ -1,4 +1,4 @@
-package three.haddad.smartnotas
+package haddad.three.notas
 
 import android.app.Application
 import android.app.NotificationChannel
@@ -16,26 +16,26 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.UpdateCheckSchedule
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.di.AppStartupWarmup
-import three.haddad.smartnotas.di.ApplicationScope
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.quickcapture.QuickCaptureNotifier
-import three.haddad.smartnotas.reminders.ReminderScheduler
-import three.haddad.smartnotas.reminders.observeNoteRefreshes
-import three.haddad.smartnotas.trash.RememberTrashSweepWork
-import three.haddad.smartnotas.ui.lock.AppLockSession
-import three.haddad.smartnotas.update.PlayInAppUpdateProgressController
-import three.haddad.smartnotas.update.PlayStoreUpdateChecker
-import three.haddad.smartnotas.update.RememberUpdateChecker
-import three.haddad.smartnotas.update.RememberUpdateState
-import three.haddad.smartnotas.update.UpdateAvailableNotifier
-import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
-import three.haddad.smartnotas.widget.NotesWidgetUpdater
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.UpdateCheckSchedule
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.di.AppStartupWarmup
+import haddad.three.notas.di.ApplicationScope
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.quickcapture.QuickCaptureNotifier
+import haddad.three.notas.reminders.ReminderScheduler
+import haddad.three.notas.reminders.observeNoteRefreshes
+import haddad.three.notas.trash.RememberTrashSweepWork
+import haddad.three.notas.ui.lock.AppLockSession
+import haddad.three.notas.update.PlayInAppUpdateProgressController
+import haddad.three.notas.update.PlayStoreUpdateChecker
+import haddad.three.notas.update.RememberUpdateChecker
+import haddad.three.notas.update.RememberUpdateState
+import haddad.three.notas.update.UpdateAvailableNotifier
+import haddad.three.notas.update.UpdateCheckWorkScheduler
+import haddad.three.notas.widget.NotesWidgetUpdater
 import javax.inject.Inject
 
 @HiltAndroidApp

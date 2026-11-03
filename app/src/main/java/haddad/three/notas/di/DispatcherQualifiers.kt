@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.di
+package haddad.three.notas.di
 
 import dagger.Module
 import dagger.Provides

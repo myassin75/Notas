@@ -145,7 +145,7 @@ All Android network clients (`BackendApiClient`, `BackupApiClient`, `SyncApiClie
 ```kotlin
 val baseUrl = BuildConfig.BACKEND_API_BASE_URL.trimEnd('/')
 ```
-In [app/build.gradle.kts](file:///home/mohamed/SmartNotas/app/build.gradle.kts#L102-L106), `defaultConfig` currently sets:
+In [app/build.gradle.kts](file:///home/mohamed/Notas/app/build.gradle.kts#L102-L106), `defaultConfig` currently sets:
 ```kotlin
 buildConfigField("String", "BACKEND_API_BASE_URL", "\"https://api.smartnotas.com\"")
 ```
@@ -154,7 +154,7 @@ buildConfigField("String", "BACKEND_API_BASE_URL", "\"https://api.smartnotas.com
 To allow building a staging test APK pointed at Vercel Staging without modifying production release builds or hardcoding temporary URLs into git:
 
 #### Step 1: Update `app/build.gradle.kts`
-Modify the `devRelease` build type (and optionally `debug`) in [app/build.gradle.kts](file:///home/mohamed/SmartNotas/app/build.gradle.kts#L127-L140) to read a Gradle property or environment variable with a safe fallback:
+Modify the `devRelease` build type (and optionally `debug`) in [app/build.gradle.kts](file:///home/mohamed/Notas/app/build.gradle.kts#L127-L140) to read a Gradle property or environment variable with a safe fallback:
 
 ```kotlin
 create("devRelease") {
@@ -186,7 +186,7 @@ When the Vercel staging URL is known (e.g. `https://notas-backend-staging.vercel
 ./gradlew assembleGithubDevRelease -PbackendApiBaseUrl="https://notas-backend-staging.vercel.app"
 ```
 - **Production Safety**: The `release` build type remains completely untouched and continues to point strictly to `https://api.smartnotas.com`.
-- **Packaging Safety**: `devRelease` uses the package ID `three.haddad.smartnotas.dev.gh`, preventing it from overwriting the production app on test devices.
+- **Packaging Safety**: `devRelease` uses the package ID `haddad.three.notas.dev.gh`, preventing it from overwriting the production app on test devices.
 
 ---
 

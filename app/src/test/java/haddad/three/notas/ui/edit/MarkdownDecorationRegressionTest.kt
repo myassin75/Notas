@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -13,7 +13,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.ui.common.MarkdownStyler
+import haddad.three.notas.ui.common.MarkdownStyler
 
 class MarkdownDecorationRegressionTest {
     private val styler =
@@ -106,7 +106,7 @@ class MarkdownDecorationRegressionTest {
         // Exercise the map used by saved-note tap/long-press handling as well as its renderer.
         val constructor =
             Class
-                .forName("three.haddad.smartnotas.ui.common.MarkdownInlineInteractionBuilder")
+                .forName("haddad.three.notas.ui.common.MarkdownInlineInteractionBuilder")
                 .declaredConstructors
                 .single { it.parameterCount == 3 }
                 .apply { isAccessible = true }

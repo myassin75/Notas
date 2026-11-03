@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.content.BroadcastReceiver
 import android.content.ClipData
@@ -11,12 +11,12 @@ import androidx.core.net.toUri
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ActionType
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.di.ApplicationScope
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
+import haddad.three.notas.R
+import haddad.three.notas.data.ActionType
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.di.ApplicationScope
+import haddad.three.notas.diagnostics.DiagnosticLog
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -71,8 +71,8 @@ class ActionReceiver : BroadcastReceiver() {
     private suspend fun fire(
         context: Context,
         repository: NoteRepository,
-        noteWithItems: three.haddad.smartnotas.data.NoteWithItems,
-        action: three.haddad.smartnotas.data.NoteAction,
+        noteWithItems: haddad.three.notas.data.NoteWithItems,
+        action: haddad.three.notas.data.NoteAction,
     ): Boolean {
         val noteId = noteWithItems.note.id
         if (action.type == ActionType.COPY_TO_CLIPBOARD) {
@@ -121,9 +121,9 @@ class ActionReceiver : BroadcastReceiver() {
         return true
     }
 
-    private fun getNoteContent(noteWithItems: three.haddad.smartnotas.data.NoteWithItems): String {
+    private fun getNoteContent(noteWithItems: haddad.three.notas.data.NoteWithItems): String {
         val note = noteWithItems.note
-        return if (note.kind == three.haddad.smartnotas.data.NoteKind.NOTE) {
+        return if (note.kind == haddad.three.notas.data.NoteKind.NOTE) {
             note.body
         } else {
             noteWithItems.items.sortedBy { it.sortOrder }.joinToString("\n") {
@@ -139,7 +139,7 @@ class ActionReceiver : BroadcastReceiver() {
     private fun normalizeUrl(s: String): String = if (s.startsWith("http://") || s.startsWith("https://")) s else "https://$s"
 
     companion object {
-        const val ACTION_FIRE = "three.haddad.smartnotas.reminders.ACTION_FIRE"
+        const val ACTION_FIRE = "haddad.three.notas.reminders.ACTION_FIRE"
         const val EXTRA_NOTE_ID = "note_id"
         const val EXTRA_ACTION_INDEX = "action_index"
     }

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,12 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.NotesUiState
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
+import haddad.three.notas.R
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.NotesUiState
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListColumn
+import haddad.three.notas.ui.components.settings.GroupedListItem
 
 @Composable
 fun NotesUiSection(

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -9,8 +9,8 @@ class ShoulderRepository
     @Inject
     constructor(
         private val shoulderDao: ShoulderDao,
-        private val tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder? = null,
-        private val authRepository: three.haddad.smartnotas.data.auth.AuthRepository? = null,
+        private val tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder? = null,
+        private val authRepository: haddad.three.notas.data.auth.AuthRepository? = null,
     ) {
         fun getAllShoulders(): Flow<List<ShoulderEntity>> = shoulderDao.observeAllShoulders()
 

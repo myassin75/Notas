@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase

@@ -1,13 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { rateLimit } from '../src/middleware/rateLimit.js';
 import { authenticate } from '../src/middleware/auth.js';
-import { RateLimitError, UnauthorizedError, ForbiddenError } from '../src/errors/AppError.js';
+import { RateLimitError, UnauthorizedError, ForbiddenError, ConflictError } from '../src/errors/AppError.js';
 import { verifyFirebaseToken } from '../src/utils/firebaseAdmin.js';
 import { prisma } from '../src/db/client.js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+const mockGetUser = vi.fn();
+
 vi.mock('../src/utils/firebaseAdmin.js', () => ({
   verifyFirebaseToken: vi.fn(),
+  getFirebaseAdmin: vi.fn(() => ({
+    auth: () => ({
+      getUser: mockGetUser,
+    }),
+  })),
 }));
 
 vi.mock('../src/db/client.js', () => ({
@@ -126,7 +133,7 @@ describe('Middleware', () => {
       );
     });
 
-    it('re-keys existing PostgreSQL user when email matches but UID differs (recreated Firebase account)', async () => {
+    it('re-keys existing PostgreSQL user when email matches, email is verified, and old user was deleted in Firebase', async () => {
       const req = {
         headers: { authorization: 'Bearer valid-firebase-token' },
       } as unknown as VercelRequest;
@@ -138,6 +145,9 @@ describe('Middleware', () => {
         email_verified: true,
         name: 'Recreated User',
       } as any);
+
+      // Old user in Firebase no longer exists (e.g. deleted and recreated)
+      mockGetUser.mockRejectedValueOnce({ code: 'auth/user-not-found' });
 
       // 1. Not found by new UID
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
@@ -160,6 +170,86 @@ describe('Middleware', () => {
 
       expect(user.uid).toBe('new-firebase-uid-99');
       expect(prisma.$executeRaw).toHaveBeenCalled();
+    });
+
+    it('rejects identity re-keying with ConflictError when incoming email is not verified', async () => {
+      const req = {
+        headers: { authorization: 'Bearer valid-firebase-token' },
+      } as unknown as VercelRequest;
+      const res = {} as VercelResponse;
+
+      vi.mocked(verifyFirebaseToken).mockResolvedValue({
+        uid: 'attacker-uid-66',
+        email: 'victim@example.com',
+        email_verified: false,
+      } as any);
+
+      // 1. Not found by attacker UID
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+      // 2. Found by email under victim UID
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+        id: 'victim-uid-11',
+        email: 'victim@example.com',
+        deletionPending: false,
+      } as any);
+
+      await expect(authenticate(req, res)).rejects.toThrow(ConflictError);
+      expect(prisma.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('rejects identity re-keying with ConflictError when old Firebase account is still active under a different identity', async () => {
+      const req = {
+        headers: { authorization: 'Bearer valid-firebase-token' },
+      } as unknown as VercelRequest;
+      const res = {} as VercelResponse;
+
+      vi.mocked(verifyFirebaseToken).mockResolvedValue({
+        uid: 'conflicting-uid-77',
+        email: 'legit@example.com',
+        email_verified: true,
+      } as any);
+
+      // 1. Not found by new UID
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+      // 2. Found by email under existing UID
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+        id: 'existing-uid-88',
+        email: 'legit@example.com',
+        deletionPending: false,
+      } as any);
+
+      // Old user is still active in Firebase!
+      mockGetUser.mockResolvedValueOnce({
+        uid: 'existing-uid-88',
+        email: 'legit@example.com',
+      });
+
+      await expect(authenticate(req, res)).rejects.toThrow(ConflictError);
+      expect(prisma.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('rejects authentication with ForbiddenError when existing email record has deletionPending', async () => {
+      const req = {
+        headers: { authorization: 'Bearer valid-firebase-token' },
+      } as unknown as VercelRequest;
+      const res = {} as VercelResponse;
+
+      vi.mocked(verifyFirebaseToken).mockResolvedValue({
+        uid: 'returning-uid-33',
+        email: 'pending-del@example.com',
+        email_verified: true,
+      } as any);
+
+      // 1. Not found by new UID
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+      // 2. Found by email but pending deletion
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+        id: 'old-uid-22',
+        email: 'pending-del@example.com',
+        deletionPending: true,
+      } as any);
+
+      await expect(authenticate(req, res)).rejects.toThrow(ForbiddenError);
     });
 
     it('creates new user record when neither UID nor email exists in database', async () => {

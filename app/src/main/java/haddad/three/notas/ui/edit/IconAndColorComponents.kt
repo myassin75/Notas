@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -44,11 +44,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.calendar.CalendarDesignTokens
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.NoteColors
+import haddad.three.notas.R
+import haddad.three.notas.ui.calendar.CalendarDesignTokens
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.NoteColors
 
 @Composable
 fun NoteIconAndColorCard(

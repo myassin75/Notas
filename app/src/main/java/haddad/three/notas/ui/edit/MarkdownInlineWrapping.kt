@@ -1,9 +1,9 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownInlineProjection
-import three.haddad.smartnotas.ui.common.parseMarkdownDocument
+import haddad.three.notas.ui.common.MarkdownInlineProjection
+import haddad.three.notas.ui.common.parseMarkdownDocument
 
 /**
  * Toggles the inline format delimited by [open]/[close] over the current selection, reusing or

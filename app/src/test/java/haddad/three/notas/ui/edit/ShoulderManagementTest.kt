@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
@@ -7,14 +7,14 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.ui.components.formatColorToHex
-import three.haddad.smartnotas.ui.components.isColorDark
-import three.haddad.smartnotas.ui.components.parseColorHexOrNull
-import three.haddad.smartnotas.ui.components.parseHsvFromHex
-import three.haddad.smartnotas.ui.components.parseNoteColorHex
-import three.haddad.smartnotas.ui.components.readableBadgeColors
-import three.haddad.smartnotas.ui.components.rgbToHsv
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.ui.components.formatColorToHex
+import haddad.three.notas.ui.components.isColorDark
+import haddad.three.notas.ui.components.parseColorHexOrNull
+import haddad.three.notas.ui.components.parseHsvFromHex
+import haddad.three.notas.ui.components.parseNoteColorHex
+import haddad.three.notas.ui.components.readableBadgeColors
+import haddad.three.notas.ui.components.rgbToHsv
 
 class ShoulderManagementTest {
 

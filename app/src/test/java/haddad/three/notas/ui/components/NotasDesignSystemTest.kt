@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -7,8 +7,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.ui.theme.NotasTokens
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 
 /**
  * Unit tests validating Phase 02 Figma Design Tokens and Reusable Component properties.

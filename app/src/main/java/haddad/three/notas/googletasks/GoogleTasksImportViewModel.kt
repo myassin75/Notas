@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.googletasks
+package haddad.three.notas.googletasks
 
 import android.content.Context
 import android.content.Intent
@@ -18,9 +18,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.di.IoDispatcher
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.di.IoDispatcher
 import javax.inject.Inject
 
 /**

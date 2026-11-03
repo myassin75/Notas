@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.lock
+package haddad.three.notas.ui.lock
 
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -34,10 +34,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.feedback.appClickable
+import haddad.three.notas.R
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.feedback.appClickable
 
 @Composable
 fun LockScreen(

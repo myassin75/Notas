@@ -1,11 +1,11 @@
-package three.haddad.smartnotas.data.backup
+package haddad.three.notas.data.backup
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.auth.BackendApiResponse
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.auth.BackendApiResponse
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.content.ContentValues
 import android.content.Context
@@ -8,8 +8,8 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.update.RememberUpdateInfo
+import haddad.three.notas.R
+import haddad.three.notas.update.RememberUpdateInfo
 import java.io.File
 import java.io.FileInputStream
 import java.net.HttpURLConnection

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.widget
+package haddad.three.notas.widget
 
 import android.content.Context
 import android.content.SharedPreferences

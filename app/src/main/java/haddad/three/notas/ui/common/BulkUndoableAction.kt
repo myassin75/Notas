@@ -1,9 +1,9 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import android.content.Context
 import androidx.annotation.PluralsRes
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteCompletionSnapshot
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteCompletionSnapshot
 
 /**
  * Records the most recent bulk action so the user-facing snackbar can offer Undo and so

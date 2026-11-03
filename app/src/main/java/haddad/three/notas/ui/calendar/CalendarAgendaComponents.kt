@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar
+package haddad.three.notas.ui.calendar
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,12 +37,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.edit.NoteIcon
-import three.haddad.smartnotas.ui.edit.resolveNoteIcon
-import three.haddad.smartnotas.ui.theme.LocalIsDark
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.edit.NoteIcon
+import haddad.three.notas.ui.edit.resolveNoteIcon
+import haddad.three.notas.ui.theme.LocalIsDark
 import java.time.LocalDate
 
 /**
@@ -357,11 +357,11 @@ fun AgendaEventCard(
                         val fallbackPrimary = MaterialTheme.colorScheme.primary
                         val chipColor =
                             remember(event.shoulderColorHex, fallbackPrimary) {
-                                three.haddad.smartnotas.ui.components.parseNoteColorHex(event.shoulderColorHex, fallbackPrimary)
+                                haddad.three.notas.ui.components.parseNoteColorHex(event.shoulderColorHex, fallbackPrimary)
                             }
                         val (badgeBg, badgeFg) =
                             remember(chipColor, isDark) {
-                                three.haddad.smartnotas.ui.components.readableBadgeColors(chipColor, isDark)
+                                haddad.three.notas.ui.components.readableBadgeColors(chipColor, isDark)
                             }
                         Surface(
                             shape = CircleShape,

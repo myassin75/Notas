@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -56,22 +56,22 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isLandscape
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.components.AboutAuthorPhoto
-import three.haddad.smartnotas.ui.components.AppIconImage
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListColumn
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.theme.pillShape
-import three.haddad.smartnotas.update.OBTAINX_PACKAGE_ID
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isLandscape
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.components.AboutAuthorPhoto
+import haddad.three.notas.ui.components.AppIconImage
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListColumn
+import haddad.three.notas.ui.components.settings.GroupedListItem
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.theme.pillShape
+import haddad.three.notas.update.OBTAINX_PACKAGE_ID
 
 private data class AboutAppRoute(
     val packageId: String,

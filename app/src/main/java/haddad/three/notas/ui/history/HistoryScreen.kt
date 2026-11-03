@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.history
+package haddad.three.notas.ui.history
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -115,47 +115,47 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.NoteLayoutMode
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.ui.common.BulkUndoableAction
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.bulkActionSnackbarMessage
-import three.haddad.smartnotas.ui.common.emptyStateSpacing
-import three.haddad.smartnotas.ui.common.isLandscape
-import three.haddad.smartnotas.ui.common.noteMosaicColumnCount
-import three.haddad.smartnotas.ui.common.rememberNotificationsAllowed
-import three.haddad.smartnotas.ui.components.EmptyArchiveIllustration
-import three.haddad.smartnotas.ui.components.EmptyTrashIllustration
-import three.haddad.smartnotas.ui.components.MultiActionSwipeRevealCard
-import three.haddad.smartnotas.ui.components.NoteCard
-import three.haddad.smartnotas.ui.components.NoteCardUiModel
-import three.haddad.smartnotas.ui.components.RememberConfirmDialog
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.RememberToggleButton
-import three.haddad.smartnotas.ui.components.SwipeRevealTile
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.components.rememberSelectionActionBarListClearance
-import three.haddad.smartnotas.ui.components.toNoteCardUiModel
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.modifiers.PillBottomBarHeight
-import three.haddad.smartnotas.ui.modifiers.PillBottomScrimExtra
-import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
-import three.haddad.smartnotas.ui.modifiers.rememberContentOverflowScrollEnabled
-import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.ui.theme.GlassVariant
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.LocalReducedMotion
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
-import three.haddad.smartnotas.ui.theme.LocalThemeState
-import three.haddad.smartnotas.ui.theme.glassContainerColor
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.NoteLayoutMode
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.ui.common.BulkUndoableAction
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.bulkActionSnackbarMessage
+import haddad.three.notas.ui.common.emptyStateSpacing
+import haddad.three.notas.ui.common.isLandscape
+import haddad.three.notas.ui.common.noteMosaicColumnCount
+import haddad.three.notas.ui.common.rememberNotificationsAllowed
+import haddad.three.notas.ui.components.EmptyArchiveIllustration
+import haddad.three.notas.ui.components.EmptyTrashIllustration
+import haddad.three.notas.ui.components.MultiActionSwipeRevealCard
+import haddad.three.notas.ui.components.NoteCard
+import haddad.three.notas.ui.components.NoteCardUiModel
+import haddad.three.notas.ui.components.RememberConfirmDialog
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.RememberToggleButton
+import haddad.three.notas.ui.components.SwipeRevealTile
+import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
+import haddad.three.notas.ui.components.rememberSelectionActionBarListClearance
+import haddad.three.notas.ui.components.toNoteCardUiModel
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.modifiers.PillBottomBarHeight
+import haddad.three.notas.ui.modifiers.PillBottomScrimExtra
+import haddad.three.notas.ui.modifiers.applyToScrollableList
+import haddad.three.notas.ui.modifiers.rememberContentOverflowScrollEnabled
+import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.ui.theme.GlassVariant
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.LocalReducedMotion
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.LocalSnackbarHostState
+import haddad.three.notas.ui.theme.LocalThemeState
+import haddad.three.notas.ui.theme.glassContainerColor
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -176,11 +176,11 @@ internal object HistoryDesignTokens {
 
 @Composable
 internal fun historyScreenBg(): Color =
-    if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
+    if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
 
 @Composable
 internal fun historyMainSurface(): Color =
-    if (three.haddad.smartnotas.ui.theme.LocalIsDark.current) {
+    if (haddad.three.notas.ui.theme.LocalIsDark.current) {
         glassContainerColor(GlassVariant.StandardCard, isDark = true)
     } else {
         MaterialTheme.colorScheme.surface
@@ -188,14 +188,14 @@ internal fun historyMainSurface(): Color =
 
 @Composable
 internal fun historyActiveLavender(): Color {
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val palette = LocalSemanticPalette.current
     return if (isDark) palette.selectedStateContainer else MaterialTheme.colorScheme.primaryContainer
 }
 
 @Composable
 internal fun historyPrimaryPurple(): Color {
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val palette = LocalSemanticPalette.current
     val themeState = LocalThemeState.current
     val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == AccentTheme.PURE_BLACK
@@ -217,7 +217,7 @@ internal fun historyIllustrationOutline(): Color = MaterialTheme.colorScheme.out
 
 @Composable
 internal fun historyIllustrationCircle(): Color {
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val palette = LocalSemanticPalette.current
     return if (isDark) palette.selectedStateContainer else MaterialTheme.colorScheme.primaryContainer
 }
@@ -543,7 +543,7 @@ fun HistoryRoute(
     val noteLayoutMode by vm.noteLayoutMode.collectAsStateWithLifecycle()
     val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
         initialValue =
-            three.haddad.smartnotas.data
+            haddad.three.notas.data
                 .InteractionState(),
     )
     val selectedIds by vm.selectedIds.collectAsStateWithLifecycle()

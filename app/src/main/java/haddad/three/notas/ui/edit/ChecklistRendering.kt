@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -49,19 +49,19 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.domain.checklist.EditableItem
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.markdownChecklistCheckboxSize
-import three.haddad.smartnotas.ui.common.rememberLocalTextFieldValueState
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.feedback.LocalHapticEnabled
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.feedback.appCombinedClickable
-import three.haddad.smartnotas.ui.feedback.performLongPressHaptic
-import three.haddad.smartnotas.ui.feedback.performSwipeThresholdHaptic
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.domain.checklist.EditableItem
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.markdownChecklistCheckboxSize
+import haddad.three.notas.ui.common.rememberLocalTextFieldValueState
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.feedback.LocalHapticEnabled
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.feedback.appCombinedClickable
+import haddad.three.notas.ui.feedback.performLongPressHaptic
+import haddad.three.notas.ui.feedback.performSwipeThresholdHaptic
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import kotlin.math.roundToInt
 
 /**

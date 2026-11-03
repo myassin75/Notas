@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -49,20 +49,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberConfirmDialog
-import three.haddad.smartnotas.ui.components.formatColorToHex
-import three.haddad.smartnotas.ui.components.hsvToRgb
-import three.haddad.smartnotas.ui.components.isColorDark
-import three.haddad.smartnotas.ui.components.parseColorHexOrNull
-import three.haddad.smartnotas.ui.components.parseHsvFromHex
-import three.haddad.smartnotas.ui.components.parseNoteColorHex
-import three.haddad.smartnotas.ui.components.readableBadgeColors
-import three.haddad.smartnotas.ui.components.rgbToHsv
-import three.haddad.smartnotas.ui.theme.LocalIsDark
+import haddad.three.notas.R
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberConfirmDialog
+import haddad.three.notas.ui.components.formatColorToHex
+import haddad.three.notas.ui.components.hsvToRgb
+import haddad.three.notas.ui.components.isColorDark
+import haddad.three.notas.ui.components.parseColorHexOrNull
+import haddad.three.notas.ui.components.parseHsvFromHex
+import haddad.three.notas.ui.components.parseNoteColorHex
+import haddad.three.notas.ui.components.readableBadgeColors
+import haddad.three.notas.ui.components.rgbToHsv
+import haddad.three.notas.ui.theme.LocalIsDark
 
 @Composable
 fun ShoulderPickerSheet(

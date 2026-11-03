@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { UnauthorizedError, ForbiddenError } from '../errors/AppError.js';
-import { verifyFirebaseToken } from '../utils/firebaseAdmin.js';
+import { UnauthorizedError, ForbiddenError, ConflictError } from '../errors/AppError.js';
+import { verifyFirebaseToken, getFirebaseAdmin } from '../utils/firebaseAdmin.js';
 import { prisma } from '../db/client.js';
 import { logger } from '../utils/logger.js';
 import type { AuthenticatedRequest, AuthenticatedUser } from '../types/index.js';
@@ -53,6 +53,54 @@ export async function authenticate(
         : null;
 
       if (existingByEmail) {
+        if (existingByEmail.deletionPending) {
+          throw new ForbiddenError('Account is pending deletion and cannot process new requests.');
+        }
+
+        // Identity linking policy: Never link or re-key unless the incoming identity has a verified email
+        if (!authenticatedUser.emailVerified) {
+          throw new ConflictError(
+            'An account with this email already exists. Please verify your email before linking.',
+            undefined,
+            'EMAIL_NOT_VERIFIED'
+          );
+        }
+
+        // Verify if the old identity still exists as an active user in Firebase Admin
+        try {
+          const oldFirebaseUser = await getFirebaseAdmin().auth().getUser(existingByEmail.id);
+          if (oldFirebaseUser && oldFirebaseUser.uid !== authenticatedUser.uid) {
+            logger.warn('Conflicting active Firebase user identities detected for email', {
+              existingDbUid: existingByEmail.id,
+              incomingUid: authenticatedUser.uid,
+              email: authenticatedUser.email,
+            });
+            throw new ConflictError(
+              'An existing account with this email is associated with a different user identity.',
+              undefined,
+              'ACCOUNT_CONFLICT'
+            );
+          }
+        } catch (error: any) {
+          if (error instanceof ConflictError || error instanceof ForbiddenError) {
+            throw error;
+          }
+          // If the old user was deleted in Firebase ('auth/user-not-found'), re-keying is permitted.
+          if (error?.code !== 'auth/user-not-found') {
+            logger.warn('Could not verify old Firebase user status during identity re-key check', {
+              error: error?.message,
+              oldUid: existingByEmail.id,
+            });
+            if (process.env.NODE_ENV !== 'test') {
+              throw new ConflictError(
+                'Unable to safely verify existing account identity. Please contact support.',
+                undefined,
+                'IDENTITY_VERIFICATION_FAILED'
+              );
+            }
+          }
+        }
+
         logger.info('Re-keying existing PostgreSQL user to new authoritative Firebase UID', {
           oldUid: existingByEmail.id,
           newUid: authenticatedUser.uid,
@@ -91,7 +139,7 @@ export async function authenticate(
       throw new ForbiddenError('Account is pending deletion and cannot process new requests.');
     }
   } catch (error) {
-    if (error instanceof ForbiddenError) throw error;
+    if (error instanceof ForbiddenError || error instanceof ConflictError) throw error;
 
     logger.error('Failed to sync authenticated user record with PostgreSQL', error, {
       userId: authenticatedUser.uid,

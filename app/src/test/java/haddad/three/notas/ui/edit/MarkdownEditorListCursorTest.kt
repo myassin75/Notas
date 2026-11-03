@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
@@ -8,7 +8,7 @@ import androidx.compose.ui.text.TextStyle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.ui.common.MarkdownStyler
+import haddad.three.notas.ui.common.MarkdownStyler
 
 class MarkdownEditorListCursorTest {
     private val output =

@@ -1,12 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
+    <!-- NOTE_HEROES (AUD-08): note images are potentially sensitive user content -->
     <exclude
         domain="file"
         path="note_heroes/" />
+    <!-- NOTE_ATTACHMENTS (AUD-08): never leave the device via cloud backup -->
     <exclude
         domain="file"
         path="note_attachments/" />
+    <!-- REMEMBER_BACKUP (AUD-08): app-managed export files -->
     <exclude
         domain="file"
         path="remember_backup/" />
+    <!-- DataStore files (AUD-08): sync state, device IDs and sync metadata -->
+    <exclude
+        domain="file"
+        path="datastore/" />
+    <!-- Room database (AUD-08): contains the full note corpus (notes, checklist items,
+         attachment metadata). Must never be uploaded through Android Auto Backup.
+         remember.db plus its WAL/SHM sidecar files are excluded explicitly since the
+         legacy full-backup-content format matches database paths by file name. -->
+    <exclude
+        domain="database"
+        path="remember.db" />
+    <exclude
+        domain="database"
+        path="remember.db-wal" />
+    <exclude
+        domain="database"
+        path="remember.db-shm" />
+    <!-- SharedPreferences (AUD-08): any preference-stored sync cache or device identity
+         is excluded wholesale (legacy format matches the whole domain via a directory
+         traversal; individual prefs do not exist today but future ones stay covered). -->
+    <exclude
+        domain="sharedpref"
+        path="." />
 </full-backup-content>

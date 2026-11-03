@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.diagnostics
+package haddad.three.notas.diagnostics
 
 import android.Manifest
 import android.app.AlarmManager
@@ -19,21 +19,21 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.OnboardingPrefs
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.ui.common.MIN_MULTI_PANE_WIDTH_DP
-import three.haddad.smartnotas.widget.NotesWidgetReceiver
-import three.haddad.smartnotas.widget.QuickCaptureWidgetReceiver
-import three.haddad.smartnotas.widget.SelectedWidgetReceiver
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.OnboardingPrefs
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.ui.common.MIN_MULTI_PANE_WIDTH_DP
+import haddad.three.notas.widget.NotesWidgetReceiver
+import haddad.three.notas.widget.QuickCaptureWidgetReceiver
+import haddad.three.notas.widget.SelectedWidgetReceiver
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -520,14 +520,14 @@ object DiagnosticLog {
     }
 
     private data class PreferencesSnapshot(
-        val theme: three.haddad.smartnotas.data.ThemeState,
-        val notesUi: three.haddad.smartnotas.data.NotesUiState,
-        val interaction: three.haddad.smartnotas.data.InteractionState,
-        val reminder: three.haddad.smartnotas.data.ReminderPreferencesState,
-        val defaultNote: three.haddad.smartnotas.data.DefaultNotePreferencesState,
-        val update: three.haddad.smartnotas.data.UpdatePreferencesState,
-        val quickCapture: three.haddad.smartnotas.data.QuickCaptureState,
-        val onboarding: three.haddad.smartnotas.data.OnboardingState,
+        val theme: haddad.three.notas.data.ThemeState,
+        val notesUi: haddad.three.notas.data.NotesUiState,
+        val interaction: haddad.three.notas.data.InteractionState,
+        val reminder: haddad.three.notas.data.ReminderPreferencesState,
+        val defaultNote: haddad.three.notas.data.DefaultNotePreferencesState,
+        val update: haddad.three.notas.data.UpdatePreferencesState,
+        val quickCapture: haddad.three.notas.data.QuickCaptureState,
+        val onboarding: haddad.three.notas.data.OnboardingState,
         val lock: LockPrefs.State,
     )
 }

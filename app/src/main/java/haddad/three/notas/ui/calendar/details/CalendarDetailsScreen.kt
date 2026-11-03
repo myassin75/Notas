@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar.details
+package haddad.three.notas.ui.calendar.details
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,19 +43,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.ui.calendar.CalendarDesignTokens
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.edit.NoteIcon
-import three.haddad.smartnotas.ui.edit.resolveNoteIcon
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.ui.theme.GlassVariant
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.LocalThemeState
-import three.haddad.smartnotas.ui.theme.glassContainerColor
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.ui.calendar.CalendarDesignTokens
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.edit.NoteIcon
+import haddad.three.notas.ui.edit.resolveNoteIcon
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.ui.theme.GlassVariant
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.LocalThemeState
+import haddad.three.notas.ui.theme.glassContainerColor
 import java.util.Locale
 
 @Composable

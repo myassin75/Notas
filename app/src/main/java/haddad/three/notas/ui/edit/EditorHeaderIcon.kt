@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,10 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.NoteColors
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.NoteColors
 
 @Composable
 internal fun EditorHeaderIcon(
@@ -42,7 +42,7 @@ internal fun EditorHeaderIcon(
     val iconContentDescription = stringResource(R.string.options_icon_cd)
     val iconInteractionSource = remember { MutableInteractionSource() }
 
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val accent = NoteColors.at(colorIndex)
     val hasCustomColor = !NoteColors.isNone(colorIndex)
     val effectiveTint =

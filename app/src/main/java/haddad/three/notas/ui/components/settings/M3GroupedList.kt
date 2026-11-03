@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components.settings
+package haddad.three.notas.ui.components.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.ui.theme.elevatedCardColors
+import haddad.three.notas.ui.theme.elevatedCardColors
 
 enum class GroupPosition { FIRST, MIDDLE, LAST, ONLY }
 

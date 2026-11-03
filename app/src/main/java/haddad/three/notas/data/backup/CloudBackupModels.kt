@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.backup
+package haddad.three.notas.data.backup
 
 import kotlinx.serialization.Serializable
 

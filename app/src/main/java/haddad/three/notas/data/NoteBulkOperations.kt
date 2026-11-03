@@ -1,7 +1,7 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import androidx.room.withTransaction
-import three.haddad.smartnotas.reminders.ReminderScheduler
+import haddad.three.notas.reminders.ReminderScheduler
 
 /**
  * Selection-mode actions that apply to many notes at once.
@@ -20,7 +20,7 @@ internal class NoteBulkOperations(
     private val database: RememberDatabase?,
     private val reminderCoordinator: NoteReminderCoordinator,
     private val mediaMaintenance: NoteMediaMaintenance,
-    private val tombstoneRecorder: three.haddad.smartnotas.data.sync.SyncTombstoneRecorder? = null,
+    private val tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder? = null,
 ) {
     private suspend fun runInTransaction(block: suspend () -> Unit) {
         if (database != null) database.withTransaction { block() } else block()

@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
-val rememberApplicationId = "three.haddad.smartnotas"
+val rememberApplicationId = "haddad.three.notas"
 val rememberCompileSdk = 37
 val rememberCompileSdkMinor = 2
 val rememberMinSdk = 31
@@ -318,6 +318,7 @@ dependencies {
     implementation(libs.androidx.graphics.shapes)
     implementation(libs.material.kolor)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.documentfile)
     implementation(libs.androidx.profileinstaller)

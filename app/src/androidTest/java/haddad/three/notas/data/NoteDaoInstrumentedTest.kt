@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4

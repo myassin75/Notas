@@ -1,6 +1,6 @@
 @file:Suppress("ConfigurationScreenWidthHeight")
 
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import android.content.res.Configuration
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
@@ -33,7 +33,7 @@ const val SMALL_LANDSCAPE_HEIGHT_DP = 480
 const val MIN_MULTI_PANE_WIDTH_DP = 840
 
 /**
- * Adaptive information captured before [RememberTheme][three.haddad.smartnotas.ui.theme.RememberTheme]
+ * Adaptive information captured before [RememberTheme][haddad.three.notas.ui.theme.RememberTheme]
  * replaces [androidx.compose.ui.platform.LocalDensity] for visual scaling.
  */
 val LocalSystemWindowAdaptiveInfo = staticCompositionLocalOf<WindowAdaptiveInfo?> { null }

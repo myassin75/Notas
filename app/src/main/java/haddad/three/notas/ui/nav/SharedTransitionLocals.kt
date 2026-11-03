@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.nav
+package haddad.three.notas.ui.nav
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi

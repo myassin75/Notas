@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -7,7 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import three.haddad.smartnotas.ui.nav.noteMorphContainer
+import haddad.three.notas.ui.nav.noteMorphContainer
 
 /**
  * Editor half of the card <-> editor container morph, shared by the note and list editors.

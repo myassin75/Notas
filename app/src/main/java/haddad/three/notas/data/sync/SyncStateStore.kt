@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data.sync
+package haddad.three.notas.data.sync
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import three.haddad.smartnotas.ui.components.SyncStatus
+import haddad.three.notas.ui.components.SyncStatus
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
@@ -8,14 +8,14 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import three.haddad.smartnotas.data.AccentTheme
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.ui.theme.ThemeColors
-import three.haddad.smartnotas.ui.theme.buildColorScheme
-import three.haddad.smartnotas.ui.theme.resolveSemanticPalette
+import haddad.three.notas.data.AccentTheme
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.ui.theme.ThemeColors
+import haddad.three.notas.ui.theme.buildColorScheme
+import haddad.three.notas.ui.theme.resolveSemanticPalette
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate

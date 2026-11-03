@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar.details
+package haddad.three.notas.ui.calendar.details
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size

@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
@@ -9,11 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.MarkdownStyler
-import three.haddad.smartnotas.ui.common.parseMarkdownDocument
-import three.haddad.smartnotas.ui.common.parseMarkdownLines
-import three.haddad.smartnotas.ui.common.withCombinedMarkdownDecorations
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.MarkdownStyler
+import haddad.three.notas.ui.common.parseMarkdownDocument
+import haddad.three.notas.ui.common.parseMarkdownLines
+import haddad.three.notas.ui.common.withCombinedMarkdownDecorations
 
 private const val LIVE_PREVIEW_UNCHECKED_CHECKLIST_MARKER = "\u2610 "
 private const val LIVE_PREVIEW_CHECKED_CHECKLIST_MARKER = "\u2611 "

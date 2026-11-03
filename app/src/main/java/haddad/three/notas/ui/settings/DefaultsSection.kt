@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.DropdownMenu
@@ -13,17 +13,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.DefaultNotePreferencesState
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.RecurrenceUnit
-import three.haddad.smartnotas.data.labelRes
-import three.haddad.smartnotas.domain.formatTimeOfDay
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.edit.ReminderTimePickerDialog
-import three.haddad.smartnotas.data.Visibility as NoteVisibility
+import haddad.three.notas.R
+import haddad.three.notas.data.DefaultNotePreferencesState
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.RecurrenceUnit
+import haddad.three.notas.data.labelRes
+import haddad.three.notas.domain.formatTimeOfDay
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.edit.ReminderTimePickerDialog
+import haddad.three.notas.data.Visibility as NoteVisibility
 
 @Composable
 internal fun DefaultsSection(

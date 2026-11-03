@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.app.Notification
 import android.app.NotificationManager
@@ -14,11 +14,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.di.ApplicationScope
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.di.ApplicationScope
 import javax.inject.Inject
 
 /*

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -35,15 +35,15 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.ui.common.HERO_MASK_ASPECT_RATIO
-import three.haddad.smartnotas.ui.common.HeroFramedImage
-import three.haddad.smartnotas.ui.common.HeroFraming
-import three.haddad.smartnotas.ui.components.EditorShelfNotice
-import three.haddad.smartnotas.ui.components.EditorShelfNoticeState
-import three.haddad.smartnotas.ui.components.NoteShelfState
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.modifiers.rememberExpressiveOverscrollEffect
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.common.HERO_MASK_ASPECT_RATIO
+import haddad.three.notas.ui.common.HeroFramedImage
+import haddad.three.notas.ui.common.HeroFraming
+import haddad.three.notas.ui.components.EditorShelfNotice
+import haddad.three.notas.ui.components.EditorShelfNoticeState
+import haddad.three.notas.ui.components.NoteShelfState
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.modifiers.rememberExpressiveOverscrollEffect
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 internal object EditorContentBodyDefaults {
     val HorizontalPadding = 24.dp
@@ -105,7 +105,7 @@ internal fun EditorContentBodyColumn(
         heroContent?.invoke(this)
         EditorShelfNoticeBlock(shelfState = shelfState)
         Spacer(Modifier.height(EditorContentBodyDefaults.BodyTopSpacing))
-        val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+        val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
         Surface(
             shape = RoundedCornerShape(28.dp),
             color = if (isDark) Color(0xFF141419).copy(alpha = 0.94f) else MaterialTheme.colorScheme.surface,
@@ -203,7 +203,7 @@ internal fun EditorContentPictureHero(
     modifier: Modifier = Modifier,
 ) {
     val framing = remember(pictureHeroFraming) { HeroFraming.fromJsonString(pictureHeroFraming) }
-    val sharedScope = three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope.current
+    val sharedScope = haddad.three.notas.ui.nav.LocalSharedTransitionScope.current
 
     Box(modifier = modifier) {
         val heroFadeInSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())

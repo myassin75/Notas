@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.domain.checklist
+package haddad.three.notas.domain.checklist
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

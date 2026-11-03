@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.calendar
+package haddad.three.notas.ui.calendar
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.LocalReducedMotion
+import haddad.three.notas.R
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.LocalReducedMotion
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter

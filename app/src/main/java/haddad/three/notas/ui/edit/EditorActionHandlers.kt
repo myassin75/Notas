@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.Context
 import androidx.compose.material3.SnackbarDuration
@@ -11,9 +11,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.notifications.canPostNotifications
-import three.haddad.smartnotas.ui.theme.LocalSnackbarHostState
+import haddad.three.notas.R
+import haddad.three.notas.notifications.canPostNotifications
+import haddad.three.notas.ui.theme.LocalSnackbarHostState
 
 internal class EditorActionHandlers(
     val saveAndShowToast: () -> Unit,

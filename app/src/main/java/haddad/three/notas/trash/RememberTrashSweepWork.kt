@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.trash
+package haddad.three.notas.trash
 
 import android.content.Context
 import androidx.work.Constraints

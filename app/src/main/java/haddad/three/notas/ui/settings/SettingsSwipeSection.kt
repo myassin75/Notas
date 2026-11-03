@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -56,18 +56,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.DEFAULT_SWIPE_END_TO_START_REVEAL_ACTIONS
-import three.haddad.smartnotas.data.DEFAULT_SWIPE_START_TO_END_REVEAL_ACTIONS
-import three.haddad.smartnotas.data.NoteSwipeAction
-import three.haddad.smartnotas.data.SwipeGestureMode
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberToggleButton
-import three.haddad.smartnotas.ui.feedback.LocalHapticEnabled
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.feedback.performLongPressHaptic
-import three.haddad.smartnotas.ui.theme.swipeActionAccent
+import haddad.three.notas.R
+import haddad.three.notas.data.DEFAULT_SWIPE_END_TO_START_REVEAL_ACTIONS
+import haddad.three.notas.data.DEFAULT_SWIPE_START_TO_END_REVEAL_ACTIONS
+import haddad.three.notas.data.NoteSwipeAction
+import haddad.three.notas.data.SwipeGestureMode
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberToggleButton
+import haddad.three.notas.ui.feedback.LocalHapticEnabled
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.feedback.performLongPressHaptic
+import haddad.three.notas.ui.theme.swipeActionAccent
 
 private const val SWIPE_REVEAL_SLOT_COUNT = 3
 private const val SWIPE_REVEAL_TOTAL_SLOT_COUNT = SWIPE_REVEAL_SLOT_COUNT * 2
@@ -125,7 +125,7 @@ private fun SwipeGestureModeSegmentedControl(
     current: SwipeGestureMode,
     onSelect: (SwipeGestureMode) -> Unit,
 ) {
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val trackBg =
         if (isDark) {
             MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.65f)

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.quicksettings
+package haddad.three.notas.quicksettings
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
@@ -6,8 +6,8 @@ import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import three.haddad.smartnotas.MainActivity
-import three.haddad.smartnotas.R
+import haddad.three.notas.MainActivity
+import haddad.three.notas.R
 
 abstract class QuickCreateTileService : TileService() {
     protected abstract val tileLabelRes: Int

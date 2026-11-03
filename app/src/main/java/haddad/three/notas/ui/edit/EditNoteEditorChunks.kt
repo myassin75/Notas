@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -83,20 +83,20 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.HERO_MASK_ASPECT_RATIO
-import three.haddad.smartnotas.ui.common.MarkdownLinkInteraction
-import three.haddad.smartnotas.ui.common.MarkdownText
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.NoteShelfState
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.HERO_MASK_ASPECT_RATIO
+import haddad.three.notas.ui.common.MarkdownLinkInteraction
+import haddad.three.notas.ui.common.MarkdownText
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.NoteShelfState
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.theme.transparentLargeTopAppBarColors
 
 /**
  * Bridges the editor's [MarkdownEditorState] with [EditNoteViewModel.body]. Owns the "last
@@ -205,10 +205,10 @@ internal fun rememberEditorBodyBridge(
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    val snackbarHostState = three.haddad.smartnotas.ui.theme.LocalSnackbarHostState.current
+    val snackbarHostState = haddad.three.notas.ui.theme.LocalSnackbarHostState.current
     val changesSavedMsg =
         androidx.compose.ui.res
-            .stringResource(three.haddad.smartnotas.R.string.changes_saved)
+            .stringResource(haddad.three.notas.R.string.changes_saved)
     val undoMsg = stringResource(R.string.common_undo)
 
     val untitledName = stringResource(R.string.edit_note_title_new)

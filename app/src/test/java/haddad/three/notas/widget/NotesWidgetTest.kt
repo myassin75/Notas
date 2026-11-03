@@ -1,12 +1,12 @@
-package three.haddad.smartnotas.widget
+package haddad.three.notas.widget
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.Visibility
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.Visibility
 
 class NotesWidgetTest {
     @Test

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.googletasks
+package haddad.three.notas.googletasks
 
 import kotlinx.serialization.Serializable
 

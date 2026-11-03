@@ -1,9 +1,9 @@
 @file:Suppress("ktlint:standard:function-expression-body")
 
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.parseMarkdownLines
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.parseMarkdownLines
 
 internal fun String.withChecklistLineToggled(
     lineIndex: Int,

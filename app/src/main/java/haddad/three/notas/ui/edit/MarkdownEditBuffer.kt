@@ -1,15 +1,15 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.MarkdownHorizontalRuleLineRegex
-import three.haddad.smartnotas.ui.common.MarkdownInlineKind
-import three.haddad.smartnotas.ui.common.MarkdownLineSyntax
-import three.haddad.smartnotas.ui.common.markdownLinkUrl
-import three.haddad.smartnotas.ui.common.parseMarkdownDocument
-import three.haddad.smartnotas.ui.common.parseMarkdownLine
-import three.haddad.smartnotas.ui.common.parseMarkdownLines
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.MarkdownHorizontalRuleLineRegex
+import haddad.three.notas.ui.common.MarkdownInlineKind
+import haddad.three.notas.ui.common.MarkdownLineSyntax
+import haddad.three.notas.ui.common.markdownLinkUrl
+import haddad.three.notas.ui.common.parseMarkdownDocument
+import haddad.three.notas.ui.common.parseMarkdownLine
+import haddad.three.notas.ui.common.parseMarkdownLines
 
 private const val BODY_AUTO_FOCUS_MAX_CHARS = 280
 private const val BODY_AUTO_FOCUS_MAX_PARAGRAPHS = 6

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.worker
+package haddad.three.notas.worker
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
@@ -6,15 +6,15 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.UpdateCheckSchedule
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.update.PlayStoreUpdateChecker
-import three.haddad.smartnotas.update.RememberUpdateChecker
-import three.haddad.smartnotas.update.RememberUpdateState
-import three.haddad.smartnotas.update.UpdateAvailableNotifier
-import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.UpdateCheckSchedule
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.update.PlayStoreUpdateChecker
+import haddad.three.notas.update.RememberUpdateChecker
+import haddad.three.notas.update.RememberUpdateState
+import haddad.three.notas.update.UpdateAvailableNotifier
+import haddad.three.notas.update.UpdateCheckWorkScheduler
 
 @HiltWorker
 class UpdateCheckWorker

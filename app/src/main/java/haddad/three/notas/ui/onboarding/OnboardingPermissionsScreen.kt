@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.onboarding
+package haddad.three.notas.ui.onboarding
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -84,12 +84,12 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.components.RememberButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.net.Uri
 import androidx.compose.material3.Text
@@ -9,22 +9,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.DefaultNotePreferencesState
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.ReminderPreferencesState
-import three.haddad.smartnotas.data.ShoulderEntity
-import three.haddad.smartnotas.data.SnoozeType
-import three.haddad.smartnotas.di.SettingsDependenciesEntryPoint
-import three.haddad.smartnotas.ui.common.FullScreenHeroImageOverlay
-import three.haddad.smartnotas.ui.common.HeroFraming
-import three.haddad.smartnotas.ui.components.RememberConfirmDialog
+import haddad.three.notas.R
+import haddad.three.notas.data.DefaultNotePreferencesState
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.ReminderPreferencesState
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.SnoozeType
+import haddad.three.notas.di.SettingsDependenciesEntryPoint
+import haddad.three.notas.ui.common.FullScreenHeroImageOverlay
+import haddad.three.notas.ui.common.HeroFraming
+import haddad.three.notas.ui.components.RememberConfirmDialog
 import java.io.File
-import three.haddad.smartnotas.data.Visibility as NoteVisibility
+import haddad.three.notas.data.Visibility as NoteVisibility
 
 /**
  * Shared options panel wiring for every content editor. Notes and checklists can

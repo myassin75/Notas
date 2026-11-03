@@ -1,10 +1,10 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import three.haddad.smartnotas.ui.common.MarkdownBlockKind
-import three.haddad.smartnotas.ui.common.MarkdownPartialBlockPrefixRegex
-import three.haddad.smartnotas.ui.common.parseMarkdownLine
+import haddad.three.notas.ui.common.MarkdownBlockKind
+import haddad.three.notas.ui.common.MarkdownPartialBlockPrefixRegex
+import haddad.three.notas.ui.common.parseMarkdownLine
 
 /**
  * Moves a newline typed inside inline wrappers past their closing markers, so the break lands

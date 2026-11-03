@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -46,9 +46,9 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.size.Size
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.components.RememberButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
+import haddad.three.notas.R
+import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.components.RememberTextButton
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min

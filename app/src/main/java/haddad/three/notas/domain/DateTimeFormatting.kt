@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.domain
+package haddad.three.notas.domain
 
 import android.content.Context
 import android.text.format.DateFormat

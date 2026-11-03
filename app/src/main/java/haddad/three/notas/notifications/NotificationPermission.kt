@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.notifications
+package haddad.three.notas.notifications
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -10,7 +10,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
+import haddad.three.notas.diagnostics.DiagnosticLog
 
 fun canPostNotifications(context: Context): Boolean {
     val appContext = context.applicationContext

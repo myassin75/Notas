@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.help
+package haddad.three.notas.ui.help
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -72,20 +72,20 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.first
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.ui.common.MarkdownText
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.components.settings.GroupPosition
-import three.haddad.smartnotas.ui.components.settings.GroupedListItem
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.modifiers.applyToScrollableList
-import three.haddad.smartnotas.ui.modifiers.rememberProgressiveBlurStyle
-import three.haddad.smartnotas.ui.settings.SettingsDesignTokens
-import three.haddad.smartnotas.ui.settings.SettingsSectionCard
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
+import haddad.three.notas.R
+import haddad.three.notas.ui.common.MarkdownText
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
+import haddad.three.notas.ui.components.settings.GroupPosition
+import haddad.three.notas.ui.components.settings.GroupedListItem
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.modifiers.applyToScrollableList
+import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
+import haddad.three.notas.ui.settings.SettingsDesignTokens
+import haddad.three.notas.ui.settings.SettingsSectionCard
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.theme.transparentLargeTopAppBarColors
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

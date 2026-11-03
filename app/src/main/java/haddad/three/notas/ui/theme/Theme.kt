@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.theme
+package haddad.three.notas.ui.theme
 
 import android.database.ContentObserver
 import android.os.Handler
@@ -29,11 +29,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
-import three.haddad.smartnotas.data.NotesUiState
-import three.haddad.smartnotas.data.ThemeState
-import three.haddad.smartnotas.data.effectiveDarkTheme
-import three.haddad.smartnotas.ui.common.responsiveTextScaleForWidth
-import three.haddad.smartnotas.ui.feedback.LocalHapticEnabled
+import haddad.three.notas.data.NotesUiState
+import haddad.three.notas.data.ThemeState
+import haddad.three.notas.data.effectiveDarkTheme
+import haddad.three.notas.ui.common.responsiveTextScaleForWidth
+import haddad.three.notas.ui.feedback.LocalHapticEnabled
 
 private const val MAX_APP_DISPLAY_SCALE = 1.15f
 private const val MAX_SYSTEM_DISPLAY_SIZE_SCALE = 1.5f
@@ -118,7 +118,7 @@ fun RememberTheme(
             resolveSemanticPalette(
                 accentTheme = themeState.accentTheme,
                 darkTheme = darkTheme,
-                isOledBlack = blackThemeActive || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK,
+                isOledBlack = blackThemeActive || themeState.accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK,
             )
         }
 
@@ -150,7 +150,7 @@ fun RememberTheme(
                     if (darkTheme) {
                         AmbientBackground(
                             accentTheme = themeState.accentTheme,
-                            isOledBlack = blackThemeActive || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK,
+                            isOledBlack = blackThemeActive || themeState.accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK,
                             reducedMotion = reducedMotion,
                         )
                     } else {

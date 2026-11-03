@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -45,23 +45,23 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ActionType
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.dataLabelRes
-import three.haddad.smartnotas.data.labelRes
-import three.haddad.smartnotas.data.recycleNoteActionIconBitmap
-import three.haddad.smartnotas.data.toNoteActionIconData
-import three.haddad.smartnotas.data.toNoteActionIconDrawable
-import three.haddad.smartnotas.ui.common.AppBottomSheet
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.rememberBottomSheetStateWithUnsavedChanges
-import three.haddad.smartnotas.ui.common.rememberHoistedStringTextFieldState
-import three.haddad.smartnotas.ui.components.RememberButton
-import three.haddad.smartnotas.ui.components.RememberFilledTonalIconButton
-import three.haddad.smartnotas.ui.components.RememberTextButton
-import three.haddad.smartnotas.ui.components.RememberUnsavedChangesDialog
-import three.haddad.smartnotas.ui.feedback.appClickable
+import haddad.three.notas.R
+import haddad.three.notas.data.ActionType
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.dataLabelRes
+import haddad.three.notas.data.labelRes
+import haddad.three.notas.data.recycleNoteActionIconBitmap
+import haddad.three.notas.data.toNoteActionIconData
+import haddad.three.notas.data.toNoteActionIconDrawable
+import haddad.three.notas.ui.common.AppBottomSheet
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.rememberBottomSheetStateWithUnsavedChanges
+import haddad.three.notas.ui.common.rememberHoistedStringTextFieldState
+import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.components.RememberFilledTonalIconButton
+import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.components.RememberUnsavedChangesDialog
+import haddad.three.notas.ui.feedback.appClickable
 
 private const val LEGACY_CONTACT_MANUAL_ENTRY_EXTRA = "__remember_manual_contact_entry__"
 

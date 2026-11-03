@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

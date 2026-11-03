@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.runtime.Composable

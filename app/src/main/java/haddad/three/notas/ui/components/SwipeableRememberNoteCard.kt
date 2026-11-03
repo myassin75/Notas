@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.components
+package haddad.three.notas.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -21,15 +21,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.InteractionState
-import three.haddad.smartnotas.data.NoteSwipeAction
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.SwipeGestureMode
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
-import three.haddad.smartnotas.ui.theme.semanticSwipeBackground
-import three.haddad.smartnotas.ui.theme.semanticSwipeIconTint
+import haddad.three.notas.R
+import haddad.three.notas.data.InteractionState
+import haddad.three.notas.data.NoteSwipeAction
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.SwipeGestureMode
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.theme.semanticSwipeBackground
+import haddad.three.notas.ui.theme.semanticSwipeIconTint
 
 @Composable
 fun SwipeableRememberNoteCard(

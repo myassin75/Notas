@@ -1,12 +1,12 @@
-package three.haddad.smartnotas.ui.common
+package haddad.three.notas.ui.common
 
 import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.R
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.R
 
 /**
  * Launches the system share chooser with the app's active distribution link.

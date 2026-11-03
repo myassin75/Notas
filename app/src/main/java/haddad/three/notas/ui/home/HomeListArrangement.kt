@@ -1,14 +1,14 @@
-package three.haddad.smartnotas.ui.home
+package haddad.three.notas.ui.home
 
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.GroupBy
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteWithItems
-import three.haddad.smartnotas.data.SortDir
-import three.haddad.smartnotas.data.SortKey
-import three.haddad.smartnotas.data.ViewOptions
-import three.haddad.smartnotas.data.pinned
-import three.haddad.smartnotas.ui.components.toNoteCardUiModel
+import haddad.three.notas.R
+import haddad.three.notas.data.GroupBy
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.SortDir
+import haddad.three.notas.data.SortKey
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.pinned
+import haddad.three.notas.ui.components.toNoteCardUiModel
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -330,7 +330,7 @@ private fun arrangeByShoulder(activeNotes: List<NoteWithItems>): List<HomeListIt
     val shoulderedNotes = activeNotes.filter { it.shoulder != null }
     val unshoulderedNotes = activeNotes.filter { it.shoulder == null }
 
-    val shouldersById = LinkedHashMap<Long, three.haddad.smartnotas.data.ShoulderEntity>()
+    val shouldersById = LinkedHashMap<Long, haddad.three.notas.data.ShoulderEntity>()
     shoulderedNotes.forEach { noteWithItems ->
         val shoulder = noteWithItems.shoulder!!
         shouldersById.putIfAbsent(shoulder.id, shoulder)

@@ -1,14 +1,14 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import three.haddad.smartnotas.BuildConfig
-import three.haddad.smartnotas.data.UpdateCheckSchedule
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.worker.UpdateCheckWorker
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.UpdateCheckSchedule
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.worker.UpdateCheckWorker
 import java.time.DayOfWeek
 import java.time.Duration
 import java.time.ZoneId

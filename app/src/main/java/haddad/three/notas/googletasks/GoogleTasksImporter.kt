@@ -1,12 +1,12 @@
-package three.haddad.smartnotas.googletasks
+package haddad.three.notas.googletasks
 
-import three.haddad.smartnotas.data.MAX_REMINDERS_PER_NOTE
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteReminder
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.PersistableChecklistItem
-import three.haddad.smartnotas.data.RecurrenceRule
-import three.haddad.smartnotas.data.limitedToReminderSlots
+import haddad.three.notas.data.MAX_REMINDERS_PER_NOTE
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.PersistableChecklistItem
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.limitedToReminderSlots
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

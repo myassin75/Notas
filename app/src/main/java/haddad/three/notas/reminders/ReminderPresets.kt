@@ -1,7 +1,7 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.content.Context
-import three.haddad.smartnotas.R
+import haddad.three.notas.R
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.ZonedDateTime

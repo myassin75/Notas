@@ -1,29 +1,29 @@
-package three.haddad.smartnotas.di
+package haddad.three.notas.di
 
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.DevModePrefs
-import three.haddad.smartnotas.data.InteractionPrefs
-import three.haddad.smartnotas.data.LockPrefs
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.OnboardingPrefs
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.UpdatePrefs
-import three.haddad.smartnotas.data.ViewOptionsPrefs
-import three.haddad.smartnotas.reminders.ReminderScheduler
-import three.haddad.smartnotas.update.AppReviewLauncher
-import three.haddad.smartnotas.update.PlayInAppUpdateProgressController
-import three.haddad.smartnotas.update.PlayInAppUpdateStarter
-import three.haddad.smartnotas.update.PlayUpdateSessionHandle
-import three.haddad.smartnotas.update.RememberUpdateState
-import three.haddad.smartnotas.update.UpdateAvailableNotifier
-import three.haddad.smartnotas.update.UpdateCheckWorkScheduler
-import three.haddad.smartnotas.widget.NotesWidgetUpdater
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.DevModePrefs
+import haddad.three.notas.data.InteractionPrefs
+import haddad.three.notas.data.LockPrefs
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.OnboardingPrefs
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.reminders.ReminderScheduler
+import haddad.three.notas.update.AppReviewLauncher
+import haddad.three.notas.update.PlayInAppUpdateProgressController
+import haddad.three.notas.update.PlayInAppUpdateStarter
+import haddad.three.notas.update.PlayUpdateSessionHandle
+import haddad.three.notas.update.RememberUpdateState
+import haddad.three.notas.update.UpdateAvailableNotifier
+import haddad.three.notas.update.UpdateCheckWorkScheduler
+import haddad.three.notas.widget.NotesWidgetUpdater
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -42,9 +42,9 @@ interface SettingsDependenciesEntryPoint {
 
 
 
-    fun cloudBackupManager(): three.haddad.smartnotas.data.backup.CloudBackupManager
+    fun cloudBackupManager(): haddad.three.notas.data.backup.CloudBackupManager
 
-    fun authRepository(): three.haddad.smartnotas.data.auth.AuthRepository
+    fun authRepository(): haddad.three.notas.data.auth.AuthRepository
 
     fun themePrefs(): ThemePrefs
 

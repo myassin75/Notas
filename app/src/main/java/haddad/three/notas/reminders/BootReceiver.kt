@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -6,10 +6,10 @@ import android.content.Intent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.di.ApplicationScope
-import three.haddad.smartnotas.quickcapture.QuickCaptureNotifier
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.di.ApplicationScope
+import haddad.three.notas.quickcapture.QuickCaptureNotifier
 import javax.inject.Inject
 
 @AndroidEntryPoint

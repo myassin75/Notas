@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.settings
+package haddad.three.notas.ui.settings
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -31,13 +31,13 @@ import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.QuickCapturePrefs
-import three.haddad.smartnotas.data.QuickCaptureState
-import three.haddad.smartnotas.data.ReminderPreferencesState
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.SnoozeType
-import three.haddad.smartnotas.ui.components.RememberDropdownMenuItem
+import haddad.three.notas.R
+import haddad.three.notas.data.QuickCapturePrefs
+import haddad.three.notas.data.QuickCaptureState
+import haddad.three.notas.data.ReminderPreferencesState
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.SnoozeType
+import haddad.three.notas.ui.components.RememberDropdownMenuItem
 
 @Composable
 internal fun RemindersSection(

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.data
+package haddad.three.notas.data
 
 import org.json.JSONArray
 import org.json.JSONObject

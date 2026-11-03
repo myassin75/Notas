@@ -1,12 +1,12 @@
-package three.haddad.smartnotas.data.backup
+package haddad.three.notas.data.backup
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.data.AttachmentDao
-import three.haddad.smartnotas.data.NoteAttachmentEntity
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.di.IoDispatcher
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.di.IoDispatcher
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton

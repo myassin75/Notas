@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -7,11 +7,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.getActiveReminders
+import haddad.three.notas.data.AppMediaStorage
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.getActiveReminders
 import javax.inject.Inject
 
 /**

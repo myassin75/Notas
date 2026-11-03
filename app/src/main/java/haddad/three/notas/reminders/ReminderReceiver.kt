@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.reminders
+package haddad.three.notas.reminders
 
 import android.app.Notification
 import android.app.NotificationManager
@@ -20,27 +20,27 @@ import androidx.core.net.toUri
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.MainActivity
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.ActionType
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.Importance
-import three.haddad.smartnotas.data.NoteAction
-import three.haddad.smartnotas.data.NoteEntity
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.ReminderPrefs
-import three.haddad.smartnotas.data.Visibility
-import three.haddad.smartnotas.data.alertsAsAlarm
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.data.labelRes
-import three.haddad.smartnotas.data.toNoteActionIconBitmap
-import three.haddad.smartnotas.di.ApplicationScope
-import three.haddad.smartnotas.diagnostics.DiagnosticLog
-import three.haddad.smartnotas.notifications.canPostNotifications
-import three.haddad.smartnotas.notifications.postNotificationIfAllowed
-import three.haddad.smartnotas.ui.common.HeroFraming
-import three.haddad.smartnotas.ui.edit.iconEmojiPayload
+import haddad.three.notas.MainActivity
+import haddad.three.notas.R
+import haddad.three.notas.data.ActionType
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAction
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.ReminderPrefs
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.alertsAsAlarm
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.data.labelRes
+import haddad.three.notas.data.toNoteActionIconBitmap
+import haddad.three.notas.di.ApplicationScope
+import haddad.three.notas.diagnostics.DiagnosticLog
+import haddad.three.notas.notifications.canPostNotifications
+import haddad.three.notas.notifications.postNotificationIfAllowed
+import haddad.three.notas.ui.common.HeroFraming
+import haddad.three.notas.ui.edit.iconEmojiPayload
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlin.math.max
@@ -263,7 +263,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
 
         /** Note row id carried in every reminder notification's extras. */
-        const val NOTIFICATION_EXTRA_NOTE_ID = "three.haddad.smartnotas.reminders.NOTE_ID"
+        const val NOTIFICATION_EXTRA_NOTE_ID = "haddad.three.notas.reminders.NOTE_ID"
 
         private fun decodeNotificationHeroBitmap(
             context: Context,

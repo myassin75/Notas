@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- App -->
-    <string name="app_name">SmartNotas</string>
+    <string name="app_name">Notas</string>
     <string name="app_tagline">Notes, tasks &amp; reminders — all in one place</string>
     <string name="app_version_format">%1$s v%2$s</string>
     <string name="about_build_variant_format">%1$s, %2$s</string>
@@ -21,7 +21,7 @@
     <string name="onboarding_permissions_notifications_title">Notifications</string>
     <string name="onboarding_permissions_notifications_body">Required for reminder alerts, snooze actions, and quick capture</string>
     <string name="onboarding_permissions_reliable_title">Improve reliability</string>
-    <string name="onboarding_permissions_reliable_body">Let SmartNotas ignore battery optimizations so scheduled reminders are less likely to be delayed</string>
+    <string name="onboarding_permissions_reliable_body">Let Notas ignore battery optimizations so scheduled reminders are less likely to be delayed</string>
     <string name="onboarding_permissions_status_recommended">Recommended</string>
     <string name="onboarding_permissions_status_optional">Optional</string>
     <string name="onboarding_permissions_enabled">Enabled</string>
@@ -99,15 +99,15 @@
     <string name="widget_agenda_description">Track overdue reminders and what is coming up in the next 7 days.</string>
     <string name="widget_quick_capture_description">Create a new note or list from your home screen, with a tiny due-today status.</string>
     <string name="widget_selected_description">Display all, starred, pinned, or tagged notes and lists.</string>
-    <string name="widget_header_title">SmartNotas</string>
+    <string name="widget_header_title">Notas</string>
 
     <!-- Lock and PIN -->
-    <string name="lock_title_unlock">Unlock SmartNotas</string>
+    <string name="lock_title_unlock">Unlock Notas</string>
     <string name="lock_enter_pin">Enter your PIN</string>
     <string name="lock_use_device_unlock">Use your device unlock method</string>
     <string name="lock_wrong_pin">Wrong PIN</string>
     <string name="pin_setup_title">Set up PIN</string>
-    <string name="pin_setup_subtitle" tools:ignore="TypographyDashes">Choose a 4-6 digit PIN to unlock SmartNotas</string>
+    <string name="pin_setup_subtitle" tools:ignore="TypographyDashes">Choose a 4-6 digit PIN to unlock Notas</string>
     <string name="pin_label">PIN</string>
     <string name="pin_confirm_label">Confirm</string>
 
@@ -253,7 +253,7 @@
     <string name="main_fab_close">Close</string>
     <string name="main_fab_create">Create</string>
     <string name="main_menu_share_app">Share app</string>
-    <string name="main_share_chooser_title">Share SmartNotas</string>
+    <string name="main_share_chooser_title">Share Notas</string>
     <string name="about_share_text">Finally found a solid app to manage my tasks and notes with a beautiful UI and fail-safe reminders. Check it out: %s</string>
     <string name="main_empty_trash_title">Empty trash?</string>
     <string name="main_empty_trash_subtitle">Permanently delete all trashed items. This cannot be undone.</string>
@@ -641,10 +641,10 @@
     <string name="reminder_set_title">Set reminder</string>
     <string name="reminder_exact_alarm_permission_prompt">Exact reminders require permission. Tap to enable in Settings.</string>
     <string name="reminder_notifications_required_title">Setting Reminders</string>
-    <string name="reminder_notifications_required_body">SmartNotas needs notification permission before it can alert you when a reminder is due</string>
+    <string name="reminder_notifications_required_body">Notas needs notification permission before it can alert you when a reminder is due</string>
     <string name="reminder_notifications_required_action">Enable notifications</string>
     <string name="notification_permission_required_title">Post to Notifications</string>
-    <string name="notification_permission_required_body">SmartNotas doesn\'t have permission to create notifications yet</string>
+    <string name="notification_permission_required_body">Notas doesn\'t have permission to create notifications yet</string>
     <string name="reminder_date_picker_today">Today</string>
     <string name="reminder_every_label">Every</string>
     <string name="reminder_on_day">On day %1$d</string>
@@ -1081,7 +1081,7 @@
     <string name="google_tasks_import_method_grant_permission">Connect Google</string>
     <string name="google_tasks_import_method_manual_import">Manual import</string>
     <string name="google_tasks_import_intro_title">Connect your Google Tasks</string>
-    <string name="google_tasks_import_intro_body">Connect a Google account, choose the tasks you want, and add them to SmartNotas. Read-only access, no changes are made to Google Tasks.</string>
+    <string name="google_tasks_import_intro_body">Connect a Google account, choose the tasks you want, and add them to Notas. Read-only access, no changes are made to Google Tasks.</string>
     <string name="google_tasks_import_takeout_title">Import from a file</string>
     <string name="google_tasks_import_takeout_body">Import a Google Tasks Takeout file or a Tasks.org backup. No account sign-in required.</string>
     <string name="google_tasks_import_steps_google_heading">Google Tasks</string>
@@ -1147,11 +1147,11 @@
         <item quantity="one">Discard %1$d selected?</item>
         <item quantity="other">Discard %1$d selected?</item>
     </plurals>
-    <string name="google_tasks_import_source_switch_confirm_body">None of these tasks are saved to SmartNotas yet. Cancel and switch source?</string>
+    <string name="google_tasks_import_source_switch_confirm_body">None of these tasks are saved to Notas yet. Cancel and switch source?</string>
     <string name="google_tasks_import_cancel_takeout_confirm_title">Cancel import?</string>
-    <string name="google_tasks_import_cancel_takeout_confirm_body">None of these tasks are saved to SmartNotas yet. Cancel and start again?</string>
-    <string name="google_tasks_import_leave_confirm_body">None of these tasks are saved to SmartNotas yet. Leave this import?</string>
-    <string name="google_tasks_import_cancel_active_confirm_body">Import is still running. Cancel now? Any tasks already saved will stay in SmartNotas.</string>
+    <string name="google_tasks_import_cancel_takeout_confirm_body">None of these tasks are saved to Notas yet. Cancel and start again?</string>
+    <string name="google_tasks_import_leave_confirm_body">None of these tasks are saved to Notas yet. Leave this import?</string>
+    <string name="google_tasks_import_cancel_active_confirm_body">Import is still running. Cancel now? Any tasks already saved will stay in Notas.</string>
     <string name="google_tasks_import_cancel_active_confirm_action">Cancel import</string>
     <string name="google_tasks_import_keep_importing">Keep importing</string>
     <string name="google_tasks_import_source_chip_expand_cd">Show source options</string>
@@ -1223,7 +1223,7 @@
 
     <!-- Settings: security -->
     <string name="settings_app_lock_title">App lock</string>
-    <string name="settings_app_lock_enabled">Use device unlock to open SmartNotas</string>
+    <string name="settings_app_lock_enabled">Use device unlock to open Notas</string>
     <string name="settings_app_lock_disabled">Use your device PIN, pattern, password, or biometrics</string>
     <string name="settings_app_lock_no_device_lock">Set a device screen lock first</string>
     <string name="settings_biometric_title">Biometric unlock</string>
@@ -1245,7 +1245,7 @@
     <string name="settings_track_updates_via_obtainx_desc">Let ObtainX track and install updates for this app</string>
     <string name="settings_track_updates_via_obtainx_get_desc">Get ObtainX to receive updates automatically</string>
     <string name="settings_notify_updates_need_auto_check">Enable \"Automatically check for updates\" first</string>
-    <string name="settings_notify_updates_enable_notifications">Allow notifications for SmartNotas</string>
+    <string name="settings_notify_updates_enable_notifications">Allow notifications for Notas</string>
     <string name="settings_update_available_button">Update available - %1$s</string>
     <string name="settings_update_available">v%1$s available</string>
     <string name="settings_up_to_date">You\'re up to date</string>
@@ -1437,7 +1437,7 @@
     <string name="dev_options_test_notif_summary_line3">Pack for trip — today</string>
 
     <!-- Diagnostics export: header, system snapshot, preferences snapshot -->
-    <string name="diagnostics_title">SmartNotas diagnostics</string>
+    <string name="diagnostics_title">Notas diagnostics</string>
     <string name="diagnostics_generated_format">Generated: %1$s</string>
     <string name="diagnostics_package_format">Package: %1$s</string>
     <string name="diagnostics_version_format">Version: %1$s (%2$d)</string>
@@ -1468,7 +1468,7 @@
     <string name="diagnostics_post_notifications_granted_format">POST_NOTIFICATIONS granted: %1$s</string>
     <string name="diagnostics_ignoring_battery_optimizations_format">Ignoring battery optimizations: %1$s</string>
     <string name="diagnostics_exact_alarms_allowed_format">Exact alarms allowed: %1$s</string>
-    <string name="diagnostics_section_settings">SmartNotas settings</string>
+    <string name="diagnostics_section_settings">Notas settings</string>
     <string name="diagnostics_settings_snapshot_unavailable">Settings snapshot unavailable.</string>
     <string name="diagnostics_theme_mode_format">Theme mode: %1$s</string>
     <string name="diagnostics_color_source_format">Color source: %1$s</string>

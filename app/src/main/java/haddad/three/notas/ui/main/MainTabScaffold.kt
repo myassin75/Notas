@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.main
+package haddad.three.notas.ui.main
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -82,30 +82,30 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.graphics.shapes.Morph
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.notifications.appNotificationSettingsIntent
-import three.haddad.smartnotas.ui.common.LocalAllowCompactControls
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.RememberPredictiveBackHandler
-import three.haddad.smartnotas.ui.common.isLandscape
-import three.haddad.smartnotas.ui.common.isSmallLandscape
-import three.haddad.smartnotas.ui.common.rememberShareAppAction
-import three.haddad.smartnotas.ui.components.AlertChromeSummary
-import three.haddad.smartnotas.ui.components.AlertFloatingActionButtonMenu
-import three.haddad.smartnotas.ui.components.RememberConfirmDialog
-import three.haddad.smartnotas.ui.components.RememberFloatingActionButton
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.components.UpdateChromeState
-import three.haddad.smartnotas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
-import three.haddad.smartnotas.ui.feedback.appClickable
-import three.haddad.smartnotas.ui.history.HistorySection
-import three.haddad.smartnotas.ui.nav.LocalNavAnimatedVisibilityScope
-import three.haddad.smartnotas.ui.nav.LocalSharedTransitionScope
-import three.haddad.smartnotas.ui.theme.MorphPolygonShape
-import three.haddad.smartnotas.ui.theme.RoundedPolygonShape
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.notifications.appNotificationSettingsIntent
+import haddad.three.notas.ui.common.LocalAllowCompactControls
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.RememberPredictiveBackHandler
+import haddad.three.notas.ui.common.isLandscape
+import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.common.rememberShareAppAction
+import haddad.three.notas.ui.components.AlertChromeSummary
+import haddad.three.notas.ui.components.AlertFloatingActionButtonMenu
+import haddad.three.notas.ui.components.RememberConfirmDialog
+import haddad.three.notas.ui.components.RememberFloatingActionButton
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.components.UpdateChromeState
+import haddad.three.notas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
+import haddad.three.notas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
+import haddad.three.notas.ui.feedback.appClickable
+import haddad.three.notas.ui.history.HistorySection
+import haddad.three.notas.ui.nav.LocalNavAnimatedVisibilityScope
+import haddad.three.notas.ui.nav.LocalSharedTransitionScope
+import haddad.three.notas.ui.theme.MorphPolygonShape
+import haddad.three.notas.ui.theme.RoundedPolygonShape
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import kotlin.math.roundToInt
 
 enum class MainTab(
@@ -151,10 +151,10 @@ fun MainTabScaffold(
     var moveArchiveToTrashOpen by rememberSaveable { mutableStateOf(false) }
     var closeNotesRevealRequest by rememberSaveable { mutableIntStateOf(0) }
 
-    val isDark = three.haddad.smartnotas.ui.theme.LocalIsDark.current
-    val semanticPalette = three.haddad.smartnotas.ui.theme.LocalSemanticPalette.current
-    val themeState = three.haddad.smartnotas.ui.theme.LocalThemeState.current
-    val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == three.haddad.smartnotas.data.AccentTheme.PURE_BLACK
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
+    val semanticPalette = haddad.three.notas.ui.theme.LocalSemanticPalette.current
+    val themeState = haddad.three.notas.ui.theme.LocalThemeState.current
+    val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK
 
     val selectedAccent =
         if (isDark) {
@@ -186,8 +186,8 @@ fun MainTabScaffold(
                     )
                     NavigationBar(
                         containerColor =
-                            three.haddad.smartnotas.ui.theme.glassContainerColor(
-                                variant = three.haddad.smartnotas.ui.theme.GlassVariant.BottomNav,
+                            haddad.three.notas.ui.theme.glassContainerColor(
+                                variant = haddad.three.notas.ui.theme.GlassVariant.BottomNav,
                                 isDark = isDark,
                             ),
                         tonalElevation = 0.dp,

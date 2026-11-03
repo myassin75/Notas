@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -7,15 +7,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.AppMediaStorage
-import three.haddad.smartnotas.data.ChecklistItemEntity
-import three.haddad.smartnotas.data.DefaultNotePrefs
-import three.haddad.smartnotas.data.NoteOptions
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.getActiveReminders
-import three.haddad.smartnotas.domain.checklist.ChecklistEditResult
-import three.haddad.smartnotas.domain.checklist.ChecklistEditor
-import three.haddad.smartnotas.domain.checklist.EditableItem
+import haddad.three.notas.data.AppMediaStorage
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.DefaultNotePrefs
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.domain.checklist.ChecklistEditResult
+import haddad.three.notas.domain.checklist.ChecklistEditor
+import haddad.three.notas.domain.checklist.EditableItem
 import javax.inject.Inject
 
 /**
@@ -344,11 +344,11 @@ class EditListViewModel
          * doubles as [PersistableChecklistItem.localKey] so the repository can remap parent pointers
          * even for drafts that have never been written.
          */
-        private fun currentPersistable(): List<three.haddad.smartnotas.data.PersistableChecklistItem> =
+        private fun currentPersistable(): List<haddad.three.notas.data.PersistableChecklistItem> =
             _items.value
                 .filter { it.text.isNotBlank() }
                 .map { item ->
-                    three.haddad.smartnotas.data.PersistableChecklistItem(
+                    haddad.three.notas.data.PersistableChecklistItem(
                         localKey = item.localId,
                         text = item.text,
                         details = item.details,
@@ -484,7 +484,7 @@ class EditListViewModel
                                 colorIndex = old.colorIndex,
                                 items =
                                     oldItems.map {
-                                        three.haddad.smartnotas.data.PersistableChecklistItem(
+                                        haddad.three.notas.data.PersistableChecklistItem(
                                             localKey = it.id,
                                             text = it.text,
                                             details = it.details,

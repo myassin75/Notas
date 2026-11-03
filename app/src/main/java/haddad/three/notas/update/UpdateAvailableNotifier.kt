@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.update
+package haddad.three.notas.update
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -12,10 +12,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import three.haddad.smartnotas.MainActivity
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.UpdatePreferencesState
-import three.haddad.smartnotas.data.UpdatePrefs
+import haddad.three.notas.MainActivity
+import haddad.three.notas.R
+import haddad.three.notas.data.UpdatePreferencesState
+import haddad.three.notas.data.UpdatePrefs
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.auth
+package haddad.three.notas.ui.auth
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
@@ -15,9 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.NotasTypography
+
+import androidx.compose.material3.IconButton
 
 /**
  * Modern, clean, and elegant error banner for Auth screens.
@@ -27,6 +29,7 @@ import three.haddad.smartnotas.ui.theme.NotasTypography
 fun AuthErrorBanner(
     message: String,
     modifier: Modifier = Modifier,
+    onDismiss: (() -> Unit)? = null,
 ) {
     val palette = LocalSemanticPalette.current
 
@@ -55,6 +58,19 @@ fun AuthErrorBanner(
                 color = palette.error,
                 modifier = Modifier.weight(1f),
             )
+            if (onDismiss != null) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    RememberMaterialRoundedSymbol(
+                        name = "close",
+                        size = 16.dp,
+                        tint = palette.error,
+                        contentDescription = "Dismiss error",
+                    )
+                }
+            }
         }
     }
 }

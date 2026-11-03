@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.profile
+package haddad.three.notas.ui.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -52,30 +52,30 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.data.NoteRepository
-import three.haddad.smartnotas.data.NotesUiPrefs
-import three.haddad.smartnotas.data.NotesUiState
-import three.haddad.smartnotas.data.ThemeMode
-import three.haddad.smartnotas.data.ThemePrefs
-import three.haddad.smartnotas.data.ThemeState
-import three.haddad.smartnotas.notifications.appNotificationSettingsIntent
-import three.haddad.smartnotas.notifications.canPostNotifications
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.components.AccountHeader
-import three.haddad.smartnotas.ui.components.PrimaryButton
-import three.haddad.smartnotas.ui.components.SecondaryButton
-import three.haddad.smartnotas.ui.components.SettingsRow
-import three.haddad.smartnotas.ui.components.SettingsRowCard
-import three.haddad.smartnotas.ui.theme.LocalSemanticPalette
-import three.haddad.smartnotas.ui.theme.NotasTokens
-import three.haddad.smartnotas.ui.theme.NotasTypography
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NotesUiPrefs
+import haddad.three.notas.data.NotesUiState
+import haddad.three.notas.data.ThemeMode
+import haddad.three.notas.data.ThemePrefs
+import haddad.three.notas.data.ThemeState
+import haddad.three.notas.notifications.appNotificationSettingsIntent
+import haddad.three.notas.notifications.canPostNotifications
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.AccountHeader
+import haddad.three.notas.ui.components.PrimaryButton
+import haddad.three.notas.ui.components.SecondaryButton
+import haddad.three.notas.ui.components.SettingsRow
+import haddad.three.notas.ui.components.SettingsRowCard
+import haddad.three.notas.ui.theme.LocalSemanticPalette
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 import javax.inject.Inject
 
-import three.haddad.smartnotas.data.auth.AuthRepository
-import three.haddad.smartnotas.data.auth.AuthState
-import three.haddad.smartnotas.data.auth.AppAuthState
-import three.haddad.smartnotas.data.auth.AuthUser
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AppAuthState
+import haddad.three.notas.data.auth.AuthUser
 
 data class GuestProfileStats(
     val notesCount: Int = 0,
@@ -280,6 +280,7 @@ fun GuestProfileScreen(
                             initials = initials,
                             photoUrl = currentUser.photoUrl,
                             badgeText = badgeText,
+                            avatarSize = NotasTokens.AvatarSizeLarge,
                         )
                     } else {
                         AccountHeader(
@@ -287,6 +288,7 @@ fun GuestProfileScreen(
                             subtitle = "Using Notas without an account",
                             initials = "G",
                             badgeText = "Data stored on this device only",
+                            avatarSize = NotasTokens.AvatarSizeLarge,
                         )
                     }
 

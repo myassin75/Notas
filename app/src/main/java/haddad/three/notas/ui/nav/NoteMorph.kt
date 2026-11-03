@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.nav
+package haddad.three.notas.ui.nav
 
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -9,7 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import three.haddad.smartnotas.ui.theme.reducedMotionAwareSpec
+import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 /**
  * One card <-> editor container transform for notes and lists, with or without cover art.

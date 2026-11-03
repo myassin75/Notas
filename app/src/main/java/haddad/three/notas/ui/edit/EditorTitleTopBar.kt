@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -63,14 +63,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.NoteKind
-import three.haddad.smartnotas.ui.common.RememberMaterialRoundedSymbol
-import three.haddad.smartnotas.ui.common.rememberLocalTextFieldValueState
-import three.haddad.smartnotas.ui.components.RememberIconButton
-import three.haddad.smartnotas.ui.components.rememberResponsiveActionButtonSize
-import three.haddad.smartnotas.ui.theme.LocalIsDark
-import three.haddad.smartnotas.ui.theme.transparentLargeTopAppBarColors
+import haddad.three.notas.R
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.common.rememberLocalTextFieldValueState
+import haddad.three.notas.ui.components.RememberIconButton
+import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.transparentLargeTopAppBarColors
 import kotlin.math.roundToInt
 
 private const val EDITOR_TITLE_MAX_LINES = 2

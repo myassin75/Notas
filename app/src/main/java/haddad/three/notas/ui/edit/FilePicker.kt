@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.edit
+package haddad.three.notas.ui.edit
 
 import android.content.ContentResolver
 import android.content.ContentValues
@@ -24,8 +24,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import three.haddad.smartnotas.R
-import three.haddad.smartnotas.data.AppMediaStorage
+import haddad.three.notas.R
+import haddad.three.notas.data.AppMediaStorage
 import java.io.File
 import java.io.IOException
 

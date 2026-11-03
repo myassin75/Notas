@@ -1,4 +1,4 @@
-package three.haddad.smartnotas.ui.splash
+package haddad.three.notas.ui.splash
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
