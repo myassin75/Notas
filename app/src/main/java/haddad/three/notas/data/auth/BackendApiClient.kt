@@ -14,6 +14,7 @@ import javax.inject.Singleton
 @Singleton
 class BackendApiClient(
     private val httpFactory: (String) -> HttpURLConnection,
+    private val customBaseUrl: String? = null,
 ) {
     @Inject
     constructor() : this({ url ->
@@ -22,14 +23,21 @@ class BackendApiClient(
             readTimeout = 10000
             instanceFollowRedirects = false
         }
-    })
+    }, null)
+
+    constructor(httpFactory: (String) -> HttpURLConnection) : this(httpFactory, null)
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
 
+    val baseUrl: String
+        get() = (customBaseUrl ?: BuildConfig.BACKEND_API_BASE_URL)
+            .trimEnd('/')
+            .removeSuffix("/api/v1")
+            .removeSuffix("/api")
+
     suspend fun getProfile(idToken: String): AuthResult<BackendProfile> = withContext(Dispatchers.IO) {
-        val baseUrl = BuildConfig.BACKEND_API_BASE_URL.trimEnd('/')
         val endpoint = "$baseUrl/api/v1/me"
 
         try {
@@ -66,6 +74,15 @@ class BackendApiClient(
                 }
                 401 -> AuthResult.Error("Unauthorized: Session has expired. Please sign in again.", code = "UNAUTHORIZED")
                 403 -> AuthResult.Error("Access forbidden: Account cannot access this resource.", code = "FORBIDDEN")
+                404 -> {
+                    val errorMsg = try {
+                        val apiResponse = json.decodeFromString<BackendApiResponse<BackendProfile>>(responseBody)
+                        apiResponse.error?.message ?: "Backend endpoint not found (HTTP 404)"
+                    } catch (_: Exception) {
+                        "Backend endpoint not found (HTTP 404). Please verify that the backend is deployed and reachable."
+                    }
+                    AuthResult.Error(errorMsg, code = "NOT_FOUND")
+                }
                 429 -> AuthResult.Error("Rate limit exceeded. Please wait a moment before trying again.", code = "RATE_LIMIT")
                 in 500..599 -> AuthResult.Error("Backend server error ($statusCode). Please try again later.", code = "SERVER_ERROR")
                 else -> AuthResult.Error("HTTP request failed with status $statusCode", code = "HTTP_$statusCode")

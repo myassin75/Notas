@@ -11,6 +11,7 @@ data class AuthUser(
     val isEmailVerified: Boolean,
     val displayName: String? = null,
     val photoUrl: String? = null,
+    val verificationEmailSent: Boolean = true,
 )
 
 /**

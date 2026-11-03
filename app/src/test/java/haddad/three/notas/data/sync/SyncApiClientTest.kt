@@ -242,4 +242,42 @@ class SyncApiClientTest {
 
         assertTrue(result is SyncResult.Unauthorized)
     }
+
+    @Test
+    fun `pushSync 404 returns NotFound`() = runTest {
+        val fakeConnection = FakeHttpURLConnection(
+            code = 404,
+            errStream = ByteArrayInputStream("""{"success":false,"error":{"code":"NOT_FOUND","message":"Sync endpoint not found"}}""".toByteArray()),
+        )
+
+        val client = SyncApiClient { fakeConnection }
+        val result = client.pushSync("test-token", SyncPushRequestDto("dev-1", "Pixel", "1.0"))
+
+        assertTrue(result is SyncResult.Error)
+        val err = result as SyncResult.Error
+        assertEquals("NOT_FOUND", err.code)
+        assertEquals(404, err.statusCode)
+        assertEquals("Sync endpoint not found", err.message)
+    }
+
+    @Test
+    fun `pushSync baseUrlSanitization strips trailing slashes and api v1`() = runTest {
+        var requestedUrl: String? = null
+        val fakeConnection = FakeHttpURLConnection(
+            code = 200,
+            responseStream = ByteArrayInputStream("""{"success":true,"data":{"serverRevision":"1","appliedCount":{"categories":0,"notes":0,"settings":0},"conflicts":[]}}""".toByteArray()),
+        )
+
+        val client = SyncApiClient(
+            httpFactory = { url ->
+                requestedUrl = url
+                fakeConnection
+            },
+            customBaseUrl = "https://notas-backend-iota.vercel.app/api/v1/",
+        )
+
+        val result = client.pushSync("token", SyncPushRequestDto("dev-1", "Pixel", "1.0"))
+        assertTrue(result is SyncResult.Success)
+        assertEquals("https://notas-backend-iota.vercel.app/api/v1/sync/push", requestedUrl)
+    }
 }

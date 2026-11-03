@@ -124,13 +124,15 @@ class FirebaseAuthRepository @Inject constructor(
             }
 
             // Send verification email
+            var emailDispatched = false
             try {
                 user.sendEmailVerification().awaitResult()
-            } catch (_: Exception) {
-                // Secondary action
+                emailDispatched = true
+            } catch (e: Exception) {
+                android.util.Log.w("FirebaseAuthRepository", "Failed to dispatch verification email to ${user.email}", e)
             }
 
-            AuthResult.Success(user.toAuthUser())
+            AuthResult.Success(user.toAuthUser(verificationEmailSent = emailDispatched))
         } catch (e: Exception) {
             mapFirebaseException(e)
         }
@@ -307,18 +309,26 @@ class FirebaseAuthRepository @Inject constructor(
             is FirebaseAuthActionCodeException -> "The verification or password reset link is invalid, expired, or has already been used."
             is FirebaseNetworkException -> "Network error. Please check your internet connection and try again."
             is FirebaseTooManyRequestsException -> "Too many attempts. Requests from this device are temporarily blocked. Please try again later."
+            is com.google.firebase.auth.FirebaseAuthException -> when (e.errorCode) {
+                "ERROR_QUOTA_EXCEEDED", "quota-exceeded" ->
+                    "Email verification quota exceeded for this project. Please try again later or contact support."
+                "ERROR_TOO_MANY_REQUESTS", "too-many-requests" ->
+                    "Too many requests. Please wait a few moments before requesting another verification email."
+                else -> e.localizedMessage ?: "Authentication operation failed."
+            }
             else -> e.localizedMessage ?: "Authentication operation failed."
         }
         return AuthResult.Error(message = message, cause = e)
     }
 }
 
-private fun FirebaseUser.toAuthUser(): AuthUser = AuthUser(
+private fun FirebaseUser.toAuthUser(verificationEmailSent: Boolean = true): AuthUser = AuthUser(
     uid = uid,
     email = email.orEmpty(),
     isEmailVerified = isEmailVerified,
     displayName = displayName,
     photoUrl = photoUrl?.toString(),
+    verificationEmailSent = verificationEmailSent,
 )
 
 suspend fun <T> Task<T>.awaitResult(): T = suspendCancellableCoroutine { continuation ->

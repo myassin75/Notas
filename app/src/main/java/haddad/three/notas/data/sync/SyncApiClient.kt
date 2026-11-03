@@ -19,6 +19,7 @@ import javax.inject.Singleton
 @Singleton
 open class SyncApiClient(
     private val httpFactory: (String) -> HttpURLConnection,
+    private val customBaseUrl: String? = null,
 ) {
     @Inject
     constructor() : this({ url ->
@@ -27,7 +28,9 @@ open class SyncApiClient(
             readTimeout = 20000
             instanceFollowRedirects = false
         }
-    })
+    }, null)
+
+    constructor(httpFactory: (String) -> HttpURLConnection) : this(httpFactory, null)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -35,11 +38,16 @@ open class SyncApiClient(
         encodeDefaults = true
     }
 
+    val baseUrl: String
+        get() = (customBaseUrl ?: BuildConfig.BACKEND_API_BASE_URL)
+            .trimEnd('/')
+            .removeSuffix("/api/v1")
+            .removeSuffix("/api")
+
     open suspend fun pushSync(
         idToken: String,
         payload: SyncPushRequestDto,
     ): SyncResult<SyncPushResponseDto> = withContext(Dispatchers.IO) {
-        val baseUrl = BuildConfig.BACKEND_API_BASE_URL.trimEnd('/')
         val endpoint = "$baseUrl/api/v1/sync/push"
 
         try {
@@ -89,6 +97,19 @@ open class SyncApiClient(
                     )
                 }
                 401 -> SyncResult.Unauthorized
+                404 -> {
+                    val errorMsg = try {
+                        val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
+                        apiResponse.error?.message ?: "Sync endpoint not found (HTTP 404)"
+                    } catch (_: Exception) {
+                        "Sync endpoint not found (HTTP 404)"
+                    }
+                    SyncResult.Error(
+                        message = errorMsg,
+                        code = "NOT_FOUND",
+                        statusCode = 404,
+                    )
+                }
                 429 -> SyncResult.RateLimited
                 in 500..599 -> SyncResult.Error(
                     message = "Backend server error ($statusCode)",
@@ -115,7 +136,6 @@ open class SyncApiClient(
         sinceRevision: String,
         limit: Int = 100,
     ): SyncResult<SyncChangesResponseDto> = withContext(Dispatchers.IO) {
-        val baseUrl = BuildConfig.BACKEND_API_BASE_URL.trimEnd('/')
         val endpoint = "$baseUrl/api/v1/sync/changes?sinceRevision=$sinceRevision&limit=$limit"
 
         try {
@@ -157,6 +177,19 @@ open class SyncApiClient(
                     )
                 }
                 401 -> SyncResult.Unauthorized
+                404 -> {
+                    val errorMsg = try {
+                        val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
+                        apiResponse.error?.message ?: "Sync endpoint not found (HTTP 404)"
+                    } catch (_: Exception) {
+                        "Sync endpoint not found (HTTP 404)"
+                    }
+                    SyncResult.Error(
+                        message = errorMsg,
+                        code = "NOT_FOUND",
+                        statusCode = 404,
+                    )
+                }
                 429 -> SyncResult.RateLimited
                 in 500..599 -> SyncResult.Error(
                     message = "Backend server error ($statusCode)",

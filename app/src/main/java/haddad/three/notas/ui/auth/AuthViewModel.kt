@@ -162,7 +162,8 @@ class AuthViewModel @Inject constructor(
             when (val result = authRepository.registerWithEmailAndPassword(cleanEmail, current.password, cleanUsername)) {
                 is AuthResult.Success -> {
                     _registerState.update { it.copy(isLoading = false, isSuccess = true) }
-                    initVerifyEmail(cleanEmail)
+                    val emailDispatched = result.data.verificationEmailSent
+                    initVerifyEmail(cleanEmail, initialDispatchFailed = !emailDispatched)
                     onSuccess(cleanEmail)
                 }
                 is AuthResult.Error -> {
@@ -260,18 +261,24 @@ class AuthViewModel @Inject constructor(
     // -----------------------------------------------------------------------------------------
     // Verify Email
     // -----------------------------------------------------------------------------------------
-    fun initVerifyEmail(email: String) {
+    fun initVerifyEmail(email: String, initialDispatchFailed: Boolean = false) {
         _verifyEmailState.update {
             it.copy(
                 email = email,
                 isChecking = false,
                 isVerified = false,
-                canResend = false,
-                resendCountdown = 59,
-                errorMessage = null,
+                canResend = initialDispatchFailed,
+                resendCountdown = if (initialDispatchFailed) 0 else 59,
+                errorMessage = if (initialDispatchFailed) {
+                    "Account created, but the verification email could not be sent. Please tap 'Resend email' to try again."
+                } else {
+                    null
+                },
             )
         }
-        startVerifyCountdown()
+        if (!initialDispatchFailed) {
+            startVerifyCountdown()
+        }
     }
 
     private fun startVerifyCountdown() {
@@ -289,6 +296,7 @@ class AuthViewModel @Inject constructor(
     fun resendVerificationEmail() {
         if (!_verifyEmailState.value.canResend) return
         viewModelScope.launch {
+            _verifyEmailState.update { it.copy(errorMessage = null) }
             when (val result = authRepository.sendEmailVerification()) {
                 is AuthResult.Success -> {
                     startVerifyCountdown()

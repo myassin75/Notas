@@ -23,6 +23,7 @@ import javax.inject.Singleton
 @Singleton
 open class BackupApiClient(
     private val httpFactory: (String) -> HttpURLConnection,
+    private val customBaseUrl: String? = null,
 ) {
     @Inject
     constructor() : this({ url ->
@@ -30,7 +31,9 @@ open class BackupApiClient(
             connectTimeout = 20000
             readTimeout = 30000
         }
-    })
+    }, null)
+
+    constructor(httpFactory: (String) -> HttpURLConnection) : this(httpFactory, null)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -38,8 +41,11 @@ open class BackupApiClient(
         encodeDefaults = true
     }
 
-    private val apiBaseUrl: String
-        get() = BuildConfig.BACKEND_API_BASE_URL.trimEnd('/')
+    val apiBaseUrl: String
+        get() = (customBaseUrl ?: BuildConfig.BACKEND_API_BASE_URL)
+            .trimEnd('/')
+            .removeSuffix("/api/v1")
+            .removeSuffix("/api")
 
     open suspend fun createBackup(
         idToken: String,
@@ -305,6 +311,19 @@ open class BackupApiClient(
                 }
             }
             401 -> CloudBackupResult.Unauthorized
+            404 -> {
+                val errorMsg = try {
+                    val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
+                    apiResponse.error?.message ?: "Backup endpoint not found (HTTP 404)"
+                } catch (_: Exception) {
+                    "Backup endpoint not found (HTTP 404)"
+                }
+                CloudBackupResult.Error(
+                    message = errorMsg,
+                    code = "NOT_FOUND",
+                    statusCode = 404,
+                )
+            }
             429 -> CloudBackupResult.RateLimited
             in 500..599 -> CloudBackupResult.Error(
                 message = "Backend server error ($statusCode)",

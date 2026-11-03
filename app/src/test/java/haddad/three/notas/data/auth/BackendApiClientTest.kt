@@ -120,6 +120,43 @@ class BackendApiClientTest {
     }
 
     @Test
+    fun getProfile_404NotFound_returnsNotFoundError() = runTest {
+        val fakeConnection = FakeHttpURLConnection(
+            code = 404,
+            errStream = ByteArrayInputStream("""{"success":false,"error":{"code":"NOT_FOUND","message":"User profile not found in database"}}""".toByteArray()),
+        )
+
+        val client = BackendApiClient { fakeConnection }
+        val result = client.getProfile("token-xyz")
+
+        assertTrue(result is AuthResult.Error)
+        val error = result as AuthResult.Error
+        assertEquals("NOT_FOUND", error.code)
+        assertEquals("User profile not found in database", error.message)
+    }
+
+    @Test
+    fun getProfile_baseUrlSanitization_stripsTrailingSlashAndApiV1() = runTest {
+        var requestedUrl: String? = null
+        val fakeConnection = FakeHttpURLConnection(
+            code = 200,
+            responseStream = ByteArrayInputStream("""{"success":true,"data":{"id":"u1","email":"a@b.com","emailVerified":true}}""".toByteArray()),
+        )
+
+        val client = BackendApiClient(
+            httpFactory = { url ->
+                requestedUrl = url
+                fakeConnection
+            },
+            customBaseUrl = "https://notas-backend-iota.vercel.app/api/v1/",
+        )
+
+        val result = client.getProfile("token-xyz")
+        assertTrue(result is AuthResult.Success)
+        assertEquals("https://notas-backend-iota.vercel.app/api/v1/me", requestedUrl)
+    }
+
+    @Test
     fun getProfile_ioException_returnsNetworkError() = runTest {
         val client = BackendApiClient {
             throw IOException("Unable to resolve host")

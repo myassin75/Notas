@@ -102,7 +102,7 @@ extensions.configure<ApplicationExtension>("android") {
         buildConfigField(
             "String",
             "BACKEND_API_BASE_URL",
-            "\"https://api.smartnotas.com\"",
+            "\"https://notas-backend-iota.vercel.app\"",
         )
     }
 
@@ -125,7 +125,7 @@ extensions.configure<ApplicationExtension>("android") {
         debug {
             val devBackendUrl = project.findProperty("backendApiBaseUrl") as? String
                 ?: System.getenv("BACKEND_API_BASE_URL")
-                ?: "https://smartnotas-api-staging-git-master-hayassin755-glitchs-projects.vercel.app"
+                ?: "https://notas-backend-iota.vercel.app"
             buildConfigField("String", "BACKEND_API_BASE_URL", "\"$devBackendUrl\"")
         }
         create("devRelease") {
@@ -144,10 +144,14 @@ extensions.configure<ApplicationExtension>("android") {
 
             val stagingBackendUrl = project.findProperty("backendApiBaseUrl") as? String
                 ?: System.getenv("BACKEND_API_BASE_URL")
-                ?: "https://smartnotas-api-staging-git-master-hayassin755-glitchs-projects.vercel.app"
+                ?: "https://notas-backend-iota.vercel.app"
             buildConfigField("String", "BACKEND_API_BASE_URL", "\"$stagingBackendUrl\"")
         }
         release {
+            val prodBackendUrl = project.findProperty("backendApiBaseUrl") as? String
+                ?: System.getenv("BACKEND_API_BASE_URL")
+                ?: "https://notas-backend-iota.vercel.app"
+            buildConfigField("String", "BACKEND_API_BASE_URL", "\"$prodBackendUrl\"")
             versionNameSuffix = previewVersionSuffix
             isMinifyEnabled = true
             isShrinkResources = true

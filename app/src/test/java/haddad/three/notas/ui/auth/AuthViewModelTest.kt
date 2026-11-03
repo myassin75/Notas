@@ -145,6 +145,33 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun register_verificationEmailDispatchFailed_enablesImmediateResendAndShowsMessage() = runTest {
+        fakeRepository.initialVerificationEmailDispatched = false
+
+        viewModel.onRegisterUsernameChange("validUser")
+        viewModel.onRegisterEmailChange("user@example.com")
+        viewModel.onRegisterPasswordChange("SecurePassword1")
+
+        var registeredEmail: String? = null
+        viewModel.validateAndSubmitRegistration { email ->
+            registeredEmail = email
+        }
+
+        advanceUntilIdle()
+
+        val regState = viewModel.registerState.value
+        assertTrue(regState.isSuccess)
+        assertEquals("user@example.com", registeredEmail)
+
+        // When initial dispatch fails: canResend is immediately true, countdown is 0, helpful message displayed
+        val verifyState = viewModel.verifyEmailState.value
+        assertTrue(verifyState.canResend)
+        assertEquals(0, verifyState.resendCountdown)
+        assertNotNull(verifyState.errorMessage)
+        assertTrue(verifyState.errorMessage!!.contains("could not be sent"))
+    }
+
+    @Test
     fun register_repositoryError_displaysErrorMessage() = runTest {
         fakeRepository.shouldSucceed = false
         fakeRepository.errorMessage = "An account with this email address already exists."
@@ -515,6 +542,7 @@ class FakeAuthRepository : AuthRepository {
     var loggedInUser: AuthUser? = null
     var resetEmailSentTo: String? = null
     var verificationEmailSent: Boolean = false
+    var initialVerificationEmailDispatched: Boolean = true
     var actionCodeApplied: String? = null
     var passwordResetCompletedCode: String? = null
     var passwordUpdated: String? = null
@@ -533,6 +561,7 @@ class FakeAuthRepository : AuthRepository {
             email = email,
             isEmailVerified = false,
             displayName = username,
+            verificationEmailSent = initialVerificationEmailDispatched,
         )
         currentUser = user
         registeredUser = user

@@ -96,6 +96,47 @@ describe('API Router — Security, CORS, Health & Payload Guard', () => {
     });
   });
 
+  it('handles public health check when query path contains redundant api/v1/health', async () => {
+    vi.spyOn(clientModule, 'checkDatabaseHealth').mockResolvedValue(true);
+
+    const req = {
+      method: 'GET',
+      headers: {},
+      query: { path: 'api/v1/health' },
+    } as unknown as VercelRequest;
+
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      status: 'healthy',
+      database: 'connected',
+    });
+  });
+
+  it('handles public health check when req.url is /health without query param', async () => {
+    vi.spyOn(clientModule, 'checkDatabaseHealth').mockResolvedValue(true);
+
+    const req = {
+      method: 'GET',
+      headers: {},
+      url: '/health',
+      query: {},
+    } as unknown as VercelRequest;
+
+    const res = createMockResponse();
+
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      status: 'healthy',
+      database: 'connected',
+    });
+  });
+
   it('responds with 503 Degraded on public GET /api/v1/health when database is down', async () => {
     vi.spyOn(clientModule, 'checkDatabaseHealth').mockResolvedValue(false);
 

@@ -54,8 +54,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 2. Parse clean path
-  const rawPath = (req.query.path as string) || req.url?.replace(/^\/api\/v1\/?/, '') || '';
-  const cleanPath = rawPath.split('?')[0].replace(/^\/+|\/+$/g, '');
+  const rawPath =
+    (req.query.path as string) ||
+    req.url?.replace(/^\/api\/v1\/?/, '').replace(/^\/api\/?/, '') ||
+    '';
+  const cleanPath = rawPath
+    .split('?')[0]
+    .replace(/^\/+|\/+$/g, '')
+    .replace(/^(api\/v1\/|api\/)+/, '');
   const method = req.method?.toUpperCase();
 
   try {
