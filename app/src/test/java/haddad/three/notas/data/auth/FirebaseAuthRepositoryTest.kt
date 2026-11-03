@@ -6,6 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -65,5 +66,25 @@ class FirebaseAuthRepositoryTest {
         // Token should be null
         val token = repository.getIdToken()
         assertNull(token)
+    }
+
+    @Test
+    fun buildActionCodeSettings_returnsConfiguredSettings() {
+        val fakeContext = object : ContextWrapper(null) {
+            override fun getPackageName(): String = "haddad.three.notas"
+        }
+        val fakeApiClient = BackendApiClient { throw IOException("No network in test") }
+
+        val repository = FirebaseAuthRepository(
+            context = fakeContext,
+            backendApiClient = fakeApiClient,
+            ioDispatcher = testDispatcher,
+        )
+
+        val settings = repository.buildActionCodeSettings()
+        assertNotNull(settings)
+        assertEquals("https://notas-7db14.firebaseapp.com/__/auth/action", settings?.url)
+        assertEquals(true, settings?.canHandleCodeInApp())
+        assertEquals("haddad.three.notas", settings?.androidPackageName)
     }
 }

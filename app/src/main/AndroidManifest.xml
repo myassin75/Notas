@@ -117,6 +117,18 @@
                     android:scheme="https"
                     android:host="notas-7db14.firebaseapp.com"
                     android:pathPrefix="/__/auth/action" />
+                <data
+                    android:scheme="https"
+                    android:host="notas-7db14.firebaseapp.com"
+                    android:pathPrefix="/__/auth/links" />
+                <data
+                    android:scheme="https"
+                    android:host="notas-7db14.web.app"
+                    android:pathPrefix="/__/auth/action" />
+                <data
+                    android:scheme="https"
+                    android:host="notas-7db14.web.app"
+                    android:pathPrefix="/__/auth/links" />
             </intent-filter>
             <meta-data
                 android:name="android.app.shortcuts"

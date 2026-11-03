@@ -5,6 +5,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthActionCodeException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -126,7 +127,7 @@ class FirebaseAuthRepository @Inject constructor(
             // Send verification email
             var emailDispatched = false
             try {
-                user.sendEmailVerification().awaitResult()
+                sendVerificationEmailToUser(user)
                 emailDispatched = true
             } catch (e: Exception) {
                 android.util.Log.w("FirebaseAuthRepository", "Failed to dispatch verification email to ${user.email}", e)
@@ -188,11 +189,46 @@ class FirebaseAuthRepository @Inject constructor(
 
         try {
             val user = auth!!.currentUser ?: return@withContext AuthResult.Error("No user currently logged in", code = "UNAUTHENTICATED")
-            user.sendEmailVerification().awaitResult()
+            sendVerificationEmailToUser(user)
             AuthResult.Success(Unit)
         } catch (e: Exception) {
             mapFirebaseException(e)
         }
+    }
+
+    internal fun buildActionCodeSettings(): ActionCodeSettings? {
+        return try {
+            val continueUrl = "https://notas-7db14.firebaseapp.com/__/auth/action"
+            ActionCodeSettings.newBuilder()
+                .setUrl(continueUrl)
+                .setHandleCodeInApp(true)
+                .setAndroidPackageName(
+                    context.packageName,
+                    /* installIfNotAvailable = */ false,
+                    /* minimumVersion = */ null,
+                )
+                .build()
+        } catch (e: Exception) {
+            android.util.Log.w("FirebaseAuthRepository", "Failed to build ActionCodeSettings", e)
+            null
+        }
+    }
+
+    private suspend fun sendVerificationEmailToUser(user: FirebaseUser) {
+        val settings = buildActionCodeSettings()
+        if (settings != null) {
+            try {
+                user.sendEmailVerification(settings).awaitResult()
+                return
+            } catch (e: Exception) {
+                android.util.Log.w(
+                    "FirebaseAuthRepository",
+                    "sendEmailVerification with ActionCodeSettings failed; falling back to default sendEmailVerification",
+                    e,
+                )
+            }
+        }
+        user.sendEmailVerification().awaitResult()
     }
 
     override suspend fun reloadUser(): AuthResult<AuthUser> = withContext(ioDispatcher) {

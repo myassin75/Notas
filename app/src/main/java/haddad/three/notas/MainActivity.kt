@@ -54,6 +54,7 @@ import haddad.three.notas.data.ThemeState
 import haddad.three.notas.data.UpdatePreferencesState
 import haddad.three.notas.data.UpdatePrefs
 import haddad.three.notas.data.effectiveDarkTheme
+import haddad.three.notas.data.auth.AuthDeepLinkParser
 import haddad.three.notas.di.ApplicationScope
 import haddad.three.notas.di.LaunchAction
 import haddad.three.notas.ui.InAppRatingAutoPromptHost
@@ -205,14 +206,10 @@ class MainActivity : FragmentActivity() {
             intent.removeExtra(EXTRA_OPEN_SETTINGS_UPDATES)
             return
         }
-        val dataUri = intent.data
-        if (dataUri != null) {
-            val mode = dataUri.getQueryParameter("mode")
-            val oobCode = dataUri.getQueryParameter("oobCode")
-            if (!mode.isNullOrBlank() && !oobCode.isNullOrBlank()) {
-                pendingLaunch.value = LaunchAction.AuthEmailAction(mode = mode, oobCode = oobCode)
-                return
-            }
+        val authAction = AuthDeepLinkParser.parse(intent.data)
+        if (authAction != null) {
+            pendingLaunch.value = authAction
+            return
         }
         when (intent.action) {
             Intent.ACTION_SEND -> {
