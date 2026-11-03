@@ -93,3 +93,4 @@ class AuthDeepLinkParserTest {
         assertNull(AuthDeepLinkParser.parse("https://notas-7db14.firebaseapp.com/"))
     }
 }
+
