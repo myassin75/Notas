@@ -111,6 +111,8 @@ class SyncJournalRepository @Inject constructor(
                     pendingChangeDao.resetJournaledChangesToPending(journal.journalId)
                     journalDao.deleteById(journal.journalId)
                     if (file.exists()) file.delete()
+                    val maxCommitted = journalDao.getMaxCommittedSequence(deviceId) ?: 0L
+                    sequenceDao.setSequence(deviceId, maxCommitted, System.currentTimeMillis())
                 }
 
                 if (database != null) {

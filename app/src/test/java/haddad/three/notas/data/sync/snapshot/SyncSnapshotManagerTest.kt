@@ -1145,6 +1145,12 @@ class SyncSnapshotManagerTest {
         override suspend fun getMaxPublishedSequence(deviceId: String): Long? =
             journals.values.filter { it.deviceId == deviceId }.maxOfOrNull { it.sequence }
 
+        override suspend fun getMaxCommittedSequence(deviceId: String): Long? =
+            journals.values.filter { it.deviceId == deviceId && it.status in listOf(JournalStatus.READY_TO_UPLOAD.name, JournalStatus.UPLOADED.name) }.maxOfOrNull { it.sequence }
+
+        override suspend fun getCreatedJournals(deviceId: String): List<SyncJournalEntity> =
+            journals.values.filter { it.deviceId == deviceId && it.status == JournalStatus.CREATED.name }
+
         override suspend fun getByDeviceAndSequence(deviceId: String, sequence: Long): SyncJournalEntity? =
             journals.values.find { it.deviceId == deviceId && it.sequence == sequence }
 

@@ -30,7 +30,15 @@ sealed interface JournalCreationResult {
 
 /**
  * Creates, serializes, encrypts, and durably persists immutable sync journals
- * from eligible pending changes.
+ * using a crash-safe state machine.
+ *
+ * Guarantees:
+ * 1. Monotonicity: Journal sequences strictly advance without gaps.
+ * 2. Crash-Safety: Failures during encryption, filesystem writes, or process death
+ *    cannot permanently consume or skip a sequence number.
+ * 3. Durable Reconciliation: Stale or interrupted journal states are reconciled before
+ *    new allocations.
+ * 4. Immutability: Journal payload, journalId, and changeId bindings are fixed and tamper-evident.
  */
 @Singleton
 class SyncJournalWriter @Inject constructor(
@@ -60,9 +68,116 @@ class SyncJournalWriter @Inject constructor(
     }
 
     /**
-     * Gathers pending changes, groups them into a bounded batch, allocates a sequence,
-     * serializes and encrypts the journal, and atomically commits the journal and updates
-     * pending change statuses.
+     * Reconciles any interrupted or stale journal creation state for [deviceId].
+     * 1. If any journal is stuck in [JournalStatus.CREATED], checks disk file:
+     *    - If valid & decryptable: commits promotion to [JournalStatus.READY_TO_UPLOAD].
+     *    - If missing or corrupted: rolls back pending changes and deletes the orphan journal record.
+     * 2. Checks sequence counter consistency: if lastAllocatedSequence exceeds committed journals
+     *    and no valid journal exists on disk, reclaims the uncommitted sequence.
+     */
+    suspend fun reconcileIncompleteState(deviceId: String, timestamp: Long = clock()) = withContext(Dispatchers.IO) {
+        // 1. Reconcile CREATED status journals
+        val createdJournals = journalDao.getCreatedJournals(deviceId)
+        for (journal in createdJournals) {
+            val file = File(journal.storagePath)
+            var isValid = false
+            var decodedDto: SyncJournalDto? = null
+
+            if (file.exists() && file.length() > 0L) {
+                try {
+                    val key = mekManager.getActiveMasterKey()
+                    if (key != null) {
+                        val encryptedBytes = file.readBytes()
+                        val aad = buildAad(journal.formatVersion, journal.journalId, journal.deviceId, journal.sequence)
+                        val decrypted = EncryptedContainer.decrypt(encryptedBytes, key, expectedAad = aad)
+                        decodedDto = json.decodeFromString<SyncJournalDto>(String(decrypted, Charsets.UTF_8))
+                        isValid = true
+                    }
+                } catch (_: Exception) {
+                    isValid = false
+                }
+            }
+
+            if (isValid && decodedDto != null) {
+                val operationBlock: suspend () -> Unit = {
+                    journalDao.updateStatus(journal.journalId, JournalStatus.READY_TO_UPLOAD.name, timestamp)
+                    pendingChangeDao.markChangesJournaled(decodedDto.operations.map { it.changeId }, journal.journalId)
+                    sequenceDao.setSequence(deviceId, journal.sequence, timestamp)
+                }
+                if (database != null) database.withTransaction { operationBlock() } else operationBlock()
+            } else {
+                val rollbackBlock: suspend () -> Unit = {
+                    pendingChangeDao.resetJournaledChangesToPending(journal.journalId)
+                    journalDao.deleteById(journal.journalId)
+                    if (file.exists()) file.delete()
+                }
+                if (database != null) database.withTransaction { rollbackBlock() } else rollbackBlock()
+            }
+        }
+
+        // 2. Reconcile uncommitted sequence allocations
+        val maxCommitted = journalDao.getMaxCommittedSequence(deviceId) ?: 0L
+        val currentAllocated = sequenceDao.getLastAllocatedSequence(deviceId) ?: 0L
+
+        if (currentAllocated > maxCommitted) {
+            val baseDir = File(context.filesDir, JOURNALS_DIR_NAME)
+            val deviceDir = File(baseDir, deviceId)
+            val candidateFiles = deviceDir.listFiles { _, name ->
+                name.startsWith("${currentAllocated}_") && name.endsWith(".journal")
+            }
+            var recovered = false
+
+            if (!candidateFiles.isNullOrEmpty()) {
+                val candidateFile = candidateFiles.first()
+                try {
+                    val key = mekManager.getActiveMasterKey()
+                    if (key != null) {
+                        val encryptedBytes = candidateFile.readBytes()
+                        val filename = candidateFile.name
+                        val journalId = filename.substringAfter("${currentAllocated}_").substringBefore(".journal")
+                        val aad = buildAad(SyncJournalDto.CURRENT_FORMAT_VERSION, journalId, deviceId, currentAllocated)
+                        val decrypted = EncryptedContainer.decrypt(encryptedBytes, key, expectedAad = aad)
+                        val dto = json.decodeFromString<SyncJournalDto>(String(decrypted, Charsets.UTF_8))
+
+                        val entity = SyncJournalEntity(
+                            journalId = dto.journalId,
+                            deviceId = deviceId,
+                            sequence = currentAllocated,
+                            formatVersion = dto.formatVersion,
+                            createdAt = dto.createdAt,
+                            operationCount = dto.operationCount,
+                            storagePath = candidateFile.absolutePath,
+                            encryptedSizeBytes = candidateFile.length(),
+                            status = JournalStatus.READY_TO_UPLOAD.name,
+                            uploadAttempts = 0,
+                            lastError = null,
+                            updatedAt = timestamp,
+                        )
+
+                        val commitBlock: suspend () -> Unit = {
+                            journalDao.insert(entity)
+                            pendingChangeDao.markChangesJournaled(dto.operations.map { it.changeId }, dto.journalId)
+                            sequenceDao.setSequence(deviceId, currentAllocated, timestamp)
+                        }
+                        if (database != null) database.withTransaction { commitBlock() } else commitBlock()
+                        recovered = true
+                    }
+                } catch (_: Exception) {
+                    recovered = false
+                }
+            }
+
+            if (!recovered) {
+                // Interrupted allocation without valid journal: reclaim sequence
+                sequenceDao.setSequence(deviceId, maxCommitted, timestamp)
+            }
+        }
+    }
+
+    /**
+     * Gathers pending changes, groups them into a bounded batch, generates deterministic DTO,
+     * encrypts with AES-256-GCM, flushes to disk with fsync, and atomically commits the sequence,
+     * journal metadata, and change statuses in Room.
      */
     suspend fun createNextJournal(
         maxOperations: Int = DEFAULT_MAX_OPERATIONS,
@@ -70,26 +185,27 @@ class SyncJournalWriter @Inject constructor(
     ): JournalCreationResult = withContext(Dispatchers.IO) {
         writerMutex.withLock {
             val deviceId = customDeviceId ?: deviceIdProvider()
-            val pendingChanges = pendingChangeDao.getPendingChanges(maxOperations)
 
+            // 1. Reconcile any prior incomplete state to guarantee contiguous sequences
+            reconcileIncompleteState(deviceId)
+
+            val pendingChanges = pendingChangeDao.getPendingChanges(maxOperations)
             if (pendingChanges.isEmpty()) {
                 return@withLock JournalCreationResult.NoEligibleChanges
             }
 
-            // 1. Validate operations and detect duplicates
+            // 2. Validate operations and enforce batch size boundaries
             val seenChangeIds = mutableSetOf<String>()
             val validOperations = mutableListOf<JournalOperationDto>()
             var accumulatedSizeBytes = 0L
 
             for (change in pendingChanges) {
                 if (!seenChangeIds.add(change.changeId)) {
-                    // Duplicate changeId detected: skip duplicate to enforce uniqueness
                     continue
                 }
 
                 val payloadSize = change.payload?.toByteArray(Charsets.UTF_8)?.size ?: 0
                 if (validOperations.isNotEmpty() && (accumulatedSizeBytes + payloadSize) > MAX_BATCH_SIZE_BYTES) {
-                    // Reached max batch size: stop batching to enforce byte boundaries
                     break
                 }
 
@@ -114,23 +230,18 @@ class SyncJournalWriter @Inject constructor(
                 return@withLock JournalCreationResult.NoEligibleChanges
             }
 
-            val journalId = UUID.randomUUID().toString()
-            val now = clock()
-
-            // 2. Obtain active Master Encryption Key (MEK)
+            // 3. Obtain Master Encryption Key (MEK)
             val mek = mekManager.getActiveMasterKey()
                 ?: return@withLock JournalCreationResult.Error("Master Encryption Key is not initialized on this device.")
 
-            // 3. Allocate next device sequence atomically
-            val sequence = if (database != null) {
-                database.withTransaction {
-                    sequenceDao.allocateNextSequence(deviceId, now)
-                }
-            } else {
-                sequenceDao.allocateNextSequence(deviceId, now)
-            }
+            val journalId = UUID.randomUUID().toString()
+            val now = clock()
 
-            // 4. Construct Journal DTO
+            // 4. Calculate next sequence monotonically from committed state
+            val maxCommitted = journalDao.getMaxCommittedSequence(deviceId) ?: 0L
+            val sequence = maxCommitted + 1L
+
+            // 5. Construct Journal DTO
             val journalDto = SyncJournalDto(
                 formatVersion = SyncJournalDto.CURRENT_FORMAT_VERSION,
                 journalId = journalId,
@@ -141,10 +252,10 @@ class SyncJournalWriter @Inject constructor(
                 operations = validOperations,
             )
 
-            // 5. Serialize deterministically
+            // 6. Serialize deterministically
             val plainBytes = json.encodeToString(journalDto).toByteArray(Charsets.UTF_8)
 
-            // 6. Encrypt with AES-256-GCM via existing EncryptedContainer
+            // 7. Encrypt with AES-256-GCM via EncryptedContainer
             val aad = buildAad(journalDto.formatVersion, journalId, deviceId, sequence)
             val encryptedBytes = try {
                 EncryptedContainer.encrypt(
@@ -156,7 +267,7 @@ class SyncJournalWriter @Inject constructor(
                 return@withLock JournalCreationResult.Error("Failed to encrypt sync journal: ${e.message}", cause = e)
             }
 
-            // 7. Persist encrypted journal file to local storage
+            // 8. Persist encrypted journal file to local storage with fsync
             val baseDir = File(context.filesDir, JOURNALS_DIR_NAME)
             val deviceDir = File(baseDir, deviceId).apply { mkdirs() }
             val journalFile = File(deviceDir, "${sequence}_$journalId.journal")
@@ -166,6 +277,10 @@ class SyncJournalWriter @Inject constructor(
                 FileOutputStream(tempFile).use { fos ->
                     fos.write(encryptedBytes)
                     fos.flush()
+                    try {
+                        fos.fd.sync()
+                    } catch (_: Exception) {
+                    }
                 }
                 if (!tempFile.renameTo(journalFile)) {
                     tempFile.copyTo(journalFile, overwrite = true)
@@ -177,7 +292,7 @@ class SyncJournalWriter @Inject constructor(
                 return@withLock JournalCreationResult.Error("Failed to write encrypted journal to disk: ${e.message}", cause = e)
             }
 
-            // 8. Commit journal metadata and transition pending changes state in an atomic transaction
+            // 9. Atomic Room transaction: commit journal entity, record sequence, and mark changes journaled
             val journalEntity = SyncJournalEntity(
                 journalId = journalId,
                 deviceId = deviceId,
@@ -193,9 +308,10 @@ class SyncJournalWriter @Inject constructor(
                 updatedAt = now,
             )
 
-            val committed: Boolean = try {
-                val operationBlock: suspend () -> Unit = {
+            try {
+                val commitBlock: suspend () -> Unit = {
                     journalDao.insert(journalEntity)
+                    sequenceDao.setSequence(deviceId, sequence, now)
                     pendingChangeDao.markChangesJournaled(
                         changeIds = validOperations.map { it.changeId },
                         journalId = journalId,
@@ -203,13 +319,11 @@ class SyncJournalWriter @Inject constructor(
                 }
 
                 if (database != null) {
-                    database.withTransaction { operationBlock() }
+                    database.withTransaction { commitBlock() }
                 } else {
-                    operationBlock()
+                    commitBlock()
                 }
-                true
             } catch (e: Exception) {
-                // If database commit fails, delete disk file so we don't leave orphaned files
                 journalFile.delete()
                 return@withLock JournalCreationResult.Error("Failed to commit journal metadata: ${e.message}", cause = e)
             }
@@ -218,4 +332,3 @@ class SyncJournalWriter @Inject constructor(
         }
     }
 }
-

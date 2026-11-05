@@ -69,6 +69,12 @@ interface SyncJournalDao {
     @Query("SELECT MAX(sequence) FROM sync_journals WHERE deviceId = :deviceId")
     suspend fun getMaxPublishedSequence(deviceId: String): Long?
 
+    @Query("SELECT MAX(sequence) FROM sync_journals WHERE deviceId = :deviceId AND status IN ('READY_TO_UPLOAD', 'UPLOADED')")
+    suspend fun getMaxCommittedSequence(deviceId: String): Long?
+
+    @Query("SELECT * FROM sync_journals WHERE deviceId = :deviceId AND status = 'CREATED'")
+    suspend fun getCreatedJournals(deviceId: String): List<SyncJournalEntity>
+
     @Query("UPDATE sync_journals SET status = :newStatus, driveFileId = :driveFileId, updatedAt = :timestamp WHERE journalId = :journalId")
     suspend fun markUploaded(journalId: String, driveFileId: String, newStatus: String = JournalStatus.UPLOADED.name, timestamp: Long = System.currentTimeMillis()): Int
 

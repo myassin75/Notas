@@ -30,6 +30,26 @@ interface SyncSequenceDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(entity: SyncSequenceEntity)
 
+    @Query("UPDATE sync_sequences SET lastAllocatedSequence = :sequence, updatedAt = :timestamp WHERE deviceId = :deviceId")
+    suspend fun setLastAllocatedSequence(deviceId: String, sequence: Long, timestamp: Long = System.currentTimeMillis()): Int
+
+    /**
+     * Atomically sets or inserts the sequence for [deviceId].
+     */
+    @Transaction
+    suspend fun setSequence(deviceId: String, sequence: Long, timestamp: Long = System.currentTimeMillis()) {
+        val updated = setLastAllocatedSequence(deviceId, sequence, timestamp)
+        if (updated == 0) {
+            insertOrUpdate(
+                SyncSequenceEntity(
+                    deviceId = deviceId,
+                    lastAllocatedSequence = sequence,
+                    updatedAt = timestamp,
+                ),
+            )
+        }
+    }
+
     /**
      * Atomically allocates and persists the next sequence number for [deviceId].
      * Guarantees monotonicity and survives application restarts.
@@ -54,4 +74,3 @@ interface SyncSequenceDao {
     @Query("DELETE FROM sync_sequences")
     suspend fun clearAll()
 }
-

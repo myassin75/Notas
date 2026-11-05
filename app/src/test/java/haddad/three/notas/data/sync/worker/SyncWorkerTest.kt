@@ -974,6 +974,10 @@ class SyncWorkerTest {
         override fun observeAllJournals(): Flow<List<SyncJournalEntity>> = emptyFlow()
         override suspend fun getMaxPublishedSequence(deviceId: String): Long? =
             journals.values.filter { it.deviceId == deviceId }.maxOfOrNull { it.sequence }
+        override suspend fun getMaxCommittedSequence(deviceId: String): Long? =
+            journals.values.filter { it.deviceId == deviceId && it.status in listOf(JournalStatus.READY_TO_UPLOAD.name, JournalStatus.UPLOADED.name) }.maxOfOrNull { it.sequence }
+        override suspend fun getCreatedJournals(deviceId: String): List<SyncJournalEntity> =
+            journals.values.filter { it.deviceId == deviceId && it.status == JournalStatus.CREATED.name }
         override suspend fun markUploaded(journalId: String, driveFileId: String, newStatus: String, timestamp: Long): Int {
             val j = journals[journalId] ?: return 0
             journals[journalId] = j.copy(status = newStatus, driveFileId = driveFileId, updatedAt = timestamp)
@@ -1074,6 +1078,11 @@ class SyncWorkerTest {
 
         override suspend fun insertOrUpdate(entity: SyncSequenceEntity) {
             sequences[entity.deviceId] = entity.lastAllocatedSequence
+        }
+
+        override suspend fun setLastAllocatedSequence(deviceId: String, sequence: Long, timestamp: Long): Int {
+            sequences[deviceId] = sequence
+            return 1
         }
 
         override suspend fun allocateNextSequence(deviceId: String, timestamp: Long): Long {
