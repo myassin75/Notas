@@ -11,7 +11,7 @@
 |:---|:---|:---:|:---:|:---|
 | **F01** | Firebase Credential Incident & History Purge | P0 | **VERIFIED** | `4af7c88` |
 | **F03** | User-Partitioned MEK Storage & Account Isolation | P0 | **VERIFIED** | `4836dff` |
-| **F02** | Crash-Safe Journal Sequence Allocation | P0 | **IN_PROGRESS** | Pending |
+| **F02** | Crash-Safe Journal Sequence Allocation | P0 | **VERIFIED** | `b2a61a2`, `907a678` |
 
 ---
 
