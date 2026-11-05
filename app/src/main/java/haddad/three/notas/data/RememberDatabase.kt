@@ -10,6 +10,26 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import haddad.three.notas.data.sync.change.PendingChangeDao
+import haddad.three.notas.data.sync.change.PendingChangeEntity
+import haddad.three.notas.data.sync.conflict.SyncAppliedOperationDao
+import haddad.three.notas.data.sync.conflict.SyncAppliedOperationEntity
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataDao
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataEntity
+import haddad.three.notas.data.sync.conflict.SyncConflictRecordDao
+import haddad.three.notas.data.sync.conflict.SyncConflictRecordEntity
+import haddad.three.notas.data.sync.conflict.SyncHlcStateDao
+import haddad.three.notas.data.sync.conflict.SyncHlcStateEntity
+import haddad.three.notas.data.sync.conflict.SyncTombstoneDao
+import haddad.three.notas.data.sync.conflict.SyncTombstoneEntity
+import haddad.three.notas.data.sync.journal.SyncJournalDao
+import haddad.three.notas.data.sync.journal.SyncJournalEntity
+import haddad.three.notas.data.sync.journal.SyncSequenceDao
+import haddad.three.notas.data.sync.journal.SyncSequenceEntity
+import haddad.three.notas.data.sync.transport.SyncInboxDao
+import haddad.three.notas.data.sync.transport.SyncInboxEntity
+import haddad.three.notas.data.sync.transport.SyncWatermarkDao
+import haddad.three.notas.data.sync.transport.SyncWatermarkEntity
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -79,8 +99,18 @@ class Converters {
         NoteAttachmentEntity::class,
         NoteFtsEntity::class,
         ShoulderEntity::class,
+        PendingChangeEntity::class,
+        SyncSequenceEntity::class,
+        SyncJournalEntity::class,
+        SyncInboxEntity::class,
+        SyncWatermarkEntity::class,
+        SyncAppliedOperationEntity::class,
+        SyncConflictMetadataEntity::class,
+        SyncTombstoneEntity::class,
+        SyncConflictRecordEntity::class,
+        SyncHlcStateEntity::class,
     ],
-    version = 9,
+    version = 12,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -92,6 +122,26 @@ abstract class RememberDatabase : RoomDatabase() {
     abstract fun attachmentDao(): AttachmentDao
 
     abstract fun shoulderDao(): ShoulderDao
+
+    abstract fun pendingChangeDao(): PendingChangeDao
+
+    abstract fun syncSequenceDao(): SyncSequenceDao
+
+    abstract fun syncJournalDao(): SyncJournalDao
+
+    abstract fun syncInboxDao(): SyncInboxDao
+
+    abstract fun syncWatermarkDao(): SyncWatermarkDao
+
+    abstract fun syncAppliedOperationDao(): SyncAppliedOperationDao
+
+    abstract fun syncConflictMetadataDao(): SyncConflictMetadataDao
+
+    abstract fun syncTombstoneDao(): SyncTombstoneDao
+
+    abstract fun syncConflictRecordDao(): SyncConflictRecordDao
+
+    abstract fun syncHlcStateDao(): SyncHlcStateDao
 
     companion object {
         fun build(context: Context): RememberDatabase =
@@ -106,6 +156,9 @@ abstract class RememberDatabase : RoomDatabase() {
                     MIGRATION_6_7,
                     MIGRATION_7_8,
                     MIGRATION_8_9,
+                    MIGRATION_9_10,
+                    MIGRATION_10_11,
+                    MIGRATION_11_12,
                 )
                 .fallbackToDestructiveMigration(false)
                 .build()
@@ -433,6 +486,213 @@ abstract class RememberDatabase : RoomDatabase() {
                     // 4. Attachments table: add ownerId column and index
                     db.execSQL("ALTER TABLE `attachments` ADD COLUMN `ownerId` TEXT DEFAULT NULL")
                     db.execSQL("CREATE INDEX IF NOT EXISTS `index_attachments_ownerId` ON `attachments` (`ownerId`)")
+                }
+            }
+
+        internal val MIGRATION_9_10 =
+            object : Migration(9, 10) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 1. Pending changes table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `pending_changes` (
+                            `changeId` TEXT NOT NULL, 
+                            `entityType` TEXT NOT NULL, 
+                            `entityId` TEXT NOT NULL, 
+                            `operationType` TEXT NOT NULL, 
+                            `deviceId` TEXT NOT NULL, 
+                            `createdAt` INTEGER NOT NULL, 
+                            `schemaVersion` INTEGER NOT NULL, 
+                            `payload` TEXT, 
+                            `hlcTimestamp` TEXT, 
+                            `hlcCounter` INTEGER, 
+                            `hlcNodeId` TEXT, 
+                            `status` TEXT NOT NULL DEFAULT 'PENDING', 
+                            `journalId` TEXT, 
+                            PRIMARY KEY(`changeId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_pending_changes_createdAt` ON `pending_changes` (`createdAt`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_pending_changes_entityType_entityId` ON `pending_changes` (`entityType`, `entityId`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_pending_changes_status` ON `pending_changes` (`status`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_pending_changes_journalId` ON `pending_changes` (`journalId`)")
+
+                    // 2. Sync sequences table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_sequences` (
+                            `deviceId` TEXT NOT NULL, 
+                            `lastAllocatedSequence` INTEGER NOT NULL, 
+                            `updatedAt` INTEGER NOT NULL, 
+                            PRIMARY KEY(`deviceId`)
+                        )
+                        """.trimIndent(),
+                    )
+
+                    // 3. Sync journals table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_journals` (
+                            `journalId` TEXT NOT NULL, 
+                            `deviceId` TEXT NOT NULL, 
+                            `sequence` INTEGER NOT NULL, 
+                            `formatVersion` INTEGER NOT NULL, 
+                            `createdAt` INTEGER NOT NULL, 
+                            `operationCount` INTEGER NOT NULL, 
+                            `storagePath` TEXT NOT NULL, 
+                            `encryptedSizeBytes` INTEGER NOT NULL, 
+                            `status` TEXT NOT NULL DEFAULT 'CREATED', 
+                            `uploadAttempts` INTEGER NOT NULL DEFAULT 0, 
+                            `lastError` TEXT, 
+                            `updatedAt` INTEGER NOT NULL, 
+                            PRIMARY KEY(`journalId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_sync_journals_deviceId_sequence` ON `sync_journals` (`deviceId`, `sequence`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_journals_status` ON `sync_journals` (`status`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_journals_createdAt` ON `sync_journals` (`createdAt`)")
+                }
+            }
+
+        internal val MIGRATION_10_11 =
+            object : Migration(10, 11) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 1. Add driveFileId to sync_journals
+                    db.execSQL("ALTER TABLE `sync_journals` ADD COLUMN `driveFileId` TEXT DEFAULT NULL")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_journals_driveFileId` ON `sync_journals` (`driveFileId`)")
+
+                    // 2. Create sync_inbox table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_inbox` (
+                            `journalId` TEXT NOT NULL, 
+                            `deviceId` TEXT NOT NULL, 
+                            `sequence` INTEGER NOT NULL, 
+                            `formatVersion` INTEGER NOT NULL, 
+                            `driveFileId` TEXT NOT NULL, 
+                            `localFilePath` TEXT NOT NULL, 
+                            `contentSha256` TEXT NOT NULL, 
+                            `operationCount` INTEGER NOT NULL, 
+                            `downloadedAt` INTEGER NOT NULL, 
+                            `status` TEXT NOT NULL DEFAULT 'VALIDATED', 
+                            PRIMARY KEY(`journalId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_sync_inbox_deviceId_sequence` ON `sync_inbox` (`deviceId`, `sequence`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_inbox_status` ON `sync_inbox` (`status`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_inbox_downloadedAt` ON `sync_inbox` (`downloadedAt`)")
+
+                    // 3. Create sync_watermarks table
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_watermarks` (
+                            `deviceId` TEXT NOT NULL, 
+                            `highestDiscoveredSeq` INTEGER NOT NULL, 
+                            `highestDownloadedSeq` INTEGER NOT NULL, 
+                            `highestValidatedSeq` INTEGER NOT NULL, 
+                            `missingSequencesJson` TEXT NOT NULL DEFAULT '[]', 
+                            `updatedAt` INTEGER NOT NULL, 
+                            PRIMARY KEY(`deviceId`)
+                        )
+                        """.trimIndent(),
+                    )
+                }
+            }
+
+        internal val MIGRATION_11_12 =
+            object : Migration(11, 12) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 1. Add highestAppliedSeq to sync_watermarks
+                    db.execSQL("ALTER TABLE `sync_watermarks` ADD COLUMN `highestAppliedSeq` INTEGER NOT NULL DEFAULT 0")
+
+                    // 2. Create sync_applied_operations
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_applied_operations` (
+                            `changeId` TEXT NOT NULL,
+                            `journalId` TEXT NOT NULL,
+                            `deviceId` TEXT NOT NULL,
+                            `sequence` INTEGER NOT NULL,
+                            `entityType` TEXT NOT NULL,
+                            `entityId` TEXT NOT NULL,
+                            `appliedAt` INTEGER NOT NULL,
+                            `hlcTimestamp` TEXT NOT NULL,
+                            PRIMARY KEY(`changeId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_applied_operations_deviceId_sequence` ON `sync_applied_operations` (`deviceId`, `sequence`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_applied_operations_entityType_entityId` ON `sync_applied_operations` (`entityType`, `entityId`)")
+
+                    // 3. Create sync_conflict_metadata
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_conflict_metadata` (
+                            `entityType` TEXT NOT NULL,
+                            `entityId` TEXT NOT NULL,
+                            `fieldName` TEXT NOT NULL,
+                            `hlcTimestamp` TEXT NOT NULL,
+                            `updatedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`entityType`, `entityId`, `fieldName`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_conflict_metadata_entityType_entityId` ON `sync_conflict_metadata` (`entityType`, `entityId`)")
+
+                    // 4. Create sync_tombstones
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_tombstones` (
+                            `entityType` TEXT NOT NULL,
+                            `entityId` TEXT NOT NULL,
+                            `deletedAt` INTEGER NOT NULL,
+                            `hlcTimestamp` TEXT NOT NULL,
+                            `deviceId` TEXT NOT NULL,
+                            PRIMARY KEY(`entityType`, `entityId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_tombstones_deletedAt` ON `sync_tombstones` (`deletedAt`)")
+
+                    // 5. Create sync_conflict_records
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_conflict_records` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            `conflictId` TEXT NOT NULL,
+                            `entityType` TEXT NOT NULL,
+                            `entityId` TEXT NOT NULL,
+                            `fieldName` TEXT NOT NULL,
+                            `winningValue` TEXT,
+                            `losingValue` TEXT,
+                            `winningHlc` TEXT NOT NULL,
+                            `losingHlc` TEXT NOT NULL,
+                            `winningDeviceId` TEXT NOT NULL,
+                            `losingDeviceId` TEXT NOT NULL,
+                            `detectedAt` INTEGER NOT NULL,
+                            `resolved` INTEGER NOT NULL DEFAULT 0
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_sync_conflict_records_conflictId` ON `sync_conflict_records` (`conflictId`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_conflict_records_entityType_entityId` ON `sync_conflict_records` (`entityType`, `entityId`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_conflict_records_detectedAt` ON `sync_conflict_records` (`detectedAt`)")
+
+                    // 6. Create sync_hlc_state
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_hlc_state` (
+                            `nodeId` TEXT NOT NULL,
+                            `physicalTime` INTEGER NOT NULL,
+                            `logicalCounter` INTEGER NOT NULL,
+                            `updatedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`nodeId`)
+                        )
+                        """.trimIndent(),
+                    )
                 }
             }
 

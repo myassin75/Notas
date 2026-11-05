@@ -42,21 +42,50 @@ enum BackupStatus {
   FAILED
 }
 
+enum EmailVerificationStatus {
+  PENDING_VERIFICATION
+  VERIFICATION_SYNC_PENDING
+  VERIFIED
+}
+
+enum OtpPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum OtpStatus {
+  PENDING_DISPATCH
+  ACTIVE
+  CONSUMED
+  EXHAUSTED
+  EXPIRED
+  CANCELLED
+  FAILED
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  DEAD_LETTER
+}
+
 // ----------------------------------------------------------------------------------------------
 // User Model (Mapped to Firebase Authentication UID)
 // ----------------------------------------------------------------------------------------------
 
 model User {
-  id            String    @id // Firebase Authentication UID
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  displayName   String?
-  photoUrl      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  lastSyncAt      DateTime?
-  deletionPending Boolean   @default(false)
-  deletedAt       DateTime?
+  id                      String                  @id // Firebase Authentication UID
+  email                   String                  @unique
+  emailVerified           Boolean                 @default(false)
+  emailVerificationStatus EmailVerificationStatus @default(PENDING_VERIFICATION)
+  displayName             String?
+  photoUrl                String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  lastSyncAt              DateTime?
+  deletionPending         Boolean                 @default(false)
+  deletedAt               DateTime?
 
   // Relations
   notes           Note[]
@@ -253,3 +282,50 @@ model Backup {
   @@index([userId, status])
   @@map("backups")
 }
+
+// ----------------------------------------------------------------------------------------------
+// Email OTP Model (Cryptographic OTP Verification & Password Reset)
+// ----------------------------------------------------------------------------------------------
+
+model EmailOtp {
+  id                 String     @id @default(uuid())
+  email              String
+  userId             String?    // Optional Firebase UID if authenticated
+  purpose            OtpPurpose
+  codeHash           String     // HMAC-SHA256(email:code, OTP_SECRET)
+  status             OtpStatus  @default(PENDING_DISPATCH)
+  attemptsLeft       Int        @default(5)
+  expiresAt          DateTime
+  resendAvailableAt  DateTime
+  dispatchedAt       DateTime?
+  consumedAt         DateTime?
+  dispatchError      String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@index([email, purpose, status])
+  @@index([createdAt])
+  @@map("email_otps")
+}
+
+// ----------------------------------------------------------------------------------------------
+// Transactional Outbox Event Model (Durable Asynchronous Operations)
+// ----------------------------------------------------------------------------------------------
+
+model OutboxEvent {
+  id           String       @id @default(uuid())
+  aggregateId  String       // Firebase UID or relevant aggregate root
+  eventType    String       // "SYNC_FIREBASE_EMAIL_VERIFIED" | "SYNC_FIREBASE_PASSWORD"
+  payload      Json
+  status       OutboxStatus @default(PENDING)
+  attempts     Int          @default(0)
+  maxAttempts  Int          @default(5)
+  nextRetryAt  DateTime     @default(now())
+  lastError    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@map("outbox_events")
+}
+

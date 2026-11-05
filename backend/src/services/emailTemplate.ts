@@ -145,3 +145,4 @@ export function renderVerificationEmail(options: VerificationEmailTemplateOption
 </body>
 </html>`;
 }
+

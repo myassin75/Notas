@@ -44,6 +44,12 @@ interface SettingsDependenciesEntryPoint {
 
     fun cloudBackupManager(): haddad.three.notas.data.backup.CloudBackupManager
 
+    fun googleDriveBackupProvider(): haddad.three.notas.data.drive.backup.GoogleDriveBackupProvider
+
+    fun googleDriveAuthDelegate(): haddad.three.notas.data.drive.auth.GoogleDriveAuthDelegate
+
+    fun driveAuthPreferences(): haddad.three.notas.data.drive.auth.DriveAuthPreferences
+
     fun authRepository(): haddad.three.notas.data.auth.AuthRepository
 
     fun themePrefs(): ThemePrefs

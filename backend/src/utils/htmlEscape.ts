@@ -23,3 +23,4 @@ export function maskEmail(email: string): string {
   }
   return `${localPart[0]}***${localPart[localPart.length - 1]}@${domain}`;
 }
+

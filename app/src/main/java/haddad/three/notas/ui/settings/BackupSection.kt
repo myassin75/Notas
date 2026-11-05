@@ -49,6 +49,9 @@ import haddad.three.notas.ui.components.settings.GroupedListItem
 @Composable
 internal fun BackupSection(
     cloudBackupManager: CloudBackupManager? = null,
+    driveBackupProvider: haddad.three.notas.data.drive.backup.GoogleDriveBackupProvider? = null,
+    driveAuthDelegate: haddad.three.notas.data.drive.auth.GoogleDriveAuthDelegate? = null,
+    drivePrefs: haddad.three.notas.data.drive.auth.DriveAuthPreferences? = null,
     authRepository: AuthRepository? = null,
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
@@ -297,6 +300,15 @@ internal fun BackupSection(
                 }
             }
         }
+
+        // Google Drive Client-Side Encrypted Backup & Restore Provider
+        haddad.three.notas.ui.settings.drive.GoogleDriveBackupSection(
+            driveBackupProvider = driveBackupProvider,
+            driveAuthDelegate = driveAuthDelegate,
+            drivePrefs = drivePrefs,
+            snackbarHostState = snackbarHostState,
+            scope = scope,
+        )
     }
 
     if (showCloudRestoreConfirmDialog && cloudState.backups.isNotEmpty()) {

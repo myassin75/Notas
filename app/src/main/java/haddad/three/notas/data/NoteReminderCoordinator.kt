@@ -1,6 +1,7 @@
 package haddad.three.notas.data
 
 import androidx.room.withTransaction
+import haddad.three.notas.data.sync.change.LocalChangeRecorder
 import haddad.three.notas.reminders.ReminderScheduler
 import haddad.three.notas.reminders.needsCriticalRepeat
 
@@ -16,6 +17,7 @@ internal class NoteReminderCoordinator(
     private val scheduler: ReminderScheduler?,
     private val clock: () -> Long,
     private val database: RememberDatabase?,
+    private val changeRecorder: LocalChangeRecorder? = null,
 ) {
     fun resolveUpdatedReminders(
         existingNote: NoteEntity?,
@@ -152,12 +154,16 @@ internal class NoteReminderCoordinator(
             )
 
         if (activeReminders.isEmpty()) {
-            noteDao.update(
+            val updatedNote =
                 existing.copy(
                     completedAt = clock(),
                     updatedAt = clock(),
-                ),
-            )
+                )
+            val block: suspend () -> Unit = {
+                noteDao.update(updatedNote)
+                changeRecorder?.recordNoteUpsert(updatedNote)
+            }
+            if (database != null) database.withTransaction { block() } else block()
             scheduler?.cancel(noteId)
             scheduler?.cancelNotification(noteId)
             return snapshot
@@ -207,7 +213,11 @@ internal class NoteReminderCoordinator(
                     ).withSyncedPrimaryReminder()
             }
 
-        noteDao.update(nextNote)
+        val block: suspend () -> Unit = {
+            noteDao.update(nextNote)
+            changeRecorder?.recordNoteUpsert(nextNote)
+        }
+        if (database != null) database.withTransaction { block() } else block()
         scheduler?.cancelNotification(noteId)
         if (nextNote.completedAt != null) {
             scheduler?.cancel(noteId)
@@ -225,7 +235,11 @@ internal class NoteReminderCoordinator(
         val existing = existingWithItems.note
         if (existing.completedAt == null && snapshot == null) return false
         val restoredNote = restoredIncompleteNote(existing, snapshot)
-        noteDao.update(restoredNote)
+        val block: suspend () -> Unit = {
+            noteDao.update(restoredNote)
+            changeRecorder?.recordNoteUpsert(restoredNote)
+        }
+        if (database != null) database.withTransaction { block() } else block()
         scheduler?.scheduleOrShow(restoredNote, existingWithItems.items)
         return true
     }
@@ -238,6 +252,7 @@ internal class NoteReminderCoordinator(
                 val existing = existingWithItems.note
                 val restoredNote = restoredIncompleteNote(existing, snapshot)
                 noteDao.update(restoredNote)
+                changeRecorder?.recordNoteUpsert(restoredNote)
                 scheduler?.cancel(id)
                 scheduler?.scheduleOrShow(restoredNote, existingWithItems.items)
             }

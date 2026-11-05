@@ -38,6 +38,20 @@ interface AuthRepository {
 
     suspend fun updatePassword(newPassword: String): AuthResult<Unit>
 
+    suspend fun sendOtpVerification(): AuthResult<Unit> = AuthResult.Success(Unit)
+
+    suspend fun verifyOtpCode(code: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
+    suspend fun requestPasswordResetOtp(email: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
+    suspend fun resetPasswordWithOtp(
+        email: String,
+        code: String,
+        newPassword: String,
+    ): AuthResult<Unit> = AuthResult.Success(Unit)
+
+    suspend fun checkOtpStatus(): AuthResult<Boolean> = AuthResult.Success(currentUser?.isEmailVerified == true)
+
     suspend fun signOut()
 
     suspend fun getIdToken(forceRefresh: Boolean = false): String?

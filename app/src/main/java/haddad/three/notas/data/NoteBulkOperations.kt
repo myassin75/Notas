@@ -1,6 +1,7 @@
 package haddad.three.notas.data
 
 import androidx.room.withTransaction
+import haddad.three.notas.data.sync.change.LocalChangeRecorder
 import haddad.three.notas.reminders.ReminderScheduler
 
 /**
@@ -21,6 +22,7 @@ internal class NoteBulkOperations(
     private val reminderCoordinator: NoteReminderCoordinator,
     private val mediaMaintenance: NoteMediaMaintenance,
     private val tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder? = null,
+    private val changeRecorder: LocalChangeRecorder? = null,
 ) {
     private suspend fun runInTransaction(block: suspend () -> Unit) {
         if (database != null) database.withTransaction { block() } else block()
@@ -42,7 +44,9 @@ internal class NoteBulkOperations(
             ids.forEach { id ->
                 val note = noteDao.get(id)?.note ?: return@forEach
                 if (note.pinned == pinned) return@forEach
-                noteDao.update(note.copy(pinnedAt = if (pinned) now else null))
+                val updated = note.copy(pinnedAt = if (pinned) now else null)
+                noteDao.update(updated)
+                changeRecorder?.recordNoteUpsert(updated)
                 changed += id
             }
         }
@@ -53,7 +57,10 @@ internal class NoteBulkOperations(
         if (ids.isEmpty()) return
         val now = clock()
         runInTransaction {
-            ids.forEach { id -> noteDao.setArchived(id, true, now) }
+            ids.forEach { id ->
+                noteDao.setArchived(id, true, now)
+                noteDao.get(id)?.note?.let { changeRecorder?.recordNoteUpsert(it) }
+            }
         }
         ids.forEach { id ->
             scheduler?.cancel(id)
@@ -65,7 +72,10 @@ internal class NoteBulkOperations(
         if (ids.isEmpty()) return
         val now = clock()
         runInTransaction {
-            ids.forEach { id -> noteDao.setArchived(id, false, now) }
+            ids.forEach { id ->
+                noteDao.setArchived(id, false, now)
+                noteDao.get(id)?.note?.let { changeRecorder?.recordNoteUpsert(it) }
+            }
         }
         // Re-arm reminders after the rows are flipped back to active. Only schedule
         // for notes that still have a reminderAt set; restored rows without one stay
@@ -83,7 +93,10 @@ internal class NoteBulkOperations(
         if (ids.isEmpty()) return
         val now = clock()
         runInTransaction {
-            ids.forEach { id -> noteDao.setTrashed(id, true, now) }
+            ids.forEach { id ->
+                noteDao.setTrashed(id, true, now)
+                noteDao.get(id)?.note?.let { changeRecorder?.recordNoteUpsert(it) }
+            }
         }
         ids.forEach { id ->
             scheduler?.cancel(id)
@@ -95,7 +108,10 @@ internal class NoteBulkOperations(
         if (ids.isEmpty()) return
         val now = clock()
         runInTransaction {
-            ids.forEach { id -> noteDao.setTrashed(id, false, now) }
+            ids.forEach { id ->
+                noteDao.setTrashed(id, false, now)
+                noteDao.get(id)?.note?.let { changeRecorder?.recordNoteUpsert(it) }
+            }
         }
         ids.forEach { id ->
             val noteWithItems = noteDao.get(id) ?: return@forEach
@@ -120,6 +136,15 @@ internal class NoteBulkOperations(
             scheduler?.cancelNotification(id)
         }
         runInTransaction {
+            deletedNotes.forEach { deletedNote ->
+                changeRecorder?.recordNoteDelete(deletedNote.note.uuid)
+                deletedNote.items.forEach { item ->
+                    changeRecorder?.recordChecklistItemDelete(item.uuid, deletedNote.note.uuid)
+                }
+                deletedNote.attachments.forEach { att ->
+                    changeRecorder?.recordAttachmentDelete(att.uuid, deletedNote.note.uuid)
+                }
+            }
             ids.forEach { id -> noteDao.deleteById(id) }
         }
         mediaMaintenance.cleanupUnreferencedMedia(deletedNotes.flatMap { deletedNote -> deletedNote.mediaUris() })

@@ -73,6 +73,12 @@ export class RateLimitError extends AppError {
   }
 }
 
+export class TooManyRequestsError extends RateLimitError {
+  constructor(message = 'Too many requests. Please slow down.', details?: unknown, code = 'TOO_MANY_REQUESTS') {
+    super(message, details, code);
+  }
+}
+
 export class InternalServerError extends AppError {
   constructor(message = 'Internal server error occurred', details?: unknown, code = 'INTERNAL_SERVER_ERROR') {
     super({ message, statusCode: HttpCode.INTERNAL_SERVER_ERROR, code, details, isOperational: false });

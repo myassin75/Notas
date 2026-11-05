@@ -276,6 +276,9 @@ fun SettingsRoute(
     val reminderPrefs = settingsDependencies.reminderPrefs()
     val defaultNotePrefs = settingsDependencies.defaultNotePrefs()
     val cloudBackupManager = settingsDependencies.cloudBackupManager()
+    val driveBackupProvider = settingsDependencies.googleDriveBackupProvider()
+    val driveAuthDelegate = settingsDependencies.googleDriveAuthDelegate()
+    val drivePrefs = settingsDependencies.driveAuthPreferences()
     val authRepository = settingsDependencies.authRepository()
     val authState by authRepository.authState
         .collectAsStateWithLifecycle(initialValue = haddad.three.notas.data.auth.AuthState.Unauthenticated)
@@ -979,6 +982,9 @@ fun SettingsRoute(
                             ) {
                                 BackupSection(
                                     cloudBackupManager = cloudBackupManager,
+                                    driveBackupProvider = driveBackupProvider,
+                                    driveAuthDelegate = driveAuthDelegate,
+                                    drivePrefs = drivePrefs,
                                     authRepository = authRepository,
                                     snackbarHostState = snackbarHostState,
                                     scope = scope,

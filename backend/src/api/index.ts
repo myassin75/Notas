@@ -23,6 +23,14 @@ import {
   handleDeleteAttachment,
 } from './routes/attachments.js';
 import { handleSendVerificationEmail } from './routes/auth.js';
+import {
+  handleSendOtpVerification,
+  handleVerifyOtpCode,
+  handleRequestPasswordReset,
+  handleResetPassword,
+  handleGetOtpStatus,
+} from './routes/otpAuth.js';
+import { ForbiddenError } from '../errors/AppError.js';
 
 const rateLimiter = rateLimit({ windowMs: 60 * 1000, maxRequests: 120 });
 const verifyEmailRateLimiter = rateLimit({ windowMs: 60 * 1000, maxRequests: 5, keyPrefix: 'verify-email' });
@@ -88,13 +96,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // 5. Distributed / In-memory Rate Limiting
+    // 5. Public Password Reset Endpoints (Unauthenticated)
+    if (cleanPath === 'auth/otp/request-password-reset' && method === 'POST') {
+      await verifyEmailRateLimiter(req, res);
+      return await handleRequestPasswordReset(req, res);
+    }
+
+    if (cleanPath === 'auth/otp/reset-password' && method === 'POST') {
+      await verifyEmailRateLimiter(req, res);
+      return await handleResetPassword(req, res);
+    }
+
+    // 6. Distributed / In-memory Rate Limiting
     await rateLimiter(req, res);
 
-    // 6. Authentication with Token Revocation Check for Sensitive Operations
+    // 7. Authentication with Token Revocation Check for Sensitive Operations
     const isRevocationSensitive = cleanPath === 'me' && method === 'DELETE';
     await authenticate(req, res, { checkRevoked: isRevocationSensitive });
     const authReq = req as AuthenticatedRequest;
+
+    // Helper: Strict cloud feature access guard
+    const requireEmailVerified = () => {
+      if (!authReq.user.emailVerified) {
+        throw new ForbiddenError(
+          'Email verification is required to access cloud features (sync, backups, attachments).',
+          undefined,
+          'EMAIL_NOT_VERIFIED'
+        );
+      }
+    };
 
     logger.debug(`Incoming API request: ${method} /${cleanPath}`, {
       userId: authReq.user.uid,
@@ -117,7 +147,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return await handleGetStats(authReq, res);
     }
 
-    // 2. Auth & Verification Email Endpoints
+    // 2. Auth & OTP Verification Endpoints
+    if (cleanPath === 'auth/otp/send-verification' && method === 'POST') {
+      await verifyEmailRateLimiter(req, res);
+      return await handleSendOtpVerification(authReq, res);
+    }
+
+    if (cleanPath === 'auth/otp/verify-code' && method === 'POST') {
+      return await handleVerifyOtpCode(authReq, res);
+    }
+
+    if (cleanPath === 'auth/otp/status' && method === 'GET') {
+      return await handleGetOtpStatus(authReq, res);
+    }
+
     if (
       (cleanPath === 'auth/send-verification-email' || cleanPath === 'me/send-verification-email') &&
       method === 'POST'
@@ -126,17 +169,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return await handleSendVerificationEmail(authReq, res);
     }
 
-    // 2. Sync Endpoints (/api/v1/sync)
+    // 3. Sync Endpoints (/api/v1/sync - Guarded by email verification)
     if (cleanPath === 'sync/push' && method === 'POST') {
+      requireEmailVerified();
       return await handleSyncPush(authReq, res);
     }
 
     if (cleanPath === 'sync/changes' && method === 'GET') {
+      requireEmailVerified();
       return await handleSyncChanges(authReq, res);
     }
 
-    // 3. Backup Endpoints (/api/v1/backups)
+    // 4. Backup Endpoints (/api/v1/backups - Guarded by email verification)
     if (cleanPath === 'backups') {
+      requireEmailVerified();
       if (method === 'POST') return await handleCreateBackup(authReq, res);
       if (method === 'GET') return await handleListBackups(authReq, res);
     }
@@ -144,6 +190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Match /backups/:id, /backups/:id/restore, or /backups/:id/verify
     const backupMatch = cleanPath.match(/^backups\/([a-zA-Z0-9-]+)(\/(restore|verify))?$/);
     if (backupMatch) {
+      requireEmailVerified();
       const backupId = backupMatch[1];
       const action = backupMatch[3];
 
@@ -160,13 +207,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 4. Attachment Endpoints (/api/v1/attachments)
+    // 5. Attachment Endpoints (/api/v1/attachments - Guarded by email verification)
     if (cleanPath === 'attachments/upload-url' && method === 'POST') {
+      requireEmailVerified();
       return await handleGetAttachmentUploadUrl(authReq, res);
     }
 
     const attachmentMatch = cleanPath.match(/^attachments\/([a-zA-Z0-9-]+)(\/(verify|download-url))?$/);
     if (attachmentMatch) {
+      requireEmailVerified();
       const attachmentId = attachmentMatch[1];
       const action = attachmentMatch[3];
 

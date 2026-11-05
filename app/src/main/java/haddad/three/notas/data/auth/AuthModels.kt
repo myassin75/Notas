@@ -18,12 +18,16 @@ data class AuthUser(
  * Result wrapper for authentication operations.
  */
 sealed interface AuthResult<out T> {
-    data class Success<T>(val data: T) : AuthResult<T>
+    data class Success<T>(
+        val data: T,
+    ) : AuthResult<T>
+
     data class Error(
         val message: String,
         val code: String? = null,
         val cause: Throwable? = null,
     ) : AuthResult<Nothing>
+
     data object Cancelled : AuthResult<Nothing>
 }
 
@@ -32,8 +36,12 @@ sealed interface AuthResult<out T> {
  */
 sealed interface AuthState {
     data object Loading : AuthState
+
     data object Unauthenticated : AuthState
-    data class Authenticated(val user: AuthUser) : AuthState
+
+    data class Authenticated(
+        val user: AuthUser,
+    ) : AuthState
 }
 
 /**
@@ -53,10 +61,15 @@ sealed interface AppAuthState {
     data object Authenticating : AppAuthState
 
     /** Authenticated with Firebase, actively loading or syncing profile from backend */
-    data class LoadingProfile(val user: AuthUser) : AppAuthState
+    data class LoadingProfile(
+        val user: AuthUser,
+    ) : AppAuthState
 
     /** Fully authenticated with Firebase identity and synchronized backend profile */
-    data class Authenticated(val user: AuthUser, val backendProfile: BackendProfile? = null) : AppAuthState
+    data class Authenticated(
+        val user: AuthUser,
+        val backendProfile: BackendProfile? = null,
+    ) : AppAuthState
 
     /** Recoverable authentication or backend profile sync error (retains Firebase identity) */
     data class RecoverableError(
@@ -99,4 +112,27 @@ data class BackendApiError(
 data class SendVerificationEmailResponse(
     val message: String,
     val email: String? = null,
+)
+
+@Serializable
+data class VerifyOtpRequest(
+    val code: String,
+)
+
+@Serializable
+data class RequestPasswordResetRequest(
+    val email: String,
+)
+
+@Serializable
+data class ResetPasswordRequest(
+    val email: String,
+    val code: String,
+    val newPassword: String,
+)
+
+@Serializable
+data class OtpStatusResponse(
+    val status: String,
+    val emailVerified: Boolean,
 )

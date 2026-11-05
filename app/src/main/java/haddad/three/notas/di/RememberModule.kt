@@ -13,6 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import haddad.three.notas.data.AppMediaStorage
 import haddad.three.notas.data.DefaultNotePrefs
 import haddad.three.notas.data.DevModePrefs
@@ -29,6 +30,24 @@ import haddad.three.notas.data.ShoulderRepository
 import haddad.three.notas.data.ThemePrefs
 import haddad.three.notas.data.UpdatePrefs
 import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.crypto.MekManager
+import haddad.three.notas.data.sync.change.DefaultLocalChangeRecorder
+import haddad.three.notas.data.sync.change.LocalChangeRecorder
+import haddad.three.notas.data.sync.change.PendingChangeDao
+import haddad.three.notas.data.sync.conflict.FieldConflictResolver
+import haddad.three.notas.data.sync.conflict.SyncAppliedOperationDao
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataDao
+import haddad.three.notas.data.sync.conflict.SyncConflictRecordDao
+import haddad.three.notas.data.sync.conflict.SyncHlcStateDao
+import haddad.three.notas.data.sync.conflict.SyncTombstoneDao
+import haddad.three.notas.data.sync.hlc.HlcClock
+import haddad.three.notas.data.sync.hlc.HlcStorage
+import haddad.three.notas.data.sync.hlc.RoomHlcStorage
+import haddad.three.notas.data.sync.ingestion.RemoteJournalIngestionEngine
+import haddad.three.notas.data.sync.journal.SyncJournalDao
+import haddad.three.notas.data.sync.journal.SyncJournalRepository
+import haddad.three.notas.data.sync.journal.SyncJournalWriter
+import haddad.three.notas.data.sync.journal.SyncSequenceDao
 import haddad.three.notas.googletasks.GoogleTasksApi
 import haddad.three.notas.googletasks.GoogleTasksImportPrefs
 import haddad.three.notas.googletasks.GoogleTasksImporter
@@ -107,11 +126,14 @@ object RememberModule {
         database: RememberDatabase,
         tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder,
         authRepository: haddad.three.notas.data.auth.AuthRepository,
+        changeRecorder: LocalChangeRecorder,
     ): ShoulderRepository =
         ShoulderRepository(
             shoulderDao = database.shoulderDao(),
             tombstoneRecorder = tombstoneRecorder,
             authRepository = authRepository,
+            database = database,
+            changeRecorder = changeRecorder,
         )
 
     @Provides
@@ -123,6 +145,7 @@ object RememberModule {
         appMediaStorage: AppMediaStorage,
         tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder,
         authRepository: haddad.three.notas.data.auth.AuthRepository,
+        changeRecorder: LocalChangeRecorder,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         @DefaultDispatcher defaultDispatcher: CoroutineDispatcher,
     ): NoteRepository =
@@ -138,6 +161,7 @@ object RememberModule {
             defaultDispatcher = defaultDispatcher,
             tombstoneRecorder = tombstoneRecorder,
             authRepository = authRepository,
+            changeRecorder = changeRecorder,
         )
 
     @Provides
@@ -253,6 +277,156 @@ object RememberModule {
         haddad.three.notas.data.sync.DefaultSyncTombstoneRecorder(
             authRepository = authRepository,
             syncStateStore = syncStateStore,
+        )
+
+    @Provides
+    @Singleton
+    fun providePendingChangeDao(database: RememberDatabase): PendingChangeDao =
+        database.pendingChangeDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncSequenceDao(database: RememberDatabase): SyncSequenceDao =
+        database.syncSequenceDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncJournalDao(database: RememberDatabase): SyncJournalDao =
+        database.syncJournalDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncInboxDao(database: RememberDatabase): haddad.three.notas.data.sync.transport.SyncInboxDao =
+        database.syncInboxDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncWatermarkDao(database: RememberDatabase): haddad.three.notas.data.sync.transport.SyncWatermarkDao =
+        database.syncWatermarkDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncAppliedOperationDao(database: RememberDatabase): SyncAppliedOperationDao =
+        database.syncAppliedOperationDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncConflictMetadataDao(database: RememberDatabase): SyncConflictMetadataDao =
+        database.syncConflictMetadataDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncTombstoneDao(database: RememberDatabase): SyncTombstoneDao =
+        database.syncTombstoneDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncConflictRecordDao(database: RememberDatabase): SyncConflictRecordDao =
+        database.syncConflictRecordDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncHlcStateDao(database: RememberDatabase): SyncHlcStateDao =
+        database.syncHlcStateDao()
+
+    @Provides
+    @Singleton
+    fun provideHlcStorage(hlcStateDao: SyncHlcStateDao): HlcStorage =
+        RoomHlcStorage(hlcStateDao)
+
+    @Provides
+    @Singleton
+    fun provideHlcClock(
+        hlcStorage: HlcStorage,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+    ): HlcClock =
+        HlcClock(
+            nodeId = runBlocking { syncStateStore.getOrCreateDeviceId() },
+            storage = hlcStorage,
+        )
+
+    @Provides
+    @Singleton
+    fun provideFieldConflictResolver(
+        database: RememberDatabase,
+    ): FieldConflictResolver =
+        FieldConflictResolver(
+            noteDao = database.noteDao(),
+            checklistItemDao = database.checklistItemDao(),
+            shoulderDao = database.shoulderDao(),
+            attachmentDao = database.attachmentDao(),
+            conflictMetadataDao = database.syncConflictMetadataDao(),
+            tombstoneDao = database.syncTombstoneDao(),
+            conflictRecordDao = database.syncConflictRecordDao(),
+        )
+
+    @Provides
+    @Singleton
+    fun provideRemoteJournalIngestionEngine(
+        database: RememberDatabase,
+        fieldConflictResolver: FieldConflictResolver,
+        hlcClock: HlcClock,
+        mekManager: MekManager,
+    ): RemoteJournalIngestionEngine =
+        RemoteJournalIngestionEngine(
+            database = database,
+            syncInboxDao = database.syncInboxDao(),
+            syncWatermarkDao = database.syncWatermarkDao(),
+            appliedOperationDao = database.syncAppliedOperationDao(),
+            fieldConflictResolver = fieldConflictResolver,
+            hlcClock = hlcClock,
+            mekManager = mekManager,
+        )
+
+    @Provides
+    @Singleton
+    fun provideLocalChangeRecorder(
+        pendingChangeDao: PendingChangeDao,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+    ): LocalChangeRecorder =
+        DefaultLocalChangeRecorder(
+            pendingChangeDao = pendingChangeDao,
+            deviceIdProvider = { syncStateStore.getOrCreateDeviceId() },
+        )
+
+    @Provides
+    @Singleton
+    fun provideSyncJournalWriter(
+        @ApplicationContext context: Context,
+        database: RememberDatabase,
+        pendingChangeDao: PendingChangeDao,
+        sequenceDao: SyncSequenceDao,
+        journalDao: SyncJournalDao,
+        mekManager: MekManager,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+    ): SyncJournalWriter =
+        SyncJournalWriter(
+            context = context,
+            database = database,
+            pendingChangeDao = pendingChangeDao,
+            sequenceDao = sequenceDao,
+            journalDao = journalDao,
+            mekManager = mekManager,
+            deviceIdProvider = { syncStateStore.getOrCreateDeviceId() },
+        )
+
+    @Provides
+    @Singleton
+    fun provideSyncJournalRepository(
+        @ApplicationContext context: Context,
+        database: RememberDatabase,
+        journalDao: SyncJournalDao,
+        sequenceDao: SyncSequenceDao,
+        pendingChangeDao: PendingChangeDao,
+        mekManager: MekManager,
+    ): SyncJournalRepository =
+        SyncJournalRepository(
+            context = context,
+            database = database,
+            journalDao = journalDao,
+            sequenceDao = sequenceDao,
+            pendingChangeDao = pendingChangeDao,
+            mekManager = mekManager,
         )
 
     @Provides

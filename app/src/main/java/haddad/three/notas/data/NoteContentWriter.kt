@@ -1,6 +1,7 @@
 package haddad.three.notas.data
 
 import androidx.room.withTransaction
+import haddad.three.notas.data.sync.change.LocalChangeRecorder
 import haddad.three.notas.reminders.ReminderScheduler
 
 /**
@@ -20,6 +21,7 @@ internal class NoteContentWriter(
     private val clock: () -> Long,
     private val database: RememberDatabase?,
     private val ownerIdProvider: () -> String? = { null },
+    private val changeRecorder: LocalChangeRecorder? = null,
 ) {
     suspend fun createNote(
         title: String,
@@ -56,7 +58,13 @@ internal class NoteContentWriter(
                 reminders = resolvedReminders,
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
-        val noteId = noteDao.insert(noteEntity)
+        val applyInsert: suspend () -> Long = {
+            val noteId = noteDao.insert(noteEntity)
+            val catUuid = options.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+            changeRecorder?.recordNoteUpsert(noteEntity.copy(id = noteId), catUuid)
+            noteId
+        }
+        val noteId = if (database != null) database.withTransaction { applyInsert() } else applyInsert()
         if (noteEntity.reminderAt != null) {
             val createdNote = noteDao.get(noteId)?.note
             if (createdNote != null) {
@@ -103,10 +111,12 @@ internal class NoteContentWriter(
                 reminders = resolvedReminders,
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
-        val id = noteDao.insert(noteEntity)
-        if (validItems.isNotEmpty()) {
-            itemDao.insertAll(
-                validItems.mapIndexed { index, text ->
+        val applyInsert: suspend () -> Long = {
+            val id = noteDao.insert(noteEntity)
+            val catUuid = options.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+            changeRecorder?.recordNoteUpsert(noteEntity.copy(id = id), catUuid)
+            if (validItems.isNotEmpty()) {
+                val checklistEntities = validItems.mapIndexed { index, text ->
                     ChecklistItemEntity(
                         noteId = id,
                         ownerId = currentOwnerId,
@@ -117,9 +127,15 @@ internal class NoteContentWriter(
                         parentId = null,
                         depth = 0,
                     )
-                },
-            )
+                }
+                itemDao.insertAll(checklistEntities)
+                checklistEntities.forEach { itemEntity ->
+                    changeRecorder?.recordChecklistItemUpsert(itemEntity, noteEntity.uuid)
+                }
+            }
+            id
         }
+        val id = if (database != null) database.withTransaction { applyInsert() } else applyInsert()
         if (noteEntity.reminderAt != null) {
             val createdNoteWithItems = noteDao.get(id)
             if (createdNoteWithItems != null) {
@@ -171,8 +187,14 @@ internal class NoteContentWriter(
                 reminders = resolvedReminders,
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
-        val id = noteDao.insert(noteEntity)
-        checklistWriter.insertHierarchy(noteId = id, items = validItems, ownerId = currentOwnerId)
+        val applyInsert: suspend () -> Long = {
+            val id = noteDao.insert(noteEntity)
+            val catUuid = options.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+            changeRecorder?.recordNoteUpsert(noteEntity.copy(id = id), catUuid)
+            checklistWriter.insertHierarchy(noteId = id, items = validItems, ownerId = currentOwnerId, noteUuid = noteEntity.uuid)
+            id
+        }
+        val id = if (database != null) database.withTransaction { applyInsert() } else applyInsert()
         if (noteEntity.reminderAt != null) {
             val createdNoteWithItems = noteDao.get(id)
             if (createdNoteWithItems != null) {
@@ -220,7 +242,12 @@ internal class NoteContentWriter(
                     },
             )
         val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
-        noteDao.update(noteEntity)
+        val applyUpdate: suspend () -> Unit = {
+            noteDao.update(noteEntity)
+            val catUuid = options.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+            changeRecorder?.recordNoteUpsert(noteEntity, catUuid)
+        }
+        if (database != null) database.withTransaction { applyUpdate() } else applyUpdate()
         reminderCoordinator.rescheduleReminder(id, noteEntity.reminderAt)
         reminderCoordinator.refreshNotificationIfActive(id)
         if (oldPictureUri != null && oldPictureUri != options.pictureUri) {
@@ -273,7 +300,9 @@ internal class NoteContentWriter(
                     )
                 val noteEntity = unsyncedNote.withSyncedPrimaryReminder()
                 noteDao.update(noteEntity)
-                checklistWriter.syncHierarchy(noteId = id, items = items, ownerId = existing.ownerId)
+                val catUuid = options.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+                changeRecorder?.recordNoteUpsert(noteEntity, catUuid)
+                checklistWriter.syncHierarchy(noteId = id, items = items, ownerId = existing.ownerId, noteUuid = noteEntity.uuid)
                 true
             }
         }
@@ -287,13 +316,9 @@ internal class NoteContentWriter(
                 applyUpdates()
             }
         if (didUpdate) {
-            if (didUpdate) {
-                val noteEntity = noteDao.get(id)?.note
-                reminderCoordinator.rescheduleReminder(id, noteEntity?.reminderAt)
-            }
-        }
-        if (didUpdate) reminderCoordinator.refreshNotificationIfActive(id)
-        if (didUpdate) {
+            val noteEntity = noteDao.get(id)?.note
+            reminderCoordinator.rescheduleReminder(id, noteEntity?.reminderAt)
+            reminderCoordinator.refreshNotificationIfActive(id)
             if (oldPictureUri != null && oldPictureUri != options.pictureUri) {
                 mediaMaintenance.cleanupUnreferencedMedia(listOf(oldPictureUri))
             }

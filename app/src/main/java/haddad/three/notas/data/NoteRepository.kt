@@ -77,11 +77,17 @@ class NoteRepository(
     private val tombstoneRecorder: haddad.three.notas.data.sync.SyncTombstoneRecorder? = null,
     private val authRepository: haddad.three.notas.data.auth.AuthRepository? = null,
     private val ownerIdProvider: () -> String? = { authRepository?.currentUser?.uid },
+    private val changeRecorder: haddad.three.notas.data.sync.change.LocalChangeRecorder? = null,
 ) {
     // NoteRefreshObserver owns widget and summary refreshes after committed database changes.
     // Per-note alarm scheduling/cancellation stays synchronous here to preserve ordering.
 
-    private val checklistWriter = NoteChecklistWriter(itemDao)
+    private val checklistWriter =
+        NoteChecklistWriter(
+            itemDao = itemDao,
+            changeRecorder = changeRecorder,
+            noteUuidResolver = { id -> noteDao.get(id)?.note?.uuid },
+        )
 
     private val mediaMaintenance =
         NoteMediaMaintenance(
@@ -89,6 +95,8 @@ class NoteRepository(
             attachmentDao = attachmentDao,
             appMediaStorage = appMediaStorage,
             clock = clock,
+            database = database,
+            changeRecorder = changeRecorder,
         )
 
     private val reminderCoordinator =
@@ -97,6 +105,7 @@ class NoteRepository(
             scheduler = scheduler,
             clock = clock,
             database = database,
+            changeRecorder = changeRecorder,
         )
 
     private val contentWriter =
@@ -111,6 +120,7 @@ class NoteRepository(
             clock = clock,
             database = database,
             ownerIdProvider = ownerIdProvider,
+            changeRecorder = changeRecorder,
         )
 
     private val bulkOperations =
@@ -122,6 +132,7 @@ class NoteRepository(
             reminderCoordinator = reminderCoordinator,
             mediaMaintenance = mediaMaintenance,
             tombstoneRecorder = tombstoneRecorder,
+            changeRecorder = changeRecorder,
         )
 
     fun observeActive(): Flow<List<NoteWithItems>> = noteDao.observeActive().flowOn(ioDispatcher)
@@ -228,11 +239,25 @@ class NoteRepository(
     ) {
         val row = noteDao.get(id) ?: return
         if (row.note.pinned == pinned) return
-        noteDao.update(row.note.copy(pinnedAt = if (pinned) clock() else null))
+        val updated = row.note.copy(pinnedAt = if (pinned) clock() else null)
+        val block: suspend () -> Unit = {
+            noteDao.update(updated)
+            val catUuid = updated.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+            changeRecorder?.recordNoteUpsert(updated, catUuid)
+        }
+        if (database != null) database.withTransaction { block() } else block()
     }
 
     suspend fun moveToTrash(id: Long) {
-        noteDao.setTrashed(id, true, clock())
+        val now = clock()
+        val block: suspend () -> Unit = {
+            noteDao.setTrashed(id, true, now)
+            noteDao.get(id)?.note?.let { trashedNote ->
+                val catUuid = trashedNote.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+                changeRecorder?.recordNoteUpsert(trashedNote, catUuid)
+            }
+        }
+        if (database != null) database.withTransaction { block() } else block()
         scheduler?.cancel(id)
         scheduler?.cancelNotification(id)
     }
@@ -311,7 +336,15 @@ class NoteRepository(
     }
 
     suspend fun restoreFromTrash(id: Long) {
-        noteDao.setTrashed(id, false, clock())
+        val now = clock()
+        val block: suspend () -> Unit = {
+            noteDao.setTrashed(id, false, now)
+            noteDao.get(id)?.note?.let { restoredNote ->
+                val catUuid = restoredNote.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+                changeRecorder?.recordNoteUpsert(restoredNote, catUuid)
+            }
+        }
+        if (database != null) database.withTransaction { block() } else block()
         val noteWithItems = noteDao.get(id)
         if (noteWithItems != null) {
             val restoredNote = noteWithItems.note
@@ -326,13 +359,29 @@ class NoteRepository(
      * archived notes are considered "put away" so their alarms stop firing until unarchived.
      */
     suspend fun archiveNote(id: Long) {
-        noteDao.setArchived(id, true, clock())
+        val now = clock()
+        val block: suspend () -> Unit = {
+            noteDao.setArchived(id, true, now)
+            noteDao.get(id)?.note?.let { archivedNote ->
+                val catUuid = archivedNote.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+                changeRecorder?.recordNoteUpsert(archivedNote, catUuid)
+            }
+        }
+        if (database != null) database.withTransaction { block() } else block()
         scheduler?.cancel(id)
         scheduler?.cancelNotification(id)
     }
 
     suspend fun unarchiveNote(id: Long) {
-        noteDao.setArchived(id, false, clock())
+        val now = clock()
+        val block: suspend () -> Unit = {
+            noteDao.setArchived(id, false, now)
+            noteDao.get(id)?.note?.let { unarchivedNote ->
+                val catUuid = unarchivedNote.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
+                changeRecorder?.recordNoteUpsert(unarchivedNote, catUuid)
+            }
+        }
+        if (database != null) database.withTransaction { block() } else block()
         val noteWithItems = noteDao.get(id)
         if (noteWithItems != null) {
             val unarchivedNote = noteWithItems.note
@@ -344,24 +393,46 @@ class NoteRepository(
 
     suspend fun deleteForever(id: Long) {
         val deletedNote = noteDao.get(id)
-        if (deletedNote != null) {
-            tombstoneRecorder?.recordNoteDeleted(deletedNote)
+        val block: suspend () -> Unit = {
+            if (deletedNote != null) {
+                tombstoneRecorder?.recordNoteDeleted(deletedNote)
+                changeRecorder?.recordNoteDelete(deletedNote.note.uuid)
+                deletedNote.items.forEach { item ->
+                    changeRecorder?.recordChecklistItemDelete(item.uuid, deletedNote.note.uuid)
+                }
+                deletedNote.attachments.forEach { att ->
+                    changeRecorder?.recordAttachmentDelete(att.uuid, deletedNote.note.uuid)
+                }
+            }
+            noteDao.deleteById(id)
         }
+        if (database != null) database.withTransaction { block() } else block()
         scheduler?.cancel(id)
         scheduler?.cancelNotification(id)
-        noteDao.deleteById(id)
         mediaMaintenance.cleanupUnreferencedMedia(deletedNote?.mediaUris().orEmpty())
     }
 
     suspend fun emptyTrash() {
         val deletedNotes = noteDao.trashedNoteIds().mapNotNull { trashedId -> noteDao.get(trashedId) }
-        tombstoneRecorder?.recordNotesDeleted(deletedNotes)
+        val block: suspend () -> Unit = {
+            tombstoneRecorder?.recordNotesDeleted(deletedNotes)
+            deletedNotes.forEach { deletedNote ->
+                changeRecorder?.recordNoteDelete(deletedNote.note.uuid)
+                deletedNote.items.forEach { item ->
+                    changeRecorder?.recordChecklistItemDelete(item.uuid, deletedNote.note.uuid)
+                }
+                deletedNote.attachments.forEach { att ->
+                    changeRecorder?.recordAttachmentDelete(att.uuid, deletedNote.note.uuid)
+                }
+            }
+            noteDao.emptyTrash()
+        }
+        if (database != null) database.withTransaction { block() } else block()
         deletedNotes.forEach { deletedNote ->
             val trashedId = deletedNote.note.id
             scheduler?.cancel(trashedId)
             scheduler?.cancelNotification(trashedId)
         }
-        noteDao.emptyTrash()
         mediaMaintenance.cleanupUnreferencedMedia(deletedNotes.flatMap { deletedNote -> deletedNote.mediaUris() })
     }
 
@@ -434,18 +505,20 @@ class NoteRepository(
         val oldIds = noteDao.allNoteIds().toSet()
         val replacedNotes = oldIds.mapNotNull { noteId -> noteDao.get(noteId) }
         val count =
-            if (database != null) {
-                database.withTransaction {
+            haddad.three.notas.data.sync.change.SyncContext.withRemoteSuppression {
+                if (database != null) {
+                    database.withTransaction {
+                        noteDao.deleteAllNotes()
+                        importBlock()
+                    }
+                } else {
+                    oldIds.forEach { noteId ->
+                        scheduler?.cancel(noteId)
+                        scheduler?.cancelNotification(noteId)
+                    }
                     noteDao.deleteAllNotes()
                     importBlock()
                 }
-            } else {
-                oldIds.forEach { noteId ->
-                    scheduler?.cancel(noteId)
-                    scheduler?.cancelNotification(noteId)
-                }
-                noteDao.deleteAllNotes()
-                importBlock()
             }
         mediaMaintenance.cleanupUnreferencedMedia(replacedNotes.flatMap { replacedNote -> replacedNote.mediaUris() })
         resyncRemindersAfterMassReplace(oldIds)
@@ -454,12 +527,14 @@ class NoteRepository(
 
     @Suppress("ktlint:standard:function-expression-body")
     internal suspend fun <Result> runImportTransaction(importBlock: suspend () -> Result): Result {
-        return if (database != null) {
-            database.withTransaction {
+        return haddad.three.notas.data.sync.change.SyncContext.withRemoteSuppression {
+            if (database != null) {
+                database.withTransaction {
+                    importBlock()
+                }
+            } else {
                 importBlock()
             }
-        } else {
-            importBlock()
         }
     }
 
@@ -661,7 +736,15 @@ class NoteRepository(
     suspend fun criticalRepeatNotes(now: Long = clock()): List<NoteWithItems> = reminderCoordinator.criticalRepeatNotes(now)
 
     suspend fun toggleItemChecked(item: ChecklistItemEntity) {
-        itemDao.update(item.copy(checked = !item.checked))
+        val updated = item.copy(checked = !item.checked)
+        val block: suspend () -> Unit = {
+            itemDao.update(updated)
+            val noteUuid = noteDao.get(item.noteId)?.note?.uuid ?: ""
+            if (noteUuid.isNotBlank()) {
+                changeRecorder?.recordChecklistItemUpsert(updated, noteUuid)
+            }
+        }
+        if (database != null) database.withTransaction { block() } else block()
     }
 
     /**

@@ -178,6 +178,7 @@ extensions.configure<ApplicationExtension>("android") {
             buildConfigField("Boolean", "CHECK_UPDATES", "true")
             buildConfigField("Boolean", "USE_PLAY_IN_APP_UPDATES", "false")
             buildConfigField("Boolean", "GOOGLE_TASKS_CONNECT_ENABLED", "true")
+            buildConfigField("Boolean", "GOOGLE_DRIVE_SYNC_ENABLED", "true")
         }
         create("offline") {
             dimension = "distribution"
@@ -185,12 +186,14 @@ extensions.configure<ApplicationExtension>("android") {
             buildConfigField("Boolean", "CHECK_UPDATES", "false")
             buildConfigField("Boolean", "USE_PLAY_IN_APP_UPDATES", "false")
             buildConfigField("Boolean", "GOOGLE_TASKS_CONNECT_ENABLED", "false")
+            buildConfigField("Boolean", "GOOGLE_DRIVE_SYNC_ENABLED", "false")
         }
         create("playstore") {
             dimension = "distribution"
             buildConfigField("Boolean", "CHECK_UPDATES", "true")
             buildConfigField("Boolean", "USE_PLAY_IN_APP_UPDATES", "true")
             buildConfigField("Boolean", "GOOGLE_TASKS_CONNECT_ENABLED", "true")
+            buildConfigField("Boolean", "GOOGLE_DRIVE_SYNC_ENABLED", "true")
         }
     }
 

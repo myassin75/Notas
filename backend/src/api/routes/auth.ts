@@ -18,3 +18,4 @@ export async function handleSendVerificationEmail(req: AuthenticatedRequest, res
 
   return res.status(200).json(response);
 }
+

@@ -37,11 +37,13 @@ export async function authenticate(
     });
 
     if (userRecord) {
+      const shouldMarkVerified = authenticatedUser.emailVerified && userRecord.emailVerificationStatus !== 'VERIFIED';
       userRecord = await prisma.user.update({
         where: { id: authenticatedUser.uid },
         data: {
           email: authenticatedUser.email,
           emailVerified: authenticatedUser.emailVerified,
+          emailVerificationStatus: shouldMarkVerified ? 'VERIFIED' : userRecord.emailVerificationStatus,
           displayName: authenticatedUser.name ?? undefined,
           photoUrl: authenticatedUser.picture ?? undefined,
         },
@@ -127,6 +129,7 @@ export async function authenticate(
             id: authenticatedUser.uid,
             email: authenticatedUser.email,
             emailVerified: authenticatedUser.emailVerified,
+            emailVerificationStatus: authenticatedUser.emailVerified ? 'VERIFIED' : 'PENDING_VERIFICATION',
             displayName: authenticatedUser.name,
             photoUrl: authenticatedUser.picture,
           },
