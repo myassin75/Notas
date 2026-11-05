@@ -20,7 +20,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito.mock
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -56,8 +55,8 @@ class CrashSafeJournalSequenceAllocationTest {
     @Before
     fun setUp() {
         fakeFilesDir = tempFolder.newFolder("app_files")
-        val baseContext = mock(Context::class.java)
-        fakeContext = object : ContextWrapper(baseContext) {
+        fakeContext = object : ContextWrapper(null) {
+            override fun getApplicationContext(): Context = this
             override fun getFilesDir(): File = fakeFilesDir
         }
 
@@ -93,13 +92,14 @@ class CrashSafeJournalSequenceAllocationTest {
         )
     }
 
-    private fun seedChange(id: String, payload: String = "payload_$id") {
+    private fun seedChange(id: String, payload: String = "payload_$id") = runBlocking {
         pendingChangeDao.insert(
             PendingChangeEntity(
                 changeId = id,
                 entityType = "NOTE",
                 entityId = "entity_$id",
                 operationType = "UPSERT",
+                deviceId = deviceId,
                 schemaVersion = 1,
                 createdAt = System.currentTimeMillis(),
                 payload = payload,
@@ -144,7 +144,8 @@ class CrashSafeJournalSequenceAllocationTest {
         seedChange("change_fail_disk")
 
         // Point filesDir to a non-writable / impossible path to simulate disk failure
-        val unwriteableContext = object : ContextWrapper(fakeContext) {
+        val unwriteableContext = object : ContextWrapper(null) {
+            override fun getApplicationContext(): Context = this
             override fun getFilesDir(): File {
                 val nonDir = File(fakeFilesDir, "not_a_dir.txt")
                 nonDir.createNewFile()
@@ -409,27 +410,71 @@ class CrashSafeJournalSequenceAllocationTest {
         override suspend fun getPendingChanges(limit: Int): List<PendingChangeEntity> =
             changes.values.filter { it.status == "PENDING" }.take(limit)
 
-        override suspend fun markChangesJournaled(changeIds: List<String>, journalId: String) {
+        override suspend fun getAllPendingChanges(): List<PendingChangeEntity> =
+            changes.values.filter { it.status == "PENDING" }
+
+        override fun observePendingChanges(): Flow<List<PendingChangeEntity>> = emptyFlow()
+
+        override suspend fun countPendingChanges(): Int =
+            changes.values.count { it.status == "PENDING" }
+
+        override suspend fun getChangesForEntity(entityType: String, entityId: String): List<PendingChangeEntity> =
+            changes.values.filter { it.entityType == entityType && it.entityId == entityId }
+
+        override suspend fun getChangesForJournal(journalId: String): List<PendingChangeEntity> =
+            changes.values.filter { it.journalId == journalId }
+
+        override suspend fun markChangesJournaled(changeIds: Collection<String>, journalId: String): Int {
+            var count = 0
             for (id in changeIds) {
                 changes[id]?.let {
                     changes[id] = it.copy(status = "JOURNALED", journalId = journalId)
+                    count++
                 }
             }
+            return count
         }
 
-        override suspend fun resetJournaledChangesToPending(journalId: String) {
+        override suspend fun markChangesSynced(journalId: String): Int {
+            var count = 0
+            changes.values.filter { it.journalId == journalId }.forEach {
+                changes[it.changeId] = it.copy(status = "SYNCED")
+                count++
+            }
+            return count
+        }
+
+        override suspend fun resetJournaledChangesToPending(journalId: String): Int {
+            var count = 0
             for ((id, change) in changes) {
                 if (change.journalId == journalId) {
                     changes[id] = change.copy(status = "PENDING", journalId = null)
+                    count++
                 }
             }
+            return count
         }
 
-        override suspend fun deleteChanges(changeIds: List<String>): Int =
-            changeIds.count { changes.remove(it) != null }
+        override suspend fun deleteById(changeId: String): Int =
+            if (changes.remove(changeId) != null) 1 else 0
 
-        override suspend fun deleteChangesForJournal(journalId: String): Int =
-            changes.values.filter { it.journalId == journalId }.count { changes.remove(it.changeId) != null }
+        override suspend fun deleteByIds(changeIds: Collection<String>): Int {
+            var count = 0
+            changeIds.forEach { if (changes.remove(it) != null) count++ }
+            return count
+        }
+
+        override suspend fun deleteChangesForEntity(entityType: String, entityId: String): Int {
+            val toRemove = changes.values.filter { it.entityType == entityType && it.entityId == entityId }
+            toRemove.forEach { changes.remove(it.changeId) }
+            return toRemove.size
+        }
+
+        override suspend fun deleteSynced(): Int {
+            val toRemove = changes.values.filter { it.status == "SYNCED" }
+            toRemove.forEach { changes.remove(it.changeId) }
+            return toRemove.size
+        }
 
         override suspend fun clearAll() {
             changes.clear()
@@ -529,4 +574,3 @@ class CrashSafeJournalSequenceAllocationTest {
         }
     }
 }
-
