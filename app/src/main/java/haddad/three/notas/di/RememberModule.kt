@@ -40,6 +40,10 @@ import haddad.three.notas.data.sync.conflict.SyncConflictMetadataDao
 import haddad.three.notas.data.sync.conflict.SyncConflictRecordDao
 import haddad.three.notas.data.sync.conflict.SyncHlcStateDao
 import haddad.three.notas.data.sync.conflict.SyncTombstoneDao
+import haddad.three.notas.data.sync.snapshot.AttachmentPromotionRecoveryManager
+import haddad.three.notas.data.sync.snapshot.SyncAttachmentPromotionDao
+import haddad.three.notas.data.sync.snapshot.SyncSnapshotDao
+import haddad.three.notas.data.sync.snapshot.SyncSnapshotManager
 import haddad.three.notas.data.sync.hlc.HlcClock
 import haddad.three.notas.data.sync.hlc.HlcStorage
 import haddad.three.notas.data.sync.hlc.RoomHlcStorage
@@ -331,6 +335,16 @@ object RememberModule {
 
     @Provides
     @Singleton
+    fun provideSyncSnapshotDao(database: RememberDatabase): SyncSnapshotDao =
+        database.syncSnapshotDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncAttachmentPromotionDao(database: RememberDatabase): SyncAttachmentPromotionDao =
+        database.syncAttachmentPromotionDao()
+
+    @Provides
+    @Singleton
     fun provideHlcStorage(hlcStateDao: SyncHlcStateDao): HlcStorage =
         RoomHlcStorage(hlcStateDao)
 
@@ -428,6 +442,60 @@ object RememberModule {
             pendingChangeDao = pendingChangeDao,
             mekManager = mekManager,
         )
+
+    @Provides
+    @Singleton
+    fun provideAttachmentPromotionRecoveryManager(
+        @ApplicationContext context: Context,
+        promotionDao: SyncAttachmentPromotionDao,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): AttachmentPromotionRecoveryManager = AttachmentPromotionRecoveryManager(
+        context = context,
+        promotionDao = promotionDao,
+        ioDispatcher = ioDispatcher,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSyncSnapshotManager(
+        @ApplicationContext context: Context,
+        database: RememberDatabase,
+        snapshotDao: SyncSnapshotDao,
+        promotionDao: SyncAttachmentPromotionDao,
+        promotionRecoveryManager: AttachmentPromotionRecoveryManager,
+        pendingChangeDao: PendingChangeDao,
+        journalDao: SyncJournalDao,
+        watermarkDao: haddad.three.notas.data.sync.transport.SyncWatermarkDao,
+        appliedOperationDao: SyncAppliedOperationDao,
+        conflictMetadataDao: SyncConflictMetadataDao,
+        tombstoneDao: SyncTombstoneDao,
+        conflictRecordDao: SyncConflictRecordDao,
+        hlcClock: HlcClock,
+        mekManager: MekManager,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): SyncSnapshotManager = SyncSnapshotManager(
+        context = context,
+        database = database,
+        snapshotDao = snapshotDao,
+        promotionDao = promotionDao,
+        promotionRecoveryManager = promotionRecoveryManager,
+        pendingChangeDao = pendingChangeDao,
+        journalDao = journalDao,
+        watermarkDao = watermarkDao,
+        appliedOperationDao = appliedOperationDao,
+        conflictMetadataDao = conflictMetadataDao,
+        tombstoneDao = tombstoneDao,
+        conflictRecordDao = conflictRecordDao,
+        noteDao = database.noteDao(),
+        itemDao = database.checklistItemDao(),
+        shoulderDao = database.shoulderDao(),
+        attachmentDao = database.attachmentDao(),
+        hlcClock = hlcClock,
+        mekManager = mekManager,
+        deviceIdProvider = { syncStateStore.getOrCreateDeviceId() },
+        ioDispatcher = ioDispatcher,
+    )
 
     @Provides
     @Singleton

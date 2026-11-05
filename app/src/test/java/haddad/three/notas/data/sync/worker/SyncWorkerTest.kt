@@ -224,6 +224,7 @@ class SyncWorkerTest {
             ingestionEngine = ingestionEngine,
             journalWriter = journalWriter,
             uploader = uploader,
+            journalDao = fakeJournalDao,
             pendingChangeDao = fakePendingChangeDao,
             ioDispatcher = testDispatcher,
         )
@@ -293,6 +294,7 @@ class SyncWorkerTest {
             ingestionEngine = ingestionEngine,
             journalWriter = journalWriter,
             uploader = uploader,
+            journalDao = fakeJournalDao,
             pendingChangeDao = fakePendingChangeDao,
             ioDispatcher = testDispatcher,
         )
@@ -811,17 +813,18 @@ class SyncWorkerTest {
             ),
         )
 
-        // Simulate 2nd upload rate limited
-        fakeDriveApiClient.uploadRateLimitAttempts = 1
+        // Simulate 2nd upload failure (J1 succeeds, J2 fails with 500)
+        fakeDriveApiClient.failOnUploadIndex = 2
 
         val res1 = coordinator.executeSync(runAttempt = 0)
-        assertTrue(res1 is SyncExecutionResult.Retry)
+        assertTrue("Expected Retry but got $res1", res1 is SyncExecutionResult.Retry)
 
         // J1 was uploaded, J2 failed
         assertEquals(JournalStatus.UPLOADED.name, fakeJournalDao.getById(j1Id)?.status)
         assertEquals(JournalStatus.FAILED.name, fakeJournalDao.getById(j2Id)?.status)
 
-        // Reset J2 to READY_TO_UPLOAD for retry
+        // Reset J2 to READY_TO_UPLOAD and clear failure trigger for retry
+        fakeDriveApiClient.failOnUploadIndex = null
         fakeJournalDao.update(fakeJournalDao.getById(j2Id)!!.copy(status = JournalStatus.READY_TO_UPLOAD.name))
 
         // Run next sync
@@ -1338,6 +1341,8 @@ class SyncWorkerTest {
         var retryAfterSecondsHeader: Long? = null
         var simulateUploadUnauthorized = false
         var uploadRateLimitAttempts = 0
+        var uploadCount = 0
+        var failOnUploadIndex: Int? = null
         val files = mutableMapOf<String, DriveEntry>()
         private var idCounter = 1000
         private var pendingUploadId: String? = null
@@ -1360,6 +1365,11 @@ class SyncWorkerTest {
                             if (simulateUnauthorized) return HTTP_UNAUTHORIZED
                             if (urlString.contains("uploadType=multipart")) {
                                 if (simulateUploadUnauthorized) return HTTP_UNAUTHORIZED
+                                if (requestMethod == "POST") {
+                                    if (failOnUploadIndex != null && uploadCount >= failOnUploadIndex!!) {
+                                        return 500
+                                    }
+                                }
                                 if (uploadRateLimitAttempts > 0) {
                                     uploadRateLimitAttempts--
                                     return 429
@@ -1413,10 +1423,16 @@ class SyncWorkerTest {
                         }
 
                         override fun getOutputStream(): OutputStream {
+                            if (urlString.contains("uploadType=multipart") && requestMethod == "POST") {
+                                uploadCount++
+                            }
                             return object : ByteArrayOutputStream() {
                                 override fun close() {
                                     super.close()
                                     if (urlString.contains("uploadType=multipart")) {
+                                        if (failOnUploadIndex != null && uploadCount >= failOnUploadIndex!!) {
+                                            return
+                                        }
                                         val body = String(toByteArray(), Charsets.UTF_8)
                                         val journalId = body.substringAfter("\"journalId\":\"", "").substringBefore("\"")
                                         val deviceId = body.substringAfter("\"deviceId\":\"", "").substringBefore("\"")

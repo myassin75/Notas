@@ -44,8 +44,14 @@ interface SyncAppliedOperationDao {
     @Query("SELECT COUNT(*) FROM sync_applied_operations WHERE changeId = :changeId")
     suspend fun isApplied(changeId: String): Boolean
 
+    @Query("SELECT * FROM sync_applied_operations")
+    suspend fun getAllOperations(): List<SyncAppliedOperationEntity> = emptyList()
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(operations: List<SyncAppliedOperationEntity>) {}
+
     @Query("DELETE FROM sync_applied_operations")
-    suspend fun clearAll()
+    suspend fun clearAll() {}
 }
 
 /**
@@ -80,8 +86,14 @@ interface SyncConflictMetadataDao {
     @Query("DELETE FROM sync_conflict_metadata WHERE entityType = :entityType AND entityId = :entityId")
     suspend fun deleteForEntity(entityType: String, entityId: String): Int
 
+    @Query("SELECT * FROM sync_conflict_metadata")
+    suspend fun getAllMetadata(): List<SyncConflictMetadataEntity> = emptyList()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(metadata: List<SyncConflictMetadataEntity>) {}
+
     @Query("DELETE FROM sync_conflict_metadata")
-    suspend fun clearAll()
+    suspend fun clearAll() {}
 }
 
 /**
@@ -116,8 +128,11 @@ interface SyncTombstoneDao {
     @Query("SELECT * FROM sync_tombstones ORDER BY deletedAt DESC")
     suspend fun getAllTombstones(): List<SyncTombstoneEntity>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(tombstones: List<SyncTombstoneEntity>) {}
+
     @Query("DELETE FROM sync_tombstones")
-    suspend fun clearAll()
+    suspend fun clearAll() {}
 }
 
 /**
@@ -165,8 +180,14 @@ interface SyncConflictRecordDao {
     @Query("UPDATE sync_conflict_records SET resolved = 1 WHERE id = :id")
     suspend fun markResolved(id: Long): Int
 
+    @Query("SELECT * FROM sync_conflict_records")
+    suspend fun getAllConflictRecords(): List<SyncConflictRecordEntity> = emptyList()
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(records: List<SyncConflictRecordEntity>) {}
+
     @Query("DELETE FROM sync_conflict_records")
-    suspend fun clearAll()
+    suspend fun clearAll() {}
 }
 
 /**

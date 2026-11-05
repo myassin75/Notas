@@ -17,6 +17,8 @@ import haddad.three.notas.data.drive.auth.DriveAuthPreferences
 import haddad.three.notas.data.drive.auth.GoogleDriveAuthDelegate
 import haddad.three.notas.data.sync.change.PendingChangeDao
 import haddad.three.notas.data.sync.journal.SyncJournalDao
+import haddad.three.notas.data.sync.snapshot.SnapshotTransportService
+import haddad.three.notas.data.sync.snapshot.SyncSnapshotDao
 import haddad.three.notas.data.sync.transport.GoogleDriveSyncTransport
 import haddad.three.notas.data.sync.transport.JournalDiscoveryService
 import haddad.three.notas.data.sync.transport.JournalDownloader
@@ -126,6 +128,22 @@ object GoogleDriveModule {
         pendingChangeDao = pendingChangeDao,
         transport = transport,
         database = database,
+        ioDispatcher = ioDispatcher,
+    )
+
+    @Provides
+    @Singleton
+    fun provideSnapshotTransportService(
+        @ApplicationContext context: Context,
+        transport: GoogleDriveSyncTransport,
+        driveApiClient: GoogleDriveApiClient,
+        database: RememberDatabase,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): SnapshotTransportService = SnapshotTransportService(
+        context = context,
+        transport = transport,
+        driveApiClient = driveApiClient,
+        snapshotDao = database.syncSnapshotDao(),
         ioDispatcher = ioDispatcher,
     )
 }

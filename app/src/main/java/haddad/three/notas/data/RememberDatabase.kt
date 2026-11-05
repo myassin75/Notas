@@ -28,6 +28,10 @@ import haddad.three.notas.data.sync.journal.SyncSequenceDao
 import haddad.three.notas.data.sync.journal.SyncSequenceEntity
 import haddad.three.notas.data.sync.transport.SyncInboxDao
 import haddad.three.notas.data.sync.transport.SyncInboxEntity
+import haddad.three.notas.data.sync.snapshot.SyncAttachmentPromotionDao
+import haddad.three.notas.data.sync.snapshot.SyncAttachmentPromotionEntity
+import haddad.three.notas.data.sync.snapshot.SyncSnapshotDao
+import haddad.three.notas.data.sync.snapshot.SyncSnapshotEntity
 import haddad.three.notas.data.sync.transport.SyncWatermarkDao
 import haddad.three.notas.data.sync.transport.SyncWatermarkEntity
 import kotlinx.serialization.decodeFromString
@@ -109,8 +113,10 @@ class Converters {
         SyncTombstoneEntity::class,
         SyncConflictRecordEntity::class,
         SyncHlcStateEntity::class,
+        SyncSnapshotEntity::class,
+        SyncAttachmentPromotionEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -143,6 +149,10 @@ abstract class RememberDatabase : RoomDatabase() {
 
     abstract fun syncHlcStateDao(): SyncHlcStateDao
 
+    abstract fun syncSnapshotDao(): SyncSnapshotDao
+
+    abstract fun syncAttachmentPromotionDao(): SyncAttachmentPromotionDao
+
     companion object {
         fun build(context: Context): RememberDatabase =
             Room
@@ -159,6 +169,7 @@ abstract class RememberDatabase : RoomDatabase() {
                     MIGRATION_9_10,
                     MIGRATION_10_11,
                     MIGRATION_11_12,
+                    MIGRATION_12_13,
                 )
                 .fallbackToDestructiveMigration(false)
                 .build()
@@ -690,6 +701,46 @@ abstract class RememberDatabase : RoomDatabase() {
                             `logicalCounter` INTEGER NOT NULL,
                             `updatedAt` INTEGER NOT NULL,
                             PRIMARY KEY(`nodeId`)
+                        )
+                        """.trimIndent(),
+                    )
+                }
+            }
+
+        internal val MIGRATION_12_13 =
+            object : Migration(12, 13) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    // 1. Create sync_snapshots
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_snapshots` (
+                            `snapshotId` TEXT NOT NULL,
+                            `creatorDeviceId` TEXT NOT NULL,
+                            `createdAt` INTEGER NOT NULL,
+                            `formatVersion` INTEGER NOT NULL,
+                            `storagePath` TEXT NOT NULL,
+                            `contentSha256` TEXT NOT NULL,
+                            `driveFileId` TEXT,
+                            `coverageVectorJson` TEXT NOT NULL,
+                            `snapshotHlc` TEXT NOT NULL,
+                            `status` TEXT NOT NULL,
+                            `updatedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`snapshotId`)
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_snapshots_status` ON `sync_snapshots` (`status`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_snapshots_createdAt` ON `sync_snapshots` (`createdAt`)")
+
+                    // 2. Create sync_attachment_promotions
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_attachment_promotions` (
+                            `snapshotId` TEXT NOT NULL,
+                            `status` TEXT NOT NULL,
+                            `createdAt` INTEGER NOT NULL,
+                            `updatedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`snapshotId`)
                         )
                         """.trimIndent(),
                     )
