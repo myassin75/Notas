@@ -11,23 +11,35 @@ import javax.crypto.spec.SecretKeySpec
 
 /**
  * Interface managing hardware-backed Key Encryption Keys (KEKs) in Android KeyStore.
+ * Supports account-partitioned KEK aliases with transparent legacy alias fallback.
  */
 interface KeyStoreManager {
-    fun getOrCreateKek(version: Int = CryptoConstants.DEFAULT_KEY_ID): SecretKey
+    fun getOrCreateKek(
+        version: Int = CryptoConstants.DEFAULT_KEY_ID,
+        accountId: String = CryptoStorage.GUEST_ACCOUNT_ID,
+    ): SecretKey
 
-    fun hasKek(version: Int = CryptoConstants.DEFAULT_KEY_ID): Boolean
+    fun hasKek(
+        version: Int = CryptoConstants.DEFAULT_KEY_ID,
+        accountId: String = CryptoStorage.GUEST_ACCOUNT_ID,
+    ): Boolean
 
     fun wrapKey(
         keyToWrap: SecretKey,
         kekVersion: Int = CryptoConstants.DEFAULT_KEY_ID,
+        accountId: String = CryptoStorage.GUEST_ACCOUNT_ID,
     ): ByteArray
 
     fun unwrapKey(
         wrappedKeyBytes: ByteArray,
         kekVersion: Int = CryptoConstants.DEFAULT_KEY_ID,
+        accountId: String = CryptoStorage.GUEST_ACCOUNT_ID,
     ): SecretKey
 
-    fun deleteKek(version: Int = CryptoConstants.DEFAULT_KEY_ID)
+    fun deleteKek(
+        version: Int = CryptoConstants.DEFAULT_KEY_ID,
+        accountId: String = CryptoStorage.GUEST_ACCOUNT_ID,
+    )
 }
 
 /**
@@ -39,8 +51,11 @@ class AndroidKeyStoreManager : KeyStoreManager {
             load(null)
         }
 
-    override fun getOrCreateKek(version: Int): SecretKey {
-        val alias = getAlias(version)
+    override fun getOrCreateKek(
+        version: Int,
+        accountId: String,
+    ): SecretKey {
+        val alias = getAlias(version, accountId)
         if (keyStore.containsAlias(alias)) {
             val entry = keyStore.getEntry(alias, null) as? KeyStore.SecretKeyEntry
             if (entry != null) {
@@ -68,13 +83,17 @@ class AndroidKeyStoreManager : KeyStoreManager {
         return keyGenerator.generateKey()
     }
 
-    override fun hasKek(version: Int): Boolean = keyStore.containsAlias(getAlias(version))
+    override fun hasKek(
+        version: Int,
+        accountId: String,
+    ): Boolean = keyStore.containsAlias(getAlias(version, accountId))
 
     override fun wrapKey(
         keyToWrap: SecretKey,
         kekVersion: Int,
+        accountId: String,
     ): ByteArray {
-        val kek = getOrCreateKek(kekVersion)
+        val kek = getOrCreateKek(kekVersion, accountId)
         return EncryptedContainer.encrypt(
             plaintext = keyToWrap.encoded,
             key = kek,
@@ -86,8 +105,17 @@ class AndroidKeyStoreManager : KeyStoreManager {
     override fun unwrapKey(
         wrappedKeyBytes: ByteArray,
         kekVersion: Int,
+        accountId: String,
     ): SecretKey {
-        val kek = getOrCreateKek(kekVersion)
+        // Try account-scoped KEK alias first. If missing, fall back to legacy un-partitioned KEK alias.
+        val kek = if (hasKek(kekVersion, accountId)) {
+            getOrCreateKek(kekVersion, accountId)
+        } else if (hasKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)) {
+            getOrCreateKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)
+        } else {
+            getOrCreateKek(kekVersion, accountId)
+        }
+
         val rawKeyBytes =
             EncryptedContainer.decrypt(
                 containerBytes = wrappedKeyBytes,
@@ -97,14 +125,26 @@ class AndroidKeyStoreManager : KeyStoreManager {
         return SecretKeySpec(rawKeyBytes, "AES")
     }
 
-    override fun deleteKek(version: Int) {
-        val alias = getAlias(version)
+    override fun deleteKek(
+        version: Int,
+        accountId: String,
+    ) {
+        val alias = getAlias(version, accountId)
         if (keyStore.containsAlias(alias)) {
             keyStore.deleteEntry(alias)
         }
     }
 
-    private fun getAlias(version: Int): String = "${CryptoConstants.KEYSTORE_ALIAS_PREFIX}$version"
+    private fun getAlias(
+        version: Int,
+        accountId: String,
+    ): String =
+        if (accountId == CryptoStorage.GUEST_ACCOUNT_ID) {
+            "${CryptoConstants.KEYSTORE_ALIAS_PREFIX}$version"
+        } else {
+            val safe = accountId.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            "${CryptoConstants.KEYSTORE_ALIAS_PREFIX}${safe}_v$version"
+        }
 
     companion object {
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
@@ -118,8 +158,11 @@ class SoftwareKeyStoreManager : KeyStoreManager {
     private val keyStoreMap = ConcurrentHashMap<String, SecretKey>()
     private val secureRandom = SecureRandom()
 
-    override fun getOrCreateKek(version: Int): SecretKey {
-        val alias = getAlias(version)
+    override fun getOrCreateKek(
+        version: Int,
+        accountId: String,
+    ): SecretKey {
+        val alias = getAlias(version, accountId)
         return keyStoreMap.computeIfAbsent(alias) {
             val keyGen = KeyGenerator.getInstance("AES")
             keyGen.init(256, secureRandom)
@@ -127,13 +170,17 @@ class SoftwareKeyStoreManager : KeyStoreManager {
         }
     }
 
-    override fun hasKek(version: Int): Boolean = keyStoreMap.containsKey(getAlias(version))
+    override fun hasKek(
+        version: Int,
+        accountId: String,
+    ): Boolean = keyStoreMap.containsKey(getAlias(version, accountId))
 
     override fun wrapKey(
         keyToWrap: SecretKey,
         kekVersion: Int,
+        accountId: String,
     ): ByteArray {
-        val kek = getOrCreateKek(kekVersion)
+        val kek = getOrCreateKek(kekVersion, accountId)
         return EncryptedContainer.encrypt(
             plaintext = keyToWrap.encoded,
             key = kek,
@@ -145,8 +192,16 @@ class SoftwareKeyStoreManager : KeyStoreManager {
     override fun unwrapKey(
         wrappedKeyBytes: ByteArray,
         kekVersion: Int,
+        accountId: String,
     ): SecretKey {
-        val kek = getOrCreateKek(kekVersion)
+        val kek = if (hasKek(kekVersion, accountId)) {
+            getOrCreateKek(kekVersion, accountId)
+        } else if (hasKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)) {
+            getOrCreateKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)
+        } else {
+            getOrCreateKek(kekVersion, accountId)
+        }
+
         val rawKeyBytes =
             EncryptedContainer.decrypt(
                 containerBytes = wrappedKeyBytes,
@@ -156,15 +211,27 @@ class SoftwareKeyStoreManager : KeyStoreManager {
         return SecretKeySpec(rawKeyBytes, "AES")
     }
 
-    override fun deleteKek(version: Int) {
-        keyStoreMap.remove(getAlias(version))
+    override fun deleteKek(
+        version: Int,
+        accountId: String,
+    ) {
+        keyStoreMap.remove(getAlias(version, accountId))
     }
 
     fun clearAll() {
         keyStoreMap.clear()
     }
 
-    private fun getAlias(version: Int): String = "${CryptoConstants.KEYSTORE_ALIAS_PREFIX}$version"
+    private fun getAlias(
+        version: Int,
+        accountId: String,
+    ): String =
+        if (accountId == CryptoStorage.GUEST_ACCOUNT_ID) {
+            "${CryptoConstants.KEYSTORE_ALIAS_PREFIX}$version"
+        } else {
+            val safe = accountId.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            "${CryptoConstants.KEYSTORE_ALIAS_PREFIX}${safe}_v$version"
+        }
 }
 
 /**

@@ -36,6 +36,7 @@ class FirebaseAuthRepository
         @ApplicationContext private val context: Context,
         private val backendApiClient: BackendApiClient,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+        private val mekManagerProvider: javax.inject.Provider<haddad.three.notas.crypto.MekManager>? = null,
     ) : AuthRepository {
         private val auth: FirebaseAuth? by lazy {
             try {
@@ -62,6 +63,10 @@ class FirebaseAuthRepository
 
         init {
             auth?.addAuthStateListener { firebaseAuth ->
+                try {
+                    mekManagerProvider?.get()?.clearMemoryCache()
+                } catch (_: Exception) {
+                }
                 val user = firebaseAuth.currentUser
                 if (user != null) {
                     val authUser = user.toAuthUser()
@@ -437,6 +442,10 @@ class FirebaseAuthRepository
 
         override suspend fun signOut() {
             auth?.signOut()
+            try {
+                mekManagerProvider?.get()?.clearMemoryCache()
+            } catch (_: Exception) {
+            }
             _authState.value = AuthState.Unauthenticated
             _appAuthState.value = AppAuthState.Guest
         }

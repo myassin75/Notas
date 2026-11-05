@@ -12,6 +12,8 @@ import haddad.three.notas.crypto.KeyStoreManager
 import haddad.three.notas.crypto.MekManager
 import haddad.three.notas.crypto.RecoverySetupManager
 import haddad.three.notas.crypto.SharedPrefsCryptoStorage
+import haddad.three.notas.data.auth.AuthRepository
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -25,15 +27,27 @@ object CryptoModule {
     @Singleton
     fun provideCryptoStorage(
         @ApplicationContext context: Context,
-    ): CryptoStorage = SharedPrefsCryptoStorage(context)
+        authRepositoryProvider: Provider<AuthRepository>,
+    ): CryptoStorage =
+        SharedPrefsCryptoStorage(
+            context = context,
+            accountIdProvider = { authRepositoryProvider.get().currentUser?.uid },
+        )
 
     @Provides
     @Singleton
     fun provideMekManager(
         keyStoreManager: KeyStoreManager,
         cryptoStorage: CryptoStorage,
+        authRepositoryProvider: Provider<AuthRepository>,
         @ApplicationContext context: Context,
-    ): MekManager = MekManager(keyStoreManager, cryptoStorage, context)
+    ): MekManager =
+        MekManager(
+            keyStoreManager = keyStoreManager,
+            storage = cryptoStorage,
+            context = context,
+            accountIdProvider = { authRepositoryProvider.get().currentUser?.uid },
+        )
 
     @Provides
     @Singleton

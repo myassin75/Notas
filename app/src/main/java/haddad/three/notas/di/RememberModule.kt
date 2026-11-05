@@ -258,11 +258,13 @@ object RememberModule {
         @ApplicationContext context: Context,
         backendApiClient: haddad.three.notas.data.auth.BackendApiClient,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        mekManagerProvider: javax.inject.Provider<haddad.three.notas.crypto.MekManager>,
     ): haddad.three.notas.data.auth.AuthRepository =
         haddad.three.notas.data.auth.FirebaseAuthRepository(
             context = context,
             backendApiClient = backendApiClient,
             ioDispatcher = ioDispatcher,
+            mekManagerProvider = mekManagerProvider,
         )
 
     @Provides
