@@ -31,5 +31,12 @@ backend/node_modules/
 dist/
 .vercel
 
-# Firebase service account secrets
+# Firebase and Cloud service account secrets
 *-firebase-adminsdk-*.json
+*firebase-adminsdk*.json
+*-adminsdk-*.json
+*service-account*.json
+notas-*.json
+**/notas-*.json
+**/*adminsdk*.json
+**/*service-account*.json
