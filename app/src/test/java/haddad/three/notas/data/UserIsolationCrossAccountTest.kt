@@ -1,0 +1,402 @@
+package haddad.three.notas.data
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+
+/**
+ * Task F04: Regression tests for User Isolation and Cross-Account boundaries.
+ * Verifies that active notes, search, trash, and archive are strictly partitioned by ownerId.
+ */
+class UserIsolationCrossAccountTest {
+
+    private lateinit var fakeNoteDao: IsolationTestNoteDao
+    private lateinit var fakeChecklistDao: IsolationTestChecklistItemDao
+    private lateinit var fakeAttachmentDao: IsolationTestAttachmentDao
+    private var activeOwnerId: String? = null
+    private lateinit var repository: NoteRepository
+
+    @Before
+    fun setUp() {
+        fakeNoteDao = IsolationTestNoteDao()
+        fakeChecklistDao = IsolationTestChecklistItemDao()
+        fakeAttachmentDao = IsolationTestAttachmentDao()
+        activeOwnerId = null
+        repository = NoteRepository(
+            noteDao = fakeNoteDao,
+            itemDao = fakeChecklistDao,
+            attachmentDao = fakeAttachmentDao,
+            ownerIdProvider = { activeOwnerId },
+        )
+    }
+
+    @Test
+    fun `cross account active notes isolation - User B cannot see User A active notes`() = runBlocking {
+        // Step 1: User Alice creates a note
+        activeOwnerId = "user_alice"
+        val aliceNoteId = repository.createNote(
+            title = "Alice Confidential Note",
+            body = "Top secret details",
+            colorIndex = 1,
+        )
+
+        // Step 2: Switch to User Bob
+        activeOwnerId = "user_bob"
+        val bobNoteId = repository.createNote(
+            title = "Bob Public Note",
+            body = "Bob's ideas",
+            colorIndex = 2,
+        )
+
+        // Verify: User Bob observing active notes must only see Bob's note
+        val bobActive = repository.observeActive().first()
+        assertEquals("User Bob must see exactly 1 note", 1, bobActive.size)
+        assertEquals("User Bob must see only his own note", bobNoteId, bobActive.first().note.id)
+        assertFalse(
+            "User Bob must not see Alice's note",
+            bobActive.any { it.note.id == aliceNoteId }
+        )
+
+        // Step 3: Switch back to User Alice
+        activeOwnerId = "user_alice"
+        val aliceActive = repository.observeActive().first()
+        assertEquals("User Alice must see exactly 1 note", 1, aliceActive.size)
+        assertEquals("User Alice must see only her own note", aliceNoteId, aliceActive.first().note.id)
+    }
+
+    @Test
+    fun `guest and authenticated account active notes isolation`() = runBlocking {
+        // Step 1: Guest creates a note
+        activeOwnerId = null
+        val guestNoteId = repository.createNote(
+            title = "Guest Local Note",
+            body = "Not synced anywhere",
+            colorIndex = 0,
+        )
+
+        // Step 2: User Alice signs in and creates a note
+        activeOwnerId = "user_alice"
+        val aliceNoteId = repository.createNote(
+            title = "Alice Cloud Note",
+            body = "Synced with backend",
+            colorIndex = 3,
+        )
+
+        // Alice must not see Guest's note in active list
+        val aliceActive = repository.observeActive().first()
+        assertEquals("Alice must only see her own note", 1, aliceActive.size)
+        assertEquals(aliceNoteId, aliceActive.first().note.id)
+
+        // Guest session must only see Guest's note
+        activeOwnerId = null
+        val guestActive = repository.observeActive().first()
+        assertEquals("Guest must only see guest note", 1, guestActive.size)
+        assertEquals(guestNoteId, guestActive.first().note.id)
+    }
+
+    @Test
+    fun `cross account search isolation - User B search query does not return User A notes`() = runBlocking {
+        activeOwnerId = "user_alice"
+        repository.createNote(
+            title = "Quarterly Financial Secret",
+            body = "Budget allocation for 2027",
+            colorIndex = 0,
+        )
+
+        // Switch to Bob
+        activeOwnerId = "user_bob"
+        repository.createNote(
+            title = "Grocery shopping list",
+            body = "Apples, bananas",
+            colorIndex = 0,
+        )
+
+        // Bob searches for "Financial" or "Secret"
+        val bobResults = repository.searchNotes("Financial").first()
+        assertTrue(
+            "Bob's search for 'Financial' must be empty since only Alice owns that keyword",
+            bobResults.isEmpty()
+        )
+    }
+
+    @Test
+    fun `cross account trash isolation - User B cannot view or empty User A trashed notes`() = runBlocking {
+        // Alice trashes a note
+        activeOwnerId = "user_alice"
+        val aliceNoteId = repository.createNote(
+            title = "Alice Deprecated Plan",
+            body = "To be deleted",
+            colorIndex = 0,
+        )
+        repository.moveToTrash(aliceNoteId)
+
+        // Bob has his own note
+        activeOwnerId = "user_bob"
+        val bobNoteId = repository.createNote(
+            title = "Bob Trash Candidate",
+            body = "Bob wants to delete this",
+            colorIndex = 0,
+        )
+        repository.moveToTrash(bobNoteId)
+
+        // Bob checks trash
+        val bobTrash = repository.observeTrashed().first()
+        assertEquals("Bob must only see his 1 trashed note", 1, bobTrash.size)
+        assertEquals(bobNoteId, bobTrash.first().note.id)
+
+        // Bob empties trash
+        repository.emptyTrash()
+
+        // Bob's trash is now empty
+        val bobTrashAfter = repository.observeTrashed().first()
+        assertTrue("Bob's trash should now be empty", bobTrashAfter.isEmpty())
+
+        // Alice's trashed note must NOT have been destroyed by Bob emptying his trash!
+        activeOwnerId = "user_alice"
+        val aliceTrash = repository.observeTrashed().first()
+        assertEquals("Alice's trashed note must still exist intact", 1, aliceTrash.size)
+        assertEquals(aliceNoteId, aliceTrash.first().note.id)
+    }
+
+    @Test
+    fun `cross account archive isolation - User B cannot view User A archived notes`() = runBlocking {
+        // Alice archives a note
+        activeOwnerId = "user_alice"
+        val aliceNoteId = repository.createNote(
+            title = "Alice Old Project",
+            body = "Archived material",
+            colorIndex = 0,
+        )
+        repository.archiveNote(aliceNoteId)
+
+        // Bob checks archive
+        activeOwnerId = "user_bob"
+        val bobArchive = repository.observeArchived().first()
+        assertTrue("Bob's archive should be empty", bobArchive.isEmpty())
+    }
+
+    @Test
+    fun `guest to account promotion flow migrates guest notes to authenticated user`() = runBlocking {
+        // Step 1: Create notes as Guest
+        activeOwnerId = null
+        val guestNote1 = repository.createNote("Guest Idea 1", "Body 1", 0)
+        val guestNote2 = repository.createNote("Guest Idea 2", "Body 2", 1)
+
+        assertEquals("Guest should see 2 notes", 2, repository.observeActive().first().size)
+
+        // Step 2: User registers / logs in as Alice
+        val migratedCount = repository.migrateGuestDataToOwner("user_alice")
+        assertEquals("Should migrate 2 notes", 2, migratedCount)
+
+        // Step 3: Switch session to Alice
+        activeOwnerId = "user_alice"
+        val aliceActive = repository.observeActive().first()
+        assertEquals("Alice should now see the 2 migrated notes", 2, aliceActive.size)
+        assertTrue(aliceActive.any { it.note.id == guestNote1 && it.note.ownerId == "user_alice" })
+        assertTrue(aliceActive.any { it.note.id == guestNote2 && it.note.ownerId == "user_alice" })
+
+        // Step 4: Guest partition is now empty
+        activeOwnerId = null
+        val guestActive = repository.observeActive().first()
+        assertTrue("Guest partition should now have 0 notes", guestActive.isEmpty())
+    }
+}
+
+/**
+ * In-memory test NoteDao simulating unpartitioned baseline behavior (prior to F04 fix).
+ */
+class IsolationTestNoteDao : NoteDao {
+    val notes = mutableMapOf<Long, NoteEntity>()
+    var idCounter = 1L
+
+    override fun observeActive(): Flow<List<NoteWithItems>> =
+        flowOf(notes.values.filter { !it.trashed && !it.archived }.map { NoteWithItems(it, emptyList()) })
+
+    override fun observeScheduled(): Flow<List<NoteWithItems>> =
+        flowOf(notes.values.filter { !it.trashed && !it.archived && it.reminderAt != null }.map { NoteWithItems(it, emptyList()) })
+
+    override fun observeTrashed(): Flow<List<NoteWithItems>> =
+        flowOf(notes.values.filter { it.trashed }.map { NoteWithItems(it, emptyList()) })
+
+    override fun observeArchived(): Flow<List<NoteWithItems>> =
+        flowOf(notes.values.filter { it.archived && !it.trashed }.map { NoteWithItems(it, emptyList()) })
+
+    override fun observe(id: Long): Flow<NoteWithItems?> =
+        flowOf(notes[id]?.let { NoteWithItems(it, emptyList()) })
+
+    override suspend fun get(id: Long): NoteWithItems? =
+        notes[id]?.let { NoteWithItems(it, emptyList()) }
+
+    override suspend fun getByUuid(uuid: String): NoteWithItems? =
+        notes.values.find { it.uuid == uuid }?.let { NoteWithItems(it, emptyList()) }
+
+    override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
+        notes.values.find { it.uuid == uuid }
+
+    override suspend fun allNotes(): List<NoteWithItems> =
+        notes.values.map { NoteWithItems(it, emptyList()) }
+
+    override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
+        notes.values.filter { it.ownerId == ownerId }.map { NoteWithItems(it, emptyList()) }
+
+    override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
+
+    override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> {
+        val clean = ftsQuery.replace("*", "").lowercase()
+        return flowOf(
+            notes.values
+                .filter {
+                    !it.trashed && !it.archived &&
+                        (it.title.lowercase().contains(clean) || it.body.lowercase().contains(clean))
+                }
+                .map { NoteWithItems(it, emptyList()) }
+        )
+    }
+
+    override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> {
+        val clean = ftsQuery.replace("*", "").lowercase()
+        return flowOf(
+            notes.values
+                .filter {
+                    it.archived && !it.trashed &&
+                        (it.title.lowercase().contains(clean) || it.body.lowercase().contains(clean))
+                }
+                .map { NoteWithItems(it, emptyList()) }
+        )
+    }
+
+    override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> {
+        val clean = ftsQuery.replace("*", "").lowercase()
+        return flowOf(
+            notes.values
+                .filter {
+                    it.trashed &&
+                        (it.title.lowercase().contains(clean) || it.body.lowercase().contains(clean))
+                }
+                .map { NoteWithItems(it, emptyList()) }
+        )
+    }
+
+    override suspend fun insert(note: NoteEntity): Long {
+        val id = if (note.id != 0L) note.id else idCounter++
+        val entity = note.copy(id = id)
+        notes[id] = entity
+        return id
+    }
+
+    override suspend fun update(note: NoteEntity) {
+        notes[note.id] = note
+    }
+
+    override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) {
+        notes[id]?.let { notes[id] = it.copy(trashed = trashed, updatedAt = updatedAt) }
+    }
+
+    override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) {
+        notes[id]?.let { notes[id] = it.copy(archived = archived, updatedAt = updatedAt) }
+    }
+
+    override suspend fun deleteById(id: Long) {
+        notes.remove(id)
+    }
+
+    override suspend fun allNoteIds(): List<Long> = notes.keys.toList()
+
+    override suspend fun countPictureUri(uri: String): Int = notes.values.count { it.pictureUri == uri }
+
+    override suspend fun trashedNoteIds(): List<Long> =
+        notes.values.filter { it.trashed }.map { it.id }
+
+    override suspend fun archivedNoteIds(): List<Long> =
+        notes.values.filter { it.archived && !it.trashed }.map { it.id }
+
+    override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
+
+    override suspend fun deleteAllNotes() {
+        notes.clear()
+    }
+
+    override suspend fun emptyTrash() {
+        notes.entries.removeIf { it.value.trashed }
+    }
+
+    override suspend fun deleteTrashedOlderThan(cutoff: Long) {}
+}
+
+class IsolationTestChecklistItemDao : ChecklistItemDao {
+    val items = mutableMapOf<Long, ChecklistItemEntity>()
+    var idCounter = 1L
+
+    override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> =
+        items.values.filter { it.noteId == noteId }
+
+    override suspend fun getByUuid(uuid: String): ChecklistItemEntity? =
+        items.values.find { it.uuid == uuid }
+
+    override suspend fun insert(item: ChecklistItemEntity): Long {
+        val id = if (item.id != 0L) item.id else idCounter++
+        items[id] = item.copy(id = id)
+        return id
+    }
+
+    override suspend fun insertAll(items: List<ChecklistItemEntity>) {
+        items.forEach { insert(it) }
+    }
+
+    override suspend fun update(item: ChecklistItemEntity) {
+        items[item.id] = item
+    }
+
+    override suspend fun deleteById(id: Long) {
+        items.remove(id)
+    }
+
+    override suspend fun deleteForNote(noteId: Long) {
+        items.entries.removeIf { it.value.noteId == noteId }
+    }
+}
+
+class IsolationTestAttachmentDao : AttachmentDao {
+    val attachments = mutableMapOf<Long, NoteAttachmentEntity>()
+    var idCounter = 1L
+
+    override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> =
+        attachments.values.filter { it.noteId == noteId }
+
+    override suspend fun insert(attachment: NoteAttachmentEntity): Long {
+        val id = if (attachment.id != 0L) attachment.id else idCounter++
+        attachments[id] = attachment.copy(id = id)
+        return id
+    }
+
+    override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) {
+        attachments.forEach { insert(it) }
+    }
+
+    override suspend fun getById(id: Long): NoteAttachmentEntity? = attachments[id]
+
+    override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? =
+        attachments.values.find { it.uuid == uuid }
+
+    override suspend fun countByUri(uri: String): Int =
+        attachments.values.count { it.uri == uri }
+
+    override suspend fun deleteById(id: Long) {
+        attachments.remove(id)
+    }
+
+    override suspend fun deleteForNote(noteId: Long) {
+        attachments.entries.removeIf { it.value.noteId == noteId }
+    }
+}

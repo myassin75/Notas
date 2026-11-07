@@ -135,13 +135,28 @@ class NoteRepository(
             changeRecorder = changeRecorder,
         )
 
-    fun observeActive(): Flow<List<NoteWithItems>> = noteDao.observeActive().flowOn(ioDispatcher)
+    private fun matchesOwner(noteOwnerId: String?, filterOwnerId: String?): Boolean =
+        (filterOwnerId == null && noteOwnerId == null) || (filterOwnerId != null && noteOwnerId == filterOwnerId)
 
-    fun observeScheduled(): Flow<List<NoteWithItems>> = noteDao.observeScheduled().flowOn(ioDispatcher)
+    fun observeActive(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
+        noteDao.observeActive()
+            .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+            .flowOn(ioDispatcher)
 
-    fun observeTrashed(): Flow<List<NoteWithItems>> = noteDao.observeTrashed().flowOn(ioDispatcher)
+    fun observeScheduled(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
+        noteDao.observeScheduled()
+            .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+            .flowOn(ioDispatcher)
 
-    fun observeArchived(): Flow<List<NoteWithItems>> = noteDao.observeArchived().flowOn(ioDispatcher)
+    fun observeTrashed(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
+        noteDao.observeTrashed()
+            .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+            .flowOn(ioDispatcher)
+
+    fun observeArchived(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
+        noteDao.observeArchived()
+            .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+            .flowOn(ioDispatcher)
 
     fun observe(id: Long): Flow<NoteWithItems?> = noteDao.observe(id).flowOn(ioDispatcher)
 
@@ -155,32 +170,38 @@ class NoteRepository(
      * whitespace, each term is escaped and turned into a prefix match (`term*`), so typing
      * "buy mil" will match "buy milk" as soon as the user has typed the third letter.
      */
-    fun searchNotes(query: String): Flow<List<NoteWithItems>> {
+    fun searchNotes(query: String, ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> {
         val fts = toFtsPrefixQuery(query)
         return if (fts.isEmpty()) {
             flowOf(emptyList())
         } else {
-            noteDao.searchNotes(fts).flowOn(ioDispatcher)
+            noteDao.searchNotes(fts)
+                .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+                .flowOn(ioDispatcher)
         }.flowOn(defaultDispatcher)
     }
 
     /** Same FTS prefix match as [searchNotes], but scoped to archived notes only. */
-    fun searchArchivedNotes(query: String): Flow<List<NoteWithItems>> {
+    fun searchArchivedNotes(query: String, ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> {
         val fts = toFtsPrefixQuery(query)
         return if (fts.isEmpty()) {
             flowOf(emptyList())
         } else {
-            noteDao.searchArchived(fts).flowOn(ioDispatcher)
+            noteDao.searchArchived(fts)
+                .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+                .flowOn(ioDispatcher)
         }.flowOn(defaultDispatcher)
     }
 
     /** Same FTS prefix match as [searchNotes], but scoped to trashed notes only. */
-    fun searchTrashedNotes(query: String): Flow<List<NoteWithItems>> {
+    fun searchTrashedNotes(query: String, ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> {
         val fts = toFtsPrefixQuery(query)
         return if (fts.isEmpty()) {
             flowOf(emptyList())
         } else {
-            noteDao.searchTrashed(fts).flowOn(ioDispatcher)
+            noteDao.searchTrashed(fts)
+                .map { list -> list.filter { matchesOwner(it.note.ownerId, ownerId) } }
+                .flowOn(ioDispatcher)
         }.flowOn(defaultDispatcher)
     }
 
@@ -324,11 +345,13 @@ class NoteRepository(
         return true
     }
 
-    suspend fun moveAllArchivedToTrash() {
-        val archivedIds = noteDao.archivedNoteIds()
-        if (archivedIds.isEmpty()) return
+    suspend fun moveAllArchivedToTrash(ownerId: String? = ownerIdProvider()) {
+        val archivedNotes = noteDao.archivedNoteIds().mapNotNull { noteDao.get(it) }
+            .filter { matchesOwner(it.note.ownerId, ownerId) }
+        if (archivedNotes.isEmpty()) return
         val now = clock()
-        archivedIds.forEach { archivedId ->
+        archivedNotes.forEach { noteWithItems ->
+            val archivedId = noteWithItems.note.id
             noteDao.setTrashed(archivedId, true, now)
             scheduler?.cancel(archivedId)
             scheduler?.cancelNotification(archivedId)
@@ -412,11 +435,12 @@ class NoteRepository(
         mediaMaintenance.cleanupUnreferencedMedia(deletedNote?.mediaUris().orEmpty())
     }
 
-    suspend fun emptyTrash() {
-        val deletedNotes = noteDao.trashedNoteIds().mapNotNull { trashedId -> noteDao.get(trashedId) }
+    suspend fun emptyTrash(ownerId: String? = ownerIdProvider()) {
+        val trashedNotes = noteDao.trashedNoteIds().mapNotNull { trashedId -> noteDao.get(trashedId) }
+            .filter { matchesOwner(it.note.ownerId, ownerId) }
         val block: suspend () -> Unit = {
-            tombstoneRecorder?.recordNotesDeleted(deletedNotes)
-            deletedNotes.forEach { deletedNote ->
+            tombstoneRecorder?.recordNotesDeleted(trashedNotes)
+            trashedNotes.forEach { deletedNote ->
                 changeRecorder?.recordNoteDelete(deletedNote.note.uuid)
                 deletedNote.items.forEach { item ->
                     changeRecorder?.recordChecklistItemDelete(item.uuid, deletedNote.note.uuid)
@@ -424,16 +448,16 @@ class NoteRepository(
                 deletedNote.attachments.forEach { att ->
                     changeRecorder?.recordAttachmentDelete(att.uuid, deletedNote.note.uuid)
                 }
+                noteDao.deleteById(deletedNote.note.id)
             }
-            noteDao.emptyTrash()
         }
         if (database != null) database.withTransaction { block() } else block()
-        deletedNotes.forEach { deletedNote ->
+        trashedNotes.forEach { deletedNote ->
             val trashedId = deletedNote.note.id
             scheduler?.cancel(trashedId)
             scheduler?.cancelNotification(trashedId)
         }
-        mediaMaintenance.cleanupUnreferencedMedia(deletedNotes.flatMap { deletedNote -> deletedNote.mediaUris() })
+        mediaMaintenance.cleanupUnreferencedMedia(trashedNotes.flatMap { deletedNote -> deletedNote.mediaUris() })
     }
 
     // ---------------------------------------------------------------------------
@@ -501,28 +525,56 @@ class NoteRepository(
      * leaves existing notes intact. Reminder [PendingIntent]s are reconciled after a successful
      * commit only (never cancel the old schedule before we know the replace succeeded).
      */
-    suspend fun restoreNotesFullReplace(importBlock: suspend () -> Int): Int {
-        val oldIds = noteDao.allNoteIds().toSet()
-        val replacedNotes = oldIds.mapNotNull { noteId -> noteDao.get(noteId) }
+    suspend fun restoreNotesFullReplace(
+        ownerId: String? = ownerIdProvider(),
+        importBlock: suspend () -> Int,
+    ): Int {
+        val oldNotes = noteDao.allNotes().filter { matchesOwner(it.note.ownerId, ownerId) }
+        val oldIds = oldNotes.map { it.note.id }.toSet()
+        val replacedNotes = oldNotes
         val count =
             haddad.three.notas.data.sync.change.SyncContext.withRemoteSuppression {
                 if (database != null) {
                     database.withTransaction {
-                        noteDao.deleteAllNotes()
+                        oldIds.forEach { noteDao.deleteById(it) }
                         importBlock()
                     }
                 } else {
                     oldIds.forEach { noteId ->
                         scheduler?.cancel(noteId)
                         scheduler?.cancelNotification(noteId)
+                        noteDao.deleteById(noteId)
                     }
-                    noteDao.deleteAllNotes()
                     importBlock()
                 }
             }
         mediaMaintenance.cleanupUnreferencedMedia(replacedNotes.flatMap { replacedNote -> replacedNote.mediaUris() })
         resyncRemindersAfterMassReplace(oldIds)
         return count
+    }
+
+    suspend fun migrateGuestDataToOwner(targetOwnerId: String): Int {
+        val guestNotes = noteDao.allNotes().filter { it.note.ownerId == null }
+        if (guestNotes.isEmpty()) return 0
+        val now = clock()
+        val block: suspend () -> Int = {
+            guestNotes.forEach { noteWithItems ->
+                val updatedNote = noteWithItems.note.copy(ownerId = targetOwnerId, updatedAt = now)
+                noteDao.update(updatedNote)
+                noteWithItems.items.forEach { item ->
+                    itemDao.update(item.copy(ownerId = targetOwnerId))
+                }
+                noteWithItems.attachments.forEach { att ->
+                    attachmentDao.insert(att.copy(ownerId = targetOwnerId))
+                }
+            }
+            guestNotes.size
+        }
+        return if (database != null) {
+            database.withTransaction { block() }
+        } else {
+            block()
+        }
     }
 
     @Suppress("ktlint:standard:function-expression-body")

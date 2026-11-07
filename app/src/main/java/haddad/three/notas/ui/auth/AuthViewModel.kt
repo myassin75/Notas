@@ -79,6 +79,8 @@ class AuthViewModel
     @Inject
     constructor(
         private val authRepository: AuthRepository,
+        private val noteRepository: haddad.three.notas.data.NoteRepository? = null,
+        private val mekManager: haddad.three.notas.crypto.MekManager? = null,
     ) : ViewModel() {
         val authState: StateFlow<AuthState> =
             authRepository.authState
@@ -169,6 +171,8 @@ class AuthViewModel
 
                 when (val result = authRepository.registerWithEmailAndPassword(cleanEmail, current.password, cleanUsername)) {
                     is AuthResult.Success -> {
+                        noteRepository?.migrateGuestDataToOwner(result.data.uid)
+                        mekManager?.migrateGuestKeysToAccount(result.data.uid)
                         _registerState.update { it.copy(isLoading = false, isSuccess = true) }
                         val emailDispatched = result.data.verificationEmailSent
                         initVerifyEmail(cleanEmail, initialDispatchFailed = !emailDispatched)
@@ -225,6 +229,8 @@ class AuthViewModel
                 _loginState.update { it.copy(isLoading = true, errorMessage = null) }
                 when (val result = authRepository.loginWithEmailAndPassword(current.email.trim(), current.password)) {
                     is AuthResult.Success -> {
+                        noteRepository?.migrateGuestDataToOwner(result.data.uid)
+                        mekManager?.migrateGuestKeysToAccount(result.data.uid)
                         // Sync profile with backend serverless endpoint
                         authRepository.syncBackendProfile()
                         _loginState.update { it.copy(isLoading = false, isSuccess = true) }
@@ -253,6 +259,8 @@ class AuthViewModel
 
                 when (val result = authRepository.signInWithGoogle(context)) {
                     is AuthResult.Success -> {
+                        noteRepository?.migrateGuestDataToOwner(result.data.uid)
+                        mekManager?.migrateGuestKeysToAccount(result.data.uid)
                         authRepository.syncBackendProfile()
                         _loginState.update { it.copy(isLoading = false, isSuccess = true) }
                         _registerState.update { it.copy(isLoading = false, isSuccess = true) }
