@@ -1,5 +1,7 @@
 package haddad.three.notas.ui.edit
 
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -181,6 +184,20 @@ fun EditNoteScreen(
     val blurMod =
         blurStyle?.applyToFullBleedLayer(topAlphaMultiplier = topAlphaMultiplier)
             ?: Modifier
+
+    val isLocked by vm.locked.collectAsStateWithLifecycle()
+    val activity = LocalContext.current as? Activity
+    DisposableEffect(activity, isLocked) {
+        val window = activity?.window
+        if (isLocked) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+        onDispose {
+            if (isLocked) {
+                window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            }
+        }
+    }
 
     val archived by vm.archived.collectAsStateWithLifecycle()
     val trashed by vm.trashed.collectAsStateWithLifecycle()

@@ -1,5 +1,7 @@
 package haddad.three.notas.ui.lock
 
+import android.app.Activity
+import android.view.WindowManager
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.background
@@ -18,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +52,14 @@ fun LockScreen(
     onUnlocked: () -> Unit,
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
+    DisposableEffect(activity) {
+        val window = activity?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
     val scope = rememberCoroutineScope()
     val requiredDigits = pinLength.coerceIn(LockPrefs.MIN_PIN_LENGTH, LockPrefs.MAX_PIN_LENGTH)
     var pin by remember { mutableStateOf("") }
