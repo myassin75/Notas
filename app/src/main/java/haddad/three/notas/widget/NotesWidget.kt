@@ -855,17 +855,17 @@ private fun widgetEntryPoint(context: Context): NotesWidgetEntryPoint =
         NotesWidgetEntryPoint::class.java,
     )
 
-private data class AgendaWidgetItems(
+internal data class AgendaWidgetItems(
     val overdue: List<NoteWithItems>,
     val upcoming: List<NoteWithItems>,
 )
 
-private data class QuickCaptureWidgetCounts(
+internal data class QuickCaptureWidgetCounts(
     val overdueCount: Int,
     val dueTodayCount: Int,
 )
 
-private fun agendaWidgetItems(
+internal fun agendaWidgetItems(
     notes: List<NoteWithItems>,
     now: Long,
 ): AgendaWidgetItems {
@@ -873,6 +873,7 @@ private fun agendaWidgetItems(
         notes
             .asSequence()
             .filter { it.note.completedAt == null }
+            .filter { !it.note.locked }
             .filter { it.note.visibility != Visibility.SECRET }
             .filter { it.note.reminderAt != null }
             .filter { noteWithItems ->
@@ -890,7 +891,7 @@ private fun agendaWidgetItems(
     )
 }
 
-private fun quickCaptureWidgetCounts(
+internal fun quickCaptureWidgetCounts(
     notes: List<NoteWithItems>,
     now: Long,
 ): QuickCaptureWidgetCounts {
@@ -898,6 +899,7 @@ private fun quickCaptureWidgetCounts(
         notes
             .asSequence()
             .filter { it.note.completedAt == null }
+            .filter { !it.note.locked }
             .filter { it.note.visibility != Visibility.SECRET }
             .filter { it.note.reminderAt != null }
             .toList()
@@ -928,6 +930,7 @@ internal fun selectedNotesWidgetItems(
 ): List<NoteWithItems> {
     val uncompletedActive =
         notes
+            .filter { !it.note.locked }
             .filter { it.note.visibility != Visibility.SECRET }
             .filter { it.note.completedAt == null }
 

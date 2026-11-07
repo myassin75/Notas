@@ -78,6 +78,38 @@ class NotesWidgetTest {
         assertEquals(listOf(2L), result.map { it.note.id })
     }
 
+    @Test
+    fun selected_notes_widget_items_excludes_locked_notes() {
+        val notes =
+            listOf(
+                createTestNote(id = 1L, title = "Active Normal"),
+                createTestNote(id = 2L, title = "Active Locked", locked = true),
+                createTestNote(id = 3L, title = "Active Secret", visibility = Visibility.SECRET),
+            )
+
+        val result =
+            selectedNotesWidgetItems(
+                notes = notes,
+                config = SelectedNotesWidgetConfig(filterType = SelectedNotesFilterType.ALL),
+                viewOptions = ViewOptions(),
+            )
+
+        assertEquals(listOf(1L), result.map { it.note.id })
+    }
+
+    @Test
+    fun agenda_widget_items_excludes_locked_notes() {
+        val now = 10_000L
+        val notes =
+            listOf(
+                createTestNote(id = 1L, title = "Reminder Normal", reminderAt = now + 1000L),
+                createTestNote(id = 2L, title = "Reminder Locked", reminderAt = now + 1000L, locked = true),
+            )
+
+        val result = agendaWidgetItems(notes = notes, now = now)
+        assertEquals(listOf(1L), result.upcoming.map { it.note.id })
+    }
+
     private fun createTestNote(
         id: Long,
         title: String = "Note $id",
@@ -85,6 +117,8 @@ class NotesWidgetTest {
         shoulderId: Long? = null,
         completedAt: Long? = null,
         visibility: Visibility = Visibility.DEFAULT,
+        locked: Boolean = false,
+        reminderAt: Long? = null,
     ): NoteWithItems =
         NoteWithItems(
             note =
@@ -101,6 +135,8 @@ class NotesWidgetTest {
                     shoulderId = shoulderId,
                     completedAt = completedAt,
                     pinnedAt = if (pinned) 1000L else null,
+                    locked = locked,
+                    reminderAt = reminderAt,
                 ),
             items = emptyList(),
         )
