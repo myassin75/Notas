@@ -60,17 +60,7 @@ class EditEventViewModelTest {
 
     private fun createRepository(): NoteRepository {
         val fakeNoteDao =
-            object : NoteDao {
-                override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
-
+            object : haddad.three.notas.data.BaseFakeNoteDao() {
                 override suspend fun get(id: Long): NoteWithItems? {
                     val found = insertedNotes.firstOrNull { it.id == id } ?: return null
                     val atts = insertedAttachments.filter { it.noteId == id }
@@ -86,17 +76,6 @@ class EditEventViewModelTest {
                 override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
                     insertedNotes.firstOrNull { it.uuid == uuid }
 
-                override suspend fun allNotes(): List<NoteWithItems> = emptyList()
-                override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = emptyList()
-
-                override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-
-                override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
                 override suspend fun insert(note: NoteEntity): Long {
                     val id = if (note.id > 0) note.id else (insertedNotes.size + 1).toLong()
                     val assigned = note.copy(id = id)
@@ -111,58 +90,14 @@ class EditEventViewModelTest {
                         insertedNotes[idx] = note
                     }
                 }
-
-                override suspend fun setTrashed(
-                    id: Long,
-                    trashed: Boolean,
-                    updatedAt: Long,
-                ) = Unit
-
-                override suspend fun setArchived(
-                    id: Long,
-                    archived: Boolean,
-                    updatedAt: Long,
-                ) = Unit
-
-                override suspend fun deleteById(id: Long) = Unit
-
-                override suspend fun allNoteIds(): List<Long> = emptyList()
-
-                override suspend fun countPictureUri(uri: String): Int = 0
-
-                override suspend fun trashedNoteIds(): List<Long> = emptyList()
-
-                override suspend fun archivedNoteIds(): List<Long> = emptyList()
-
-                override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-
-                override suspend fun deleteAllNotes() = Unit
-
-                override suspend fun emptyTrash() = Unit
-
-                override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
             }
 
-        val fakeChecklistDao =
-            object : ChecklistItemDao {
-                override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
-
-                override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
-
-                override suspend fun insert(item: ChecklistItemEntity): Long = 1L
-
-                override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
-
-                override suspend fun update(item: ChecklistItemEntity) = Unit
-
-                override suspend fun deleteById(id: Long) = Unit
-
-                override suspend fun deleteForNote(noteId: Long) = Unit
-            }
+        val fakeChecklistDao = object : haddad.three.notas.data.BaseFakeChecklistItemDao() {}
 
         val fakeAttachmentDao =
-            object : AttachmentDao {
-                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = insertedAttachments.filter { it.noteId == noteId }
+            object : haddad.three.notas.data.BaseFakeAttachmentDao() {
+                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> =
+                    insertedAttachments.filter { it.noteId == noteId }
 
                 override suspend fun insert(attachment: NoteAttachmentEntity): Long {
                     val id = (insertedAttachments.size + 1).toLong()
@@ -171,14 +106,11 @@ class EditEventViewModelTest {
                     return id
                 }
 
-                override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
-
-                override suspend fun getById(id: Long): NoteAttachmentEntity? = insertedAttachments.firstOrNull { it.id == id }
+                override suspend fun getById(id: Long): NoteAttachmentEntity? =
+                    insertedAttachments.firstOrNull { it.id == id }
 
                 override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? =
                     insertedAttachments.firstOrNull { it.uuid == uuid }
-
-                override suspend fun countByUri(uri: String): Int = 0
 
                 override suspend fun deleteById(id: Long) {
                     insertedAttachments.removeAll { it.id == id }
@@ -202,7 +134,7 @@ class EditEventViewModelTest {
         val shoulders = mutableListOf<ShoulderEntity>()
         val shouldersFlow = MutableStateFlow<List<ShoulderEntity>>(emptyList())
         val fakeShoulderDao =
-            object : ShoulderDao {
+            object : haddad.three.notas.data.BaseFakeShoulderDao() {
                 override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
 
                 override suspend fun allShoulders(): List<ShoulderEntity> = shoulders

@@ -227,5 +227,7 @@ class EditNoteIntegrityTest {
         override suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?) {
             // no-op for mock
         }
+
+        override suspend fun claimGuestShoulders(targetOwnerId: String): Int = 0
     }
 }

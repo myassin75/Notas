@@ -561,126 +561,15 @@ class NoteRepositoryRecurrenceTest {
 
     private class FakeNoteDao(
         initialNote: NoteEntity,
-    ) : NoteDao {
-        var stored = NoteWithItems(initialNote, emptyList())
-
-        override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(listOf(stored))
-
-        override fun observeScheduled(): Flow<List<NoteWithItems>> =
-            flowOf(
-                listOf(stored).filter {
-                    it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
-                }
-            )
-
-        override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-        override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-        override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(stored.takeIf { it.note.id == id })
-
-        override suspend fun get(id: Long): NoteWithItems? = stored.takeIf { it.note.id == id }
-
-        override suspend fun getByUuid(uuid: String): NoteWithItems? = stored.takeIf { it.note.uuid == uuid }
-
-        override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = stored.note.takeIf { it.uuid == uuid }
-
-        override suspend fun allNotes(): List<NoteWithItems> = listOf(stored)
-
-        override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
-            listOf(stored).filter { it.note.ownerId == ownerId }
-
-        override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> {
-            val reminderAt = stored.note.reminderAt ?: return emptyList()
-            return if (
-                !stored.note.trashed &&
-                !stored.note.archived &&
-                stored.note.completedAt == null &&
-                reminderAt <= untilMillis
-            ) {
-                listOf(stored)
-            } else {
-                emptyList()
-            }
+    ) : BaseFakeNoteDao() {
+        init {
+            notes[initialNote.id] = initialNote
         }
-
-        override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-        override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-        override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-        override suspend fun insert(note: NoteEntity): Long {
-            stored = NoteWithItems(note, emptyList())
-            return note.id
-        }
-
-        override suspend fun update(note: NoteEntity) {
-            stored = stored.copy(note = note)
-        }
-
-        override suspend fun setTrashed(
-            id: Long,
-            trashed: Boolean,
-            updatedAt: Long,
-        ) = Unit
-
-        override suspend fun setArchived(
-            id: Long,
-            archived: Boolean,
-            updatedAt: Long,
-        ) = Unit
-
-        override suspend fun deleteById(id: Long) = Unit
-
-        override suspend fun allNoteIds(): List<Long> = listOf(stored.note.id)
-
-        override suspend fun countPictureUri(uri: String): Int = 0
-
-        override suspend fun trashedNoteIds(): List<Long> = emptyList()
-
-        override suspend fun archivedNoteIds(): List<Long> = emptyList()
-
-        override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-
-        override suspend fun deleteAllNotes() = Unit
-
-        override suspend fun emptyTrash() = Unit
-
-        override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
+        val stored: NoteWithItems
+            get() = NoteWithItems(notes.values.first(), emptyList())
     }
 
-    private class FakeChecklistItemDao : ChecklistItemDao {
-        override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
+    private class FakeChecklistItemDao : BaseFakeChecklistItemDao()
 
-        override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
-
-        override suspend fun insert(item: ChecklistItemEntity): Long = item.id
-
-        override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
-
-        override suspend fun update(item: ChecklistItemEntity) = Unit
-
-        override suspend fun deleteById(id: Long) = Unit
-
-        override suspend fun deleteForNote(noteId: Long) = Unit
-    }
-
-    private class FakeAttachmentDao : AttachmentDao {
-        override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = emptyList()
-
-        override suspend fun insert(attachment: NoteAttachmentEntity): Long = attachment.id
-
-        override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
-
-        override suspend fun getById(id: Long): NoteAttachmentEntity? = null
-
-        override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
-
-        override suspend fun countByUri(uri: String): Int = 0
-
-        override suspend fun deleteById(id: Long) = Unit
-
-        override suspend fun deleteForNote(noteId: Long) = Unit
-    }
+    private class FakeAttachmentDao : BaseFakeAttachmentDao()
 }

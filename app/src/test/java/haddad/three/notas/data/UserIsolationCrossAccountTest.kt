@@ -211,192 +211,133 @@ class UserIsolationCrossAccountTest {
         val guestActive = repository.observeActive().first()
         assertTrue("Guest partition should now have 0 notes", guestActive.isEmpty())
     }
+
+    @Test
+    fun `guest migration merges into existing account without overwriting existing notes`() = runBlocking {
+        // Step 1: Alice already has 2 notes in her account
+        activeOwnerId = "user_alice"
+        val aliceExisting1 = repository.createNote("Alice Existing 1", "Existing body 1", 1)
+        val aliceExisting2 = repository.createNote("Alice Existing 2", "Existing body 2", 2)
+
+        // Step 2: User logs out and creates 2 notes in Guest mode
+        activeOwnerId = null
+        val guestNote1 = repository.createNote("Guest Note 1", "Guest body 1", 3)
+        val guestNote2 = repository.createNote("Guest Note 2", "Guest body 2", 4)
+
+        // Step 3: Guest signs into Alice's account, triggering migration
+        val migratedCount = repository.migrateGuestDataToOwner("user_alice")
+        assertEquals("Must migrate 2 guest notes", 2, migratedCount)
+
+        // Step 4: Verify Alice's account has ALL 4 notes (2 existing + 2 migrated)
+        activeOwnerId = "user_alice"
+        val aliceNotes = repository.observeActive().first()
+        assertEquals("Alice should have exactly 4 notes after merge", 4, aliceNotes.size)
+
+        // Check that Alice's existing notes were NOT overwritten or modified
+        val existing1 = aliceNotes.find { it.note.id == aliceExisting1 }
+        assertNotNull("Alice existing note 1 must still exist", existing1)
+        assertEquals("Alice Existing 1", existing1?.note?.title)
+
+        val existing2 = aliceNotes.find { it.note.id == aliceExisting2 }
+        assertNotNull("Alice existing note 2 must still exist", existing2)
+        assertEquals("Alice Existing 2", existing2?.note?.title)
+
+        // Check that guest notes were migrated and assigned to Alice
+        val migrated1 = aliceNotes.find { it.note.id == guestNote1 }
+        assertNotNull("Migrated guest note 1 must exist in Alice's list", migrated1)
+        assertEquals("user_alice", migrated1?.note?.ownerId)
+
+        val migrated2 = aliceNotes.find { it.note.id == guestNote2 }
+        assertNotNull("Migrated guest note 2 must exist in Alice's list", migrated2)
+        assertEquals("user_alice", migrated2?.note?.ownerId)
+
+        // Check that Guest partition is now 0
+        activeOwnerId = null
+        assertTrue("Guest notes must be 0", repository.observeActive().first().isEmpty())
+    }
+
+    @Test
+    fun `guest migration atomicity across notes checklist attachments and MEK`() = runBlocking {
+        // Step 1: Set up MEK manager with in-memory storage
+        var currentAccount: String? = null
+        val keyStore = haddad.three.notas.crypto.SoftwareKeyStoreManager()
+        val storage = haddad.three.notas.crypto.InMemoryCryptoStorage(accountIdProvider = { currentAccount })
+        val mekManager = haddad.three.notas.crypto.MekManager(
+            keyStoreManager = keyStore,
+            storage = storage,
+            context = null,
+            accountIdProvider = { currentAccount },
+        )
+
+        // Step 2: Guest creates a MEK and encrypted data
+        currentAccount = null
+        activeOwnerId = null
+        val guestMek = mekManager.getOrCreateMasterKey()
+        assertNotNull("Guest MEK must be created", guestMek)
+
+        // Guest creates a note with checklist item and attachment
+        val noteId = repository.createNote("Guest Master Note", "Body", 0)
+        fakeChecklistDao.insert(
+            ChecklistItemEntity(
+                id = 1L,
+                uuid = "item-uuid-1",
+                ownerId = null,
+                noteId = noteId,
+                text = "Guest item",
+                checked = false,
+                sortOrder = 1.0,
+                parentId = null,
+                depth = 0,
+                details = "",
+            )
+        )
+        fakeAttachmentDao.insert(
+            NoteAttachmentEntity(
+                id = 1L,
+                uuid = "att-uuid-1",
+                ownerId = null,
+                noteId = noteId,
+                uri = "file:///data/guest_img.png",
+                displayName = "guest_img.png",
+                mimeType = "image/png",
+            )
+        )
+
+        // Step 3: Trigger combined migration to Alice (MEK + Notes + Checklists + Attachments)
+        val targetUser = "user_alice"
+        mekManager.migrateGuestKeysToAccount(targetUser)
+        val migratedNotesCount = repository.migrateGuestDataToOwner(targetUser)
+
+        assertEquals(1, migratedNotesCount)
+
+        // Step 4: Verify MEK belongs to Alice and decrypts accurately
+        currentAccount = targetUser
+        val aliceMek = mekManager.getOrCreateMasterKey()
+        org.junit.Assert.assertArrayEquals(
+            "Alice MEK must match migrated guest MEK",
+            guestMek.encoded,
+            aliceMek.encoded,
+        )
+
+        // Step 5: Verify note, checklist items, and attachments all transferred to Alice
+        activeOwnerId = targetUser
+        val aliceNotes = repository.observeActive().first()
+        assertEquals(1, aliceNotes.size)
+        assertEquals(targetUser, aliceNotes.first().note.ownerId)
+
+        val aliceItems = fakeChecklistDao.itemsFor(noteId)
+        assertEquals(1, aliceItems.size)
+        assertEquals(targetUser, aliceItems.first().ownerId)
+
+        val aliceAttachments = fakeAttachmentDao.attachmentsFor(noteId)
+        assertEquals(1, aliceAttachments.size)
+        assertEquals(targetUser, aliceAttachments.first().ownerId)
+    }
 }
 
 /**
  * In-memory test NoteDao simulating unpartitioned baseline behavior (prior to F04 fix).
  */
-class IsolationTestNoteDao : NoteDao {
-    val notes = mutableMapOf<Long, NoteEntity>()
-    var idCounter = 1L
-
-    override fun observeActive(): Flow<List<NoteWithItems>> =
-        flowOf(notes.values.filter { !it.trashed && !it.archived }.map { NoteWithItems(it, emptyList()) })
-
-    override fun observeScheduled(): Flow<List<NoteWithItems>> =
-        flowOf(notes.values.filter { !it.trashed && !it.archived && it.reminderAt != null }.map { NoteWithItems(it, emptyList()) })
-
-    override fun observeTrashed(): Flow<List<NoteWithItems>> =
-        flowOf(notes.values.filter { it.trashed }.map { NoteWithItems(it, emptyList()) })
-
-    override fun observeArchived(): Flow<List<NoteWithItems>> =
-        flowOf(notes.values.filter { it.archived && !it.trashed }.map { NoteWithItems(it, emptyList()) })
-
-    override fun observe(id: Long): Flow<NoteWithItems?> =
-        flowOf(notes[id]?.let { NoteWithItems(it, emptyList()) })
-
-    override suspend fun get(id: Long): NoteWithItems? =
-        notes[id]?.let { NoteWithItems(it, emptyList()) }
-
-    override suspend fun getByUuid(uuid: String): NoteWithItems? =
-        notes.values.find { it.uuid == uuid }?.let { NoteWithItems(it, emptyList()) }
-
-    override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
-        notes.values.find { it.uuid == uuid }
-
-    override suspend fun allNotes(): List<NoteWithItems> =
-        notes.values.map { NoteWithItems(it, emptyList()) }
-
-    override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
-        notes.values.filter { it.ownerId == ownerId }.map { NoteWithItems(it, emptyList()) }
-
-    override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-
-    override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> {
-        val clean = ftsQuery.replace("*", "").lowercase()
-        return flowOf(
-            notes.values
-                .filter {
-                    !it.trashed && !it.archived &&
-                        (it.title.lowercase().contains(clean) || it.body.lowercase().contains(clean))
-                }
-                .map { NoteWithItems(it, emptyList()) }
-        )
-    }
-
-    override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> {
-        val clean = ftsQuery.replace("*", "").lowercase()
-        return flowOf(
-            notes.values
-                .filter {
-                    it.archived && !it.trashed &&
-                        (it.title.lowercase().contains(clean) || it.body.lowercase().contains(clean))
-                }
-                .map { NoteWithItems(it, emptyList()) }
-        )
-    }
-
-    override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> {
-        val clean = ftsQuery.replace("*", "").lowercase()
-        return flowOf(
-            notes.values
-                .filter {
-                    it.trashed &&
-                        (it.title.lowercase().contains(clean) || it.body.lowercase().contains(clean))
-                }
-                .map { NoteWithItems(it, emptyList()) }
-        )
-    }
-
-    override suspend fun insert(note: NoteEntity): Long {
-        val id = if (note.id != 0L) note.id else idCounter++
-        val entity = note.copy(id = id)
-        notes[id] = entity
-        return id
-    }
-
-    override suspend fun update(note: NoteEntity) {
-        notes[note.id] = note
-    }
-
-    override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) {
-        notes[id]?.let { notes[id] = it.copy(trashed = trashed, updatedAt = updatedAt) }
-    }
-
-    override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) {
-        notes[id]?.let { notes[id] = it.copy(archived = archived, updatedAt = updatedAt) }
-    }
-
-    override suspend fun deleteById(id: Long) {
-        notes.remove(id)
-    }
-
-    override suspend fun allNoteIds(): List<Long> = notes.keys.toList()
-
-    override suspend fun countPictureUri(uri: String): Int = notes.values.count { it.pictureUri == uri }
-
-    override suspend fun trashedNoteIds(): List<Long> =
-        notes.values.filter { it.trashed }.map { it.id }
-
-    override suspend fun archivedNoteIds(): List<Long> =
-        notes.values.filter { it.archived && !it.trashed }.map { it.id }
-
-    override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-
-    override suspend fun deleteAllNotes() {
-        notes.clear()
-    }
-
-    override suspend fun emptyTrash() {
-        notes.entries.removeIf { it.value.trashed }
-    }
-
-    override suspend fun deleteTrashedOlderThan(cutoff: Long) {}
-}
-
-class IsolationTestChecklistItemDao : ChecklistItemDao {
-    val items = mutableMapOf<Long, ChecklistItemEntity>()
-    var idCounter = 1L
-
-    override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> =
-        items.values.filter { it.noteId == noteId }
-
-    override suspend fun getByUuid(uuid: String): ChecklistItemEntity? =
-        items.values.find { it.uuid == uuid }
-
-    override suspend fun insert(item: ChecklistItemEntity): Long {
-        val id = if (item.id != 0L) item.id else idCounter++
-        items[id] = item.copy(id = id)
-        return id
-    }
-
-    override suspend fun insertAll(items: List<ChecklistItemEntity>) {
-        items.forEach { insert(it) }
-    }
-
-    override suspend fun update(item: ChecklistItemEntity) {
-        items[item.id] = item
-    }
-
-    override suspend fun deleteById(id: Long) {
-        items.remove(id)
-    }
-
-    override suspend fun deleteForNote(noteId: Long) {
-        items.entries.removeIf { it.value.noteId == noteId }
-    }
-}
-
-class IsolationTestAttachmentDao : AttachmentDao {
-    val attachments = mutableMapOf<Long, NoteAttachmentEntity>()
-    var idCounter = 1L
-
-    override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> =
-        attachments.values.filter { it.noteId == noteId }
-
-    override suspend fun insert(attachment: NoteAttachmentEntity): Long {
-        val id = if (attachment.id != 0L) attachment.id else idCounter++
-        attachments[id] = attachment.copy(id = id)
-        return id
-    }
-
-    override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) {
-        attachments.forEach { insert(it) }
-    }
-
-    override suspend fun getById(id: Long): NoteAttachmentEntity? = attachments[id]
-
-    override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? =
-        attachments.values.find { it.uuid == uuid }
-
-    override suspend fun countByUri(uri: String): Int =
-        attachments.values.count { it.uri == uri }
-
-    override suspend fun deleteById(id: Long) {
-        attachments.remove(id)
-    }
-
-    override suspend fun deleteForNote(noteId: Long) {
-        attachments.entries.removeIf { it.value.noteId == noteId }
-    }
-}
+typealias IsolationTestNoteDao = BaseFakeNoteDao
+typealias IsolationTestChecklistItemDao = BaseFakeChecklistItemDao
+typealias IsolationTestAttachmentDao = BaseFakeAttachmentDao

@@ -54,22 +54,7 @@ class AttachmentStorageManagerTest {
         override suspend fun getIdToken(forceRefresh: Boolean): String? = token
     }
 
-    private class FakeAttachmentDao : AttachmentDao {
-        val attachments = mutableMapOf<Long, NoteAttachmentEntity>()
-        var idCounter = 1L
-        override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = attachments.values.filter { it.noteId == noteId }
-        override suspend fun insert(attachment: NoteAttachmentEntity): Long {
-            val id = if (attachment.id != 0L) attachment.id else idCounter++
-            attachments[id] = attachment.copy(id = id)
-            return id
-        }
-        override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) { attachments.forEach { insert(it) } }
-        override suspend fun getById(id: Long): NoteAttachmentEntity? = attachments[id]
-        override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = attachments.values.find { it.uuid == uuid }
-        override suspend fun countByUri(uri: String): Int = attachments.values.count { it.uri == uri }
-        override suspend fun deleteById(id: Long) { attachments.remove(id) }
-        override suspend fun deleteForNote(noteId: Long) { attachments.entries.removeIf { it.value.noteId == noteId } }
-    }
+    private class FakeAttachmentDao : haddad.three.notas.data.BaseFakeAttachmentDao()
 
     private class MockBackupApiClient : BackupApiClient({ url -> error("Unused in mock") }) {
         var requestedUploadDto: AttachmentUploadUrlRequestDto? = null

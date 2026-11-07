@@ -48,4 +48,7 @@ interface ShoulderDao {
         noteId: Long,
         shoulderId: Long?,
     )
+
+    @Query("UPDATE shoulders SET ownerId = :targetOwnerId WHERE ownerId IS NULL")
+    suspend fun claimGuestShoulders(targetOwnerId: String): Int
 }

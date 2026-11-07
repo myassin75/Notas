@@ -400,10 +400,10 @@ internal class FakeRepositoryStore {
 
 private class FakeNoteDao(
     private val store: FakeRepositoryStore,
-) : NoteDao {
-    override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(store.notes.keys.mapNotNull { noteId -> store.noteWithItems(noteId) })
+) : haddad.three.notas.data.BaseFakeNoteDao() {
+    override fun observeActive(ownerId: String?): Flow<List<NoteWithItems>> = flowOf(store.notes.keys.mapNotNull { noteId -> store.noteWithItems(noteId) })
 
-    override fun observeScheduled(): Flow<List<NoteWithItems>> =
+    override fun observeScheduled(ownerId: String?): Flow<List<NoteWithItems>> =
         flowOf(
             store.notes.keys.mapNotNull { noteId ->
                 store.noteWithItems(noteId)
@@ -411,10 +411,6 @@ private class FakeNoteDao(
                 it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
             }
         )
-
-    override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-    override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
     override fun observe(id: Long): Flow<NoteWithItems?> =
         store.observedNotes.getOrPut(id) {
@@ -436,14 +432,6 @@ private class FakeNoteDao(
 
     override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
         allNotes().filter { it.note.ownerId == ownerId }
-
-    override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-
-    override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-    override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-    override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
 
     override suspend fun insert(note: NoteEntity): Long {
         val noteId = if (note.id > 0L) note.id else store.nextNoteId++
@@ -489,27 +477,15 @@ private class FakeNoteDao(
 
     override suspend fun allNoteIds(): List<Long> = store.notes.keys.toList()
 
-    override suspend fun countPictureUri(uri: String): Int = 0
-
-    override suspend fun trashedNoteIds(): List<Long> = emptyList()
-
-    override suspend fun archivedNoteIds(): List<Long> = emptyList()
-
-    override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-
     override suspend fun deleteAllNotes() {
         store.notes.clear()
         store.itemsByNote.clear()
     }
-
-    override suspend fun emptyTrash() = Unit
-
-    override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
 }
 
 private class FakeChecklistItemDao(
     private val store: FakeRepositoryStore,
-) : ChecklistItemDao {
+) : haddad.three.notas.data.BaseFakeChecklistItemDao() {
     override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> =
         store.itemsByNote[noteId]
             ?.sortedBy { item -> item.sortOrder }
@@ -549,23 +525,7 @@ private class FakeChecklistItemDao(
     }
 }
 
-private class FakeAttachmentDao : AttachmentDao {
-    override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = emptyList()
-
-    override suspend fun insert(attachment: NoteAttachmentEntity): Long = attachment.id
-
-    override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
-
-    override suspend fun getById(id: Long): NoteAttachmentEntity? = null
-
-    override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
-
-    override suspend fun countByUri(uri: String): Int = 0
-
-    override suspend fun deleteById(id: Long) = Unit
-
-    override suspend fun deleteForNote(noteId: Long) = Unit
-}
+private class FakeAttachmentDao : haddad.three.notas.data.BaseFakeAttachmentDao()
 
 private fun noteEntity(
     id: Long,

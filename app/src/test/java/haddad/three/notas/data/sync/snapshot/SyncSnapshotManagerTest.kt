@@ -901,34 +901,7 @@ class SyncSnapshotManagerTest {
         private val itemDao: FakeChecklistItemDao,
         private val attachmentDao: FakeAttachmentDao,
         private val shoulderDao: FakeShoulderDao,
-    ) : NoteDao {
-        val notes = mutableMapOf<String, NoteEntity>()
-
-        override suspend fun insert(note: NoteEntity): Long {
-            val assignedId = if (note.id == 0L) (notes.size + 1).toLong() else note.id
-            val stored = note.copy(id = assignedId)
-            notes[note.uuid] = stored
-            return assignedId
-        }
-
-        override suspend fun update(note: NoteEntity) {
-            notes[note.uuid] = note
-        }
-
-        override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = notes[uuid]
-
-        override suspend fun deleteById(id: Long) {
-            notes.values.find { it.id == id }?.let { notes.remove(it.uuid) }
-        }
-
-        override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
-        override suspend fun get(id: Long): NoteWithItems? = null
-        override suspend fun getByUuid(uuid: String): NoteWithItems? = null
-
+    ) : haddad.three.notas.data.UuidBaseFakeNoteDao() {
         override suspend fun allNotes(): List<NoteWithItems> = notes.values.map { note ->
             NoteWithItems(
                 note = note,
@@ -937,107 +910,15 @@ class SyncSnapshotManagerTest {
                 shoulder = shoulderDao.shoulders.values.find { it.id == note.shoulderId },
             )
         }
-
-        override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = emptyList()
-        override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-        override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) {}
-        override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) {}
-        override suspend fun allNoteIds(): List<Long> = notes.values.map { it.id }
-        override suspend fun countPictureUri(uri: String): Int = 0
-        override suspend fun trashedNoteIds(): List<Long> = emptyList()
-        override suspend fun archivedNoteIds(): List<Long> = emptyList()
-        override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-        override suspend fun deleteAllNotes() { notes.clear() }
-        override suspend fun emptyTrash() {}
-        override suspend fun deleteTrashedOlderThan(cutoff: Long) {}
     }
 
-    private class FakeChecklistItemDao : ChecklistItemDao {
-        val items = mutableMapOf<String, ChecklistItemEntity>()
+    private class FakeChecklistItemDao : haddad.three.notas.data.UuidBaseFakeChecklistItemDao()
 
-        override suspend fun insert(item: ChecklistItemEntity): Long {
-            val assignedId = if (item.id == 0L) (items.size + 1).toLong() else item.id
-            val stored = item.copy(id = assignedId)
-            items[item.uuid] = stored
-            return assignedId
-        }
-
-        override suspend fun insertAll(items: List<ChecklistItemEntity>) {
-            items.forEach { insert(it) }
-        }
-
-        override suspend fun update(item: ChecklistItemEntity) {
-            items[item.uuid] = item
-        }
-
-        override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = items[uuid]
-        override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> =
-            items.values.filter { it.noteId == noteId }
-
-        override suspend fun deleteForNote(noteId: Long) {
-            items.values.filter { it.noteId == noteId }.forEach { items.remove(it.uuid) }
-        }
-
-        override suspend fun deleteById(id: Long) {
-            items.values.find { it.id == id }?.let { items.remove(it.uuid) }
-        }
-    }
-
-    private class FakeShoulderDao : ShoulderDao {
-        val shoulders = mutableMapOf<Long, ShoulderEntity>()
-        private var idCounter = 1L
-
-        override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = flowOf(shoulders.values.toList())
-        override suspend fun allShoulders(): List<ShoulderEntity> = shoulders.values.toList()
-        override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> =
-            shoulders.values.filter { it.ownerId == ownerId }
-        override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = flowOf(emptyList())
-        override suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulders[id]
-        override suspend fun getByUuid(uuid: String): ShoulderEntity? = shoulders.values.find { it.uuid == uuid }
-        override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? =
-            shoulders.values.find { it.normalizedName == normalizedName }
-        override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
-
-        override suspend fun insertShoulder(shoulder: ShoulderEntity): Long {
-            val id = if (shoulder.id != 0L) shoulder.id else idCounter++
-            shoulders[id] = shoulder.copy(id = id)
-            return id
-        }
-
-        override suspend fun updateShoulder(shoulder: ShoulderEntity) { shoulders[shoulder.id] = shoulder }
-        override suspend fun deleteShoulder(shoulder: ShoulderEntity) { shoulders.remove(shoulder.id) }
-        override suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?) {}
+    private class FakeShoulderDao : haddad.three.notas.data.BaseFakeShoulderDao() {
         fun clearAll() { shoulders.clear() }
     }
 
-    private class FakeAttachmentDao : AttachmentDao {
-        val attachments = mutableMapOf<Long, NoteAttachmentEntity>()
-        private var idCounter = 1L
-
-        override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> =
-            attachments.values.filter { it.noteId == noteId }
-
-        override suspend fun insert(attachment: NoteAttachmentEntity): Long {
-            val id = if (attachment.id != 0L) attachment.id else idCounter++
-            attachments[id] = attachment.copy(id = id)
-            return id
-        }
-
-        override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) {
-            attachments.forEach { insert(it) }
-        }
-
-        override suspend fun getById(id: Long): NoteAttachmentEntity? = attachments[id]
-        override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = attachments.values.find { it.uuid == uuid }
-        override suspend fun countByUri(uri: String): Int = attachments.values.count { it.uri == uri }
-        override suspend fun deleteById(id: Long) { attachments.remove(id) }
-        override suspend fun deleteForNote(noteId: Long) {
-            attachments.entries.removeIf { it.value.noteId == noteId }
-        }
-    }
+    private class FakeAttachmentDao : haddad.three.notas.data.BaseFakeAttachmentDao()
 
     private class FakePendingChangeDao : PendingChangeDao {
         val changes = mutableMapOf<String, PendingChangeEntity>()

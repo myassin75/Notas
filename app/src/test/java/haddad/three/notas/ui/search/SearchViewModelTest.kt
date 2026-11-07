@@ -97,134 +97,18 @@ class SearchViewModelTest {
 
     private fun TestScope.createViewModel(): SearchViewModel {
         val fakeNoteDao =
-            object : NoteDao {
-                override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(null)
-
-                override suspend fun get(id: Long): NoteWithItems? = null
-
-                override suspend fun getByUuid(uuid: String): NoteWithItems? = null
-
-                override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = null
-
-                override suspend fun allNotes(): List<NoteWithItems> = emptyList()
-
-                override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = emptyList()
-
-                override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-
-                override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = activeSearchResultsFlow
-
-                override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = archivedSearchResultsFlow
-
-                override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-
-                override suspend fun insert(note: NoteEntity): Long = 1L
-
-                override suspend fun update(note: NoteEntity) = Unit
-
-                override suspend fun setTrashed(
-                    id: Long,
-                    trashed: Boolean,
-                    updatedAt: Long,
-                ) = Unit
-
-                override suspend fun setArchived(
-                    id: Long,
-                    archived: Boolean,
-                    updatedAt: Long,
-                ) = Unit
-
-                override suspend fun deleteById(id: Long) = Unit
-
-                override suspend fun allNoteIds(): List<Long> = emptyList()
-
-                override suspend fun countPictureUri(uri: String): Int = 0
-
-                override suspend fun trashedNoteIds(): List<Long> = emptyList()
-
-                override suspend fun archivedNoteIds(): List<Long> = emptyList()
-
-                override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-
-                override suspend fun deleteAllNotes() = Unit
-
-                override suspend fun emptyTrash() = Unit
-
-                override suspend fun deleteTrashedOlderThan(cutoff: Long) = Unit
+            object : haddad.three.notas.data.BaseFakeNoteDao() {
+                override fun searchNotes(ftsQuery: String, ownerId: String?): Flow<List<NoteWithItems>> = activeSearchResultsFlow
+                override fun searchArchived(ftsQuery: String, ownerId: String?): Flow<List<NoteWithItems>> = archivedSearchResultsFlow
             }
 
-        val fakeItemDao =
-            object : ChecklistItemDao {
-                override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = emptyList()
+        val fakeItemDao = object : haddad.three.notas.data.BaseFakeChecklistItemDao() {}
 
-                override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = null
-
-                override suspend fun insert(item: ChecklistItemEntity): Long = 1L
-
-                override suspend fun insertAll(items: List<ChecklistItemEntity>) = Unit
-
-                override suspend fun update(item: ChecklistItemEntity) = Unit
-
-                override suspend fun deleteById(id: Long) = Unit
-
-                override suspend fun deleteForNote(noteId: Long) = Unit
-            }
-
-        val fakeAttachmentDao =
-            object : AttachmentDao {
-                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = emptyList()
-
-                override suspend fun insert(attachment: NoteAttachmentEntity): Long = 1L
-
-                override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) = Unit
-
-                override suspend fun getById(id: Long): NoteAttachmentEntity? = null
-
-                override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = null
-
-                override suspend fun countByUri(uri: String): Int = 0
-
-                override suspend fun deleteById(id: Long) = Unit
-
-                override suspend fun deleteForNote(noteId: Long) = Unit
-            }
+        val fakeAttachmentDao = object : haddad.three.notas.data.BaseFakeAttachmentDao() {}
 
         val fakeShoulderDao =
-            object : ShoulderDao {
+            object : haddad.three.notas.data.BaseFakeShoulderDao() {
                 override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = allShouldersFlow
-
-                override suspend fun allShoulders(): List<ShoulderEntity> = emptyList()
-
-                override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> = emptyList()
-
-                override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = flowOf(emptyList())
-
-                override suspend fun getShoulderById(id: Long): ShoulderEntity? = null
-
-                override suspend fun getByUuid(uuid: String): ShoulderEntity? = null
-
-                override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? = null
-
-                override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
-
-                override suspend fun insertShoulder(shoulder: ShoulderEntity): Long = 1L
-
-                override suspend fun updateShoulder(shoulder: ShoulderEntity) = Unit
-
-                override suspend fun deleteShoulder(shoulder: ShoulderEntity) = Unit
-
-                override suspend fun setShoulderForNote(
-                    noteId: Long,
-                    shoulderId: Long?,
-                ) = Unit
             }
 
         val noteRepository =

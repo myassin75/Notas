@@ -59,4 +59,8 @@ class ShoulderRepository
             }
             if (database != null) database.withTransaction { block() } else block()
         }
+
+        suspend fun claimGuestShoulders(targetOwnerId: String): Int {
+            return shoulderDao.claimGuestShoulders(targetOwnerId)
+        }
     }

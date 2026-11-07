@@ -25,8 +25,16 @@ interface NoteDao {
      * that behaves like a separate shelf from Home.
      */
     @Transaction
-    @Query("SELECT * FROM notes WHERE trashed = 0 AND archived = 0 ORDER BY updatedAt DESC")
-    fun observeActive(): Flow<List<NoteWithItems>>
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE trashed = 0
+          AND archived = 0
+          AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
+        ORDER BY updatedAt DESC
+        """
+    )
+    fun observeActive(ownerId: String? = null): Flow<List<NoteWithItems>>
 
     @Transaction
     @Query(
@@ -35,18 +43,34 @@ interface NoteDao {
         WHERE trashed = 0
           AND archived = 0
           AND (reminderAt IS NOT NULL OR endAt IS NOT NULL OR isAllDay = 1 OR (reminders IS NOT NULL AND reminders != '[]' AND reminders != ''))
+          AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
         ORDER BY reminderAt ASC, endAt ASC
         """
     )
-    fun observeScheduled(): Flow<List<NoteWithItems>>
+    fun observeScheduled(ownerId: String? = null): Flow<List<NoteWithItems>>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE trashed = 1 ORDER BY updatedAt DESC")
-    fun observeTrashed(): Flow<List<NoteWithItems>>
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE trashed = 1
+          AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
+        ORDER BY updatedAt DESC
+        """
+    )
+    fun observeTrashed(ownerId: String? = null): Flow<List<NoteWithItems>>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE archived = 1 AND trashed = 0 ORDER BY updatedAt DESC")
-    fun observeArchived(): Flow<List<NoteWithItems>>
+    @Query(
+        """
+        SELECT * FROM notes
+        WHERE archived = 1
+          AND trashed = 0
+          AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
+        ORDER BY updatedAt DESC
+        """
+    )
+    fun observeArchived(ownerId: String? = null): Flow<List<NoteWithItems>>
 
     @Transaction
     @Query("SELECT * FROM notes WHERE id = :id LIMIT 1")
@@ -100,10 +124,11 @@ interface NoteDao {
         WHERE notes_fts MATCH :ftsQuery
           AND notes.trashed = 0
           AND notes.archived = 0
+          AND ((:ownerId IS NULL AND notes.ownerId IS NULL) OR notes.ownerId = :ownerId)
         ORDER BY notes.updatedAt DESC
         """,
     )
-    fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>>
+    fun searchNotes(ftsQuery: String, ownerId: String? = null): Flow<List<NoteWithItems>>
 
     /**
      * FTS over archived (non-trashed) notes. Drives the collapsible "Archive (N)" section
@@ -118,10 +143,11 @@ interface NoteDao {
         WHERE notes_fts MATCH :ftsQuery
           AND notes.archived = 1
           AND notes.trashed = 0
+          AND ((:ownerId IS NULL AND notes.ownerId IS NULL) OR notes.ownerId = :ownerId)
         ORDER BY notes.updatedAt DESC
         """,
     )
-    fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>>
+    fun searchArchived(ftsQuery: String, ownerId: String? = null): Flow<List<NoteWithItems>>
 
     /**
      * FTS over trashed notes. Powers the collapsible "Trash (N)" section inside main-tab
@@ -134,10 +160,11 @@ interface NoteDao {
         JOIN notes_fts ON notes.id = notes_fts.docid
         WHERE notes_fts MATCH :ftsQuery
           AND notes.trashed = 1
+          AND ((:ownerId IS NULL AND notes.ownerId IS NULL) OR notes.ownerId = :ownerId)
         ORDER BY notes.trashedAt DESC
         """,
     )
-    fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>>
+    fun searchTrashed(ftsQuery: String, ownerId: String? = null): Flow<List<NoteWithItems>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(note: NoteEntity): Long
@@ -186,11 +213,11 @@ interface NoteDao {
     @Query("SELECT COUNT(*) FROM notes WHERE pictureUri = :uri")
     suspend fun countPictureUri(uri: String): Int
 
-    @Query("SELECT id FROM notes WHERE trashed = 1")
-    suspend fun trashedNoteIds(): List<Long>
+    @Query("SELECT id FROM notes WHERE trashed = 1 AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)")
+    suspend fun trashedNoteIds(ownerId: String? = null): List<Long>
 
-    @Query("SELECT id FROM notes WHERE archived = 1 AND trashed = 0")
-    suspend fun archivedNoteIds(): List<Long>
+    @Query("SELECT id FROM notes WHERE archived = 1 AND trashed = 0 AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)")
+    suspend fun archivedNoteIds(ownerId: String? = null): List<Long>
 
     @Query("SELECT id FROM notes WHERE trashed = 1 AND trashedAt IS NOT NULL AND trashedAt < :cutoff")
     suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long>
@@ -198,11 +225,35 @@ interface NoteDao {
     @Query("DELETE FROM notes")
     suspend fun deleteAllNotes()
 
-    @Query("DELETE FROM notes WHERE trashed = 1")
-    suspend fun emptyTrash()
+    @Query("DELETE FROM notes WHERE trashed = 1 AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)")
+    suspend fun emptyTrash(ownerId: String? = null)
+
+    @Query(
+        """
+        UPDATE notes
+        SET trashed = 1,
+            archived = 0,
+            trashedAt = :updatedAt,
+            updatedAt = :updatedAt
+        WHERE archived = 1
+          AND trashed = 0
+          AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
+        """,
+    )
+    suspend fun moveAllArchivedToTrash(ownerId: String? = null, updatedAt: Long)
 
     @Query("DELETE FROM notes WHERE trashed = 1 AND trashedAt IS NOT NULL AND trashedAt < :cutoff")
     suspend fun deleteTrashedOlderThan(cutoff: Long)
+
+    @Query("DELETE FROM notes WHERE ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)")
+    suspend fun deleteNotesForOwner(ownerId: String?)
+
+    @Transaction
+    @Query("SELECT * FROM notes WHERE ownerId IS NULL ORDER BY id ASC")
+    suspend fun guestNotes(): List<NoteWithItems>
+
+    @Query("UPDATE notes SET ownerId = :targetOwnerId, updatedAt = :now WHERE ownerId IS NULL")
+    suspend fun claimGuestNotes(targetOwnerId: String, now: Long): Int
 }
 
 @Dao
@@ -227,6 +278,9 @@ interface ChecklistItemDao {
 
     @Query("DELETE FROM checklist_items WHERE noteId = :noteId")
     suspend fun deleteForNote(noteId: Long)
+
+    @Query("UPDATE checklist_items SET ownerId = :targetOwnerId WHERE ownerId IS NULL")
+    suspend fun claimGuestChecklistItems(targetOwnerId: String): Int
 }
 
 @Dao
@@ -254,4 +308,7 @@ interface AttachmentDao {
 
     @Query("DELETE FROM attachments WHERE noteId = :noteId")
     suspend fun deleteForNote(noteId: Long)
+
+    @Query("UPDATE attachments SET ownerId = :targetOwnerId WHERE ownerId IS NULL")
+    suspend fun claimGuestAttachments(targetOwnerId: String): Int
 }

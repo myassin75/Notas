@@ -128,99 +128,10 @@ class DriveProviderCompatibilityTest {
             CloudBackupResult.Success(Unit)
     }
 
-    private class FakeNoteDao : NoteDao {
-        val notes = mutableMapOf<Long, NoteEntity>()
-        private var idCounter = 1L
-        override fun observeActive(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observeScheduled(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observeTrashed(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observeArchived(): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun observe(id: Long): Flow<NoteWithItems?> = flowOf(notes[id]?.let { NoteWithItems(it, emptyList(), emptyList(), null) })
-        override suspend fun get(id: Long): NoteWithItems? = notes[id]?.let { NoteWithItems(it, emptyList(), emptyList(), null) }
-        override suspend fun getByUuid(uuid: String): NoteWithItems? = notes.values.find { it.uuid == uuid }?.let { NoteWithItems(it, emptyList(), emptyList(), null) }
-        override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = notes.values.find { it.uuid == uuid }
-        override suspend fun allNotes(): List<NoteWithItems> = notes.values.map { NoteWithItems(it, emptyList(), emptyList(), null) }
-        override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = notes.values.filter { it.ownerId == ownerId }.map { NoteWithItems(it, emptyList(), emptyList(), null) }
-        override suspend fun activeRemindersUntil(untilMillis: Long): List<NoteWithItems> = emptyList()
-        override fun searchNotes(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun searchArchived(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override fun searchTrashed(ftsQuery: String): Flow<List<NoteWithItems>> = flowOf(emptyList())
-        override suspend fun insert(note: NoteEntity): Long {
-            val id = if (note.id != 0L) note.id else idCounter++
-            notes[id] = note.copy(id = id)
-            return id
-        }
-        override suspend fun update(note: NoteEntity) { notes[note.id] = note }
-        override suspend fun setTrashed(id: Long, trashed: Boolean, updatedAt: Long) {
-            notes[id]?.let { notes[id] = it.copy(trashed = trashed, updatedAt = updatedAt) }
-        }
-        override suspend fun setArchived(id: Long, archived: Boolean, updatedAt: Long) {
-            notes[id]?.let { notes[id] = it.copy(archived = archived, updatedAt = updatedAt) }
-        }
-        override suspend fun deleteById(id: Long) { notes.remove(id) }
-        override suspend fun allNoteIds(): List<Long> = notes.keys.toList()
-        override suspend fun countPictureUri(uri: String): Int = notes.values.count { it.pictureUri == uri }
-        override suspend fun trashedNoteIds(): List<Long> = notes.values.filter { it.trashed }.map { it.id }
-        override suspend fun archivedNoteIds(): List<Long> = notes.values.filter { it.archived }.map { it.id }
-        override suspend fun trashedNoteIdsOlderThan(cutoff: Long): List<Long> = emptyList()
-        override suspend fun deleteAllNotes() { notes.clear() }
-        override suspend fun emptyTrash() { notes.entries.removeIf { it.value.trashed } }
-        override suspend fun deleteTrashedOlderThan(cutoff: Long) {}
-    }
-
-    private class FakeShoulderDao : ShoulderDao {
-        val shoulders = mutableMapOf<Long, ShoulderEntity>()
-        private var idCounter = 1L
-        override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = flowOf(emptyList())
-        override suspend fun allShoulders(): List<ShoulderEntity> = shoulders.values.toList()
-        override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> = shoulders.values.filter { it.ownerId == ownerId }
-        override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = flowOf(emptyList())
-        override suspend fun getShoulderById(id: Long): ShoulderEntity? = shoulders[id]
-        override suspend fun getByUuid(uuid: String): ShoulderEntity? = shoulders.values.find { it.uuid == uuid }
-        override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? = shoulders.values.find { it.normalizedName == normalizedName }
-        override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
-        override suspend fun insertShoulder(shoulder: ShoulderEntity): Long {
-            val id = if (shoulder.id != 0L) shoulder.id else idCounter++
-            shoulders[id] = shoulder.copy(id = id)
-            return id
-        }
-        override suspend fun updateShoulder(shoulder: ShoulderEntity) { shoulders[shoulder.id] = shoulder }
-        override suspend fun deleteShoulder(shoulder: ShoulderEntity) { shoulders.remove(shoulder.id) }
-        override suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?) {}
-    }
-
-    private class FakeChecklistItemDao : ChecklistItemDao {
-        val items = mutableMapOf<Long, ChecklistItemEntity>()
-        private var idCounter = 1L
-        override suspend fun itemsFor(noteId: Long): List<ChecklistItemEntity> = items.values.filter { it.noteId == noteId }
-        override suspend fun insert(item: ChecklistItemEntity): Long {
-            val id = if (item.id != 0L) item.id else idCounter++
-            items[id] = item.copy(id = id)
-            return id
-        }
-        override suspend fun insertAll(items: List<ChecklistItemEntity>) { items.forEach { insert(it) } }
-        override suspend fun update(item: ChecklistItemEntity) { items[item.id] = item }
-        override suspend fun getByUuid(uuid: String): ChecklistItemEntity? = items.values.find { it.uuid == uuid }
-        override suspend fun deleteById(id: Long) { items.remove(id) }
-        override suspend fun deleteForNote(noteId: Long) { items.entries.removeIf { it.value.noteId == noteId } }
-    }
-
-    private class FakeAttachmentDao : AttachmentDao {
-        val attachments = mutableMapOf<Long, NoteAttachmentEntity>()
-        private var idCounter = 1L
-        override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = attachments.values.filter { it.noteId == noteId }
-        override suspend fun insert(attachment: NoteAttachmentEntity): Long {
-            val id = if (attachment.id != 0L) attachment.id else idCounter++
-            attachments[id] = attachment.copy(id = id)
-            return id
-        }
-        override suspend fun insertAll(attachments: List<NoteAttachmentEntity>) { attachments.forEach { insert(it) } }
-        override suspend fun getById(id: Long): NoteAttachmentEntity? = attachments[id]
-        override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = attachments.values.find { it.uuid == uuid }
-        override suspend fun countByUri(uri: String): Int = attachments.values.count { it.uri == uri }
-        override suspend fun deleteById(id: Long) { attachments.remove(id) }
-        override suspend fun deleteForNote(noteId: Long) { attachments.entries.removeIf { it.value.noteId == noteId } }
-    }
+    private class FakeNoteDao : haddad.three.notas.data.BaseFakeNoteDao()
+    private class FakeShoulderDao : haddad.three.notas.data.BaseFakeShoulderDao()
+    private class FakeChecklistItemDao : haddad.three.notas.data.BaseFakeChecklistItemDao()
+    private class FakeAttachmentDao : haddad.three.notas.data.BaseFakeAttachmentDao()
 
     private class FakeGoogleDriveAuthDelegate : GoogleDriveAuthDelegate {
         var isRevoked = false
