@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { prisma } from '../db/client.js';
 import { OtpPurpose, OtpStatus } from '@prisma/client';
 import { sendOtpEmail } from './smtpService.js';
-import { BadRequestError, TooManyRequestsError, InternalServerError } from '../errors/AppError.js';
+import { TooManyRequestsError, InternalServerError } from '../errors/AppError.js';
 import { logger } from '../utils/logger.js';
 import { maskEmail } from '../utils/htmlEscape.js';
 
