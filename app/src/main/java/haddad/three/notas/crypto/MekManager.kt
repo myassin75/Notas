@@ -233,6 +233,10 @@ class MekManager(
     fun migrateGuestKeysToAccount(targetAccountId: String) {
         synchronized(lock) {
             val guestMek = getActiveMasterKey(CryptoStorage.GUEST_ACCOUNT_ID) ?: return
+            // If target account already has an active MEK (existing user), do not overwrite it
+            if (getActiveMasterKey(targetAccountId) != null) {
+                return
+            }
             val keyId = storage.getActiveKeyId(CryptoStorage.GUEST_ACCOUNT_ID)
             val localWrapped = keyStoreManager.wrapKey(guestMek, keyId, targetAccountId)
             storage.setLocalWrappedMek(localWrapped, keyId, targetAccountId)

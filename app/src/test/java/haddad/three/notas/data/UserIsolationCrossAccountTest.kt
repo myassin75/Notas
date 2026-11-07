@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -332,6 +333,64 @@ class UserIsolationCrossAccountTest {
         val aliceAttachments = fakeAttachmentDao.attachmentsFor(noteId)
         assertEquals(1, aliceAttachments.size)
         assertEquals(targetUser, aliceAttachments.first().ownerId)
+    }
+
+    @Test
+    fun `simulated crash during guest migration with notes migrated but MEK not migrated documents end state and verifies recovery`() = runBlocking {
+        // Step 1: Set up MEK manager with in-memory storage
+        var currentAccount: String? = null
+        val keyStore = haddad.three.notas.crypto.SoftwareKeyStoreManager()
+        val storage = haddad.three.notas.crypto.InMemoryCryptoStorage(accountIdProvider = { currentAccount })
+        val mekManager = haddad.three.notas.crypto.MekManager(
+            keyStoreManager = keyStore,
+            storage = storage,
+            context = null,
+            accountIdProvider = { currentAccount },
+        )
+
+        // Step 2: Guest creates a note and has an active MEK
+        currentAccount = null
+        activeOwnerId = null
+        val guestMek = mekManager.getOrCreateMasterKey()
+        assertNotNull(guestMek)
+
+        val noteId = repository.createNote("Guest Note Before Crash", "Secret Content", 0)
+        assertEquals(1, repository.observeActive().first().size)
+
+        // Step 3: Simulate crash during migration:
+        // Room migrates notes to Alice, BUT a crash occurs before migrateGuestKeysToAccount is called
+        val targetUser = "user_alice"
+        val count = repository.migrateGuestDataToOwner(targetUser)
+        assertEquals(1, count)
+
+        // Document the end state after this crash:
+        // 1. In Room DB: note is already claimed by Alice
+        activeOwnerId = targetUser
+        val aliceNotes = repository.observeActive().first()
+        assertEquals(1, aliceNotes.size)
+        assertEquals(targetUser, aliceNotes.first().note.ownerId)
+
+        // 2. In Keystore/Storage: Alice has NO active MEK recorded yet
+        assertNull("Alice has no MEK in storage because crash aborted before MEK migration", mekManager.getActiveMasterKey(targetUser))
+
+        // 3. In Guest Keystore/Storage: Guest MEK is still preserved intact
+        val preservedGuestMek = mekManager.getActiveMasterKey(haddad.three.notas.crypto.CryptoStorage.GUEST_ACCOUNT_ID)
+        assertNotNull("Guest MEK must remain preserved in storage", preservedGuestMek)
+        org.junit.Assert.assertArrayEquals(guestMek.encoded, preservedGuestMek!!.encoded)
+
+        // Step 4: Recovery step
+        // To fix this inconsistency, on next app startup / auth reconciliation,
+        // invoking migrateGuestKeysToAccount(targetUser) restores the key to Alice
+        mekManager.migrateGuestKeysToAccount(targetUser)
+
+        currentAccount = targetUser
+        val aliceMek = mekManager.getActiveMasterKey()
+        assertNotNull("Alice now has an active MEK after recovery", aliceMek)
+        org.junit.Assert.assertArrayEquals(
+            "Alice MEK matches the preserved guest MEK, ensuring zero data loss",
+            guestMek.encoded,
+            aliceMek!!.encoded,
+        )
     }
 }
 
