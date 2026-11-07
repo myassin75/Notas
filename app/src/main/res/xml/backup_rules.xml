@@ -12,6 +12,14 @@
     <exclude
         domain="file"
         path="remember_backup/" />
+    <!-- SYNC_JOURNALS (F04/Axe 2): sync journals tied to device keys -->
+    <exclude
+        domain="file"
+        path="sync_journals/" />
+    <!-- SYNC_SNAPSHOTS (F04/Axe 2): sync snapshots tied to device keys -->
+    <exclude
+        domain="file"
+        path="sync_snapshots/" />
     <!-- DataStore files (AUD-08): sync state, device IDs and sync metadata -->
     <exclude
         domain="file"
