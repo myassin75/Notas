@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
+import java.util.zip.ZipFile
 
 plugins {
     alias(libs.plugins.android.application)
@@ -409,5 +410,47 @@ val verifyOfflineFlavorHygiene = tasks.register<VerifyOfflineFlavorHygieneTask>(
 tasks.matching { it.name == "testOfflineDebugUnitTest" }.configureEach {
     dependsOn(verifyOfflineFlavorHygiene)
 }
+
+abstract class VerifyOfflineApkTask : DefaultTask() {
+    @get:InputDirectory
+    abstract val apkDirectory: DirectoryProperty
+
+    @TaskAction
+    fun verify() {
+        val apkDir = apkDirectory.asFile.get()
+        val apks = if (apkDir.exists()) apkDir.walkTopDown().filter { it.extension == "apk" }.toList() else emptyList()
+        if (apks.isEmpty()) {
+            logger.lifecycle("No offline APK found in ${apkDir.path} to verify.")
+            return
+        }
+
+        val forbidden = listOf("com/google/firebase", "com/google/android/gms")
+        for (apk in apks) {
+            ZipFile(apk).use { zip ->
+                val entries = zip.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    if (entry.name.endsWith(".dex")) {
+                        val bytes = zip.getInputStream(entry).readBytes()
+                        val dexText = String(bytes, Charsets.ISO_8859_1)
+                        for (pattern in forbidden) {
+                            if (dexText.contains(pattern)) {
+                                throw GradleException("Forbidden pattern '$pattern' found in ${entry.name} inside ${apk.name}")
+                            }
+                        }
+                    }
+                }
+            }
+            logger.lifecycle("SUCCESS: Verified ${apk.name} has zero Firebase and zero Google Play Services classes.")
+        }
+    }
+}
+
+val verifyOfflineApk = tasks.register<VerifyOfflineApkTask>("verifyOfflineApk") {
+    description = "Unzips offline APK and verifies that classes.dex contains no Firebase or Google references"
+    group = "verification"
+    apkDirectory.set(layout.buildDirectory.dir("outputs/apk/offline"))
+}
+
 
 

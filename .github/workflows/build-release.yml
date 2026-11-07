@@ -148,7 +148,7 @@ jobs:
       - name: Verify offline flavor hygiene
         if: ${{ inputs.build_offline == 'true' }}
         run: |
-          ./gradlew :app:verifyOfflineFlavorHygiene
+          ./gradlew :app:verifyOfflineFlavorHygiene :app:verifyOfflineApk
 
       - name: Collect and rename release assets
         run: |
