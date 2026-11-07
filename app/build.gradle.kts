@@ -354,3 +354,60 @@ if (googleServicesJson.isFile) {
     apply(plugin = "com.google.gms.google-services")
 }
 
+abstract class VerifyOfflineFlavorHygieneTask : DefaultTask() {
+    @get:InputFiles
+    abstract val runtimeClasspath: ConfigurableFileCollection
+
+    @get:InputFile
+    abstract val manifestFile: RegularFileProperty
+
+    @TaskAction
+    fun verify() {
+        val forbidden = listOf("com.google.firebase", "com.google.android.gms")
+        val matchedFiles = mutableListOf<String>()
+
+        runtimeClasspath.files.forEach { file ->
+            val path = file.path
+            if (forbidden.any { path.contains(it.replace(".", "/")) || path.contains(it) }) {
+                matchedFiles.add(file.name)
+            }
+        }
+
+        if (matchedFiles.isNotEmpty()) {
+            throw GradleException("Found forbidden dependencies in offlineDebugRuntimeClasspath: $matchedFiles")
+        }
+
+        val manifest = manifestFile.asFile.get()
+        if (!manifest.exists()) {
+            throw GradleException("Offline merged manifest not found at ${manifest.absolutePath}")
+        }
+        val content = manifest.readText()
+        if (content.contains("android.permission.INTERNET")) {
+            throw GradleException("Found android.permission.INTERNET in offline merged manifest")
+        }
+        if (content.contains("com.google.firebase")) {
+            throw GradleException("Found com.google.firebase in offline merged manifest")
+        }
+        if (content.contains("com.google.android.gms")) {
+            throw GradleException("Found com.google.android.gms in offline merged manifest")
+        }
+        if (content.contains("firebaseapp.com")) {
+            throw GradleException("Found firebaseapp.com deep link in offline merged manifest")
+        }
+        logger.lifecycle("SUCCESS: Offline flavor is 100% clean of Firebase, Google Play Services, and INTERNET permission.")
+    }
+}
+
+val verifyOfflineFlavorHygiene = tasks.register<VerifyOfflineFlavorHygieneTask>("verifyOfflineFlavorHygiene") {
+    description = "Enforces zero Firebase and zero Google Play Services in the offline flavor"
+    group = "verification"
+    dependsOn("processOfflineDebugMainManifest")
+    runtimeClasspath.from(configurations.named("offlineDebugRuntimeClasspath"))
+    manifestFile.set(layout.buildDirectory.file("intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"))
+}
+
+tasks.matching { it.name == "testOfflineDebugUnitTest" }.configureEach {
+    dependsOn(verifyOfflineFlavorHygiene)
+}
+
+

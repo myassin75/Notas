@@ -145,6 +145,11 @@ jobs:
           fi
           ./gradlew "${gradle_tasks[@]}" "${gradle_arguments[@]}" --no-configuration-cache
 
+      - name: Verify offline flavor hygiene
+        if: ${{ inputs.build_offline == 'true' }}
+        run: |
+          ./gradlew :app:verifyOfflineFlavorHygiene
+
       - name: Collect and rename release assets
         run: |
           set -euo pipefail
