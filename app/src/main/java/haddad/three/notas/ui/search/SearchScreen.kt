@@ -50,7 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,9 +97,9 @@ fun SearchRoute(
     onOpenNote: (NoteWithItems) -> Unit = {},
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val recentSearches by viewModel.recentSearches.collectAsState()
-    val activeShoulders by viewModel.activeShoulders.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val recentSearches by viewModel.recentSearches.collectAsStateWithLifecycle()
+    val activeShoulders by viewModel.activeShoulders.collectAsStateWithLifecycle()
 
     SearchScreen(
         uiState = uiState,
