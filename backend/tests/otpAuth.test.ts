@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { prisma } from '../src/db/client.js';
 import {
   computeOtpHmac,
   generateNumericOtp,
@@ -9,6 +8,222 @@ import {
 import { OtpPurpose, OtpStatus } from '@prisma/client';
 import handler from '../src/api/index.js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
+  interface InMemOtp {
+    id: string;
+    email: string;
+    userId?: string | null;
+    purpose: any;
+    codeHash: string;
+    status: any;
+    attemptsLeft: number;
+    expiresAt: Date;
+    resendAvailableAt: Date;
+    consumedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    dispatchedAt?: Date | null;
+    dispatchError?: string | null;
+  }
+
+  let inMemOtps: InMemOtp[] = [];
+  let idCounter = 1;
+
+  function reset() {
+    inMemOtps = [];
+    idCounter = 1;
+  }
+
+  const emailOtp = {
+    deleteMany: vi.fn(async ({ where }: { where?: { email?: string } } = {}) => {
+      if (where?.email) {
+        const norm = where.email.trim().toLowerCase();
+        const before = inMemOtps.length;
+        inMemOtps = inMemOtps.filter((o) => o.email !== norm);
+        return { count: before - inMemOtps.length };
+      }
+      const count = inMemOtps.length;
+      inMemOtps = [];
+      return { count };
+    }),
+
+    create: vi.fn(async ({ data }: { data: any }) => {
+      const now = new Date();
+      const record: InMemOtp = {
+        id: `otp-${idCounter++}`,
+        email: data.email.trim().toLowerCase(),
+        userId: data.userId || null,
+        purpose: data.purpose,
+        codeHash: data.codeHash,
+        status: data.status,
+        attemptsLeft: data.attemptsLeft ?? 5,
+        expiresAt: data.expiresAt instanceof Date ? data.expiresAt : new Date(data.expiresAt),
+        resendAvailableAt:
+          data.resendAvailableAt instanceof Date
+            ? data.resendAvailableAt
+            : new Date(data.resendAvailableAt),
+        consumedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      inMemOtps.push(record);
+      return { ...record };
+    }),
+
+    update: vi.fn(async ({ where, data }: { where: { id: string }; data: any }) => {
+      const idx = inMemOtps.findIndex((o) => o.id === where.id);
+      if (idx === -1) throw new Error(`Record not found: ${where.id}`);
+      inMemOtps[idx] = {
+        ...inMemOtps[idx],
+        ...data,
+        updatedAt: new Date(),
+      };
+      return { ...inMemOtps[idx] };
+    }),
+
+    findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
+      const found = inMemOtps.find((o) => o.id === where.id);
+      return found ? { ...found } : null;
+    }),
+  };
+
+  const user = {
+    findUnique: vi.fn(async ({ where }: { where: { id?: string; email?: string } }) => {
+      return {
+        id: where.id || 'test-user-123',
+        email: where.email || 'registered@notas.app',
+        emailVerified: false,
+        emailVerificationStatus: 'UNVERIFIED',
+      };
+    }),
+    update: vi.fn(async ({ where, data }: { where: { id: string }; data: any }) => {
+      return {
+        id: where.id,
+        email: 'registered@notas.app',
+        ...data,
+      };
+    }),
+  };
+
+  const outboxEvent = {
+    create: vi.fn(async ({ data }: any) => ({ id: 'outbox-1', ...data })),
+    updateMany: vi.fn(async () => ({ count: 1 })),
+  };
+
+  const $queryRaw = vi.fn(async (strings: any, ...values: any[]) => {
+    const rawSql =
+      typeof strings === 'string'
+        ? strings
+        : strings?.raw
+          ? strings.raw.join(' ')
+          : Array.isArray(strings)
+            ? strings.join(' ')
+            : '';
+
+    let emailVal = '';
+    let purposeVal = '';
+    for (const v of values) {
+      if (typeof v === 'string') {
+        if (v.includes('@')) emailVal = v.trim().toLowerCase();
+        if (v === 'EMAIL_VERIFICATION' || v === 'PASSWORD_RESET') purposeVal = v;
+      }
+    }
+
+    let matches = inMemOtps.filter((o) => {
+      if (emailVal && o.email !== emailVal) return false;
+      if (purposeVal && o.purpose !== purposeVal) return false;
+      return true;
+    });
+
+    if (rawSql.includes('ACTIVE') && rawSql.includes('PENDING_DISPATCH')) {
+      matches = matches.filter((o) => o.status === 'ACTIVE' || o.status === 'PENDING_DISPATCH');
+    }
+
+    matches.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return matches.slice(0, 1).map((m) => ({ ...m }));
+  });
+
+  const $executeRaw = vi.fn(async (strings: any, ...values: any[]) => {
+    const rawSql =
+      typeof strings === 'string'
+        ? strings
+        : strings?.raw
+          ? strings.raw.join(' ')
+          : Array.isArray(strings)
+            ? strings.join(' ')
+            : '';
+
+    if (rawSql.includes('UPDATE "email_otps"')) {
+      for (const otp of inMemOtps) {
+        if (values.includes(otp.id)) {
+          if (rawSql.includes("'CANCELLED'")) {
+            otp.status = 'CANCELLED';
+          } else if (rawSql.includes("'EXPIRED'")) {
+            otp.status = 'EXPIRED';
+          } else if (rawSql.includes("'EXHAUSTED'")) {
+            otp.status = 'EXHAUSTED';
+            otp.attemptsLeft = 0;
+          } else if (rawSql.includes("'CONSUMED'")) {
+            otp.status = 'CONSUMED';
+            otp.consumedAt = new Date();
+          } else if (rawSql.includes('"attemptsLeft" =')) {
+            const numVal = values.find((v: any) => typeof v === 'number');
+            if (numVal !== undefined) {
+              otp.attemptsLeft = numVal;
+            }
+          }
+          otp.updatedAt = new Date();
+        }
+      }
+    }
+    return 1;
+  });
+
+  const txMock: any = {
+    emailOtp,
+    user,
+    outboxEvent,
+    $queryRaw,
+    $executeRaw,
+  };
+
+  const $transaction = vi.fn(async (arg: any) => {
+    if (typeof arg === 'function') {
+      return await arg(txMock);
+    }
+    if (Array.isArray(arg)) {
+      return await Promise.all(arg);
+    }
+    return arg;
+  });
+
+  const mockClient = {
+    emailOtp,
+    user,
+    outboxEvent,
+    $queryRaw,
+    $executeRaw,
+    $transaction,
+  };
+
+  return { mockPrisma: mockClient, resetInMemOtps: reset };
+});
+
+vi.mock('../src/db/client.js', () => ({
+  prisma: mockPrisma,
+  checkDatabaseHealth: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('../src/services/smtpService.js', () => ({
+  sendOtpEmail: vi.fn().mockResolvedValue({
+    success: true,
+    messageId: 'test-smtp-msg-id',
+    provider: 'simulated',
+  }),
+}));
+
+import { prisma } from '../src/db/client.js';
 
 // Mock Firebase Admin SDK for testing
 const mockUpdateUser = vi.fn().mockResolvedValue({ uid: 'test-user-123', emailVerified: true });
@@ -103,7 +318,7 @@ describe('OTP Core Service & Concurrency Tests', () => {
   const testEmail = 'otp.test@notas.app';
 
   beforeEach(async () => {
-    await prisma.emailOtp.deleteMany({ where: { email: testEmail } });
+    resetInMemOtps();
     vi.clearAllMocks();
   });
 
