@@ -5,6 +5,39 @@ import { RateLimitError, UnauthorizedError, ForbiddenError, ConflictError } from
 import { verifyFirebaseToken } from '../src/utils/firebaseAdmin.js';
 import { prisma } from '../src/db/client.js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { User } from '@prisma/client';
+import type * as admin from 'firebase-admin';
+
+function createMockUser(overrides: Partial<User> = {}): User {
+  return {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    emailVerified: false,
+    emailVerificationStatus: 'PENDING_VERIFICATION',
+    displayName: null,
+    photoUrl: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastSyncAt: null,
+    deletionPending: false,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+function createMockDecodedToken(overrides: Partial<admin.auth.DecodedIdToken> = {}): admin.auth.DecodedIdToken {
+  return {
+    aud: 'test-project',
+    auth_time: 1234567890,
+    exp: 1234567890,
+    firebase: { identities: {}, sign_in_provider: 'password' },
+    iat: 1234567890,
+    iss: 'https://securetoken.google.com/test-project',
+    sub: 'test-uid',
+    uid: 'test-uid',
+    ...overrides,
+  };
+}
 
 const mockGetUser = vi.fn();
 
@@ -97,29 +130,35 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'firebase-uid-1',
-        email: 'user@example.com',
-        email_verified: true,
-        name: 'User One',
-        picture: 'https://avatar.com/1.png',
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'firebase-uid-1',
+          email: 'user@example.com',
+          email_verified: true,
+          name: 'User One',
+          picture: 'https://avatar.com/1.png',
+        })
+      );
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'firebase-uid-1',
-        email: 'user@example.com',
-        emailVerified: true,
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'firebase-uid-1',
+          email: 'user@example.com',
+          emailVerified: true,
+          deletionPending: false,
+        })
+      );
 
-      vi.mocked(prisma.user.update).mockResolvedValueOnce({
-        id: 'firebase-uid-1',
-        email: 'user@example.com',
-        emailVerified: true,
-        displayName: 'User One',
-        photoUrl: 'https://avatar.com/1.png',
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.update).mockResolvedValueOnce(
+        createMockUser({
+          id: 'firebase-uid-1',
+          email: 'user@example.com',
+          emailVerified: true,
+          displayName: 'User One',
+          photoUrl: 'https://avatar.com/1.png',
+          deletionPending: false,
+        })
+      );
 
       const user = await authenticate(req, res);
 
@@ -139,12 +178,14 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'new-firebase-uid-99',
-        email: 'recreated@example.com',
-        email_verified: true,
-        name: 'Recreated User',
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'new-firebase-uid-99',
+          email: 'recreated@example.com',
+          email_verified: true,
+          name: 'Recreated User',
+        })
+      );
 
       // Old user in Firebase no longer exists (e.g. deleted and recreated)
       mockGetUser.mockRejectedValueOnce({ code: 'auth/user-not-found' });
@@ -152,19 +193,23 @@ describe('Middleware', () => {
       // 1. Not found by new UID
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
       // 2. Found by email under old UID
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'old-firebase-uid-11',
-        email: 'recreated@example.com',
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'old-firebase-uid-11',
+          email: 'recreated@example.com',
+          deletionPending: false,
+        })
+      );
       // 3. Raw update succeeds
-      vi.mocked(prisma.$executeRaw).mockResolvedValueOnce(1 as any);
+      vi.mocked(prisma.$executeRaw).mockResolvedValueOnce(1);
       // 4. Return re-keyed record
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'new-firebase-uid-99',
-        email: 'recreated@example.com',
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'new-firebase-uid-99',
+          email: 'recreated@example.com',
+          deletionPending: false,
+        })
+      );
 
       const user = await authenticate(req, res);
 
@@ -178,20 +223,24 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'attacker-uid-66',
-        email: 'victim@example.com',
-        email_verified: false,
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'attacker-uid-66',
+          email: 'victim@example.com',
+          email_verified: false,
+        })
+      );
 
       // 1. Not found by attacker UID
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
       // 2. Found by email under victim UID
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'victim-uid-11',
-        email: 'victim@example.com',
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'victim-uid-11',
+          email: 'victim@example.com',
+          deletionPending: false,
+        })
+      );
 
       await expect(authenticate(req, res)).rejects.toThrow(ConflictError);
       expect(prisma.$executeRaw).not.toHaveBeenCalled();
@@ -203,20 +252,24 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'conflicting-uid-77',
-        email: 'legit@example.com',
-        email_verified: true,
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'conflicting-uid-77',
+          email: 'legit@example.com',
+          email_verified: true,
+        })
+      );
 
       // 1. Not found by new UID
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
       // 2. Found by email under existing UID
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'existing-uid-88',
-        email: 'legit@example.com',
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'existing-uid-88',
+          email: 'legit@example.com',
+          deletionPending: false,
+        })
+      );
 
       // Old user is still active in Firebase!
       mockGetUser.mockResolvedValueOnce({
@@ -234,20 +287,24 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'returning-uid-33',
-        email: 'pending-del@example.com',
-        email_verified: true,
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'returning-uid-33',
+          email: 'pending-del@example.com',
+          email_verified: true,
+        })
+      );
 
       // 1. Not found by new UID
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
       // 2. Found by email but pending deletion
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'old-uid-22',
-        email: 'pending-del@example.com',
-        deletionPending: true,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'old-uid-22',
+          email: 'pending-del@example.com',
+          deletionPending: true,
+        })
+      );
 
       await expect(authenticate(req, res)).rejects.toThrow(ForbiddenError);
     });
@@ -258,20 +315,24 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'brand-new-uid',
-        email: 'brandnew@example.com',
-        email_verified: false,
-        name: 'Brand New',
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'brand-new-uid',
+          email: 'brandnew@example.com',
+          email_verified: false,
+          name: 'Brand New',
+        })
+      );
 
       // Not found by ID, not found by email
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-      vi.mocked(prisma.user.create).mockResolvedValueOnce({
-        id: 'brand-new-uid',
-        email: 'brandnew@example.com',
-        deletionPending: false,
-      } as any);
+      vi.mocked(prisma.user.create).mockResolvedValueOnce(
+        createMockUser({
+          id: 'brand-new-uid',
+          email: 'brandnew@example.com',
+          deletionPending: false,
+        })
+      );
 
       const user = await authenticate(req, res);
 
@@ -293,22 +354,28 @@ describe('Middleware', () => {
       } as unknown as VercelRequest;
       const res = {} as VercelResponse;
 
-      vi.mocked(verifyFirebaseToken).mockResolvedValue({
-        uid: 'deleting-uid',
-        email: 'deleting@example.com',
-      } as any);
+      vi.mocked(verifyFirebaseToken).mockResolvedValue(
+        createMockDecodedToken({
+          uid: 'deleting-uid',
+          email: 'deleting@example.com',
+        })
+      );
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
-        id: 'deleting-uid',
-        email: 'deleting@example.com',
-        deletionPending: true,
-      } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(
+        createMockUser({
+          id: 'deleting-uid',
+          email: 'deleting@example.com',
+          deletionPending: true,
+        })
+      );
 
-      vi.mocked(prisma.user.update).mockResolvedValueOnce({
-        id: 'deleting-uid',
-        email: 'deleting@example.com',
-        deletionPending: true,
-      } as any);
+      vi.mocked(prisma.user.update).mockResolvedValueOnce(
+        createMockUser({
+          id: 'deleting-uid',
+          email: 'deleting@example.com',
+          deletionPending: true,
+        })
+      );
 
       await expect(authenticate(req, res)).rejects.toThrow(ForbiddenError);
     });

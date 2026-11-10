@@ -480,7 +480,7 @@ export async function getSyncChanges(
     maxRevision = settings.serverRevision;
   }
 
-  let hasMore = categoriesTruncated || notesTruncated;
+  const hasMore = categoriesTruncated || notesTruncated;
   if (hasMore) {
     // Advance only up to the lowest truncation ceiling; anything above it is pulled next page.
     const safeCeilings: bigint[] = [];

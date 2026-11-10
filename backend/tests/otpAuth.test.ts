@@ -14,9 +14,9 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
     id: string;
     email: string;
     userId?: string | null;
-    purpose: any;
+    purpose: OtpPurpose;
     codeHash: string;
-    status: any;
+    status: OtpStatus;
     attemptsLeft: number;
     expiresAt: Date;
     resendAvailableAt: Date;
@@ -48,30 +48,45 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
       return { count };
     }),
 
-    create: vi.fn(async ({ data }: { data: any }) => {
-      const now = new Date();
-      const record: InMemOtp = {
-        id: `otp-${idCounter++}`,
-        email: data.email.trim().toLowerCase(),
-        userId: data.userId || null,
-        purpose: data.purpose,
-        codeHash: data.codeHash,
-        status: data.status,
-        attemptsLeft: data.attemptsLeft ?? 5,
-        expiresAt: data.expiresAt instanceof Date ? data.expiresAt : new Date(data.expiresAt),
-        resendAvailableAt:
-          data.resendAvailableAt instanceof Date
-            ? data.resendAvailableAt
-            : new Date(data.resendAvailableAt),
-        consumedAt: null,
-        createdAt: now,
-        updatedAt: now,
-      };
-      inMemOtps.push(record);
-      return { ...record };
-    }),
+    create: vi.fn(
+      async ({
+        data,
+      }: {
+        data: {
+          email: string;
+          userId?: string | null;
+          purpose: OtpPurpose;
+          codeHash: string;
+          status: OtpStatus;
+          attemptsLeft?: number;
+          expiresAt: Date | string;
+          resendAvailableAt: Date | string;
+        };
+      }) => {
+        const now = new Date();
+        const record: InMemOtp = {
+          id: `otp-${idCounter++}`,
+          email: data.email.trim().toLowerCase(),
+          userId: data.userId || null,
+          purpose: data.purpose,
+          codeHash: data.codeHash,
+          status: data.status,
+          attemptsLeft: data.attemptsLeft ?? 5,
+          expiresAt: data.expiresAt instanceof Date ? data.expiresAt : new Date(data.expiresAt),
+          resendAvailableAt:
+            data.resendAvailableAt instanceof Date
+              ? data.resendAvailableAt
+              : new Date(data.resendAvailableAt),
+          consumedAt: null,
+          createdAt: now,
+          updatedAt: now,
+        };
+        inMemOtps.push(record);
+        return { ...record };
+      }
+    ),
 
-    update: vi.fn(async ({ where, data }: { where: { id: string }; data: any }) => {
+    update: vi.fn(async ({ where, data }: { where: { id: string }; data: Partial<InMemOtp> }) => {
       const idx = inMemOtps.findIndex((o) => o.id === where.id);
       if (idx === -1) throw new Error(`Record not found: ${where.id}`);
       inMemOtps[idx] = {
@@ -97,7 +112,7 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
         emailVerificationStatus: 'UNVERIFIED',
       };
     }),
-    update: vi.fn(async ({ where, data }: { where: { id: string }; data: any }) => {
+    update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
       return {
         id: where.id,
         email: 'registered@notas.app',
@@ -107,16 +122,16 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
   };
 
   const outboxEvent = {
-    create: vi.fn(async ({ data }: any) => ({ id: 'outbox-1', ...data })),
+    create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'outbox-1', ...data })),
     updateMany: vi.fn(async () => ({ count: 1 })),
   };
 
-  const $queryRaw = vi.fn(async (strings: any, ...values: any[]) => {
+  const $queryRaw = vi.fn(async (strings: unknown, ...values: unknown[]) => {
     const rawSql =
       typeof strings === 'string'
         ? strings
-        : strings?.raw
-          ? strings.raw.join(' ')
+        : typeof strings === 'object' && strings !== null && 'raw' in strings && Array.isArray((strings as { raw: unknown[] }).raw)
+          ? (strings as { raw: unknown[] }).raw.join(' ')
           : Array.isArray(strings)
             ? strings.join(' ')
             : '';
@@ -144,12 +159,12 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
     return matches.slice(0, 1).map((m) => ({ ...m }));
   });
 
-  const $executeRaw = vi.fn(async (strings: any, ...values: any[]) => {
+  const $executeRaw = vi.fn(async (strings: unknown, ...values: unknown[]) => {
     const rawSql =
       typeof strings === 'string'
         ? strings
-        : strings?.raw
-          ? strings.raw.join(' ')
+        : typeof strings === 'object' && strings !== null && 'raw' in strings && Array.isArray((strings as { raw: unknown[] }).raw)
+          ? (strings as { raw: unknown[] }).raw.join(' ')
           : Array.isArray(strings)
             ? strings.join(' ')
             : '';
@@ -168,7 +183,7 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
             otp.status = 'CONSUMED';
             otp.consumedAt = new Date();
           } else if (rawSql.includes('"attemptsLeft" =')) {
-            const numVal = values.find((v: any) => typeof v === 'number');
+            const numVal = values.find((v: unknown): v is number => typeof v === 'number');
             if (numVal !== undefined) {
               otp.attemptsLeft = numVal;
             }
@@ -180,7 +195,7 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
     return 1;
   });
 
-  const txMock: any = {
+  const txMock = {
     emailOtp,
     user,
     outboxEvent,
@@ -188,9 +203,9 @@ const { mockPrisma, resetInMemOtps } = vi.hoisted(() => {
     $executeRaw,
   };
 
-  const $transaction = vi.fn(async (arg: any) => {
+  const $transaction = vi.fn(async (arg: unknown) => {
     if (typeof arg === 'function') {
-      return await arg(txMock);
+      return await (arg as (tx: typeof txMock) => unknown)(txMock);
     }
     if (Array.isArray(arg)) {
       return await Promise.all(arg);
@@ -262,7 +277,7 @@ vi.mock('../src/utils/firebaseAdmin.js', () => ({
 function createMockRequest(options: {
   method: string;
   url: string;
-  body?: any;
+  body?: unknown;
   headers?: Record<string, string>;
 }): VercelRequest {
   const randomIp = `10.0.${Math.floor(Math.random() * 200)}.${Math.floor(Math.random() * 200) + 1}`;
@@ -280,15 +295,33 @@ function createMockRequest(options: {
   } as unknown as VercelRequest;
 }
 
+interface MockResponseData {
+  success?: boolean;
+  message?: string;
+  data: {
+    message?: string;
+    status?: string;
+    resendAvailableAt?: string;
+    expiresAt?: string;
+    [key: string]: unknown;
+  };
+  error: {
+    code?: string;
+    message?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 function createMockResponse(): {
   res: VercelResponse;
   statusCode: number;
-  data: any;
+  data: MockResponseData;
   headers: Record<string, string>;
 } {
   const result = {
     statusCode: 200,
-    data: null as any,
+    data: {} as MockResponseData,
     headers: {} as Record<string, string>,
     res: {} as VercelResponse,
   };
@@ -298,8 +331,8 @@ function createMockResponse(): {
       result.statusCode = code;
       return result.res;
     },
-    json(payload: any) {
-      result.data = payload;
+    json(payload: unknown) {
+      result.data = payload as MockResponseData;
       return result.res;
     },
     setHeader(name: string, value: string) {

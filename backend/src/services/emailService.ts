@@ -11,6 +11,12 @@ export interface EmailDispatchResult {
   provider: string;
 }
 
+interface ResendResponse {
+  id?: string;
+  message?: string;
+  name?: string;
+}
+
 /**
  * Generates an authentic Firebase email verification link using the Firebase Admin SDK.
  * Respects Android package configuration and continue URL settings.
@@ -30,9 +36,10 @@ export async function generateEmailVerificationLink(email: string): Promise<stri
 
   try {
     return await adminApp.auth().generateEmailVerificationLink(email, actionCodeSettings);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.warn('Failed to generate verification link with ActionCodeSettings; falling back to default link generator', {
-      error: error?.message,
+      error: errorMessage,
     });
     return await adminApp.auth().generateEmailVerificationLink(email);
   }
@@ -67,7 +74,7 @@ export async function sendEmail(options: {
         }),
       });
 
-      const responseData = (await response.json().catch(() => ({}))) as Record<string, any>;
+      const responseData = (await response.json().catch(() => ({}))) as ResendResponse;
 
       if (!response.ok) {
         logger.error('Resend API responded with error', {
@@ -91,9 +98,10 @@ export async function sendEmail(options: {
         messageId: responseData.id,
         provider: 'resend',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof InternalServerError) throw error;
-      logger.error('Failed to communicate with Resend API', { error: error?.message });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to communicate with Resend API', { error: errorMessage });
       throw new InternalServerError('Network error communicating with email delivery service', undefined, 'EMAIL_SERVICE_UNAVAILABLE');
     }
   }

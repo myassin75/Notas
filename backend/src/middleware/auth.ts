@@ -83,14 +83,15 @@ export async function authenticate(
               'ACCOUNT_CONFLICT'
             );
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           if (error instanceof ConflictError || error instanceof ForbiddenError) {
             throw error;
           }
+          const fbError = error as { code?: string; message?: string } | null | undefined;
           // If the old user was deleted in Firebase ('auth/user-not-found'), re-keying is permitted.
-          if (error?.code !== 'auth/user-not-found') {
+          if (fbError?.code !== 'auth/user-not-found') {
             logger.warn('Could not verify old Firebase user status during identity re-key check', {
-              error: error?.message,
+              error: fbError?.message,
               oldUid: existingByEmail.id,
             });
             if (process.env.NODE_ENV !== 'test') {

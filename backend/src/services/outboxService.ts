@@ -16,7 +16,7 @@ export interface OutboxSyncResult {
 export async function createOutboxEvent(
   aggregateId: string,
   eventType: string,
-  payload: Record<string, any>,
+  payload: Prisma.InputJsonValue,
   tx?: Prisma.TransactionClient
 ): Promise<void> {
   const client = tx || prisma;
@@ -52,7 +52,7 @@ export async function processOutboxQueue(batchSize = 20): Promise<OutboxSyncResu
     id: string;
     aggregateId: string;
     eventType: string;
-    payload: any;
+    payload: unknown;
     attempts: number;
     maxAttempts: number;
   }>>`
@@ -108,9 +108,10 @@ export async function processOutboxQueue(batchSize = 20): Promise<OutboxSyncResu
         });
         result.succeeded++;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       result.failed++;
       const nextAttempts = event.attempts + 1;
+      const errorMessage = error instanceof Error ? error.message : String(error);
 
       if (nextAttempts >= event.maxAttempts) {
         // Transition to DEAD_LETTER after 5 failed attempts
@@ -119,7 +120,7 @@ export async function processOutboxQueue(batchSize = 20): Promise<OutboxSyncResu
           data: {
             status: OutboxStatus.DEAD_LETTER,
             attempts: nextAttempts,
-            lastError: error?.message || 'Exceeded max retry attempts',
+            lastError: errorMessage || 'Exceeded max retry attempts',
             updatedAt: new Date(),
           },
         });
@@ -129,7 +130,7 @@ export async function processOutboxQueue(batchSize = 20): Promise<OutboxSyncResu
           eventId: event.id,
           aggregateId: event.aggregateId,
           attempts: nextAttempts,
-          error: error?.message,
+          error: errorMessage,
         });
       } else {
         // Exponential backoff: 5s, 10s, 20s, 40s... + jitter
@@ -141,7 +142,7 @@ export async function processOutboxQueue(batchSize = 20): Promise<OutboxSyncResu
           data: {
             attempts: nextAttempts,
             nextRetryAt,
-            lastError: error?.message || 'Retry attempt failed',
+            lastError: errorMessage || 'Retry attempt failed',
             updatedAt: new Date(),
           },
         });
@@ -150,7 +151,7 @@ export async function processOutboxQueue(batchSize = 20): Promise<OutboxSyncResu
           eventId: event.id,
           attempts: nextAttempts,
           nextRetryAt,
-          error: error?.message,
+          error: errorMessage,
         });
       }
     }

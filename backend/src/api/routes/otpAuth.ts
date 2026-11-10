@@ -169,10 +169,11 @@ export async function handleVerifyOtpCode(req: AuthenticatedRequest, res: Vercel
       },
       meta: { timestamp: new Date().toISOString() },
     });
-  } catch (fbError: any) {
+  } catch (fbError: unknown) {
+    const errorMessage = fbError instanceof Error ? fbError.message : String(fbError);
     logger.warn('Firebase Admin claim sync delayed; outbox worker will retry', {
       userId: uid,
-      error: fbError?.message,
+      error: errorMessage,
     });
 
     // Firebase update failed or timed out: DO NOT report final success!
@@ -213,13 +214,14 @@ export async function handleRequestPasswordReset(req: VercelRequest, res: Vercel
       // Anti-enumeration: simulate realistic delay
       await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 200));
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof TooManyRequestsError) {
       throw err;
     }
+    const errorMessage = err instanceof Error ? err.message : String(err);
     logger.warn('Password reset request encountered non-fatal error', {
       email: maskEmail(normalizedEmail),
-      error: err?.message,
+      error: errorMessage,
     });
   }
 

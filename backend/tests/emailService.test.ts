@@ -9,6 +9,7 @@ import { escapeHtml, maskEmail } from '../src/utils/htmlEscape.js';
 import * as firebaseAdminModule from '../src/utils/firebaseAdmin.js';
 import handler from '../src/api/index.js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type * as admin from 'firebase-admin';
 
 vi.mock('../src/db/client.js', () => ({
   prisma: {
@@ -39,7 +40,7 @@ const mockFirebaseApp = {
   auth: () => mockAdminAuth,
 };
 
-vi.spyOn(firebaseAdminModule, 'getFirebaseAdmin').mockReturnValue(mockFirebaseApp as any);
+vi.spyOn(firebaseAdminModule, 'getFirebaseAdmin').mockReturnValue(mockFirebaseApp as unknown as admin.app.App);
 
 describe('Email Template & HTML Escaping', () => {
   it('correctly escapes HTML special characters to prevent XSS', () => {
@@ -275,7 +276,7 @@ describe('API Route Integration — POST /api/v1/auth/send-verification-email', 
     return res as unknown as VercelResponse & {
       statusCode: number;
       headers: Record<string, string>;
-      body: any;
+      body: unknown;
     };
   }
 

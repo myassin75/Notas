@@ -142,20 +142,21 @@ export async function requestOtpWithCooldown(
       resendAvailableAt,
       expiresAt,
     };
-  } catch (smtpError: any) {
+  } catch (smtpError: unknown) {
+    const errorMessage = smtpError instanceof Error ? smtpError.message : String(smtpError);
     // 4. On SMTP failure, transition to FAILED and reset cooldown so user can retry immediately
     await prisma.emailOtp.update({
       where: { id: otpRecord.id },
       data: {
         status: OtpStatus.FAILED,
         resendAvailableAt: new Date(), // Immediate retry allowed
-        dispatchError: smtpError?.message || 'SMTP dispatch failed',
+        dispatchError: errorMessage || 'SMTP dispatch failed',
       },
     });
 
     logger.error('Failed to deliver OTP email; cooldown reset', {
       email: maskEmail(normalizedEmail),
-      error: smtpError?.message,
+      error: errorMessage,
     });
 
     throw new InternalServerError(

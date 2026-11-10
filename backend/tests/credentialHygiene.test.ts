@@ -43,7 +43,7 @@ describe('Credential Hygiene & Secret Incident Response (F01 Regression Tests)',
       try {
         const result = execSync(`git check-ignore "${file}"`, { cwd: rootDir, encoding: 'utf-8' }).trim();
         expect(result).toBe(file);
-      } catch (err) {
+      } catch {
         throw new Error(`File '${file}' should be ignored by .gitignore but is NOT ignored.`);
       }
     }

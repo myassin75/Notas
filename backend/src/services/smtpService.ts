@@ -249,10 +249,11 @@ export async function sendOtpEmail(options: {
         messageId: info.messageId,
         provider: 'gmail_smtp',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Gmail SMTP failed to deliver OTP email', {
         recipient: maskEmail(to),
-        error: error?.message,
+        error: errorMessage,
       });
       throw new InternalServerError(
         'Failed to deliver email through mail service. Please check your address and try again.',

@@ -4,7 +4,6 @@ import { logger } from '../utils/logger.js';
 // PrismaClient is attached to the `global` object in development to prevent
 // exhausting database connections during warm lambda / dev server reloads.
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
 }
 
