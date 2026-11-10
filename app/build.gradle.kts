@@ -262,6 +262,7 @@ tasks.named("preBuild") {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+    baseline = file("detekt-baseline.xml")
 }
 
 ktlint {

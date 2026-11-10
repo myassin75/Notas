@@ -1,0 +1,115 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:NavGraph.kt:@Composable fun RememberNavGraph</ID>
+    <ID>CyclomaticComplexMethod:ReminderPicker.kt:@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class) @Composable fun ReminderPickerSheet</ID>
+    <ID>CyclomaticComplexMethod:SetDateBottomSheet.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun SetDateBottomSheet</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:CalendarDetailsViewModel.kt:CalendarDetailsViewModel$val (h1Str, m1Str, ampm1, h2Str, m2Str, ampm2) = match.destructured</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:CalendarDetailsViewModel.kt:CalendarDetailsViewModel$val (isAllDay, startTime, endTime, parsedDescription) = if (isTask) { ParsedBodyResult( isAllDay = false, startTime = null, endTime = null, description = note.body.trim(), ) } else if (note.endAt != null || note.isAllDay) { val start = if (!note.isAllDay &amp;&amp; note.reminderAt != null &amp;&amp; note.reminderAt &gt; 0L) { Instant.ofEpochMilli(note.reminderAt).atZone(ZoneId.systemDefault()).toLocalTime() } else { null } val end = if (!note.isAllDay &amp;&amp; note.endAt != null &amp;&amp; note.endAt &gt; 0L) { Instant.ofEpochMilli(note.endAt).atZone(ZoneId.systemDefault()).toLocalTime() } else { null } ParsedBodyResult( isAllDay = note.isAllDay, startTime = start, endTime = end, description = EditEventViewModel.cleanLegacyTimeFromBody(note.body), ) } else { parseEventBody(note.body, note.reminderAt, isTask) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:CalendarViewModel.kt:CalendarViewModel$val (h1Str, m1Str, ampm1, h2Str, m2Str, ampm2) = match.destructured</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ColorScheme.kt:val (primary, onPrimary, primaryContainer, onPrimaryContainer, invPrimary) = when (accentTheme) { AccentTheme.MAROON -&gt; Quintuple( ThemeColors.Maroon.DarkPrimary, ThemeColors.Maroon.DarkOnPrimary, ThemeColors.Maroon.DarkPrimaryContainer, ThemeColors.Maroon.DarkOnPrimaryContainer, ThemeColors.Maroon.DarkInversePrimary, ) AccentTheme.ROYAL_BLUE -&gt; Quintuple( ThemeColors.RoyalBlue.DarkPrimary, ThemeColors.RoyalBlue.DarkOnPrimary, ThemeColors.RoyalBlue.DarkPrimaryContainer, ThemeColors.RoyalBlue.DarkOnPrimaryContainer, ThemeColors.RoyalBlue.DarkInversePrimary, ) AccentTheme.FOREST_GREEN -&gt; Quintuple( ThemeColors.ForestGreen.DarkPrimary, ThemeColors.ForestGreen.DarkOnPrimary, ThemeColors.ForestGreen.DarkPrimaryContainer, ThemeColors.ForestGreen.DarkOnPrimaryContainer, ThemeColors.ForestGreen.DarkInversePrimary, ) AccentTheme.DARK_BROWN -&gt; Quintuple( ThemeColors.DarkBrown.DarkPrimary, ThemeColors.DarkBrown.DarkOnPrimary, ThemeColors.DarkBrown.DarkPrimaryContainer, ThemeColors.DarkBrown.DarkOnPrimaryContainer, ThemeColors.DarkBrown.DarkInversePrimary, ) AccentTheme.OCEAN_TEAL -&gt; Quintuple( ThemeColors.OceanTeal.DarkPrimary, ThemeColors.OceanTeal.DarkOnPrimary, ThemeColors.OceanTeal.DarkPrimaryContainer, ThemeColors.OceanTeal.DarkOnPrimaryContainer, ThemeColors.OceanTeal.DarkInversePrimary, ) AccentTheme.PURE_BLACK -&gt; Quintuple( ThemeColors.PureBlack.DarkPrimary, ThemeColors.PureBlack.DarkOnPrimary, ThemeColors.PureBlack.DarkPrimaryContainer, ThemeColors.PureBlack.DarkOnPrimaryContainer, ThemeColors.PureBlack.DarkInversePrimary, ) AccentTheme.AMETHYST -&gt; Quintuple( ThemeColors.Amethyst.DarkPrimary, ThemeColors.Amethyst.DarkOnPrimary, ThemeColors.Amethyst.DarkPrimaryContainer, ThemeColors.Amethyst.DarkOnPrimaryContainer, ThemeColors.Amethyst.DarkInversePrimary, ) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ColorScheme.kt:val (primary, onPrimary, primaryContainer, onPrimaryContainer, invPrimary) = when (accentTheme) { AccentTheme.MAROON -&gt; Quintuple( ThemeColors.Maroon.LightPrimary, ThemeColors.Maroon.LightOnPrimary, ThemeColors.Maroon.LightPrimaryContainer, ThemeColors.Maroon.LightOnPrimaryContainer, ThemeColors.Maroon.LightInversePrimary, ) AccentTheme.ROYAL_BLUE -&gt; Quintuple( ThemeColors.RoyalBlue.LightPrimary, ThemeColors.RoyalBlue.LightOnPrimary, ThemeColors.RoyalBlue.LightPrimaryContainer, ThemeColors.RoyalBlue.LightOnPrimaryContainer, ThemeColors.RoyalBlue.LightInversePrimary, ) AccentTheme.FOREST_GREEN -&gt; Quintuple( ThemeColors.ForestGreen.LightPrimary, ThemeColors.ForestGreen.LightOnPrimary, ThemeColors.ForestGreen.LightPrimaryContainer, ThemeColors.ForestGreen.LightOnPrimaryContainer, ThemeColors.ForestGreen.LightInversePrimary, ) AccentTheme.DARK_BROWN -&gt; Quintuple( ThemeColors.DarkBrown.LightPrimary, ThemeColors.DarkBrown.LightOnPrimary, ThemeColors.DarkBrown.LightPrimaryContainer, ThemeColors.DarkBrown.LightOnPrimaryContainer, ThemeColors.DarkBrown.LightInversePrimary, ) AccentTheme.OCEAN_TEAL -&gt; Quintuple( ThemeColors.OceanTeal.LightPrimary, ThemeColors.OceanTeal.LightOnPrimary, ThemeColors.OceanTeal.LightPrimaryContainer, ThemeColors.OceanTeal.LightOnPrimaryContainer, ThemeColors.OceanTeal.LightInversePrimary, ) AccentTheme.PURE_BLACK -&gt; Quintuple( ThemeColors.PureBlack.LightPrimary, ThemeColors.PureBlack.LightOnPrimary, ThemeColors.PureBlack.LightPrimaryContainer, ThemeColors.PureBlack.LightOnPrimaryContainer, ThemeColors.PureBlack.LightInversePrimary, ) AccentTheme.AMETHYST -&gt; Quintuple( ThemeColors.Amethyst.LightPrimary, ThemeColors.Amethyst.LightOnPrimary, ThemeColors.Amethyst.LightPrimaryContainer, ThemeColors.Amethyst.LightOnPrimaryContainer, ThemeColors.Amethyst.LightInversePrimary, ) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ColorScheme.kt:val (secondary, onSecondary, secondaryContainer, onSecondaryContainer) = when (accentTheme) { AccentTheme.MAROON -&gt; Quadruple( ThemeColors.Maroon.DarkSecondary, ThemeColors.Maroon.DarkOnSecondary, ThemeColors.Maroon.DarkSecondaryContainer, ThemeColors.Maroon.DarkOnSecondaryContainer, ) AccentTheme.ROYAL_BLUE -&gt; Quadruple( ThemeColors.RoyalBlue.DarkSecondary, ThemeColors.RoyalBlue.DarkOnSecondary, ThemeColors.RoyalBlue.DarkSecondaryContainer, ThemeColors.RoyalBlue.DarkOnSecondaryContainer, ) AccentTheme.FOREST_GREEN -&gt; Quadruple( ThemeColors.ForestGreen.DarkSecondary, ThemeColors.ForestGreen.DarkOnSecondary, ThemeColors.ForestGreen.DarkSecondaryContainer, ThemeColors.ForestGreen.DarkOnSecondaryContainer, ) AccentTheme.DARK_BROWN -&gt; Quadruple( ThemeColors.DarkBrown.DarkSecondary, ThemeColors.DarkBrown.DarkOnSecondary, ThemeColors.DarkBrown.DarkSecondaryContainer, ThemeColors.DarkBrown.DarkOnSecondaryContainer, ) AccentTheme.OCEAN_TEAL -&gt; Quadruple( ThemeColors.OceanTeal.DarkSecondary, ThemeColors.OceanTeal.DarkOnSecondary, ThemeColors.OceanTeal.DarkSecondaryContainer, ThemeColors.OceanTeal.DarkOnSecondaryContainer, ) AccentTheme.PURE_BLACK -&gt; Quadruple( ThemeColors.PureBlack.DarkSecondary, ThemeColors.PureBlack.DarkOnSecondary, ThemeColors.PureBlack.DarkSecondaryContainer, ThemeColors.PureBlack.DarkOnSecondaryContainer, ) AccentTheme.AMETHYST -&gt; Quadruple( ThemeColors.Amethyst.DarkSecondary, ThemeColors.Amethyst.DarkOnSecondary, ThemeColors.Amethyst.DarkSecondaryContainer, ThemeColors.Amethyst.DarkOnSecondaryContainer, ) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ColorScheme.kt:val (secondary, onSecondary, secondaryContainer, onSecondaryContainer) = when (accentTheme) { AccentTheme.MAROON -&gt; Quadruple( ThemeColors.Maroon.LightSecondary, ThemeColors.Maroon.LightOnSecondary, ThemeColors.Maroon.LightSecondaryContainer, ThemeColors.Maroon.LightOnSecondaryContainer, ) AccentTheme.ROYAL_BLUE -&gt; Quadruple( ThemeColors.RoyalBlue.LightSecondary, ThemeColors.RoyalBlue.LightOnSecondary, ThemeColors.RoyalBlue.LightSecondaryContainer, ThemeColors.RoyalBlue.LightOnSecondaryContainer, ) AccentTheme.FOREST_GREEN -&gt; Quadruple( ThemeColors.ForestGreen.LightSecondary, ThemeColors.ForestGreen.LightOnSecondary, ThemeColors.ForestGreen.LightSecondaryContainer, ThemeColors.ForestGreen.LightOnSecondaryContainer, ) AccentTheme.DARK_BROWN -&gt; Quadruple( ThemeColors.DarkBrown.LightSecondary, ThemeColors.DarkBrown.LightOnSecondary, ThemeColors.DarkBrown.LightSecondaryContainer, ThemeColors.DarkBrown.LightOnSecondaryContainer, ) AccentTheme.OCEAN_TEAL -&gt; Quadruple( ThemeColors.OceanTeal.LightSecondary, ThemeColors.OceanTeal.LightOnSecondary, ThemeColors.OceanTeal.LightSecondaryContainer, ThemeColors.OceanTeal.LightOnSecondaryContainer, ) AccentTheme.PURE_BLACK -&gt; Quadruple( ThemeColors.PureBlack.LightSecondary, ThemeColors.PureBlack.LightOnSecondary, ThemeColors.PureBlack.LightSecondaryContainer, ThemeColors.PureBlack.LightOnSecondaryContainer, ) AccentTheme.AMETHYST -&gt; Quadruple( ThemeColors.Amethyst.LightSecondary, ThemeColors.Amethyst.LightOnSecondary, ThemeColors.Amethyst.LightSecondaryContainer, ThemeColors.Amethyst.LightOnSecondaryContainer, ) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ColorScheme.kt:val (tertiary, onTertiary, tertiaryContainer, onTertiaryContainer) = when (accentTheme) { AccentTheme.MAROON -&gt; Quadruple( ThemeColors.Maroon.DarkTertiary, ThemeColors.Maroon.DarkOnTertiary, ThemeColors.Maroon.DarkTertiaryContainer, ThemeColors.Maroon.DarkOnTertiaryContainer, ) AccentTheme.ROYAL_BLUE -&gt; Quadruple( ThemeColors.RoyalBlue.DarkTertiary, ThemeColors.RoyalBlue.DarkOnTertiary, ThemeColors.RoyalBlue.DarkTertiaryContainer, ThemeColors.RoyalBlue.DarkOnTertiaryContainer, ) AccentTheme.FOREST_GREEN -&gt; Quadruple( ThemeColors.ForestGreen.DarkTertiary, ThemeColors.ForestGreen.DarkOnTertiary, ThemeColors.ForestGreen.DarkTertiaryContainer, ThemeColors.ForestGreen.DarkOnTertiaryContainer, ) AccentTheme.DARK_BROWN -&gt; Quadruple( ThemeColors.DarkBrown.DarkTertiary, ThemeColors.DarkBrown.DarkOnTertiary, ThemeColors.DarkBrown.DarkTertiaryContainer, ThemeColors.DarkBrown.DarkOnTertiaryContainer, ) AccentTheme.OCEAN_TEAL -&gt; Quadruple( ThemeColors.OceanTeal.DarkTertiary, ThemeColors.OceanTeal.DarkOnTertiary, ThemeColors.OceanTeal.DarkTertiaryContainer, ThemeColors.OceanTeal.DarkOnTertiaryContainer, ) AccentTheme.PURE_BLACK -&gt; Quadruple( ThemeColors.PureBlack.DarkTertiary, ThemeColors.PureBlack.DarkOnTertiary, ThemeColors.PureBlack.DarkTertiaryContainer, ThemeColors.PureBlack.DarkOnTertiaryContainer, ) AccentTheme.AMETHYST -&gt; Quadruple( ThemeColors.Amethyst.DarkTertiary, ThemeColors.Amethyst.DarkOnTertiary, ThemeColors.Amethyst.DarkTertiaryContainer, ThemeColors.Amethyst.DarkOnTertiaryContainer, ) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ColorScheme.kt:val (tertiary, onTertiary, tertiaryContainer, onTertiaryContainer) = when (accentTheme) { AccentTheme.MAROON -&gt; Quadruple( ThemeColors.Maroon.LightTertiary, ThemeColors.Maroon.LightOnTertiary, ThemeColors.Maroon.LightTertiaryContainer, ThemeColors.Maroon.LightOnTertiaryContainer, ) AccentTheme.ROYAL_BLUE -&gt; Quadruple( ThemeColors.RoyalBlue.LightTertiary, ThemeColors.RoyalBlue.LightOnTertiary, ThemeColors.RoyalBlue.LightTertiaryContainer, ThemeColors.RoyalBlue.LightOnTertiaryContainer, ) AccentTheme.FOREST_GREEN -&gt; Quadruple( ThemeColors.ForestGreen.LightTertiary, ThemeColors.ForestGreen.LightOnTertiary, ThemeColors.ForestGreen.LightTertiaryContainer, ThemeColors.ForestGreen.LightOnTertiaryContainer, ) AccentTheme.DARK_BROWN -&gt; Quadruple( ThemeColors.DarkBrown.LightTertiary, ThemeColors.DarkBrown.LightOnTertiary, ThemeColors.DarkBrown.LightTertiaryContainer, ThemeColors.DarkBrown.LightOnTertiaryContainer, ) AccentTheme.OCEAN_TEAL -&gt; Quadruple( ThemeColors.OceanTeal.LightTertiary, ThemeColors.OceanTeal.LightOnTertiary, ThemeColors.OceanTeal.LightTertiaryContainer, ThemeColors.OceanTeal.LightOnTertiaryContainer, ) AccentTheme.PURE_BLACK -&gt; Quadruple( ThemeColors.PureBlack.LightTertiary, ThemeColors.PureBlack.LightOnTertiary, ThemeColors.PureBlack.LightTertiaryContainer, ThemeColors.PureBlack.LightOnTertiaryContainer, ) AccentTheme.AMETHYST -&gt; Quadruple( ThemeColors.Amethyst.LightTertiary, ThemeColors.Amethyst.LightOnTertiary, ThemeColors.Amethyst.LightTertiaryContainer, ThemeColors.Amethyst.LightOnTertiaryContainer, ) }</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:EditEventViewModel.kt:EditEventViewModel.Companion$val (h1Str, m1Str, ampm1, h2Str, m2Str, ampm2) = match.destructured</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:RememberDatabase.kt:RememberDatabase.Companion.&lt;no name provided&gt;$val (h1Str, m1Str, ampm1, h2Str, m2Str, ampm2) = match.destructured</ID>
+    <ID>EmptyFunctionBlock:BackendApiClientTest.kt:BackendApiClientTest.FakeHttpURLConnection${}</ID>
+    <ID>EmptyFunctionBlock:DriveAttachmentRestoreSafetyTest.kt:DriveAttachmentRestoreSafetyTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:DriveAttachmentRestoreSafetyTest.kt:DriveAttachmentRestoreSafetyTest.FakeGoogleDriveAuthDelegate${}</ID>
+    <ID>EmptyFunctionBlock:DriveProviderCompatibilityTest.kt:DriveProviderCompatibilityTest.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:DriveRecoveryEnvelopeSecurityTest.kt:DriveRecoveryEnvelopeSecurityTest.MockDriveConnection${}</ID>
+    <ID>EmptyFunctionBlock:DriveRecoveryEnvelopeTest.kt:DriveRecoveryEnvelopeTest.MockDriveConnection${}</ID>
+    <ID>EmptyFunctionBlock:GoogleDriveApiClientTest.kt:GoogleDriveApiClientTest.MockHttpConnection${}</ID>
+    <ID>EmptyFunctionBlock:GoogleDriveJournalTransportTest.kt:GoogleDriveJournalTransportTest.FakeGoogleDriveApiClient.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:GoogleDriveJournalTransportTest.kt:GoogleDriveJournalTransportTest.FakeGoogleDriveAuthDelegate${}</ID>
+    <ID>EmptyFunctionBlock:SnapshotTransportServiceTest.kt:SnapshotTransportServiceTest.FakeGoogleDriveApiClient.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:SnapshotTransportServiceTest.kt:SnapshotTransportServiceTest.FakeGoogleDriveAuthDelegate${}</ID>
+    <ID>EmptyFunctionBlock:SyncApiClientTest.kt:SyncApiClientTest.FakeHttpURLConnection${}</ID>
+    <ID>EmptyFunctionBlock:SyncWorkerTest.kt:SyncWorkerTest.FakeGoogleDriveApiClient.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:SyncWorkerTest.kt:SyncWorkerTest.FakeGoogleDriveAuthDelegate${}</ID>
+    <ID>EmptyFunctionBlock:TestDaos.kt:BaseFakeNoteDao${}</ID>
+    <ID>EmptyFunctionBlock:TestDaos.kt:BaseFakeShoulderDao${}</ID>
+    <ID>EmptyFunctionBlock:TestDaos.kt:UuidBaseFakeNoteDao${}</ID>
+    <ID>EmptyFunctionBlock:TestDaos.kt:UuidBaseFakeShoulderDao${}</ID>
+    <ID>FunctionOnlyReturningConstant:ThemePrefs.kt:ThemeState$fun effectiveShadingIntensity: Float</ID>
+    <ID>FunctionOnlyReturningConstant:ThemePrefs.kt:ThemeState$fun effectiveUseGradient: Boolean</ID>
+    <ID>LargeClass:CalendarViewModel.kt:CalendarViewModel : ViewModel</ID>
+    <ID>LargeClass:CalendarViewModelTest.kt:CalendarViewModelTest</ID>
+    <ID>LargeClass:GoogleDriveJournalTransportTest.kt:GoogleDriveJournalTransportTest</ID>
+    <ID>LargeClass:RemoteJournalIngestionTest.kt:RemoteJournalIngestionTest</ID>
+    <ID>LongMethod:CloudBackupManager.kt:CloudBackupManager$suspend fun restoreCloudBackup: CloudBackupResult&lt;Int&gt;</ID>
+    <ID>LongMethod:DriveSyncCoordinator.kt:DriveSyncCoordinator$suspend fun executeSync: SyncExecutionResult</ID>
+    <ID>LongMethod:FieldConflictResolver.kt:FieldConflictResolver$private suspend fun handleNote</ID>
+    <ID>LongMethod:GoogleDriveBackupProvider.kt:GoogleDriveBackupProvider$suspend fun restoreBackup: DriveResult&lt;RestoreSummary&gt;</ID>
+    <ID>LongMethod:JournalDownloader.kt:JournalDownloader$suspend fun downloadAndValidateJournal: JournalDownloadResult</ID>
+    <ID>LongMethod:SyncEngine.kt:SyncEngine$suspend fun synchronize: SyncResult&lt;Unit&gt;</ID>
+    <ID>LongMethod:SyncSnapshotManager.kt:SyncSnapshotManager$suspend fun captureSnapshot: SnapshotCaptureResult</ID>
+    <ID>LongMethod:SyncSnapshotManager.kt:SyncSnapshotManager$suspend fun restoreSnapshot: SnapshotRestoreResult</ID>
+    <ID>ThrowsCount:EncryptedContainer.kt:EncryptedContainer$fun decrypt: ByteArray</ID>
+    <ID>ThrowsCount:EncryptedContainer.kt:EncryptedContainer$fun decryptStream: ContainerMetadata</ID>
+    <ID>ThrowsCount:EncryptedContainer.kt:EncryptedContainer$fun readMetadata: ContainerMetadata</ID>
+    <ID>ThrowsCount:FieldConflictResolver.kt:FieldConflictResolver$private suspend fun handleAttachment</ID>
+    <ID>ThrowsCount:FieldConflictResolver.kt:FieldConflictResolver$suspend fun resolveAndApply</ID>
+    <ID>ThrowsCount:RemoteJournalIngestionEngine.kt:RemoteJournalIngestionEngine$private suspend fun applySingleJournal: Pair&lt;Int, Int&gt;</ID>
+    <ID>TooGenericExceptionThrown:DriveAttachmentRestoreSafetyTest.kt:DriveAttachmentRestoreSafetyTest.FakeNoteDao$throw RuntimeException("Simulated SQLite constraint failure on insert")</ID>
+    <ID>TooGenericExceptionThrown:RemoteJournalIngestionTest.kt:RemoteJournalIngestionTest.&lt;no name provided&gt;$throw RuntimeException("Disk full / constraint failure in appliedOperationDao")</ID>
+    <ID>UnusedParameter:AboutSection.kt:onLaunchPlayReview: (onFlowFinished: () -&gt; Unit) -&gt; Unit</ID>
+    <ID>UnusedParameter:AmbientWallpaper.kt:reducedMotion: Boolean</ID>
+    <ID>UnusedParameter:AppearanceSection.kt:snackbarHostState: SnackbarHostState</ID>
+    <ID>UnusedParameter:CalendarAgendaComponents.kt:helperText: String? = null</ID>
+    <ID>UnusedParameter:CalendarDesignTokens.kt:CalendarDesignTokens$isDark: Boolean = false</ID>
+    <ID>UnusedParameter:CalendarViewModel.kt:CalendarViewModel$selectedDate: LocalDate</ID>
+    <ID>UnusedParameter:FieldConflictResolver.kt:FieldConflictResolver$journal: SyncJournalDto</ID>
+    <ID>UnusedParameter:GoogleDriveSyncTransport.kt:GoogleDriveSyncTransport$forceRefresh: Boolean = false</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:allSectionsCollapsed: Boolean</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:layoutToggleEnabled: Boolean</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:noteLayoutMode: NoteLayoutMode</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:onToggleExpandCollapseAll: () -&gt; Unit</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:onToggleLayout: () -&gt; Unit</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:showExpandCollapseAllToggle: Boolean</ID>
+    <ID>UnusedParameter:HomeSearchComponents.kt:showLayoutToggle: Boolean</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:alertBarsExpanded: Boolean</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:alertSummary: AlertChromeSummary</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:blockedReminderCount: Int</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:expanded: Boolean</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:historySection: HistorySection</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:historyVisibleItemCount: Int</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:modifier: Modifier = Modifier</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onAlertBarsExpandedChange: (Boolean) -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onCreateList: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onCreateNote: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onDismissUpdateAvailable: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onImportGoogleTasks: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onInstallUpdate: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onPickImport: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onPickList: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onPickNote: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onToggle: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:onUpdateClick: () -&gt; Unit</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:updateBarState: UpdateChromeState</ID>
+    <ID>UnusedParameter:MainTabScaffold.kt:useDualPaneMode: Boolean = false</ID>
+    <ID>UnusedParameter:MarkdownTextEditor.kt:onAddTag: (String, String) -&gt; Unit = { _, _ -&gt; }</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:existing: Boolean</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:isEditMode: Boolean</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:onDeleteForever: () -&gt; Unit</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:onRestore: () -&gt; Unit</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:onToggleEdit: () -&gt; Unit</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:onUnarchive: () -&gt; Unit</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:shelfState: NoteShelfState</ID>
+    <ID>UnusedParameter:NoteActionBottomBar.kt:showEditAction: Boolean = false</ID>
+    <ID>UnusedParameter:NoteCard.kt:contentColor: Color</ID>
+    <ID>UnusedParameter:NoteCard.kt:reminderNotificationsAllowed: Boolean</ID>
+    <ID>UnusedParameter:NoteCard.kt:showPictureIndicator: Boolean</ID>
+    <ID>UnusedParameter:OptionsPanel.kt:fixedHeight: Boolean = false</ID>
+    <ID>UnusedParameter:OptionsPanel.kt:onBrowsePictureWithApp: () -&gt; Unit</ID>
+    <ID>UnusedParameter:OptionsPanel.kt:pictureUri: String?</ID>
+    <ID>UnusedParameter:RememberColorResolution.kt:context: Context</ID>
+    <ID>UnusedParameter:SettingsSectionChrome.kt:onCollapsedSectionKeysChange: (Set&lt;String&gt;) -&gt; Unit</ID>
+    <ID>UnusedParameter:SettingsUpdateSection.kt:modifier: Modifier = Modifier</ID>
+    <ID>UnusedParameter:ThemePrefs.kt:ThemeState$blackThemeActive: Boolean</ID>
+    <ID>VariableNaming:ShoulderColorUtils.kt:val val_ = hsv[2]</ID>
+  </CurrentIssues>
+</SmellBaseline>
