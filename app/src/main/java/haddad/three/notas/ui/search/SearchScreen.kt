@@ -58,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.pluralStringResource
@@ -1145,6 +1146,8 @@ fun SearchFiltersBottomSheet(
                             val dateBoxBorder =
                                 BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.45f))
 
+                            val locale = LocalConfiguration.current.locales[0]
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1168,7 +1171,7 @@ fun SearchFiltersBottomSheet(
                                         Spacer(Modifier.width(8.dp))
                                         val startDateText =
                                             if (draftFilters.customStartDate != null) {
-                                                SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(draftFilters.customStartDate!!))
+                                                SimpleDateFormat("MMM d, yyyy", locale).format(Date(draftFilters.customStartDate!!))
                                             } else {
                                                 stringResource(R.string.search_filter_start_date)
                                             }
@@ -1197,7 +1200,7 @@ fun SearchFiltersBottomSheet(
                                         Spacer(Modifier.width(8.dp))
                                         val endDateText =
                                             if (draftFilters.customEndDate != null) {
-                                                SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(draftFilters.customEndDate!!))
+                                                SimpleDateFormat("MMM d, yyyy", locale).format(Date(draftFilters.customEndDate!!))
                                             } else {
                                                 stringResource(R.string.search_filter_end_date)
                                             }

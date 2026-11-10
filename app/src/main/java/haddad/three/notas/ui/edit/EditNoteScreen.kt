@@ -2,6 +2,7 @@ package haddad.three.notas.ui.edit
 
 import android.app.Activity
 import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -186,7 +187,7 @@ fun EditNoteScreen(
             ?: Modifier
 
     val isLocked by vm.locked.collectAsStateWithLifecycle()
-    val activity = LocalContext.current as? Activity
+    val activity = LocalActivity.current
     DisposableEffect(activity, isLocked) {
         val window = activity?.window
         if (isLocked) {

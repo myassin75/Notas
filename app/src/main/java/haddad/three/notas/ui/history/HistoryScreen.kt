@@ -591,6 +591,7 @@ fun HistoryRoute(
     val context = LocalContext.current
     val notificationsAllowed = rememberNotificationsAllowed()
     val undoLabel = stringResource(R.string.bulk_action_undo)
+    val operationFailedMsg = stringResource(R.string.history_operation_failed)
 
     var moveAllArchivedToTrashConfirmOpen by rememberSaveable { mutableStateOf(false) }
     var emptyTrashConfirmOpen by rememberSaveable { mutableStateOf(false) }
@@ -1066,7 +1067,7 @@ fun HistoryRoute(
                     onError = {
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.history_operation_failed),
+                                message = operationFailedMsg,
                             )
                         }
                     },
@@ -1089,7 +1090,7 @@ fun HistoryRoute(
                     onError = {
                         scope.launch {
                             snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.history_operation_failed),
+                                message = operationFailedMsg,
                             )
                         }
                     },

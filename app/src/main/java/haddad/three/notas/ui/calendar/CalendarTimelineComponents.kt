@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -141,9 +142,10 @@ fun DayTimelineCard(
                         .verticalScroll(scrollState),
             ) {
                 // Background hourly grid (00:00 to 23:00)
+                val locale = LocalConfiguration.current.locales[0]
                 Column(modifier = Modifier.fillMaxWidth()) {
                     for (hour in 0..23) {
-                        val timeLabel = String.format(Locale.getDefault(), "%02d:00", hour)
+                        val timeLabel = String.format(locale, "%02d:00", hour)
                         Row(
                             modifier =
                                 Modifier

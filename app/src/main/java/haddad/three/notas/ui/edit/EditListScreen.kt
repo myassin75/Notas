@@ -3,6 +3,7 @@ package haddad.three.notas.ui.edit
 import android.app.Activity
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -261,7 +262,7 @@ fun EditListScreen(
 ) {
     val title by vm.title.collectAsStateWithLifecycle()
     val isLocked by vm.locked.collectAsStateWithLifecycle()
-    val activity = LocalContext.current as? Activity
+    val activity = LocalActivity.current
     DisposableEffect(activity, isLocked) {
         val window = activity?.window
         if (isLocked) {
