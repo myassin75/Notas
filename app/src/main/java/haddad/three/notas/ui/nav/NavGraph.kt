@@ -1,5 +1,6 @@
 package haddad.three.notas.ui.nav
 
+import haddad.three.notas.BuildConfig
 import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -88,6 +89,7 @@ import haddad.three.notas.ui.auth.SetNewPasswordScreen
 import haddad.three.notas.ui.auth.VerifyEmailScreen
 import haddad.three.notas.ui.auth.WelcomeScreen
 import haddad.three.notas.ui.onboarding.OnboardingPermissionsScreen
+import haddad.three.notas.ui.onboarding.OnboardingTitleScreen
 import haddad.three.notas.ui.profile.GuestProfileScreen
 import haddad.three.notas.ui.settings.DevOptionsRoute
 import haddad.three.notas.ui.settings.RememberUpdateViewModel
@@ -521,7 +523,7 @@ fun RememberNavGraph(
     val lockedStartDestination =
         remember(introSeenAtLaunch, initialExternalLaunch) {
             when {
-                !introSeenAtLaunch -> Routes.WELCOME
+                !introSeenAtLaunch -> if (BuildConfig.FLAVOR == "offline") Routes.ONBOARDING_TITLE else Routes.WELCOME
                 initialExternalLaunch -> Routes.EXTERNAL_LAUNCH
                 else -> Routes.HOME
             }
@@ -669,20 +671,9 @@ fun RememberNavGraph(
                 composable(
                     route = Routes.WELCOME,
                 ) {
-                    val context = LocalContext.current
-                    val authVm: AuthViewModel = hiltViewModel()
-                    WelcomeScreen(
-                        viewModel = authVm,
-                        onCreateAccount = {
-                            authVm.clearErrors()
-                            navController.navigate(Routes.REGISTER)
-                        },
-                        onLogin = {
-                            authVm.clearErrors()
-                            navController.navigate(Routes.LOGIN)
-                        },
-                        onGoogleSignIn = {
-                            authVm.signInWithGoogle(context) {
+                    if (BuildConfig.FLAVOR == "offline") {
+                        OnboardingTitleScreen(
+                            onLetsBegin = {
                                 if (onboardingState?.hasSeenIntro != true) {
                                     navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
                                         popUpTo(Routes.WELCOME) { inclusive = true }
@@ -692,44 +683,55 @@ fun RememberNavGraph(
                                         popUpTo(navController.graph.id) { inclusive = true }
                                     }
                                 }
-                            }
-                        },
-                        onSkipForNow = {
-                            navController.navigate(Routes.ONBOARDING_PERMISSIONS)
-                        },
-                    )
+                            },
+                        )
+                    } else {
+                        val context = LocalContext.current
+                        val authVm: AuthViewModel = hiltViewModel()
+                        WelcomeScreen(
+                            viewModel = authVm,
+                            onCreateAccount = {
+                                authVm.clearErrors()
+                                navController.navigate(Routes.REGISTER)
+                            },
+                            onLogin = {
+                                authVm.clearErrors()
+                                navController.navigate(Routes.LOGIN)
+                            },
+                            onGoogleSignIn = {
+                                authVm.signInWithGoogle(context) {
+                                    if (onboardingState?.hasSeenIntro != true) {
+                                        navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                            popUpTo(Routes.WELCOME) { inclusive = true }
+                                        }
+                                    } else {
+                                        navController.navigate(Routes.HOME) {
+                                            popUpTo(navController.graph.id) { inclusive = true }
+                                        }
+                                    }
+                                }
+                            },
+                            onSkipForNow = {
+                                navController.navigate(Routes.ONBOARDING_PERMISSIONS)
+                            },
+                        )
+                    }
                 }
 
                 composable(
                     route = Routes.ONBOARDING_TITLE,
                 ) {
-                    val context = LocalContext.current
-                    val authVm: AuthViewModel = hiltViewModel()
-                    WelcomeScreen(
-                        viewModel = authVm,
-                        onCreateAccount = {
-                            authVm.clearErrors()
-                            navController.navigate(Routes.REGISTER)
-                        },
-                        onLogin = {
-                            authVm.clearErrors()
-                            navController.navigate(Routes.LOGIN)
-                        },
-                        onGoogleSignIn = {
-                            authVm.signInWithGoogle(context) {
-                                if (onboardingState?.hasSeenIntro != true) {
-                                    navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
-                                        popUpTo(Routes.ONBOARDING_TITLE) { inclusive = true }
-                                    }
-                                } else {
-                                    navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) { inclusive = true }
-                                    }
+                    OnboardingTitleScreen(
+                        onLetsBegin = {
+                            if (onboardingState?.hasSeenIntro != true) {
+                                navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                    popUpTo(Routes.ONBOARDING_TITLE) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(navController.graph.id) { inclusive = true }
                                 }
                             }
-                        },
-                        onSkipForNow = {
-                            navController.navigate(Routes.ONBOARDING_PERMISSIONS)
                         },
                     )
                 }
@@ -1101,7 +1103,7 @@ fun RememberNavGraph(
                         if (useDualPaneMode) {
                             SettingsTwoPaneRoute(
                                 paneScaffoldDirective = paneScaffoldDirective,
-                                onOpenIntro = { navController.navigate(Routes.WELCOME) },
+                                onOpenIntro = { navController.navigate(if (BuildConfig.FLAVOR == "offline") Routes.ONBOARDING_TITLE else Routes.WELCOME) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
                                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
@@ -1114,7 +1116,7 @@ fun RememberNavGraph(
                             )
                         } else {
                             SettingsRoute(
-                                onOpenIntro = { navController.navigate(Routes.WELCOME) },
+                                onOpenIntro = { navController.navigate(if (BuildConfig.FLAVOR == "offline") Routes.ONBOARDING_TITLE else Routes.WELCOME) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
                                 onOpenHistory = { navController.navigate(Routes.HISTORY) },

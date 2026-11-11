@@ -188,6 +188,7 @@ extensions.configure<ApplicationExtension>("android") {
             buildConfigField("Boolean", "USE_PLAY_IN_APP_UPDATES", "false")
             buildConfigField("Boolean", "GOOGLE_TASKS_CONNECT_ENABLED", "false")
             buildConfigField("Boolean", "GOOGLE_DRIVE_SYNC_ENABLED", "false")
+            isDefault = true
         }
         create("playstore") {
             dimension = "distribution"

@@ -197,7 +197,8 @@ val settingsPaneSections: List<SettingsSectionKey>
     get() =
         SettingsSectionKey.entries.filter { sectionKey ->
             sectionKey != SettingsSectionKey.DevOptions &&
-                (sectionKey != SettingsSectionKey.Updates || showsUpdatesSection(singleList = false))
+                (sectionKey != SettingsSectionKey.Updates || showsUpdatesSection(singleList = false)) &&
+                (sectionKey != SettingsSectionKey.Backup || BuildConfig.FLAVOR != "offline")
         }
 
 /**
@@ -736,7 +737,7 @@ fun SettingsRoute(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = settingsScrollEnabled,
                 ) {
-                    if (selectedSectionKey == null) {
+                    if (selectedSectionKey == null && BuildConfig.FLAVOR != "offline") {
                         item(key = "guest_profile_card") {
                             val palette = LocalSemanticPalette.current
                             val user = currentAuthUser
@@ -969,7 +970,7 @@ fun SettingsRoute(
                         }
                     }
 
-                    if (includeSettingsSection(SettingsSectionKey.Backup)) {
+                    if (includeSettingsSection(SettingsSectionKey.Backup) && BuildConfig.FLAVOR != "offline") {
                         item(key = "backup") {
                             SettingsExpandableSection(
                                 sectionKey = SettingsSectionKey.Backup.routeKey,
