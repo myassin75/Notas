@@ -32,7 +32,7 @@ class ObtainXTrackingTest {
     fun githubTracksGithubReleasesWithGithubApkFilter() {
         val payload = payload("github", "haddad.three.notas.gh")
         assertEquals("haddad.three.notas.gh", payload.getValue("id").jsonPrimitive.content)
-        assertEquals("https://github.com/bikram-agarwal/Remember", payload.getValue("url").jsonPrimitive.content)
+        assertEquals("https://github.com/myassin75/Notas", payload.getValue("url").jsonPrimitive.content)
         assertEquals("""-github\.apk$""", apkFilterRegEx(payload).pattern)
     }
 
@@ -40,7 +40,7 @@ class ObtainXTrackingTest {
     fun offlineTracksGithubReleasesWithOfflineApkFilter() {
         val payload = payload("offline", "haddad.three.notas.offline")
         assertEquals("haddad.three.notas.offline", payload.getValue("id").jsonPrimitive.content)
-        assertEquals("https://github.com/bikram-agarwal/Remember", payload.getValue("url").jsonPrimitive.content)
+        assertEquals("https://github.com/myassin75/Notas", payload.getValue("url").jsonPrimitive.content)
         assertEquals("""-offline\.apk$""", apkFilterRegEx(payload).pattern)
     }
 
@@ -68,7 +68,7 @@ class ObtainXTrackingTest {
     @Test
     fun apkFiltersSelectOnlyTheMatchingFlavorAsset() {
         // ObtainX keeps an asset when the filter matches its name *or* its download URL.
-        val downloadBase = "https://github.com/bikram-agarwal/Remember/releases/download/v1.9.0/"
+        val downloadBase = "https://github.com/myassin75/Notas/releases/download/v1.9.0/"
         val assets = listOf("remember-v1.9.0-fdroid.apk", "remember-v1.9.0-github.apk", "remember-v1.9.0-offline.apk")
         val cases =
             mapOf(

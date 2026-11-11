@@ -94,7 +94,7 @@ extensions.configure<ApplicationExtension>("android") {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
 
-        buildConfigField("String", "GITHUB_REPO", "\"bikram-agarwal/Remember\"")
+        buildConfigField("String", "GITHUB_REPO", "\"myassin75/Notas\"")
         buildConfigField(
             "String",
             "PLAY_STORE_URL",

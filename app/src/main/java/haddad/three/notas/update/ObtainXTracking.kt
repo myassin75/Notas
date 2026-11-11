@@ -14,7 +14,7 @@ import haddad.three.notas.R
 internal const val OBTAINX_PACKAGE_ID = "dev.bikram.obtainx"
 
 private const val RELEASES_GITHUB_URL = "https://github.com/${BuildConfig.GITHUB_REPO}"
-private const val TRACKED_APP_AUTHOR = "bikram-agarwal"
+private const val TRACKED_APP_AUTHOR = "myassin75"
 private const val TRACKED_APP_NAME = "Notas"
 private const val DEV_RELEASE_APPLICATION_ID_SUFFIX = ".dev"
 
