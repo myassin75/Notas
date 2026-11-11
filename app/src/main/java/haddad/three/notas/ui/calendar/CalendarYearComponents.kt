@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -151,12 +152,30 @@ fun YearNavigationHeader(
     }
 }
 
+private val MonthNamesEn = arrayOf(
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+)
+
+private val WeekdayNarrowLabelsEn = listOf("M", "T", "W", "T", "F", "S", "S")
+
+private fun getLocalizedMonthName(month: YearMonth): String {
+    val locale = Locale.getDefault()
+    return if (locale.language == "en") {
+        MonthNamesEn[month.monthValue - 1]
+    } else {
+        val formatter = DateTimeFormatter.ofPattern("MMMM", locale)
+        month.format(formatter)
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+    }
+}
+
 /**
  * Root Year View composable presenting an adaptive 12-month calendar overview.
  *
  * - Mobile portrait (<540dp): 2 columns for maximum legibility and comfortable touch targets.
  * - Tablet / wide landscape (>=540dp): 3 columns (or 4 on large tablets >=760dp).
- * - Animated year transition: Directional horizontal slide and fade when navigating years.
+ * - Fast, optimized year transition with lightweight layout and precomputed grid geometry.
  */
 @Composable
 fun CalendarYearView(
@@ -175,105 +194,89 @@ fun CalendarYearView(
     val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
     val reducedMotion = LocalReducedMotion.current
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
     ) {
-        // 1. Animated Year Content: Centered Year Title and 12-Month Grid animate together
-        AnimatedContent(
-            targetState = displayedYear,
-            transitionSpec = {
-                if (reducedMotion) {
-                    fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
-                } else {
-                    val direction = if (targetState >= initialState) 1 else -1
-                    val slideDistanceFactor = 0.35f
-                    val enterSpec = tween<Float>(durationMillis = 260, easing = FastOutSlowInEasing)
-                    val enterSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
-                    val exitSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
-                    val exitSlideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+        val columns =
+            when {
+                maxWidth >= 760.dp -> 4
+                maxWidth >= 540.dp -> 3
+                else -> 2
+            }
 
-                    (
-                        slideInHorizontally(
-                            animationSpec = enterSlideSpec,
-                            initialOffsetX = { fullWidth -> (direction * fullWidth * slideDistanceFactor).toInt() },
-                        ) +
-                            fadeIn(
-                                animationSpec = enterSpec,
-                            )
-                    ).togetherWith(
-                        slideOutHorizontally(
-                            animationSpec = exitSlideSpec,
-                            targetOffsetX = { fullWidth -> (-direction * fullWidth * slideDistanceFactor).toInt() },
-                        ) +
-                            fadeOut(
-                                animationSpec = exitSpec,
-                            ),
-                    )
-                }
-            },
-            label = "YearViewAnimation",
-        ) { targetYear ->
-            val months =
-                remember(targetYear) {
-                    (1..12).map { YearMonth.of(targetYear, it) }
-                }
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // 1. Snappy Animated Year Content: Centered Year Title and 12-Month Grid
+            AnimatedContent(
+                targetState = displayedYear,
+                transitionSpec = {
+                    if (reducedMotion) {
+                        fadeIn(animationSpec = tween(0)) togetherWith fadeOut(animationSpec = tween(0))
+                    } else {
+                        val direction = if (targetState >= initialState) 1 else -1
+                        val enterSpec = tween<Float>(durationMillis = 150, easing = FastOutSlowInEasing)
+                        val enterSlideSpec = tween<IntOffset>(durationMillis = 150, easing = FastOutSlowInEasing)
+                        val exitSpec = tween<Float>(durationMillis = 100, easing = FastOutSlowInEasing)
+                        val exitSlideSpec = tween<IntOffset>(durationMillis = 150, easing = FastOutSlowInEasing)
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                // Centered Year Title Row (animated with the month grid)
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .padding(horizontal = 60.dp),
-                    contentAlignment = Alignment.Center,
+                        (
+                            slideInHorizontally(
+                                animationSpec = enterSlideSpec,
+                                initialOffsetX = { fullWidth -> direction * (fullWidth / 6) },
+                            ) + fadeIn(animationSpec = enterSpec)
+                        ).togetherWith(
+                            slideOutHorizontally(
+                                animationSpec = exitSlideSpec,
+                                targetOffsetX = { fullWidth -> -direction * (fullWidth / 6) },
+                            ) + fadeOut(animationSpec = exitSpec)
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().clipToBounds(),
+                label = "YearViewAnimation",
+            ) { targetYear ->
+                val monthRows =
+                    remember(targetYear, columns) {
+                        (1..12).map { YearMonth.of(targetYear, it) }.chunked(columns)
+                    }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = targetYear.toString(),
-                        style =
-                            MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 28.sp,
-                                color = textPrimary,
-                            ),
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                    )
-                }
+                    // Centered Year Title Row
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .padding(horizontal = 60.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = targetYear.toString(),
+                            style =
+                                MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 28.sp,
+                                    color = textPrimary,
+                                ),
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                // Responsive Months Grid
-                BoxWithConstraints(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-                ) {
-                    val columns =
-                        when {
-                            maxWidth >= 760.dp -> 4
-                            maxWidth >= 540.dp -> 3
-                            else -> 2
-                        }
-
-                    val monthRows =
-                        remember(months, columns) {
-                            months.chunked(columns)
-                        }
-
+                    // Months Grid with uniform natural card height (zero IntrinsicSize measurement overhead)
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         monthRows.forEach { rowMonths ->
                             Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(IntrinsicSize.Min),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 rowMonths.forEach { month ->
@@ -283,10 +286,7 @@ fun CalendarYearView(
                                         today = today,
                                         onMonthClick = onMonthSelected,
                                         onDateClick = onDateSelected,
-                                        modifier =
-                                            Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight(),
+                                        modifier = Modifier.weight(1f),
                                     )
                                 }
 
@@ -297,65 +297,65 @@ fun CalendarYearView(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
-        }
 
-        // 2. Stationary Navigation Arrows (< on left, > on right) pinned in place
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            // Previous Year Button (<)
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center,
+            // 2. Stationary Navigation Arrows (< on left, > on right) pinned in place
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Surface(
-                    onClick = onPreviousYear,
-                    shape = CircleShape,
-                    color = buttonBg,
-                    border = border,
-                    modifier = Modifier.size(36.dp),
+                // Previous Year Button (<)
+                Box(
+                    modifier = Modifier.size(40.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        RememberMaterialRoundedSymbol(
-                            name = "chevron_right",
-                            modifier = Modifier.graphicsLayer { scaleX = -1f },
-                            size = 20.dp,
-                            tint = textPrimary,
-                        )
+                    Surface(
+                        onClick = onPreviousYear,
+                        shape = CircleShape,
+                        color = buttonBg,
+                        border = border,
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            RememberMaterialRoundedSymbol(
+                                name = "chevron_right",
+                                modifier = Modifier.graphicsLayer { scaleX = -1f },
+                                size = 20.dp,
+                                tint = textPrimary,
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f))
 
-            // Next Year Button (>)
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Surface(
-                    onClick = onNextYear,
-                    shape = CircleShape,
-                    color = buttonBg,
-                    border = border,
-                    modifier = Modifier.size(36.dp),
+                // Next Year Button (>)
+                Box(
+                    modifier = Modifier.size(40.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        RememberMaterialRoundedSymbol(
-                            name = "chevron_right",
-                            size = 20.dp,
-                            tint = textPrimary,
-                        )
+                    Surface(
+                        onClick = onNextYear,
+                        shape = CircleShape,
+                        color = buttonBg,
+                        border = border,
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            RememberMaterialRoundedSymbol(
+                                name = "chevron_right",
+                                size = 20.dp,
+                                tint = textPrimary,
+                            )
+                        }
                     }
                 }
             }
@@ -379,7 +379,6 @@ fun YearMonthCard(
     val isSelectedMonth = month.year == selectedDate.year && month.monthValue == selectedDate.monthValue
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-
     val cardBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     val cardBorder =
@@ -392,13 +391,9 @@ fun YearMonthCard(
             BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
         }
 
-    val monthName =
-        remember(month) {
-            val formatter = DateTimeFormatter.ofPattern("MMMM", Locale.getDefault())
-            month
-                .format(formatter)
-                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-        }
+    val monthName = remember(month.monthValue) {
+        getLocalizedMonthName(month)
+    }
 
     Surface(
         shape = CalendarDesignTokens.CardShape,
@@ -477,8 +472,12 @@ private fun YearWeekdayHeaderRow(
     val dayLabels =
         remember(firstDayOfWeek) {
             val locale = Locale.getDefault()
-            (0L..6L).map { offset ->
-                firstDayOfWeek.plus(offset).getDisplayName(TextStyle.NARROW, locale)
+            if (locale.language == "en" && firstDayOfWeek == DayOfWeek.MONDAY) {
+                WeekdayNarrowLabelsEn
+            } else {
+                (0L..6L).map { offset ->
+                    firstDayOfWeek.plus(offset).getDisplayName(TextStyle.NARROW, locale)
+                }
             }
         }
 
@@ -509,6 +508,7 @@ private fun YearWeekdayHeaderRow(
 
 /**
  * Mini date grid for an individual month card in Year View.
+ * Always renders 6 rows of 7 columns (42 cells) so all cards share an exact uniform height naturally.
  */
 @Composable
 private fun YearMonthDateGrid(
@@ -520,23 +520,28 @@ private fun YearMonthDateGrid(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
-    // Compute calendar cells (weeks of 7 days, with null for leading/trailing days)
+    // Compute calendar cells (always fixed to 6 weeks x 7 columns = 42 cells)
     val weeks =
         remember(month) {
             val firstOfMonth = month.atDay(1)
             val leadingBlanks = (firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
             val daysInMonth = month.lengthOfMonth()
 
-            val allCells = mutableListOf<Int?>()
+            val allCells = ArrayList<Int?>(42)
             repeat(leadingBlanks) { allCells.add(null) }
             for (day in 1..daysInMonth) {
                 allCells.add(day)
             }
-            while (allCells.size % 7 != 0) {
+            while (allCells.size < 42) {
                 allCells.add(null)
             }
             allCells.chunked(7)
         }
+
+    val isSelectedMonth = month.year == selectedDate.year && month.monthValue == selectedDate.monthValue
+    val selectedDay = if (isSelectedMonth) selectedDate.dayOfMonth else -1
+    val isTodayMonth = month.year == today.year && month.monthValue == today.monthValue
+    val todayDay = if (isTodayMonth) today.dayOfMonth else -1
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -550,11 +555,15 @@ private fun YearMonthDateGrid(
             ) {
                 week.forEach { dayNumber ->
                     if (dayNumber == null) {
-                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(22.dp),
+                        )
                     } else {
-                        val date = remember(month, dayNumber) { month.atDay(dayNumber) }
-                        val isSelectedDate = date == selectedDate
-                        val isToday = date == today
+                        val isSelectedDate = dayNumber == selectedDay
+                        val isToday = dayNumber == todayDay
 
                         Box(
                             modifier =
@@ -564,8 +573,8 @@ private fun YearMonthDateGrid(
                                     .clip(CircleShape)
                                     .clickable(
                                         role = Role.Button,
-                                        onClickLabel = "Select $date",
-                                    ) { onDateClick(date) },
+                                        onClickLabel = "Select day $dayNumber",
+                                    ) { onDateClick(month.atDay(dayNumber)) },
                             contentAlignment = Alignment.Center,
                         ) {
                             when {

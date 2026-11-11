@@ -220,6 +220,30 @@ class CalendarViewModel
         ): CalendarUiState {
             val today = LocalDate.now()
 
+            // In YEAR view, only displayedMonth, selectedDate, and today are needed.
+            // Skip expensive computation of month grid, week view, and day timeline.
+            if (viewMode == CalendarViewMode.YEAR) {
+                return CalendarUiState(
+                    selectedDate = selectedDate,
+                    displayedMonth = displayedMonth,
+                    today = today,
+                    currentWeekStart = currentWeekStart,
+                    weekRangeTitle = "",
+                    weekYearLabel = "${displayedMonth.year}",
+                    viewMode = viewMode,
+                    monthDays = emptyList(),
+                    weekDays = emptyList(),
+                    selectedDayEvents = emptyList(),
+                    selectedDayTasks = emptyList(),
+                    selectedDayBirthdays = emptyList(),
+                    dayTimelineItems = emptyList(),
+                    dayAllDayItems = emptyList(),
+                    weekTotalEventsCount = 0,
+                    isLoading = false,
+                    errorMessage = errorMessage,
+                )
+            }
+
             // 1. Compute month grid dates (Monday-to-Sunday)
             val firstOfMonth = displayedMonth.atDay(1)
             val firstGridDate = firstOfMonth.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
