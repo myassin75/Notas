@@ -188,17 +188,17 @@ fun SetDateBottomSheet(
     val textOutOfMonth = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f) else TextOutOfMonth
 
     // Use sufficiently opaque input surfaces to maintain readability and eliminate background bleed
-    val fieldBackground = if (isDark) Color(0xFF202026) else FieldBackground
-    val cardBackground = if (isDark) Color(0xFF191920) else LavenderCardBg
-    val borderDefault = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f) else LavenderBorder
-    val cancelBg = if (isDark) Color(0xFF26262E) else LavenderCancelBg
+    val fieldBackground = if (isDark) (if (isBlackTheme) Color(0xFF101014) else Color(0xFF242424)) else FieldBackground
+    val cardBackground = if (isDark) (if (isBlackTheme) Color(0xFF141418) else Color(0xFF262626)) else LavenderCardBg
+    val borderDefault = if (isDark) (if (isBlackTheme) Color(0xFF282832) else Color(0xFF3A3A3A)) else LavenderBorder
+    val cancelBg = if (isDark) (if (isBlackTheme) Color(0xFF1C1C22) else Color(0xFF3A3A3A)) else LavenderCancelBg
     val cancelText = if (isDark) textPrimary else selectedAccent
     val typeBadgeBg = if (isDark) selectedAccent.copy(alpha = 0.16f) else LavenderBg
     val typeBadgeText = selectedAccent
-    val closeButtonBg = if (isDark) Color(0xFF26262E) else Color(0xFFF5F3F8)
+    val closeButtonBg = if (isDark) (if (isBlackTheme) Color(0xFF1C1C22) else Color(0xFF3A3A3A)) else Color(0xFFF5F3F8)
     val closeButtonTint = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF49454F)
     val navChevronTint = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF49454F)
-    val dragHandleColor = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.60f) else DragHandleColor
+    val dragHandleColor = if (isDark) (if (isBlackTheme) Color(0xFF282832) else Color(0xFF3A3A3A)) else DragHandleColor
 
     val modalContainerColor =
         if (isDark) {

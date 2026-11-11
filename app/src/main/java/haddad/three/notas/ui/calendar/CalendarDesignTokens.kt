@@ -21,11 +21,11 @@ object CalendarDesignTokens {
 
     // Background & Card Surfaces
     val ScreenBgLight = Color(0xFFF8F7FA)
-    val ScreenBgDark = Color(0xFF131318)
+    val ScreenBgDark = Color(0xFF242424)
     val CardBgLight = Color(0xFFFFFFFF)
-    val CardBgDark = Color(0xFF1E1E26)
+    val CardBgDark = Color(0xFF262626)
     val CardBorderLight = Color(0xFFEFEFF3)
-    val CardBorderDark = Color(0xFF2C2C38)
+    val CardBorderDark = Color(0xFF3A3A3A)
 
     // Typography Colors
     val TextPrimaryLight = Color(0xFF1E1B26)
@@ -86,7 +86,7 @@ object CalendarDesignTokens {
 
     @Composable
     fun resolveCardBorder(isDark: Boolean = false): Color =
-        if (isDark) Color(0xFF2C2C36).copy(alpha = 0.65f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+        if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
 
     @Composable
     fun resolveTextPrimary(isDark: Boolean = false): Color = MaterialTheme.colorScheme.onSurface

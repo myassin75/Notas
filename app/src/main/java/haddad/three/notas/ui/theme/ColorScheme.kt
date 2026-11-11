@@ -421,134 +421,24 @@ private fun buildDarkColorScheme(
                 surfaceDim = ThemeColors.OledSurfaceDim,
             )
         } else {
-            when (accentTheme) {
-                AccentTheme.MAROON ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.Maroon.DarkBackground,
-                        surface = ThemeColors.Maroon.DarkSurface,
-                        surfaceVariant = ThemeColors.Maroon.DarkSurfaceVariant,
-                        onBackground = ThemeColors.Maroon.DarkOnBackground,
-                        onSurface = ThemeColors.Maroon.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.Maroon.DarkOnSurfaceVariant,
-                        outline = ThemeColors.Maroon.DarkOutline,
-                        outlineVariant = ThemeColors.Maroon.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.Maroon.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.Maroon.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.Maroon.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.Maroon.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.Maroon.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.Maroon.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.Maroon.DarkSurfaceDim,
-                    )
-                AccentTheme.ROYAL_BLUE ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.RoyalBlue.DarkBackground,
-                        surface = ThemeColors.RoyalBlue.DarkSurface,
-                        surfaceVariant = ThemeColors.RoyalBlue.DarkSurfaceVariant,
-                        onBackground = ThemeColors.RoyalBlue.DarkOnBackground,
-                        onSurface = ThemeColors.RoyalBlue.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.RoyalBlue.DarkOnSurfaceVariant,
-                        outline = ThemeColors.RoyalBlue.DarkOutline,
-                        outlineVariant = ThemeColors.RoyalBlue.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.RoyalBlue.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.RoyalBlue.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.RoyalBlue.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.RoyalBlue.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.RoyalBlue.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.RoyalBlue.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.RoyalBlue.DarkSurfaceDim,
-                    )
-                AccentTheme.FOREST_GREEN ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.ForestGreen.DarkBackground,
-                        surface = ThemeColors.ForestGreen.DarkSurface,
-                        surfaceVariant = ThemeColors.ForestGreen.DarkSurfaceVariant,
-                        onBackground = ThemeColors.ForestGreen.DarkOnBackground,
-                        onSurface = ThemeColors.ForestGreen.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.ForestGreen.DarkOnSurfaceVariant,
-                        outline = ThemeColors.ForestGreen.DarkOutline,
-                        outlineVariant = ThemeColors.ForestGreen.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.ForestGreen.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.ForestGreen.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.ForestGreen.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.ForestGreen.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.ForestGreen.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.ForestGreen.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.ForestGreen.DarkSurfaceDim,
-                    )
-                AccentTheme.DARK_BROWN ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.DarkBrown.DarkBackground,
-                        surface = ThemeColors.DarkBrown.DarkSurface,
-                        surfaceVariant = ThemeColors.DarkBrown.DarkSurfaceVariant,
-                        onBackground = ThemeColors.DarkBrown.DarkOnBackground,
-                        onSurface = ThemeColors.DarkBrown.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.DarkBrown.DarkOnSurfaceVariant,
-                        outline = ThemeColors.DarkBrown.DarkOutline,
-                        outlineVariant = ThemeColors.DarkBrown.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.DarkBrown.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.DarkBrown.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.DarkBrown.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.DarkBrown.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.DarkBrown.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.DarkBrown.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.DarkBrown.DarkSurfaceDim,
-                    )
-                AccentTheme.OCEAN_TEAL ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.OceanTeal.DarkBackground,
-                        surface = ThemeColors.OceanTeal.DarkSurface,
-                        surfaceVariant = ThemeColors.OceanTeal.DarkSurfaceVariant,
-                        onBackground = ThemeColors.OceanTeal.DarkOnBackground,
-                        onSurface = ThemeColors.OceanTeal.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.OceanTeal.DarkOnSurfaceVariant,
-                        outline = ThemeColors.OceanTeal.DarkOutline,
-                        outlineVariant = ThemeColors.OceanTeal.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.OceanTeal.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.OceanTeal.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.OceanTeal.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.OceanTeal.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.OceanTeal.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.OceanTeal.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.OceanTeal.DarkSurfaceDim,
-                    )
-                AccentTheme.PURE_BLACK ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.PureBlack.DarkBackground,
-                        surface = ThemeColors.PureBlack.DarkSurface,
-                        surfaceVariant = ThemeColors.PureBlack.DarkSurfaceVariant,
-                        onBackground = ThemeColors.PureBlack.DarkOnBackground,
-                        onSurface = ThemeColors.PureBlack.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.PureBlack.DarkOnSurfaceVariant,
-                        outline = ThemeColors.PureBlack.DarkOutline,
-                        outlineVariant = ThemeColors.PureBlack.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.PureBlack.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.PureBlack.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.PureBlack.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.PureBlack.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.PureBlack.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.PureBlack.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.PureBlack.DarkSurfaceDim,
-                    )
-                AccentTheme.AMETHYST ->
-                    DarkThemeSurfaces(
-                        background = ThemeColors.Amethyst.DarkBackground,
-                        surface = ThemeColors.Amethyst.DarkSurface,
-                        surfaceVariant = ThemeColors.Amethyst.DarkSurfaceVariant,
-                        onBackground = ThemeColors.Amethyst.DarkOnBackground,
-                        onSurface = ThemeColors.Amethyst.DarkOnSurface,
-                        onSurfaceVariant = ThemeColors.Amethyst.DarkOnSurfaceVariant,
-                        outline = ThemeColors.Amethyst.DarkOutline,
-                        outlineVariant = ThemeColors.Amethyst.DarkOutlineVariant,
-                        surfaceContainerLowest = ThemeColors.Amethyst.DarkSurfaceContainerLowest,
-                        surfaceContainerLow = ThemeColors.Amethyst.DarkSurfaceContainerLow,
-                        surfaceContainer = ThemeColors.Amethyst.DarkSurfaceContainer,
-                        surfaceContainerHigh = ThemeColors.Amethyst.DarkSurfaceContainerHigh,
-                        surfaceContainerHighest = ThemeColors.Amethyst.DarkSurfaceContainerHighest,
-                        surfaceBright = ThemeColors.Amethyst.DarkSurfaceBright,
-                        surfaceDim = ThemeColors.Amethyst.DarkSurfaceDim,
-                    )
-            }
+            // Unified Dark Mode Palette (#242424 background, #262626 surface, #3A3A3A outlines)
+            DarkThemeSurfaces(
+                background = ThemeColors.DarkBackground,
+                surface = ThemeColors.DarkSurface,
+                surfaceVariant = ThemeColors.DarkSurfaceVariant,
+                onBackground = ThemeColors.DarkOnBackground,
+                onSurface = ThemeColors.DarkOnSurface,
+                onSurfaceVariant = ThemeColors.DarkOnSurfaceVariant,
+                outline = ThemeColors.DarkOutline,
+                outlineVariant = ThemeColors.DarkOutlineVariant,
+                surfaceContainerLowest = ThemeColors.DarkSurfaceContainerLowest,
+                surfaceContainerLow = ThemeColors.DarkSurfaceContainerLow,
+                surfaceContainer = ThemeColors.DarkSurfaceContainer,
+                surfaceContainerHigh = ThemeColors.DarkSurfaceContainerHigh,
+                surfaceContainerHighest = ThemeColors.DarkSurfaceContainerHighest,
+                surfaceBright = ThemeColors.DarkSurfaceBright,
+                surfaceDim = ThemeColors.DarkSurfaceDim,
+            )
         }
 
     return darkColorScheme(

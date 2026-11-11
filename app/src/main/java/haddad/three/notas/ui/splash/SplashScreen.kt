@@ -79,6 +79,7 @@ fun SplashScreen(
                 .background(background),
     ) {
         // Centered Group: App Icon + App Name (optically balanced slightly above center)
+        val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
         Column(
             modifier =
                 Modifier
@@ -88,7 +89,7 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_splash_logo),
+                painter = painterResource(id = if (isDark) R.drawable.ic_logo_white else R.drawable.ic_splash_logo),
                 contentDescription = stringResource(R.string.splash_app_name),
                 contentScale = ContentScale.Fit,
                 modifier =

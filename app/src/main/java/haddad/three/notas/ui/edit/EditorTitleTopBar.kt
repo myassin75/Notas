@@ -185,8 +185,8 @@ internal fun EditorTitleTopBar(
                         val isDark = LocalIsDark.current
                         Surface(
                             shape = CircleShape,
-                            color = if (isDark) Color(0xFF181820).copy(alpha = 0.75f) else MaterialTheme.colorScheme.surface,
-                            border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)) else null,
+                            color = if (isDark) Color(0xFF262626) else MaterialTheme.colorScheme.surface,
+                            border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3A3A3A)) else null,
                             modifier =
                                 Modifier
                                     .padding(start = 8.dp)

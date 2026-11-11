@@ -79,7 +79,7 @@ fun glassContainerColor(
             if (isOledBlack) {
                 Color(0xFF141418)
             } else {
-                Color(0xFF1B1B22)
+                Color(0xFF262626)
             }
         GlassVariant.SelectedCard ->
             if (isOledBlack) {
@@ -91,37 +91,37 @@ fun glassContainerColor(
             if (isOledBlack) {
                 Color(0xFF101014).copy(alpha = 0.94f)
             } else {
-                Color(0xFF14141A).copy(alpha = 0.92f)
+                Color(0xFF262626)
             }
         GlassVariant.ModalSheet ->
             if (isOledBlack) {
                 Color(0xFF16161C).copy(alpha = 0.98f)
             } else {
-                Color(0xFF1E1D25).copy(alpha = 0.96f)
+                Color(0xFF262626)
             }
         GlassVariant.Dialog ->
             if (isOledBlack) {
                 Color(0xFF16161C).copy(alpha = 0.98f)
             } else {
-                Color(0xFF1E1E26).copy(alpha = 0.98f)
+                Color(0xFF262626)
             }
         GlassVariant.Input ->
             if (isOledBlack) {
                 Color(0xFF101014)
             } else {
-                Color(0xFF15151C)
+                Color(0xFF242424)
             }
         GlassVariant.Chip ->
             if (isOledBlack) {
                 Color(0xFF16161C)
             } else {
-                Color(0xFF202028)
+                Color(0xFF3A3A3A)
             }
         GlassVariant.SolidReadability ->
             if (isOledBlack) {
                 Color(0xFF101014)
             } else {
-                Color(0xFF181820)
+                Color(0xFF262626)
             }
     }
 }
@@ -151,23 +151,26 @@ fun glassBorderStroke(
         }
     }
 
+    val themeState = LocalThemeState.current
+    val isOledBlack = themeState.blackThemeActive(isDark) || themeState.accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK
+
     return when (variant) {
         GlassVariant.StandardCard ->
-            BorderStroke(1.dp, Color(0xFF2C2C36).copy(alpha = 0.65f))
+            if (isOledBlack) BorderStroke(1.dp, Color(0xFF282832).copy(alpha = 0.60f)) else BorderStroke(1.dp, Color(0xFF3A3A3A))
         GlassVariant.SelectedCard ->
             BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
         GlassVariant.BottomNav ->
-            BorderStroke(0.5.dp, Color(0xFF282834).copy(alpha = 0.45f))
+            if (isOledBlack) BorderStroke(0.5.dp, Color(0xFF282834).copy(alpha = 0.45f)) else BorderStroke(0.5.dp, Color(0xFF3A3A3A))
         GlassVariant.ModalSheet ->
-            BorderStroke(1.dp, Color(0xFF2C2C36).copy(alpha = 0.50f))
+            if (isOledBlack) BorderStroke(1.dp, Color(0xFF282832).copy(alpha = 0.50f)) else BorderStroke(1.dp, Color(0xFF3A3A3A))
         GlassVariant.Dialog ->
-            BorderStroke(1.dp, Color(0xFF333340).copy(alpha = 0.60f))
+            if (isOledBlack) BorderStroke(1.dp, Color(0xFF333340).copy(alpha = 0.60f)) else BorderStroke(1.dp, Color(0xFF3A3A3A))
         GlassVariant.Input ->
-            BorderStroke(1.dp, Color(0xFF282834).copy(alpha = 0.45f))
+            if (isOledBlack) BorderStroke(1.dp, Color(0xFF282834).copy(alpha = 0.45f)) else BorderStroke(1.dp, Color(0xFF3A3A3A))
         GlassVariant.Chip ->
-            BorderStroke(1.dp, Color(0xFF2C2C36).copy(alpha = 0.50f))
+            if (isOledBlack) BorderStroke(1.dp, Color(0xFF2C2C36).copy(alpha = 0.50f)) else BorderStroke(1.dp, Color(0xFF3A3A3A))
         GlassVariant.SolidReadability ->
-            BorderStroke(1.dp, Color(0xFF282834).copy(alpha = 0.45f))
+            if (isOledBlack) BorderStroke(1.dp, Color(0xFF282834).copy(alpha = 0.45f)) else BorderStroke(1.dp, Color(0xFF3A3A3A))
     }
 }
 

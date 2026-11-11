@@ -45,23 +45,23 @@ object ThemeColors {
     // -----------------------------------------------------------------------------------------
     // Shared Neutral Tokens — Dark (Charcoal)
     // -----------------------------------------------------------------------------------------
-    val DarkBackground = Color(0xFF121216)
-    val DarkOnBackground = Color(0xFFE4E3EC)
-    val DarkSurface = Color(0xFF191920)
-    val DarkOnSurface = Color(0xFFE4E3EC)
-    val DarkSurfaceVariant = Color(0xFF262630)
-    val DarkOnSurfaceVariant = Color(0xFFA6A4B4)
-    val DarkOutline = Color(0xFF4A4858)
-    val DarkOutlineVariant = Color(0xFF2E2C38)
-    val DarkSurfaceContainerLowest = Color(0xFF0E0E12)
-    val DarkSurfaceContainerLow = Color(0xFF1C1C23)
-    val DarkSurfaceContainer = Color(0xFF22222B)
-    val DarkSurfaceContainerHigh = Color(0xFF292934)
-    val DarkSurfaceContainerHighest = Color(0xFF31313E)
-    val DarkSurfaceBright = Color(0xFF3A3A46)
-    val DarkSurfaceDim = Color(0xFF15151B)
-    val DarkInverseSurface = Color(0xFFE4E3EC)
-    val DarkInverseOnSurface = Color(0xFF191920)
+    val DarkBackground = Color(0xFF242424)
+    val DarkOnBackground = Color(0xFFEDE0E2)
+    val DarkSurface = Color(0xFF262626)
+    val DarkOnSurface = Color(0xFFEDE0E2)
+    val DarkSurfaceVariant = Color(0xFF3A3A3A)
+    val DarkOnSurfaceVariant = Color(0xFFAFA3A6)
+    val DarkOutline = Color(0xFF3A3A3A)
+    val DarkOutlineVariant = Color(0xFF3A3A3A)
+    val DarkSurfaceContainerLowest = Color(0xFF1E1E1E)
+    val DarkSurfaceContainerLow = Color(0xFF242424)
+    val DarkSurfaceContainer = Color(0xFF262626)
+    val DarkSurfaceContainerHigh = Color(0xFF303030)
+    val DarkSurfaceContainerHighest = Color(0xFF3A3A3A)
+    val DarkSurfaceBright = Color(0xFF424242)
+    val DarkSurfaceDim = Color(0xFF202020)
+    val DarkInverseSurface = Color(0xFFEDE0E2)
+    val DarkInverseOnSurface = Color(0xFF262626)
 
     // -----------------------------------------------------------------------------------------
     // Shared Neutral Tokens — Pure Black / OLED Dark
@@ -573,28 +573,28 @@ fun resolveSemanticPalette(
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF141418)
         } else {
-            Color(0xFF1B1B22)
+            Color(0xFF262626)
         }
 
     val cardBorder =
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF282832).copy(alpha = 0.60f)
         } else {
-            Color(0xFF2C2C36).copy(alpha = 0.65f)
+            Color(0xFF3A3A3A)
         }
 
     val modalSurface =
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF16161C).copy(alpha = 0.98f)
         } else {
-            Color(0xFF1E1D25).copy(alpha = 0.96f)
+            Color(0xFF262626)
         }
 
     val inputSurface =
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF101014)
         } else {
-            Color(0xFF15151C)
+            Color(0xFF242424)
         }
 
     return SemanticPalette(
@@ -608,7 +608,7 @@ fun resolveSemanticPalette(
         modalSurface = modalSurface,
         primaryText = Color(0xFFEDEDF2),
         secondaryText = Color(0xFFA6A4B4),
-        divider = Color(0xFF282832).copy(alpha = 0.55f),
+        divider = if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) Color(0xFF282832).copy(alpha = 0.55f) else Color(0xFF3A3A3A),
         inputSurface = inputSurface,
         error = ThemeColors.DarkError,
         success = Color(0xFF7DD080),
@@ -667,10 +667,10 @@ object NotasTokens {
     // -----------------------------------------------------------------------------------------
     // Dark Mode Palette (Preserving theme and dark mode adaptability)
     // -----------------------------------------------------------------------------------------
-    val DarkBackground = Color(0xFF121216)
-    val DarkCardSurface = Color(0xFF1B1B22)
-    val DarkInputSurface = Color(0xFF15151C)
-    val DarkBorder = Color(0xFF2C2C36)
+    val DarkBackground = Color(0xFF242424)
+    val DarkCardSurface = Color(0xFF262626)
+    val DarkInputSurface = Color(0xFF242424)
+    val DarkBorder = Color(0xFF3A3A3A)
     val DarkPrimary = Color(0xFFFFFFFF)
     val DarkOnPrimary = Color(0xFF000000)
     val DarkSecondaryText = Color(0xFFA6A4B4)

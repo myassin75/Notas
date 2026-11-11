@@ -441,9 +441,10 @@ private fun LogoComposition(logoSize: Dp) {
                 ),
         )
 
-        // The SmartNotas Logo (darckP.png)
+        // The SmartNotas Logo
+        val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
         Image(
-            painter = painterResource(id = R.drawable.darck_logo),
+            painter = painterResource(id = if (isDark) R.drawable.ic_logo_white else R.drawable.darck_logo),
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier

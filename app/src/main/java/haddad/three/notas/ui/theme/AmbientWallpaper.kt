@@ -54,43 +54,43 @@ fun resolveAmbientPalette(
     return when (accentTheme) {
         AccentTheme.MAROON ->
             AmbientPalette(
-                base = Color(0xFF121011),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF481016),
                 glowSecondary = Color(0xFF2A0A0E),
             )
         AccentTheme.ROYAL_BLUE ->
             AmbientPalette(
-                base = Color(0xFF101115),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF141E42),
                 glowSecondary = Color(0xFF0C1228),
             )
         AccentTheme.FOREST_GREEN ->
             AmbientPalette(
-                base = Color(0xFF101210),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF102814),
                 glowSecondary = Color(0xFF0A1A0D),
             )
         AccentTheme.DARK_BROWN ->
             AmbientPalette(
-                base = Color(0xFF121110),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF321C0E),
                 glowSecondary = Color(0xFF1E1108),
             )
         AccentTheme.OCEAN_TEAL ->
             AmbientPalette(
-                base = Color(0xFF101213),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF112B30),
                 glowSecondary = Color(0xFF0A1B1E),
             )
         AccentTheme.PURE_BLACK ->
             AmbientPalette(
-                base = Color(0xFF0E0E12),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF202028),
                 glowSecondary = Color(0xFF14141A),
             )
         AccentTheme.AMETHYST ->
             AmbientPalette(
-                base = Color(0xFF111014),
+                base = Color(0xFF242424),
                 glowPrimary = Color(0xFF34153A),
                 glowSecondary = Color(0xFF1F0C23),
             )
@@ -125,8 +125,8 @@ fun AmbientBackground(
     Canvas(
         modifier = modifier.fillMaxSize(),
     ) {
-        val neutralBase = if (isOledBlack) Color(0xFF000000) else Color(0xFF0F0F13)
-        val lowerNeutral = if (isOledBlack) Color(0xFF000000) else Color(0xFF0C0C0F)
+        val neutralBase = if (isOledBlack) Color(0xFF000000) else Color(0xFF242424)
+        val lowerNeutral = if (isOledBlack) Color(0xFF000000) else Color(0xFF242424)
 
         // 1. Base vertical gradient: neutral near-black charcoal fading to deep dark lower region
         drawRect(

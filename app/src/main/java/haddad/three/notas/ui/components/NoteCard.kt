@@ -261,7 +261,7 @@ fun NoteCard(
             Modifier.border(
                 BorderStroke(
                     1.dp,
-                    if (isDark) Color(0xFF2C2C36).copy(alpha = 0.65f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                 ),
                 cardShape,
             )

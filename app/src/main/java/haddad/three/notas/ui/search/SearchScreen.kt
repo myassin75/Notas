@@ -188,7 +188,7 @@ fun SearchScreen(
                 ) {
                     val searchBarBg =
                         if (isDark) {
-                            Color(0xFF15151C)
+                            Color(0xFF262626)
                         } else {
                             MaterialTheme.colorScheme.surface
                         }
@@ -196,7 +196,7 @@ fun SearchScreen(
                         if (isSearchFocused) {
                             BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.85f else 0.75f))
                         } else {
-                            BorderStroke(1.dp, if (isDark) Color(0xFF282834).copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
                         }
 
                     Surface(
@@ -451,13 +451,13 @@ fun SearchScreen(
                         // Informational Card
                         val infoCardBg =
                             if (isDark) {
-                                Color(0xFF181820).copy(alpha = 0.80f)
+                                Color(0xFF262626)
                             } else {
                                 MaterialTheme.colorScheme.primaryContainer
                             }
                         val infoCardBorder =
                             if (isDark) {
-                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+                                BorderStroke(1.dp, Color(0xFF3A3A3A))
                             } else {
                                 null
                             }
@@ -545,12 +545,12 @@ fun SearchScreen(
 
                             val recentCardBg =
                                 if (isDark) {
-                                    Color(0xFF141419).copy(alpha = 0.75f)
+                                    Color(0xFF262626)
                                 } else {
                                     MaterialTheme.colorScheme.surface
                                 }
                             val recentBorder =
-                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.40f))
+                                BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
 
                             Surface(
                                 shape = RoundedCornerShape(24.dp),
@@ -918,7 +918,7 @@ private fun SearchFilterChip(
             }
         } else {
             if (isDark) {
-                Color(0xFF202028)
+                Color(0xFF3A3A3A)
             } else {
                 MaterialTheme.colorScheme.surfaceContainerHigh
             }
@@ -927,7 +927,7 @@ private fun SearchFilterChip(
         if (selected) {
             BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary)
         } else {
-            BorderStroke(1.dp, if (isDark) Color(0xFF2C2C36).copy(alpha = 0.50f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.50f))
+            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.50f))
         }
     val chipLabelColor =
         if (selected) {
@@ -975,7 +975,7 @@ fun SearchFiltersBottomSheet(
 
     val sheetContainerColor =
         if (isDark) {
-            Color(0xFF16161C)
+            Color(0xFF262626)
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         }
@@ -1064,14 +1064,14 @@ fun SearchFiltersBottomSheet(
             item {
                 val innerCardBg =
                     if (isDark) {
-                        Color(0xFF1E1E26).copy(alpha = 0.88f)
+                        Color(0xFF262626)
                     } else {
                         MaterialTheme.colorScheme.surface
                     }
                 val innerCardBorder =
                     BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.35f),
+                        if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
                     )
 
                 Surface(
@@ -1316,7 +1316,7 @@ fun SearchFiltersBottomSheet(
                                     RememberMaterialRoundedSymbol(name = "expand_more", size = 20.dp, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            val dropdownBg = if (isDark) Color(0xFF1E1E26) else MaterialTheme.colorScheme.surface
+                            val dropdownBg = if (isDark) Color(0xFF262626) else MaterialTheme.colorScheme.surface
                             DropdownMenu(
                                 expanded = shoulderDropdownExpanded,
                                 onDismissRequest = { shoulderDropdownExpanded = false },
@@ -1580,7 +1580,7 @@ fun SearchResultCard(
     val cardColors = elevatedCardColors()
     val baseContainer =
         if (isDark) {
-            Color(0xFF16161C).copy(alpha = 0.85f)
+            Color(0xFF262626).copy(alpha = 0.85f)
         } else {
             cardColors.containerColor
         }
@@ -1595,7 +1595,7 @@ fun SearchResultCard(
         if (noteAccent != null) {
             BorderStroke(1.dp, noteAccent.copy(alpha = if (isDark) 0.35f else 0.25f))
         } else {
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.50f else 0.40f))
+            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
         }
 
     Surface(

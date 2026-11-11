@@ -97,7 +97,7 @@ fun CalendarDetailsScreen(
     } else {
         MaterialTheme.colorScheme.primary
     }
-    val onGlobalActionAccent = if (isDark) Color(0xFF121216) else Color.White
+    val onGlobalActionAccent = if (isDark) Color(0xFF242424) else Color.White
 
     val headerScreenBg = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background
     val cardSurfaceBg = if (isDark) glassContainerColor(GlassVariant.StandardCard, isDark = true) else Color(0xFFFFFFFF)

@@ -185,9 +185,9 @@ fun OptionsPanel(
         label = "optionsPanelStarredCue",
     )
     val isDark = LocalIsDark.current
-    val cardColor = if (isDark) Color(0xFF16161C).copy(alpha = 0.85f) else MaterialTheme.colorScheme.surface
-    val cardBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.5f))
-    val dividerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.5f)
+    val cardColor = if (isDark) Color(0xFF262626) else MaterialTheme.colorScheme.surface
+    val cardBorder = BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    val dividerColor = if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -221,7 +221,7 @@ fun OptionsPanel(
                     onClick = onOpenShoulders,
                     modifier = Modifier.fillMaxWidth(),
                     iconTint = if (shoulder != null) shoulderColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    iconContainerColor = if (shoulder != null) shoulderColor.copy(alpha = if (isDark) 0.22f else 0.15f) else (if (isDark) Color(0xFF1E1E26) else MaterialTheme.colorScheme.surfaceVariant),
+                    iconContainerColor = if (shoulder != null) shoulderColor.copy(alpha = if (isDark) 0.22f else 0.15f) else (if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.surfaceVariant),
                     summaryContent = {
                         if (shoulder != null) {
                             Row(

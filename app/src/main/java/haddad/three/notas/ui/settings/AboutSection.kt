@@ -361,8 +361,9 @@ private fun AboutSettingsBlock(
                     contentAlignment = Alignment.Center,
                 ) {
                     val iconSize = if (isSmallLandscape) 80.dp else 130.dp
+                    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
                     Image(
-                        painter = painterResource(id = R.drawable.darck_logo),
+                        painter = painterResource(id = if (isDark) R.drawable.ic_logo_white else R.drawable.darck_logo),
                         contentDescription = stringResource(R.string.app_name),
                         contentScale = ContentScale.Fit,
                         modifier =

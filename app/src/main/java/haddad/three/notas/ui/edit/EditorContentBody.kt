@@ -108,8 +108,8 @@ internal fun EditorContentBodyColumn(
         val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
         Surface(
             shape = RoundedCornerShape(28.dp),
-            color = if (isDark) Color(0xFF141419).copy(alpha = 0.94f) else MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.35f)),
+            color = if (isDark) Color(0xFF262626) else MaterialTheme.colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(modifier = Modifier.padding(18.dp)) {

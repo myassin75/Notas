@@ -89,14 +89,13 @@ class ThemeSystemTest {
     }
 
     @Test
-    fun buildColorScheme_darkMode_hasThemeSpecificPrimaryAwareBackgrounds() {
-        assertEquals(ThemeColors.Maroon.DarkBackground, buildColorScheme(AccentTheme.MAROON, darkTheme = true, blackThemeActive = false).background)
-        assertEquals(ThemeColors.RoyalBlue.DarkBackground, buildColorScheme(AccentTheme.ROYAL_BLUE, darkTheme = true, blackThemeActive = false).background)
-        assertEquals(ThemeColors.ForestGreen.DarkBackground, buildColorScheme(AccentTheme.FOREST_GREEN, darkTheme = true, blackThemeActive = false).background)
-        assertEquals(ThemeColors.DarkBrown.DarkBackground, buildColorScheme(AccentTheme.DARK_BROWN, darkTheme = true, blackThemeActive = false).background)
-        assertEquals(ThemeColors.OceanTeal.DarkBackground, buildColorScheme(AccentTheme.OCEAN_TEAL, darkTheme = true, blackThemeActive = false).background)
-        assertEquals(ThemeColors.PureBlack.DarkBackground, buildColorScheme(AccentTheme.PURE_BLACK, darkTheme = true, blackThemeActive = false).background)
-        assertEquals(ThemeColors.Amethyst.DarkBackground, buildColorScheme(AccentTheme.AMETHYST, darkTheme = true, blackThemeActive = false).background)
+    fun buildColorScheme_darkMode_usesUnifiedDarkBackgroundAndSurfaces() {
+        AccentTheme.entries.filter { it != AccentTheme.PURE_BLACK }.forEach { accent ->
+            val scheme = buildColorScheme(accentTheme = accent, darkTheme = true, blackThemeActive = false)
+            assertEquals("Unified dark background for $accent", ThemeColors.DarkBackground, scheme.background)
+            assertEquals("Unified dark surface for $accent", ThemeColors.DarkSurface, scheme.surface)
+            assertEquals("Unified dark outline for $accent", ThemeColors.DarkOutline, scheme.outline)
+        }
     }
 
     @Test
