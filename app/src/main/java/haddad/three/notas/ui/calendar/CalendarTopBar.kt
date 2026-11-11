@@ -47,7 +47,6 @@ import haddad.three.notas.ui.theme.LocalIsDark
  * Top bar for the Calendar screen matching the reference design:
  * - Squircle menu button with calendar view dropdown
  * - Title and day subtitle
- * - Notification bell icon button
  */
 @Composable
 fun CalendarTopBar(
@@ -55,7 +54,6 @@ fun CalendarTopBar(
     subtitle: String,
     currentViewMode: CalendarViewMode,
     onViewModeSelected: (CalendarViewMode) -> Unit,
-    onNotificationClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
@@ -142,30 +140,6 @@ fun CalendarTopBar(
                             color = textSecondary,
                         ),
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Right: Notification Bell Button
-        Box(
-            modifier = Modifier.size(48.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Surface(
-                onClick = onNotificationClick,
-                shape = CircleShape,
-                color = CalendarDesignTokens.resolveCardBg(isDark),
-                border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark)),
-                modifier = Modifier.size(42.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    RememberMaterialRoundedSymbol(
-                        name = "notifications",
-                        size = 20.dp,
-                        tint = textPrimary,
-                    )
-                }
             }
         }
     }

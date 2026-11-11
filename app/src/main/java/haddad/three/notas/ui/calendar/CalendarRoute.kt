@@ -109,13 +109,12 @@ fun CalendarRoute(
                 .background(screenBg)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
     ) {
-        // 1. Top Bar with view dropdown and notifications (pinned)
+        // 1. Top Bar with view dropdown (pinned)
         CalendarTopBar(
             title = stringResource(R.string.main_tab_calendar),
             subtitle = selectedDateSubtitle,
             currentViewMode = uiState.viewMode,
             onViewModeSelected = viewModel::onViewModeSelected,
-            onNotificationClick = {},
         )
 
         Spacer(modifier = Modifier.height(8.dp))
