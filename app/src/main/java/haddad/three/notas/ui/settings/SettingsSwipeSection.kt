@@ -132,6 +132,14 @@ private fun SwipeGestureModeSegmentedControl(
         } else {
             Color(0xFFF5F4F9)
         }
+    val activeBg =
+        if (isDark) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+        } else {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        }
+    val activeFg = MaterialTheme.colorScheme.primary
+
     Row(
         modifier =
             Modifier
@@ -149,7 +157,7 @@ private fun SwipeGestureModeSegmentedControl(
                 Modifier
                     .weight(1f)
                     .clip(CircleShape)
-                    .background(if (revealSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
+                    .background(if (revealSelected) activeBg else Color.Transparent)
                     .clickable { onSelect(SwipeGestureMode.REVEAL_ACTIONS) }
                     .padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
@@ -159,7 +167,7 @@ private fun SwipeGestureModeSegmentedControl(
                 text = stringResource(R.string.settings_swipe_reveal_title),
                 style =
                     MaterialTheme.typography.labelLarge.copy(
-                        color = if (revealSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
+                        color = if (revealSelected) activeFg else SettingsDesignTokens.TextSecondary,
                         fontWeight = if (revealSelected) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 14.sp,
                     ),
@@ -171,7 +179,7 @@ private fun SwipeGestureModeSegmentedControl(
                 Modifier
                     .weight(1f)
                     .clip(CircleShape)
-                    .background(if (executeSelected) SettingsDesignTokens.SoftLavender else Color.Transparent)
+                    .background(if (executeSelected) activeBg else Color.Transparent)
                     .clickable { onSelect(SwipeGestureMode.EXECUTE_ONE) }
                     .padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
@@ -181,7 +189,7 @@ private fun SwipeGestureModeSegmentedControl(
                 text = stringResource(R.string.settings_swipe_execute_title),
                 style =
                     MaterialTheme.typography.labelLarge.copy(
-                        color = if (executeSelected) SettingsDesignTokens.PrimaryPurple else SettingsDesignTokens.TextSecondary,
+                        color = if (executeSelected) activeFg else SettingsDesignTokens.TextSecondary,
                         fontWeight = if (executeSelected) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 14.sp,
                     ),

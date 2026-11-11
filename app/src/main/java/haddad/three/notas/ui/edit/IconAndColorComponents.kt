@@ -197,7 +197,7 @@ fun IconAndColorSheet(
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val sheetBg = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface
+    val sheetBg = if (isDark) Color(30, 30, 30).copy(alpha = 0.75f) else MaterialTheme.colorScheme.surface
     val textPrimary = MaterialTheme.colorScheme.onSurface
     val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
     val cardBorder = MaterialTheme.colorScheme.outlineVariant
@@ -237,6 +237,7 @@ fun IconAndColorSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = sheetBg,
+        scrimColor = Color.Black.copy(alpha = 0.40f),
         tonalElevation = 0.dp,
     ) {
         Column(

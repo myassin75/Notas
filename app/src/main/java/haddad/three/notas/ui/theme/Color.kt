@@ -587,7 +587,7 @@ fun resolveSemanticPalette(
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF16161C).copy(alpha = 0.98f)
         } else {
-            Color(0xFF242424)
+            Color(30, 30, 30).copy(alpha = 0.75f)
         }
 
     val inputSurface =

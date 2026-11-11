@@ -236,7 +236,7 @@ private fun PortraitLayout(
             ) {
                 RememberButton(
                     onClick = onLetsBegin,
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -244,7 +244,7 @@ private fun PortraitLayout(
                     contentPadding = PaddingValues(horizontal = 24.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(60.dp),
+                        .height(52.dp),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -253,7 +253,7 @@ private fun PortraitLayout(
                     ) {
                         Text(
                             text = stringResource(R.string.onboarding_lets_begin),
-                            fontSize = 18.sp,
+                            fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary,
                         )
@@ -261,7 +261,7 @@ private fun PortraitLayout(
                             name = "arrow_forward",
                             autoMirror = true,
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            size = 24.dp,
+                            size = 22.dp,
                         )
                     }
                 }
@@ -362,7 +362,7 @@ private fun LandscapeLayout(
                 ) {
                     RememberButton(
                         onClick = onLetsBegin,
-                        shape = RoundedCornerShape(24.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -370,7 +370,7 @@ private fun LandscapeLayout(
                         contentPadding = PaddingValues(horizontal = 24.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(58.dp),
+                            .height(50.dp),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

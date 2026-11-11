@@ -49,7 +49,11 @@ object SettingsDesignTokens {
     val ScreenBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
     val CardBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
     val PrimaryPurple: Color @Composable get() = MaterialTheme.colorScheme.primary
-    val SoftLavender: Color @Composable get() = MaterialTheme.colorScheme.primaryContainer
+    val SoftLavender: Color
+        @Composable get() {
+            val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
+            return if (isDark) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else MaterialTheme.colorScheme.primaryContainer
+        }
     val TextPrimary: Color @Composable get() = MaterialTheme.colorScheme.onSurface
     val TextSecondary: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
     val DividerColor: Color @Composable get() = MaterialTheme.colorScheme.outlineVariant
@@ -147,21 +151,17 @@ fun SettingsRowItem(
             Modifier
                 .fillMaxWidth()
                 .then(clickableModifier)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (materialSymbolName != null) {
             Box(
-                modifier =
-                    Modifier
-                        .size(36.dp)
-                        .clip(SettingsDesignTokens.IconBoxShape)
-                        .background(if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier = Modifier.size(28.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(
                     name = materialSymbolName,
-                    size = 20.dp,
+                    size = 24.dp,
                     tint = if (enabled) (titleColor ?: MaterialTheme.colorScheme.primary) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
                     weight = FontWeight.Normal,
                     filled = false,
@@ -208,22 +208,31 @@ fun SettingsValuePill(
     text: String,
     onClick: (() -> Unit)? = null,
 ) {
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val clickableModifier = if (onClick != null) Modifier.clickable { onClick() } else Modifier
+    val pillBg =
+        if (isDark) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+        } else {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        }
+    val pillTextColor = MaterialTheme.colorScheme.primary
+
     Surface(
         modifier =
             Modifier
                 .clip(SettingsDesignTokens.PillShape)
                 .then(clickableModifier),
         shape = SettingsDesignTokens.PillShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
+        color = pillBg,
     ) {
         Text(
             text = text,
             style =
                 MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = pillTextColor,
                 ),
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
         )

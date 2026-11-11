@@ -593,7 +593,7 @@ fun ReminderPickerSheet(
         if (notificationsGranted) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 val expansionSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>())
                 val fadeInSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Float>())
@@ -630,7 +630,7 @@ fun ReminderPickerSheet(
                                             .clip(MaterialTheme.shapes.medium)
                                             .clickable {
                                                 expandedIndex = if (isExpanded) -1 else index
-                                            }.padding(horizontal = 16.dp, vertical = 12.dp),
+                                            }.padding(horizontal = 16.dp, vertical = 15.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     RememberMaterialRoundedSymbol(

@@ -19,6 +19,10 @@ object CalendarDesignTokens {
     val SoftLavender = Color(0xFFFBE8EA)
     val DarkPurpleSelected = Color(0xFF5A0000)
 
+    val DynamicPrimary: Color @Composable get() = MaterialTheme.colorScheme.primary
+    val DynamicPrimaryContainer: Color @Composable get() = MaterialTheme.colorScheme.primaryContainer
+    val DynamicOnPrimary: Color @Composable get() = MaterialTheme.colorScheme.onPrimary
+
     // Background & Card Surfaces
     val ScreenBgLight = Color(0xFFF8F7FA)
     val ScreenBgDark = Color(0xFF181818)

@@ -231,7 +231,7 @@ fun SearchScreen(
                                 if (uiState.query.isEmpty()) {
                                     Text(
                                         text = stringResource(R.string.search_placeholder),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                        color = if (isDark) Color(0xFFC8C6D4) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                                         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
                                     )
                                 }
@@ -975,7 +975,7 @@ fun SearchFiltersBottomSheet(
 
     val sheetContainerColor =
         if (isDark) {
-            Color(0xFF262626)
+            Color(30, 30, 30).copy(alpha = 0.75f)
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         }
@@ -983,6 +983,7 @@ fun SearchFiltersBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = sheetContainerColor,
+        scrimColor = Color.Black.copy(alpha = 0.40f),
         dragHandle = {
             BottomSheetDefaults.DragHandle(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isDark) 0.50f else 0.40f),
@@ -1442,31 +1443,36 @@ fun SearchFiltersBottomSheet(
                         )
                     }
                     Surface(
-                        shape = RoundedCornerShape(100.dp),
+                        shape = RoundedCornerShape(14.dp),
                         color = MaterialTheme.colorScheme.primary,
                         modifier =
                             Modifier
-                                .clip(RoundedCornerShape(100.dp))
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(14.dp))
                                 .clickable {
                                     onApply(draftFilters)
                                 },
                     ) {
-                        val applyText =
-                            if (draftFilters.activeCount > 0) {
-                                stringResource(R.string.search_filter_apply_with_count, draftFilters.activeCount)
-                            } else {
-                                stringResource(R.string.search_filter_apply)
-                            }
-                        Text(
-                            text = applyText,
-                            style =
-                                MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = 16.sp,
-                                ),
-                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 14.dp),
-                        )
+                        Box(
+                            modifier = Modifier.padding(horizontal = 24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            val applyText =
+                                if (draftFilters.activeCount > 0) {
+                                    stringResource(R.string.search_filter_apply_with_count, draftFilters.activeCount)
+                                } else {
+                                    stringResource(R.string.search_filter_apply)
+                                }
+                            Text(
+                                text = applyText,
+                                style =
+                                    MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        fontSize = 15.sp,
+                                    ),
+                            )
+                        }
                     }
                 }
             }

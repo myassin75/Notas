@@ -97,13 +97,13 @@ fun glassContainerColor(
             if (isOledBlack) {
                 Color(0xFF16161C).copy(alpha = 0.98f)
             } else {
-                Color(0xFF242424)
+                Color(30, 30, 30).copy(alpha = 0.75f)
             }
         GlassVariant.Dialog ->
             if (isOledBlack) {
                 Color(0xFF16161C).copy(alpha = 0.98f)
             } else {
-                Color(0xFF242424)
+                Color(30, 30, 30).copy(alpha = 0.85f)
             }
         GlassVariant.Input ->
             if (isOledBlack) {

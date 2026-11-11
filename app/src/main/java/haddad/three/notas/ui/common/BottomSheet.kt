@@ -79,12 +79,22 @@ fun AppBottomSheet(
     // Landscape windows are short; compact the sheet chrome (drag handle, title, action bar) so
     // it doesn't consume most of the height and leave only a sliver for content.
     val landscape = isLandscape()
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
+    val isBlackTheme = haddad.three.notas.ui.theme.LocalThemeState.current.blackThemeActive(isDark)
+    val resolvedContainerColor =
+        if (isDark) {
+            if (isBlackTheme) Color(0xFF16161C).copy(alpha = 0.98f) else Color(30, 30, 30).copy(alpha = 0.75f)
+        } else {
+            containerColor
+        }
+
     ModalBottomSheet(
         onDismissRequest = dismissSheet,
         sheetState = sheetState,
         sheetGesturesEnabled = sheetGesturesEnabled,
-        containerColor = containerColor,
+        containerColor = resolvedContainerColor,
         contentColor = contentColor,
+        scrimColor = Color.Black.copy(alpha = 0.40f),
         dragHandle = { AppBottomSheetDragHandle(compact = landscape) },
     ) {
         CompositionLocalProvider(LocalDensity provides cappedDensity) {

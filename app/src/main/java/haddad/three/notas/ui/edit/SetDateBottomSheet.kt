@@ -211,6 +211,7 @@ fun SetDateBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = modalContainerColor,
+        scrimColor = Color.Black.copy(alpha = 0.40f),
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = {
             Box(
@@ -1093,13 +1094,13 @@ fun SetDateBottomSheet(
             ) {
                 // Cancel Button
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = cancelBg,
                     modifier =
                         Modifier
                             .weight(1f)
                             .height(48.dp)
-                            .clip(RoundedCornerShape(24.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable(onClick = onDismiss),
                 ) {
                     Box(
@@ -1120,13 +1121,13 @@ fun SetDateBottomSheet(
 
                 // Save Date Button
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = selectedAccent,
                     modifier =
                         Modifier
                             .weight(1.5f)
                             .height(48.dp)
-                            .clip(RoundedCornerShape(24.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable {
                                 val startUtcMillis =
                                     selectedStartDate

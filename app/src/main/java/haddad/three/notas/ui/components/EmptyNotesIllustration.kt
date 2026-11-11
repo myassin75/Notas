@@ -45,32 +45,30 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
     val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val sizeDp = if (isSmallLandscape) 96.dp else 120.dp
     val primaryColor = MaterialTheme.colorScheme.primary
-    val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f) else MaterialTheme.colorScheme.surface
+    val cardSurface = if (isDark) Color(0xFF222226) else MaterialTheme.colorScheme.surface
 
     Box(
         modifier = modifier.size(sizeDp),
         contentAlignment = Alignment.Center,
     ) {
-        val circleBg =
-            if (isDark) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
-            } else {
-                MaterialTheme.colorScheme.primaryContainer
-            }
-        // Soft background circle
-        Box(
-            modifier =
-                Modifier
-                    .size(sizeDp * 0.9f)
-                    .clip(CircleShape)
-                    .background(circleBg),
-        )
+        // Soft background circle only in light mode
+        if (!isDark) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(sizeDp * 0.9f)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+            )
+        }
 
         // Document illustration
         Canvas(modifier = Modifier.size(sizeDp * 0.65f)) {
             val strokeWidth = 2.5.dp.toPx()
+            val docOutlineColor = if (isDark) Color(0xFF9E9EA8) else primaryColor.copy(alpha = 0.35f)
+            val docLinesColor = if (isDark) Color(0xFF9E9EA8) else primaryColor.copy(alpha = 0.6f)
 
-            // Document body (card surface with primary border)
+            // Document body (card surface with primary/silver border)
             drawRoundRect(
                 color = cardSurface,
                 topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
@@ -79,7 +77,7 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
                 style = Fill,
             )
             drawRoundRect(
-                color = primaryColor.copy(alpha = 0.35f),
+                color = docOutlineColor,
                 topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
                 size = Size(size.width * 0.65f, size.height * 0.8f),
                 cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
@@ -93,9 +91,9 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
             val lineY2 = size.height * 0.45f
             val lineY3 = size.height * 0.60f
 
-            drawLine(primaryColor.copy(alpha = 0.6f), Offset(lineXStart, lineY1), Offset(lineXEnd, lineY1), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-            drawLine(primaryColor.copy(alpha = 0.6f), Offset(lineXStart, lineY2), Offset(lineXEnd * 0.88f, lineY2), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-            drawLine(primaryColor.copy(alpha = 0.6f), Offset(lineXStart, lineY3), Offset(lineXEnd * 0.78f, lineY3), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            drawLine(docLinesColor, Offset(lineXStart, lineY1), Offset(lineXEnd, lineY1), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            drawLine(docLinesColor, Offset(lineXStart, lineY2), Offset(lineXEnd * 0.88f, lineY2), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+            drawLine(docLinesColor, Offset(lineXStart, lineY3), Offset(lineXEnd * 0.78f, lineY3), strokeWidth = strokeWidth, cap = StrokeCap.Round)
         }
 
         // Circular checkmark badge in bottom right corner

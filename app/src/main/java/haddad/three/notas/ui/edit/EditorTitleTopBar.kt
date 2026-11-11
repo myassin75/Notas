@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -241,12 +243,13 @@ internal fun EditorTitleTopBar(
                     if ((isEditMode || hasUnsavedChanges) && !readOnly) {
                         var lastSaveClickMillis by remember { mutableStateOf(0L) }
                         Surface(
-                            shape = CircleShape,
+                            shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.primary,
                             modifier =
                                 Modifier
                                     .padding(end = 8.dp)
-                                    .clip(CircleShape)
+                                    .height(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable {
                                         val now = System.currentTimeMillis()
                                         if (now - lastSaveClickMillis > 600L) {
@@ -256,9 +259,9 @@ internal fun EditorTitleTopBar(
                                     },
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier.padding(horizontal = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 RememberMaterialRoundedSymbol(
                                     name = "check",
@@ -272,7 +275,7 @@ internal fun EditorTitleTopBar(
                                     style =
                                         MaterialTheme.typography.labelLarge.copy(
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 15.sp,
+                                            fontSize = 14.5.sp,
                                             color = MaterialTheme.colorScheme.onPrimary,
                                         ),
                                 )

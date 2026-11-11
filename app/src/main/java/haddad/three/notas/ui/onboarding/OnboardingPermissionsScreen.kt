@@ -293,12 +293,12 @@ fun OnboardingPermissionsScreen(
                                         },
                                     )
 
-                                    val bottomCtaShape = RoundedCornerShape(28.dp)
-                                    val bottomCtaPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+                                    val bottomCtaShape = RoundedCornerShape(14.dp)
+                                    val bottomCtaPadding = PaddingValues(horizontal = 20.dp)
                                     if (notificationsGranted) {
                                         RememberButton(
                                             onClick = onContinue,
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier.fillMaxWidth().height(48.dp),
                                             shape = bottomCtaShape,
                                             contentPadding = bottomCtaPadding,
                                         ) {
@@ -441,8 +441,8 @@ fun OnboardingPermissionsScreen(
                                 }
                             }
 
-                            val bottomCtaShape = RoundedCornerShape(28.dp)
-                            val bottomCtaPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+                            val bottomCtaShape = RoundedCornerShape(14.dp)
+                            val bottomCtaPadding = PaddingValues(horizontal = 24.dp)
                             Column(
                                 modifier =
                                     Modifier
@@ -481,7 +481,7 @@ fun OnboardingPermissionsScreen(
                                 if (notificationsGranted) {
                                     RememberButton(
                                         onClick = onContinue,
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier.fillMaxWidth().height(50.dp),
                                         shape = bottomCtaShape,
                                         contentPadding = bottomCtaPadding,
                                     ) {
@@ -918,9 +918,9 @@ private fun PermissionStatusCard(
                         RememberButton(
                             onClick = onAction,
                             enabled = currentActionEnabled,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(28.dp),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = actionVerticalPadding),
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp),
                             colors =
                                 ButtonDefaults.buttonColors(
                                     containerColor = scheme.primary,
@@ -938,9 +938,9 @@ private fun PermissionStatusCard(
                         RememberButton(
                             onClick = onAction,
                             enabled = currentActionEnabled,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(28.dp),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = actionVerticalPadding),
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp),
                             // Tonal rather than neutral: surfaceContainerHighest is one tonal
                             // step from the card it sits on, so the button all but disappears.
                             colors =

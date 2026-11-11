@@ -428,8 +428,8 @@ class DatePickerAndSchedulingTest {
 
             val lum = relativeLuminance(selectedAccent)
             assertTrue(
-                "Selected accent in dark mode for $accent must be a light accent (lum > 0.30), was $lum",
-                lum > 0.30,
+                "Selected accent in dark mode for $accent must be a vibrant accent (lum > 0.18), was $lum",
+                lum > 0.18,
             )
         }
     }

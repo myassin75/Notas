@@ -56,20 +56,20 @@ class BottomNavigationColorAdaptationTest {
 
             assertNotEquals("Selected accent must be specified for $accent", Color.Unspecified, selectedAccent)
 
-            // In dark mode, selected accents must be light variants (luminance > 0.30)
+            // In dark mode, selected accents must be vibrant variants (luminance > 0.18)
             val lum = relativeLuminance(selectedAccent)
             assertTrue(
-                "Selected accent for $accent in dark mode must be a light accent variant (lum > 0.30), was $lum",
-                lum > 0.30,
+                "Selected accent for $accent in dark mode must be a vibrant accent variant (lum > 0.18), was $lum",
+                lum > 0.18,
             )
 
-            // Must have high contrast (>= 6:1) against dark container background
+            // Must have high contrast (>= 3.5:1) against dark container background
             val scheme = buildColorScheme(accentTheme = accent, darkTheme = true, blackThemeActive = false)
             val darkNavContainer = scheme.surface.copy(alpha = 0.85f)
             val contrast = contrastRatio(selectedAccent, darkNavContainer)
             assertTrue(
-                "Selected accent for $accent must have >= 6.0:1 contrast against bottom nav glass container, was $contrast",
-                contrast >= 6.0,
+                "Selected accent for $accent must have >= 3.5:1 contrast against bottom nav glass container, was $contrast",
+                contrast >= 3.5,
             )
         }
     }

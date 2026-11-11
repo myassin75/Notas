@@ -604,47 +604,53 @@ fun CalendarEmptyIllustration(
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
-    val circleBg = MaterialTheme.colorScheme.primaryContainer
-    val pegColor = MaterialTheme.colorScheme.primary
-    val padBorder = MaterialTheme.colorScheme.outlineVariant
-    val padBg = MaterialTheme.colorScheme.surface
-    val headerStripBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-    val dayNumberColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val pegColor = if (isDark) Color.White else primaryColor
+    val padBorder = if (isDark) primaryColor else MaterialTheme.colorScheme.outlineVariant
+    val padBg = if (isDark) Color(0xFF222226) else MaterialTheme.colorScheme.surface
+    val headerStripBg = primaryColor
+    val dayNumberColor = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
 
     Box(
-        modifier =
-            modifier
-                .size(116.dp)
-                .background(circleBg, CircleShape),
+        modifier = modifier.size(100.dp),
         contentAlignment = Alignment.Center,
     ) {
+        if (!isDark) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(100.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            )
+        }
+
         Box(
-            modifier = Modifier.size(width = 62.dp, height = 66.dp),
+            modifier = Modifier.size(width = 68.dp, height = 72.dp),
             contentAlignment = Alignment.TopCenter,
         ) {
             // 1. Calendar Pad Body
             Box(
                 modifier =
                     Modifier
-                        .padding(top = 3.5.dp)
-                        .size(width = 62.dp, height = 62.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .padding(top = 4.dp)
+                        .size(width = 68.dp, height = 68.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .background(padBg)
                         .border(
                             BorderStroke(1.5.dp, padBorder),
-                            RoundedCornerShape(12.dp),
+                            RoundedCornerShape(14.dp),
                         ),
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Mauve header strip
+                    // Accent header strip
                     Box(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .height(16.dp)
+                                .height(20.dp)
                                 .background(headerStripBg),
                     )
-                    // Day number body
+                    // Day number body - crisp white "20"
                     Box(
                         modifier =
                             Modifier
@@ -656,7 +662,7 @@ fun CalendarEmptyIllustration(
                             text = "$dayNumber",
                             style =
                                 MaterialTheme.typography.titleLarge.copy(
-                                    fontSize = 24.sp,
+                                    fontSize = 26.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = dayNumberColor,
                                 ),
@@ -669,20 +675,20 @@ fun CalendarEmptyIllustration(
             Row(
                 modifier =
                     Modifier
-                        .width(62.dp)
-                        .padding(horizontal = 15.dp),
+                        .width(68.dp)
+                        .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Box(
                     modifier =
                         Modifier
-                            .size(width = 3.5.dp, height = 8.5.dp)
+                            .size(width = 4.dp, height = 9.dp)
                             .background(pegColor, RoundedCornerShape(2.dp)),
                 )
                 Box(
                     modifier =
                         Modifier
-                            .size(width = 3.5.dp, height = 8.5.dp)
+                            .size(width = 4.dp, height = 9.dp)
                             .background(pegColor, RoundedCornerShape(2.dp)),
                 )
             }

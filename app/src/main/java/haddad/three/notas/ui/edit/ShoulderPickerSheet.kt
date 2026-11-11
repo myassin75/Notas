@@ -86,7 +86,6 @@ fun ShoulderPickerSheet(
         title = stringResource(R.string.shoulder_sheet_title),
         onDismiss = onDismiss,
         showTitleBar = false,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         scrollable = false,
     ) {
         if (editingShoulder != null || creatingShoulder) {
@@ -171,10 +170,11 @@ private fun ShoulderListContent(
     val isDark = LocalIsDark.current
     val primaryAccent = MaterialTheme.colorScheme.primary
     val textPrimary = if (isDark) MaterialTheme.colorScheme.onSurface else Color(0xFF32313F)
-    val textSecondary = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF89899C)
-    val pillSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f) else Color(0xFFF5F4F9)
-    val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f) else Color(0xFFF8F8FC)
-    val cardBorder = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else Color(0xFFE9E3EF)
+    val textSecondary = if (isDark) Color(0xFFB8B6C6) else Color(0xFF6B687E)
+    val textPlaceholder = if (isDark) Color(0xFFC8C6D4) else Color(0xFF757288)
+    val pillSurface = if (isDark) Color(0xFF262626) else Color(0xFFF5F4F9)
+    val cardSurface = if (isDark) Color(0xFF242424) else Color(0xFFF8F8FC)
+    val cardBorder = if (isDark) Color(0xFF3A3A3A) else Color(0xFFE9E3EF)
     val noShoulderSelectedBg = if (isDark) primaryAccent.copy(alpha = 0.18f) else primaryAccent.copy(alpha = 0.10f)
 
     Column(
@@ -182,7 +182,7 @@ private fun ShoulderListContent(
             Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Header
         Row(
@@ -204,7 +204,7 @@ private fun ShoulderListContent(
                     text = stringResource(R.string.shoulder_sheet_subtitle),
                     style =
                         MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
+                            fontSize = 13.5.sp,
                             color = textSecondary,
                         ),
                 )
@@ -230,8 +230,9 @@ private fun ShoulderListContent(
 
         // Search box
         Surface(
-            shape = CircleShape,
+            shape = RoundedCornerShape(14.dp),
             color = pillSurface,
+            border = BorderStroke(1.dp, cardBorder),
             modifier = Modifier.fillMaxWidth(),
         ) {
             OutlinedTextField(
@@ -240,18 +241,18 @@ private fun ShoulderListContent(
                 placeholder = {
                     Text(
                         text = stringResource(R.string.shoulder_search_placeholder),
-                        style = MaterialTheme.typography.bodyMedium.copy(color = textSecondary),
+                        style = MaterialTheme.typography.bodyMedium.copy(color = textPlaceholder, fontSize = 14.5.sp),
                     )
                 },
                 leadingIcon = {
                     RememberMaterialRoundedSymbol(
                         name = "search",
                         size = 20.dp,
-                        tint = textSecondary,
+                        tint = textPlaceholder,
                     )
                 },
                 singleLine = true,
-                shape = CircleShape,
+                shape = RoundedCornerShape(14.dp),
                 colors =
                     OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.Transparent,
@@ -260,6 +261,8 @@ private fun ShoulderListContent(
                         unfocusedContainerColor = pillSurface,
                         focusedTextColor = textPrimary,
                         unfocusedTextColor = textPrimary,
+                        focusedPlaceholderColor = textPlaceholder,
+                        unfocusedPlaceholderColor = textPlaceholder,
                     ),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -297,17 +300,17 @@ private fun ShoulderListContent(
                 val (_, readableFg) = readableBadgeColors(shoulderColor, isDark)
 
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = if (isSelected) shoulderColor.copy(alpha = if (isDark) 0.16f else 0.10f) else Color.Transparent,
                     border = if (isSelected) BorderStroke(1.dp, shoulderColor.copy(alpha = if (isDark) 0.50f else 0.40f)) else null,
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable { onSelectId(shoulder.id) },
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         // Authoritative Color dot with high-contrast outline border
@@ -341,7 +344,7 @@ private fun ShoulderListContent(
                                     ),
                                 style =
                                     MaterialTheme.typography.bodySmall.copy(
-                                        fontSize = 12.sp,
+                                        fontSize = 12.5.sp,
                                         color = if (isSelected) readableFg else textSecondary,
                                     ),
                             )
@@ -401,17 +404,17 @@ private fun ShoulderListContent(
             item {
                 val isSelected = selectedShoulderId == null
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = if (isSelected) noShoulderSelectedBg else Color.Transparent,
                     border = if (isSelected) BorderStroke(1.dp, primaryAccent.copy(alpha = if (isDark) 0.50f else 0.40f)) else null,
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .clickable { onSelectId(null) },
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RememberMaterialRoundedSymbol(
@@ -553,17 +556,18 @@ private fun ShoulderListContent(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Create new shoulder
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(14.dp),
                 color = Color.Transparent,
                 border = BorderStroke(1.5.dp, primaryAccent),
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .clip(CircleShape)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .clickable(onClick = onCreateNewClick),
             ) {
                 Row(
-                    modifier = Modifier.padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -573,7 +577,7 @@ private fun ShoulderListContent(
                         tint = primaryAccent,
                         weight = FontWeight.Bold,
                     )
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.shoulder_create_new),
                         style =
@@ -588,16 +592,17 @@ private fun ShoulderListContent(
 
             // Apply button
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(14.dp),
                 color = primaryAccent,
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .clip(CircleShape)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .clickable(onClick = onApply),
             ) {
                 Row(
-                    modifier = Modifier.padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -1123,16 +1128,17 @@ private fun EditShoulderContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(14.dp),
                 color = cancelBtnBg,
                 modifier =
                     Modifier
                         .weight(1f)
-                        .clip(CircleShape)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .clickable(onClick = onBack),
             ) {
                 Row(
-                    modifier = Modifier.padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -1149,12 +1155,13 @@ private fun EditShoulderContent(
             }
 
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(14.dp),
                 color = if (canSave) primaryAccent else primaryAccent.copy(alpha = 0.38f),
                 modifier =
                     Modifier
                         .weight(1f)
-                        .clip(CircleShape)
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .clickable(enabled = canSave) {
                             if (canSave) {
                                 val finalHex = if (hexInput.startsWith("#")) hexInput.uppercase(Locale.ROOT) else "#${hexInput.uppercase(Locale.ROOT)}"
@@ -1163,7 +1170,7 @@ private fun EditShoulderContent(
                         },
             ) {
                 Row(
-                    modifier = Modifier.padding(vertical = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
