@@ -97,14 +97,14 @@ internal fun NotesEmptyState(
                     shape = RoundedCornerShape(28.dp),
                     color =
                         if (isDark) {
-                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f)
+                            Color(0xFF262626)
                         } else {
                             MaterialTheme.colorScheme.surface
                         },
                     border =
                         androidx.compose.foundation.BorderStroke(
                             1.dp,
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.55f else 0.5f),
+                            if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                         ),
                     modifier =
                         Modifier
@@ -126,13 +126,13 @@ internal fun NotesEmptyState(
                                     Modifier
                                         .size(42.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                        .background(MaterialTheme.colorScheme.primary),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
                                     name = "edit_note",
                                     size = 22.dp,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     weight = FontWeight.Normal,
                                     filled = false,
                                 )
@@ -167,7 +167,7 @@ internal fun NotesEmptyState(
                         }
 
                         HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant,
+                            color = if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant,
                             thickness = 1.dp,
                             modifier = Modifier.padding(horizontal = 16.dp),
                         )
@@ -186,13 +186,13 @@ internal fun NotesEmptyState(
                                     Modifier
                                         .size(42.dp)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                        .background(MaterialTheme.colorScheme.primary),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
                                     name = "checklist",
                                     size = 22.dp,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     weight = FontWeight.Normal,
                                     filled = false,
                                 )
