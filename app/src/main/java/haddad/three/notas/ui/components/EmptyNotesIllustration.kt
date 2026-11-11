@@ -106,13 +106,13 @@ fun EmptyNotesIllustration(modifier: Modifier = Modifier) {
                     .padding(end = 12.dp, bottom = 12.dp)
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(cardSurface),
+                    .background(if (isDark) primaryColor else cardSurface),
             contentAlignment = Alignment.Center,
         ) {
             RememberMaterialRoundedSymbol(
                 name = "check",
                 size = 22.dp,
-                tint = primaryColor,
+                tint = if (isDark) Color.White else primaryColor,
                 weight = FontWeight.Bold,
             )
         }

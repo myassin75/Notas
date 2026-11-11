@@ -21,9 +21,9 @@ object CalendarDesignTokens {
 
     // Background & Card Surfaces
     val ScreenBgLight = Color(0xFFF8F7FA)
-    val ScreenBgDark = Color(0xFF242424)
+    val ScreenBgDark = Color(0xFF181818)
     val CardBgLight = Color(0xFFFFFFFF)
-    val CardBgDark = Color(0xFF262626)
+    val CardBgDark = Color(0xFF242424)
     val CardBorderLight = Color(0xFFEFEFF3)
     val CardBorderDark = Color(0xFF3A3A3A)
 

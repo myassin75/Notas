@@ -55,6 +55,8 @@ import haddad.three.notas.R
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.common.isSmallLandscape
 import haddad.three.notas.ui.components.RememberButton
+import haddad.three.notas.ui.theme.LocalIsDark
+import haddad.three.notas.ui.theme.ThemeColors
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import haddad.three.notas.ui.theme.reducedMotionEnterTransition
 import kotlinx.coroutines.delay
@@ -140,13 +142,14 @@ private fun PortraitLayout(
     blockEnter: EnterTransition,
     onLetsBegin: () -> Unit,
 ) {
+    val isDark = LocalIsDark.current
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScreenBg)
+            .background(if (isDark) ThemeColors.DarkBackground else ScreenBg)
             .padding(top = topInset, bottom = bottomInset)
     ) {
         val screenW = maxWidth
@@ -160,14 +163,15 @@ private fun PortraitLayout(
             // Top spacing above card
             Spacer(modifier = Modifier.height(screenH * 0.025f))
 
-            // Main White Card
+            // Main Content Card
             Surface(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = horizontalMargin),
                 shape = RoundedCornerShape(32.dp),
-                color = Color.White,
+                color = if (isDark) ThemeColors.DarkSurface else Color.White,
+                border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, ThemeColors.DarkOutline) else null,
                 shadowElevation = 0.dp,
             ) {
                 Column(
@@ -193,13 +197,13 @@ private fun PortraitLayout(
                                 text = "Notas",
                                 fontSize = 34.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TitleDark,
+                                color = if (isDark) Color.White else TitleDark,
                                 letterSpacing = (-0.5).sp,
                             )
                             Text(
                                 text = stringResource(R.string.app_tagline),
                                 fontSize = 15.sp,
-                                color = SubtitleGray,
+                                color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else SubtitleGray,
                                 textAlign = TextAlign.Center,
                                 lineHeight = 21.sp,
                             )
@@ -216,7 +220,7 @@ private fun PortraitLayout(
                     text = stringResource(R.string.onboarding_byline),
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = BylineGray,
+                    color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f) else BylineGray,
                 )
             }
 
@@ -234,8 +238,8 @@ private fun PortraitLayout(
                     onClick = onLetsBegin,
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandMaroon,
-                        contentColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                     contentPadding = PaddingValues(horizontal = 24.dp),
                     modifier = Modifier
@@ -251,12 +255,12 @@ private fun PortraitLayout(
                             text = stringResource(R.string.onboarding_lets_begin),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                         )
                         RememberMaterialRoundedSymbol(
                             name = "arrow_forward",
                             autoMirror = true,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             size = 24.dp,
                         )
                     }
@@ -278,10 +282,12 @@ private fun LandscapeLayout(
     blockEnter: EnterTransition,
     onLetsBegin: () -> Unit,
 ) {
+    val isDark = LocalIsDark.current
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScreenBg)
+            .background(if (isDark) ThemeColors.DarkBackground else ScreenBg)
     ) {
         val screenH = maxHeight
 
@@ -296,7 +302,8 @@ private fun LandscapeLayout(
                     .weight(1.1f)
                     .fillMaxHeight(),
                 shape = RoundedCornerShape(28.dp),
-                color = Color.White,
+                color = if (isDark) ThemeColors.DarkSurface else Color.White,
+                border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, ThemeColors.DarkOutline) else null,
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -316,13 +323,13 @@ private fun LandscapeLayout(
                                 text = "Notas",
                                 fontSize = 30.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TitleDark,
+                                color = if (isDark) Color.White else TitleDark,
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = stringResource(R.string.app_tagline),
                                 fontSize = 14.sp,
-                                color = SubtitleGray,
+                                color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else SubtitleGray,
                             )
                         }
                     }
@@ -342,7 +349,7 @@ private fun LandscapeLayout(
                         text = stringResource(R.string.onboarding_byline),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = BylineGray,
+                        color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f) else BylineGray,
                     )
                 }
 
@@ -357,8 +364,8 @@ private fun LandscapeLayout(
                         onClick = onLetsBegin,
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BrandMaroon,
-                            contentColor = Color.White,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                         contentPadding = PaddingValues(horizontal = 24.dp),
                         modifier = Modifier
@@ -374,12 +381,12 @@ private fun LandscapeLayout(
                                 text = stringResource(R.string.onboarding_lets_begin),
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                             )
                             RememberMaterialRoundedSymbol(
                                 name = "arrow_forward",
                                 autoMirror = true,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 size = 22.dp,
                             )
                         }
@@ -392,6 +399,9 @@ private fun LandscapeLayout(
 
 @Composable
 private fun LogoComposition(logoSize: Dp) {
+    val isDark = LocalIsDark.current
+    val decorColor = if (isDark) Color(0xFF2E2E2E) else PaleDecorShape
+
     Box(
         modifier = Modifier.size(logoSize),
         contentAlignment = Alignment.Center,
@@ -400,12 +410,12 @@ private fun LogoComposition(logoSize: Dp) {
         val dot2Size = logoSize * 0.16f
         val logoIconSize = logoSize * 0.68f
 
-        // Pale circular background
+        // Circular background
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(CircleShape)
-                .background(PaleDecorShape),
+                .background(decorColor),
         )
 
         // Upper-right circle accent
@@ -415,7 +425,7 @@ private fun LogoComposition(logoSize: Dp) {
                 .align(Alignment.Center)
                 .offset(x = logoSize * 0.44f, y = -(logoSize * 0.36f))
                 .clip(CircleShape)
-                .background(PaleDecorShape),
+                .background(decorColor),
         )
 
         // Lower-left circle accent
@@ -425,7 +435,7 @@ private fun LogoComposition(logoSize: Dp) {
                 .align(Alignment.Center)
                 .offset(x = -(logoSize * 0.42f), y = logoSize * 0.36f)
                 .clip(CircleShape)
-                .background(PaleDecorShape),
+                .background(decorColor),
         )
 
         // Grounding radial shadow
@@ -436,13 +446,12 @@ private fun LogoComposition(logoSize: Dp) {
                 .offset(y = logoSize * 0.04f)
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(Color.Black.copy(alpha = 0.04f), Color.Transparent),
+                        colors = listOf(Color.Black.copy(alpha = if (isDark) 0.15f else 0.04f), Color.Transparent),
                     ),
                 ),
         )
 
         // The SmartNotas Logo
-        val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
         Image(
             painter = painterResource(id = if (isDark) R.drawable.ic_logo_white else R.drawable.darck_logo),
             contentDescription = null,

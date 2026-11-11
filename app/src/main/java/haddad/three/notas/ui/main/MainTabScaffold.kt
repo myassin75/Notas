@@ -195,7 +195,7 @@ fun MainTabScaffold(
                     ) {
                         MainTab.entries.forEach { tabItem ->
                             val selected = currentTab == tabItem
-                            val itemColor = if (selected) selectedAccent else unselectedNavColor
+                            val iconColor = if (selected) (if (isDark) (if (isBlackTheme) Color(0xFF16161C) else Color.White) else selectedAccent) else unselectedNavColor
                             NavigationBarItem(
                                 selected = selected,
                                 onClick = {
@@ -207,13 +207,13 @@ fun MainTabScaffold(
                                         Icon(
                                             painter = painterResource(R.drawable.ic_home_outlined),
                                             contentDescription = null,
-                                            tint = itemColor,
+                                            tint = iconColor,
                                             modifier = Modifier.size(24.dp),
                                         )
                                     } else {
                                         RememberMaterialRoundedSymbol(
                                             name = tabItem.symbolName,
-                                            tint = itemColor,
+                                            tint = iconColor,
                                             weight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                                             filled = false,
                                         )
@@ -223,14 +223,14 @@ fun MainTabScaffold(
                                     Text(
                                         text = stringResource(tabItem.labelRes),
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                        color = itemColor,
+                                        color = if (selected) selectedAccent else unselectedNavColor,
                                     )
                                 },
                                 colors =
                                     NavigationBarItemDefaults.colors(
-                                        selectedIconColor = selectedAccent,
+                                        selectedIconColor = if (isDark) (if (isBlackTheme) Color(0xFF16161C) else Color.White) else selectedAccent,
                                         selectedTextColor = selectedAccent,
-                                        indicatorColor = activePillTint,
+                                        indicatorColor = if (isDark) (if (isBlackTheme) Color(0xFFD4D4DE) else selectedAccent) else activePillTint,
                                         unselectedIconColor = unselectedNavColor,
                                         unselectedTextColor = unselectedNavColor,
                                     ),

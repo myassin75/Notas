@@ -79,7 +79,7 @@ fun glassContainerColor(
             if (isOledBlack) {
                 Color(0xFF141418)
             } else {
-                Color(0xFF262626)
+                Color(0xFF242424)
             }
         GlassVariant.SelectedCard ->
             if (isOledBlack) {
@@ -91,25 +91,25 @@ fun glassContainerColor(
             if (isOledBlack) {
                 Color(0xFF101014).copy(alpha = 0.94f)
             } else {
-                Color(0xFF262626)
+                Color(0xFF242424)
             }
         GlassVariant.ModalSheet ->
             if (isOledBlack) {
                 Color(0xFF16161C).copy(alpha = 0.98f)
             } else {
-                Color(0xFF262626)
+                Color(0xFF242424)
             }
         GlassVariant.Dialog ->
             if (isOledBlack) {
                 Color(0xFF16161C).copy(alpha = 0.98f)
             } else {
-                Color(0xFF262626)
+                Color(0xFF242424)
             }
         GlassVariant.Input ->
             if (isOledBlack) {
                 Color(0xFF101014)
             } else {
-                Color(0xFF242424)
+                Color(0xFF181818)
             }
         GlassVariant.Chip ->
             if (isOledBlack) {
@@ -121,7 +121,7 @@ fun glassContainerColor(
             if (isOledBlack) {
                 Color(0xFF101014)
             } else {
-                Color(0xFF262626)
+                Color(0xFF242424)
             }
     }
 }

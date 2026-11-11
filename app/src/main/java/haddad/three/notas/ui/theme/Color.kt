@@ -45,23 +45,23 @@ object ThemeColors {
     // -----------------------------------------------------------------------------------------
     // Shared Neutral Tokens — Dark (Charcoal)
     // -----------------------------------------------------------------------------------------
-    val DarkBackground = Color(0xFF242424)
+    val DarkBackground = Color(0xFF181818)
     val DarkOnBackground = Color(0xFFEDE0E2)
-    val DarkSurface = Color(0xFF262626)
+    val DarkSurface = Color(0xFF242424)
     val DarkOnSurface = Color(0xFFEDE0E2)
     val DarkSurfaceVariant = Color(0xFF3A3A3A)
     val DarkOnSurfaceVariant = Color(0xFFAFA3A6)
     val DarkOutline = Color(0xFF3A3A3A)
     val DarkOutlineVariant = Color(0xFF3A3A3A)
-    val DarkSurfaceContainerLowest = Color(0xFF1E1E1E)
-    val DarkSurfaceContainerLow = Color(0xFF242424)
-    val DarkSurfaceContainer = Color(0xFF262626)
-    val DarkSurfaceContainerHigh = Color(0xFF303030)
+    val DarkSurfaceContainerLowest = Color(0xFF121212)
+    val DarkSurfaceContainerLow = Color(0xFF1E1E1E)
+    val DarkSurfaceContainer = Color(0xFF242424)
+    val DarkSurfaceContainerHigh = Color(0xFF2C2C2C)
     val DarkSurfaceContainerHighest = Color(0xFF3A3A3A)
     val DarkSurfaceBright = Color(0xFF424242)
-    val DarkSurfaceDim = Color(0xFF202020)
+    val DarkSurfaceDim = Color(0xFF181818)
     val DarkInverseSurface = Color(0xFFEDE0E2)
-    val DarkInverseOnSurface = Color(0xFF262626)
+    val DarkInverseOnSurface = Color(0xFF242424)
 
     // -----------------------------------------------------------------------------------------
     // Shared Neutral Tokens — Pure Black / OLED Dark
@@ -115,10 +115,10 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF381F04)
         val LightInversePrimary = Color(0xFFFFB3B8)
 
-        val DarkPrimary = Color(0xFFFFB3B8)
-        val DarkOnPrimary = Color(0xFF4D0005)
-        val DarkPrimaryContainer = Color(0xFF670008)
-        val DarkOnPrimaryContainer = Color(0xFFFFD9DC)
+        val DarkPrimary = Color(0xFFFF383C)
+        val DarkOnPrimary = Color(0xFFFFFFFF)
+        val DarkPrimaryContainer = Color(0xFFFF383C)
+        val DarkOnPrimaryContainer = Color(0xFFFFFFFF)
         val DarkSecondary = Color(0xFFE2BDC0)
         val DarkOnSecondary = Color(0xFF42282C)
         val DarkSecondaryContainer = Color(0xFF5A3D41)
@@ -165,10 +165,10 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF13324C)
         val LightInversePrimary = Color(0xFFAEC4FF)
 
-        val DarkPrimary = Color(0xFFAEC4FF)
-        val DarkOnPrimary = Color(0xFF00194A)
-        val DarkPrimaryContainer = Color(0xFF0D2570)
-        val DarkOnPrimaryContainer = Color(0xFFD4E1FF)
+        val DarkPrimary = Color(0xFF0088FF)
+        val DarkOnPrimary = Color(0xFFFFFFFF)
+        val DarkPrimaryContainer = Color(0xFF0088FF)
+        val DarkOnPrimaryContainer = Color(0xFFFFFFFF)
         val DarkSecondary = Color(0xFFBCC6E2)
         val DarkOnSecondary = Color(0xFF28324C)
         val DarkSecondaryContainer = Color(0xFF3E4864)
@@ -215,10 +215,10 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF143B2F)
         val LightInversePrimary = Color(0xFF75DE78)
 
-        val DarkPrimary = Color(0xFF75DE78)
-        val DarkOnPrimary = Color(0xFF003A03)
-        val DarkPrimaryContainer = Color(0xFF015504)
-        val DarkOnPrimaryContainer = Color(0xFFA6F6A9)
+        val DarkPrimary = Color(0xFF34C759)
+        val DarkOnPrimary = Color(0xFF00380A)
+        val DarkPrimaryContainer = Color(0xFF34C759)
+        val DarkOnPrimaryContainer = Color(0xFF00380A)
         val DarkSecondary = Color(0xFFB6D3B7)
         val DarkOnSecondary = Color(0xFF263E27)
         val DarkSecondaryContainer = Color(0xFF3B553C)
@@ -265,10 +265,10 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF37270B)
         val LightInversePrimary = Color(0xFFFFB68C)
 
-        val DarkPrimary = Color(0xFFFFB68C)
-        val DarkOnPrimary = Color(0xFF471800)
-        val DarkPrimaryContainer = Color(0xFF5E2B06)
-        val DarkOnPrimaryContainer = Color(0xFFFFDBC8)
+        val DarkPrimary = Color(0xFFAC7F5E)
+        val DarkOnPrimary = Color(0xFFFFFFFF)
+        val DarkPrimaryContainer = Color(0xFFAC7F5E)
+        val DarkOnPrimaryContainer = Color(0xFFFFFFFF)
         val DarkSecondary = Color(0xFFDFC0B0)
         val DarkOnSecondary = Color(0xFF432C1E)
         val DarkSecondaryContainer = Color(0xFF5B4233)
@@ -316,10 +316,10 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF14374A)
         val LightInversePrimary = Color(0xFF70D7DE)
 
-        val DarkPrimary = Color(0xFF70D7DE)
-        val DarkOnPrimary = Color(0xFF00373B)
-        val DarkPrimaryContainer = Color(0xFF065055)
-        val DarkOnPrimaryContainer = Color(0xFFA2EFF5)
+        val DarkPrimary = Color(0xFF00C3D0)
+        val DarkOnPrimary = Color(0xFF00373D)
+        val DarkPrimaryContainer = Color(0xFF00C3D0)
+        val DarkOnPrimaryContainer = Color(0xFF00373D)
         val DarkSecondary = Color(0xFFB1CBD0)
         val DarkOnSecondary = Color(0xFF223A3E)
         val DarkSecondaryContainer = Color(0xFF385256)
@@ -416,10 +416,10 @@ object ThemeColors {
         val LightOnTertiaryContainer = Color(0xFF401824)
         val LightInversePrimary = Color(0xFFE8A8EE)
 
-        val DarkPrimary = Color(0xFFE8A8EE)
-        val DarkOnPrimary = Color(0xFF4B0C52)
-        val DarkPrimaryContainer = Color(0xFF67236E)
-        val DarkOnPrimaryContainer = Color(0xFFFCD3FF)
+        val DarkPrimary = Color(0xFFCB30E0)
+        val DarkOnPrimary = Color(0xFFFFFFFF)
+        val DarkPrimaryContainer = Color(0xFFCB30E0)
+        val DarkOnPrimaryContainer = Color(0xFFFFFFFF)
         val DarkSecondary = Color(0xFFD4B7D8)
         val DarkOnSecondary = Color(0xFF402844)
         val DarkSecondaryContainer = Color(0xFF563B5B)
@@ -573,7 +573,7 @@ fun resolveSemanticPalette(
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF141418)
         } else {
-            Color(0xFF262626)
+            Color(0xFF242424)
         }
 
     val cardBorder =
@@ -587,14 +587,14 @@ fun resolveSemanticPalette(
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF16161C).copy(alpha = 0.98f)
         } else {
-            Color(0xFF262626)
+            Color(0xFF242424)
         }
 
     val inputSurface =
         if (isOledBlack || accentTheme == haddad.three.notas.data.AccentTheme.PURE_BLACK) {
             Color(0xFF101014)
         } else {
-            Color(0xFF242424)
+            Color(0xFF181818)
         }
 
     return SemanticPalette(
@@ -667,9 +667,9 @@ object NotasTokens {
     // -----------------------------------------------------------------------------------------
     // Dark Mode Palette (Preserving theme and dark mode adaptability)
     // -----------------------------------------------------------------------------------------
-    val DarkBackground = Color(0xFF242424)
-    val DarkCardSurface = Color(0xFF262626)
-    val DarkInputSurface = Color(0xFF242424)
+    val DarkBackground = Color(0xFF181818)
+    val DarkCardSurface = Color(0xFF242424)
+    val DarkInputSurface = Color(0xFF181818)
     val DarkBorder = Color(0xFF3A3A3A)
     val DarkPrimary = Color(0xFFFFFFFF)
     val DarkOnPrimary = Color(0xFF000000)

@@ -97,7 +97,7 @@ internal fun NotesEmptyState(
                     shape = RoundedCornerShape(28.dp),
                     color =
                         if (isDark) {
-                            Color(0xFF262626)
+                            Color(0xFF242424)
                         } else {
                             MaterialTheme.colorScheme.surface
                         },
