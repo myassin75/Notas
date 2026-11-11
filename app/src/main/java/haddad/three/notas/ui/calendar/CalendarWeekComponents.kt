@@ -136,12 +136,7 @@ fun WeekDaySelectorRow(
                             day.state == CalendarDayState.OUT_OF_MONTH -> textMuted
                             else -> textPrimary
                         }
-                    val nonSelectedBg =
-                        if (isTodayNonSelected) {
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.6f)
-                        } else {
-                            Color.Transparent
-                        }
+                    val nonSelectedBg = Color.Transparent
                     val nonSelectedBorder =
                         if (isTodayNonSelected) {
                             BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)

@@ -257,7 +257,7 @@ fun SettingsCustomSwitch(
         enabled = enabled,
         colors =
             SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                checkedThumbColor = Color.White,
                 checkedTrackColor = MaterialTheme.colorScheme.primary,
                 checkedIconColor = MaterialTheme.colorScheme.primary,
                 uncheckedThumbColor = uncheckedThumb,
@@ -266,7 +266,7 @@ fun SettingsCustomSwitch(
                 disabledUncheckedTrackColor = disabledTrack,
                 disabledUncheckedThumbColor = disabledThumb,
                 disabledCheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
-                disabledCheckedThumbColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f),
+                disabledCheckedThumbColor = Color.White.copy(alpha = 0.6f),
             ),
         thumbContent =
             if (checked) {

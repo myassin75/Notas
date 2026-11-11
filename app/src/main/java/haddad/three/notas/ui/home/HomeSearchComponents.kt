@@ -134,43 +134,7 @@ internal fun SearchableTopBarTitle(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        val isDark = LocalIsDark.current
                         val semantic = MaterialTheme.semanticPalette
-
-                        // Search icon button
-                        Box(
-                            modifier =
-                                Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .then(
-                                        if (isDark) {
-                                            Modifier
-                                                .background(
-                                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
-                                                    shape = CircleShape,
-                                                )
-                                                .border(
-                                                    width = 1.dp,
-                                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                                                    shape = CircleShape,
-                                                )
-                                        } else {
-                                            Modifier
-                                        },
-                                    )
-                                    .clickable { onToggleSearch() }
-                                    .semantics { contentDescription = "Search" },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            RememberMaterialRoundedSymbol(
-                                name = "search",
-                                size = 24.dp,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                weight = FontWeight.Normal,
-                                filled = false,
-                            )
-                        }
 
                         // + Add button
                         Surface(

@@ -689,6 +689,7 @@ fun RememberSwitch(
     // near-black thumb. Keep in parity with FilePipe's FilePipeSwitch.
     colors: androidx.compose.material3.SwitchColors =
         androidx.compose.material3.SwitchDefaults.colors(
+            checkedThumbColor = Color.White,
             checkedIconColor = MaterialTheme.colorScheme.primary,
             uncheckedThumbColor = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color(0xFF9E9EA8) else MaterialTheme.colorScheme.outline,
             uncheckedTrackColor = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color(0xFF2C2C32) else MaterialTheme.colorScheme.surfaceContainerHighest,

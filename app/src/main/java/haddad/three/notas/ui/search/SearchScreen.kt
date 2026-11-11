@@ -1271,12 +1271,12 @@ fun SearchFiltersBottomSheet(
                         var shoulderDropdownExpanded by remember { mutableStateOf(false) }
                         val shoulderTriggerBg =
                             if (isDark) {
-                                Color(0xFF22222C).copy(alpha = 0.65f)
+                                Color(0xFF2C2C32)
                             } else {
                                 MaterialTheme.colorScheme.surfaceContainerHigh
                             }
                         val shoulderTriggerBorder =
-                            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.45f))
+                            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A44) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
 
                         Box {
                             Surface(
@@ -1410,10 +1410,10 @@ fun SearchFiltersBottomSheet(
                                 onCheckedChange = { draftFilters = draftFilters.copy(includeArchived = it) },
                                 colors =
                                     SwitchDefaults.colors(
-                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                        checkedThumbColor = Color.White,
                                         checkedTrackColor = MaterialTheme.colorScheme.primary,
                                         uncheckedThumbColor = if (isDark) Color(0xFF9E9EA8) else MaterialTheme.colorScheme.outline,
-                                        uncheckedTrackColor = if (isDark) Color(0xFF282834) else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        uncheckedTrackColor = if (isDark) Color(0xFF2C2C32) else MaterialTheme.colorScheme.surfaceContainerHighest,
                                         uncheckedBorderColor = Color.Transparent,
                                     ),
                             )

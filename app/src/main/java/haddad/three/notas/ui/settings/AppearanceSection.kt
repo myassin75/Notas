@@ -62,6 +62,29 @@ import haddad.three.notas.ui.components.RememberButton
 import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.ThemeColors
 
+private fun AccentTheme.previewColor(isDark: Boolean): Color =
+    if (isDark) {
+        when (this) {
+            AccentTheme.MAROON -> ThemeColors.Maroon.DarkPrimary
+            AccentTheme.ROYAL_BLUE -> ThemeColors.RoyalBlue.DarkPrimary
+            AccentTheme.FOREST_GREEN -> ThemeColors.ForestGreen.DarkPrimary
+            AccentTheme.DARK_BROWN -> ThemeColors.DarkBrown.DarkPrimary
+            AccentTheme.OCEAN_TEAL -> ThemeColors.OceanTeal.DarkPrimary
+            AccentTheme.PURE_BLACK -> ThemeColors.PureBlack.DarkPrimary
+            AccentTheme.AMETHYST -> ThemeColors.Amethyst.DarkPrimary
+        }
+    } else {
+        when (this) {
+            AccentTheme.MAROON -> ThemeColors.Maroon.LightPrimary
+            AccentTheme.ROYAL_BLUE -> ThemeColors.RoyalBlue.LightPrimary
+            AccentTheme.FOREST_GREEN -> ThemeColors.ForestGreen.LightPrimary
+            AccentTheme.DARK_BROWN -> ThemeColors.DarkBrown.LightPrimary
+            AccentTheme.OCEAN_TEAL -> ThemeColors.OceanTeal.LightPrimary
+            AccentTheme.PURE_BLACK -> ThemeColors.PureBlack.LightPrimary
+            AccentTheme.AMETHYST -> ThemeColors.Amethyst.LightPrimary
+        }
+    }
+
 private val AccentTheme.seedColor: Color
     get() =
         when (this) {
@@ -165,14 +188,14 @@ fun AppearanceSection(
                             Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(state.accentTheme.seedColor)
+                                .background(state.accentTheme.previewColor(isDark))
                                 .border(
                                     BorderStroke(
                                         1.dp,
-                                        if (state.accentTheme == AccentTheme.PURE_BLACK) {
+                                        if (state.accentTheme == AccentTheme.PURE_BLACK && !isDark) {
                                             MaterialTheme.colorScheme.outline
                                         } else {
-                                            Color.White.copy(alpha = 0.45f)
+                                            Color.White.copy(alpha = if (isDark) 0.35f else 0.45f)
                                         },
                                     ),
                                     CircleShape,
@@ -366,6 +389,7 @@ private fun AppearanceModeOption(
 private fun AccentThemesGrid(
     selectedTheme: AccentTheme,
     onSelect: (AccentTheme) -> Unit,
+    isDark: Boolean = LocalIsDark.current,
 ) {
     val themes = AccentTheme.entries
 
@@ -386,6 +410,7 @@ private fun AccentThemesGrid(
                     theme = theme,
                     selected = selectedTheme == theme,
                     onClick = { onSelect(theme) },
+                    isDark = isDark,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -399,6 +424,7 @@ private fun AccentThemesGrid(
                     theme = theme,
                     selected = selectedTheme == theme,
                     onClick = { onSelect(theme) },
+                    isDark = isDark,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -413,10 +439,10 @@ private fun AccentThemeCard(
     theme: AccentTheme,
     selected: Boolean,
     onClick: () -> Unit,
+    isDark: Boolean = LocalIsDark.current,
     modifier: Modifier = Modifier,
 ) {
-    val isDark = LocalIsDark.current
-    val seedColor = theme.seedColor
+    val swatchColor = theme.previewColor(isDark)
 
     val animatedBorderWidth by animateDpAsState(
         targetValue = if (selected) 1.5.dp else 1.dp,
@@ -426,7 +452,7 @@ private fun AccentThemeCard(
     val animatedBorderColor by animateColorAsState(
         targetValue =
             if (selected) {
-                MaterialTheme.colorScheme.primary
+                swatchColor
             } else {
                 MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.55f)
             },
@@ -477,14 +503,14 @@ private fun AccentThemeCard(
                     Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(seedColor)
+                        .background(swatchColor)
                         .border(
                             BorderStroke(
                                 1.dp,
-                                if (theme == AccentTheme.PURE_BLACK) {
+                                if (theme == AccentTheme.PURE_BLACK && !isDark) {
                                     MaterialTheme.colorScheme.outline
                                 } else {
-                                    Color.White.copy(alpha = 0.35f)
+                                    Color.White.copy(alpha = if (isDark) 0.35f else 0.40f)
                                 },
                             ),
                             CircleShape,
@@ -492,10 +518,21 @@ private fun AccentThemeCard(
                 contentAlignment = Alignment.Center,
             ) {
                 if (selected) {
+                    val checkmarkTint =
+                        if (isDark) {
+                            when (theme) {
+                                AccentTheme.FOREST_GREEN -> ThemeColors.ForestGreen.DarkOnPrimary
+                                AccentTheme.OCEAN_TEAL -> ThemeColors.OceanTeal.DarkOnPrimary
+                                AccentTheme.PURE_BLACK -> ThemeColors.PureBlack.DarkOnPrimary
+                                else -> Color.White
+                            }
+                        } else {
+                            if (theme == AccentTheme.OCEAN_TEAL) Color.Black else Color.White
+                        }
                     RememberMaterialRoundedSymbol(
                         name = "check",
                         size = 18.dp,
-                        tint = if (theme == AccentTheme.OCEAN_TEAL) Color.Black else Color.White,
+                        tint = checkmarkTint,
                         weight = FontWeight.Bold,
                     )
                 }
@@ -511,7 +548,7 @@ private fun AccentThemeCard(
                         fontSize = 11.sp,
                         color =
                             if (selected) {
-                                MaterialTheme.colorScheme.primary
+                                swatchColor
                             } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
                             },
@@ -671,6 +708,7 @@ private fun LiveThemePreviewCard(
             AccentThemesGrid(
                 selectedTheme = accentTheme,
                 onSelect = onSelectTheme,
+                isDark = isDark,
             )
         }
     }
