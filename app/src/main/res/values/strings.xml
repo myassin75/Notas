@@ -193,7 +193,8 @@
     <string name="event_icon_and_color_color_label">Color</string>
     <string name="event_icon_and_color_icon_label">Icon</string>
     <string name="event_icon_and_color_more_icons">More icons…</string>
-    <string name="color_purple">Purple</string>
+    <string name="color_purple">Maroon</string>
+    <string name="color_maroon">Maroon</string>
     <string name="color_none">None</string>
     <string name="main_tab_search">Search</string>
     <string name="search_tab_all">All</string>

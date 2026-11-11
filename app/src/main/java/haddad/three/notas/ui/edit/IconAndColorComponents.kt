@@ -157,7 +157,8 @@ fun NoteIconAndColorCard(
                     val colorDisplayName =
                         when {
                             NoteColors.isNone(colorIndex) -> stringResource(R.string.color_none)
-                            accent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_purple)
+                            accent.name.equals("Maroon", ignoreCase = true) ||
+                                accent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_maroon)
                             else -> accent.name
                         }
                     val iconDisplayName = getEventIconDisplayName(iconKey)
@@ -307,7 +308,8 @@ fun IconAndColorSheet(
                         val colorDisplayName =
                             when {
                                 NoteColors.isNone(currentColorIndex) -> stringResource(R.string.color_none)
-                                currentAccent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_purple)
+                                currentAccent.name.equals("Maroon", ignoreCase = true) ||
+                                    currentAccent.name.equals("Orchid", ignoreCase = true) -> stringResource(R.string.color_maroon)
                                 else -> currentAccent.name
                             }
                         val iconDisplayName = getEventIconDisplayName(currentIconKey)

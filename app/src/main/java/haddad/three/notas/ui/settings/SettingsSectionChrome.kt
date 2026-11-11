@@ -57,7 +57,7 @@ object SettingsDesignTokens {
     val DisabledText: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
     val DisabledSwitchTrack: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainerHighest
 
-    val StaticPrimary = Color(0xFF98549C)
+    val StaticPrimary = Color(0xFF800000)
     val StaticSoftLavender = Color(0xFFF4EAF6)
 
     val CardShape = RoundedCornerShape(22.dp)

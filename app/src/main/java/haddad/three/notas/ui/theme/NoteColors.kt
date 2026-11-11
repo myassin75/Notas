@@ -23,7 +23,7 @@ object NoteColors {
             NoteAccent("Mint", Color(0xFF3EA88A), Color(0xFF61BAA0)),
             NoteAccent("Sky", Color(0xFF3C8ACC), Color(0xFF61A1D8)),
             NoteAccent("Indigo", Color(0xFF4E5AC8), Color(0xFF7A83D6)),
-            NoteAccent("Orchid", Color(0xFF9353C8), Color(0xFFAB76D8)),
+            NoteAccent("Maroon", Color(0xFF800000), Color(0xFFFFB3B8)),
             NoteAccent("Stone", Color(0xFF7A6C5D), Color(0xFF9A8B7B)),
         )
 

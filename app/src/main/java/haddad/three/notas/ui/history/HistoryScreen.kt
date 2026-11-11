@@ -166,8 +166,8 @@ enum class HistorySection { ARCHIVE, TRASH }
 internal object HistoryDesignTokens {
     val ScreenBg = Color(0xFFF5F3F8)
     val MainSurface = Color(0xFFFFFFFF)
-    val ActiveLavenderSurface = Color(0xFFF2E8F7)
-    val PrimaryPurple = Color(0xFFA34EA5)
+    val ActiveLavenderSurface = Color(0xFFFBE8EA)
+    val PrimaryPurple = Color(0xFF800000)
     val PrimaryText = Color(0xFF383743)
     val SecondaryText = Color(0xFF85839C)
     val IllustrationOutline = Color(0xFFAAA3B9)

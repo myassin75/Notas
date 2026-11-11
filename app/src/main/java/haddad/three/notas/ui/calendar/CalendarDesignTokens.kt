@@ -15,9 +15,9 @@ import androidx.compose.ui.unit.dp
  */
 object CalendarDesignTokens {
     // Brand & Primary Accents
-    val PrimaryPurple = Color(0xFF734B8E)
-    val SoftLavender = Color(0xFFF3EAF6)
-    val DarkPurpleSelected = Color(0xFF5D2E77)
+    val PrimaryPurple = Color(0xFF800000)
+    val SoftLavender = Color(0xFFFBE8EA)
+    val DarkPurpleSelected = Color(0xFF5A0000)
 
     // Background & Card Surfaces
     val ScreenBgLight = Color(0xFFF8F7FA)
@@ -40,13 +40,13 @@ object CalendarDesignTokens {
     // Event Category & Dot Indicators
     val DotGreen = Color(0xFF34A853)
     val DotOrange = Color(0xFFFA7B17)
-    val DotPurple = Color(0xFF734B8E)
+    val DotPurple = Color(0xFF800000)
     val DotBlue = Color(0xFF4285F4)
     val DotWhite = Color(0xFFFFFFFF)
 
     // Category Box Tints
-    val CategoryPurpleBg = Color(0xFFF3EAF6)
-    val CategoryPurpleIcon = Color(0xFF734B8E)
+    val CategoryPurpleBg = Color(0xFFFBE8EA)
+    val CategoryPurpleIcon = Color(0xFF800000)
     val CategoryGreenBg = Color(0xFFEBF5F0)
     val CategoryGreenIcon = Color(0xFF2E8B57)
     val CategoryBlueBg = Color(0xFFEBF2FD)
