@@ -360,7 +360,7 @@ private fun AboutSettingsBlock(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    val iconSize = if (isSmallLandscape) 64.dp else 84.dp
+                    val iconSize = if (isSmallLandscape) 80.dp else 130.dp
                     Image(
                         painter = painterResource(id = R.drawable.darck_logo),
                         contentDescription = stringResource(R.string.app_name),
