@@ -936,6 +936,9 @@ fun SetDateBottomSheet(
                                         SwitchDefaults.colors(
                                             checkedThumbColor = onSelectedAccent,
                                             checkedTrackColor = selectedAccent,
+                                            uncheckedThumbColor = if (isDark) Color(0xFF9E9EA8) else MaterialTheme.colorScheme.outline,
+                                            uncheckedTrackColor = if (isDark) Color(0xFF2C2C32) else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            uncheckedBorderColor = Color.Transparent,
                                         ),
                                 )
                             }

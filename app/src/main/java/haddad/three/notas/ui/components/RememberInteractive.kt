@@ -688,8 +688,12 @@ fun RememberSwitch(
     // spec, where onPrimaryContainer is itself dark in dark mode - leaving a near-black check on a
     // near-black thumb. Keep in parity with FilePipe's FilePipeSwitch.
     colors: androidx.compose.material3.SwitchColors =
-        androidx.compose.material3.SwitchDefaults
-            .colors(checkedIconColor = MaterialTheme.colorScheme.primary),
+        androidx.compose.material3.SwitchDefaults.colors(
+            checkedIconColor = MaterialTheme.colorScheme.primary,
+            uncheckedThumbColor = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color(0xFF9E9EA8) else MaterialTheme.colorScheme.outline,
+            uncheckedTrackColor = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color(0xFF2C2C32) else MaterialTheme.colorScheme.surfaceContainerHighest,
+            uncheckedBorderColor = Color.Transparent,
+        ),
     interactionSource: MutableInteractionSource? = null,
 ) {
     androidx.compose.material3.Switch(

@@ -245,6 +245,12 @@ fun SettingsCustomSwitch(
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true,
 ) {
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
+    val uncheckedTrack = if (isDark) Color(0xFF2C2C32) else MaterialTheme.colorScheme.surfaceContainerHighest
+    val uncheckedThumb = if (isDark) Color(0xFF9E9EA8) else MaterialTheme.colorScheme.outline
+    val disabledTrack = if (isDark) Color(0xFF242428) else MaterialTheme.colorScheme.surfaceContainerHigh
+    val disabledThumb = if (isDark) Color(0xFF9E9EA8).copy(alpha = 0.38f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.38f)
+
     RememberSwitch(
         checked = checked,
         onCheckedChange = if (enabled) onCheckedChange else null,
@@ -254,11 +260,13 @@ fun SettingsCustomSwitch(
                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 checkedTrackColor = MaterialTheme.colorScheme.primary,
                 checkedIconColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                uncheckedThumbColor = uncheckedThumb,
+                uncheckedTrackColor = uncheckedTrack,
                 uncheckedBorderColor = Color.Transparent,
-                disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                disabledUncheckedThumbColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.38f),
+                disabledUncheckedTrackColor = disabledTrack,
+                disabledUncheckedThumbColor = disabledThumb,
+                disabledCheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                disabledCheckedThumbColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f),
             ),
         thumbContent =
             if (checked) {
