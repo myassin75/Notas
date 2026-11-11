@@ -64,6 +64,7 @@ fun CalendarRoute(
     onOpenNote: (Long) -> Unit = {},
     onOpenItemDetails: (id: Long, isTask: Boolean) -> Unit = { id, _ -> onOpenNote(id) },
     onCreateEvent: (LocalDate) -> Unit = {},
+    onNavigateToSearch: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isDark = LocalIsDark.current
@@ -138,19 +139,21 @@ fun CalendarRoute(
             subtitle = selectedDateSubtitle,
             currentViewMode = uiState.viewMode,
             onViewModeSelected = viewModel::onViewModeSelected,
+            onSearchClick = onNavigateToSearch,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        val scrollState = key(uiState.viewMode) { rememberScrollState() }
+        Box(modifier = Modifier.fillMaxSize()) {
+            val scrollState = key(uiState.viewMode) { rememberScrollState() }
 
-        // Scrollable calendar content
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState),
-        ) {
+            // Scrollable calendar content
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState),
+            ) {
             AnimatedContent(
                 targetState = uiState.viewMode,
                 transitionSpec = {
@@ -396,7 +399,10 @@ fun CalendarRoute(
                             today = uiState.today,
                             onPreviousYear = viewModel::onPreviousYear,
                             onNextYear = viewModel::onNextYear,
-                            onMonthSelected = viewModel::onMonthSelected,
+                            onMonthSelected = { month ->
+                                viewModel.onMonthSelected(month)
+                                viewModel.onViewModeSelected(CalendarViewMode.MONTH)
+                            },
                             onDateSelected = { date ->
                                 viewModel.onDateSelected(date)
                                 viewModel.onViewModeSelected(CalendarViewMode.MONTH)
@@ -626,5 +632,24 @@ fun CalendarRoute(
             // Bottom spacing
             Spacer(modifier = Modifier.height(32.dp))
         }
+
+        // 3. Floating Today Bar in Year View anchored at bottom
+        if (uiState.viewMode == CalendarViewMode.YEAR) {
+            YearTodayFloatingBar(
+                today = uiState.today,
+                onClick = {
+                    viewModel.onTodayClicked()
+                    viewModel.onViewModeSelected(CalendarViewMode.MONTH)
+                },
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(
+                            horizontal = CalendarDesignTokens.ScreenHorizontalPadding,
+                            vertical = 12.dp,
+                        ),
+            )
+        }
     }
+}
 }

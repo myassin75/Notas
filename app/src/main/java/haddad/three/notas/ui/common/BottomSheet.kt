@@ -83,7 +83,7 @@ fun AppBottomSheet(
     val isBlackTheme = haddad.three.notas.ui.theme.LocalThemeState.current.blackThemeActive(isDark)
     val resolvedContainerColor =
         if (isDark) {
-            if (isBlackTheme) Color(0xFF16161C).copy(alpha = 0.98f) else Color(30, 30, 30).copy(alpha = 0.75f)
+            if (isBlackTheme) Color(0xFF16161C) else Color(0xFF242424)
         } else {
             containerColor
         }

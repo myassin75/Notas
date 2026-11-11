@@ -104,6 +104,13 @@ object CalendarDesignTokens {
     @Composable
     fun resolveOutOfMonthText(isDark: Boolean = false): Color = MaterialTheme.colorScheme.outline
 
+    val WeekendColorLight = Color(0xFFD32F2F)
+    val WeekendColorDark = Color(0xFFFF5252)
+
+    @Composable
+    fun resolveWeekendColor(isDark: Boolean = false): Color =
+        if (isDark) WeekendColorDark else WeekendColorLight
+
     /**
      * Cleans icon key strings (e.g. "symbol:school", "sym:school", "symbol_filled:school")
      * down to the raw Material Symbols ligature name.

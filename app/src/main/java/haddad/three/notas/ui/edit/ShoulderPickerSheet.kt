@@ -673,10 +673,10 @@ private fun EditShoulderContent(
     val primaryAccent = MaterialTheme.colorScheme.primary
     val textPrimary = if (isDark) MaterialTheme.colorScheme.onSurface else Color(0xFF32313F)
     val textSecondary = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF89899C)
-    val pillSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f) else Color(0xFFF5F4F9)
-    val cardSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f) else Color(0xFFF8F8FC)
-    val cardBorder = if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else Color(0xFFE9E3EF)
-    val inputSurface = if (isDark) MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f) else Color.White
+    val pillSurface = if (isDark) Color(0xFF262626) else Color(0xFFF5F4F9)
+    val cardSurface = if (isDark) Color(0xFF242424) else Color(0xFFF8F8FC)
+    val cardBorder = if (isDark) Color(0xFF3A3A3A) else Color(0xFFE9E3EF)
+    val inputSurface = if (isDark) Color(0xFF181818) else Color.White
     val cancelBtnBg = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceVariant
     val cancelBtnText = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
     val deleteBg = if (isDark) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f) else Color(0xFFFFEBEE)

@@ -975,7 +975,7 @@ fun SearchFiltersBottomSheet(
 
     val sheetContainerColor =
         if (isDark) {
-            Color(30, 30, 30).copy(alpha = 0.75f)
+            Color(0xFF242424)
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         }
@@ -1140,12 +1140,12 @@ fun SearchFiltersBottomSheet(
                             Spacer(modifier = Modifier.height(12.dp))
                             val dateBoxBg =
                                 if (isDark) {
-                                    Color(0xFF22222C).copy(alpha = 0.65f)
+                                    Color(0xFF262626)
                                 } else {
                                     MaterialTheme.colorScheme.surfaceContainerHigh
                                 }
                             val dateBoxBorder =
-                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.45f))
+                                BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
 
                             val locale = LocalConfiguration.current.locales[0]
 

@@ -12,34 +12,30 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -47,110 +43,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import haddad.three.notas.R
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.theme.LocalIsDark
-import haddad.three.notas.ui.theme.LocalReducedMotion
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-
-/**
- * Navigation header for Year View with centered year title and stationary previous/next arrows.
- */
-@Composable
-fun YearNavigationHeader(
-    year: Int,
-    onPreviousYear: () -> Unit,
-    onNextYear: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val isDark = LocalIsDark.current
-    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
-
-    Box(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-    ) {
-        // Centered Year Title
-        Text(
-            text = year.toString(),
-            style =
-                MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    color = textPrimary,
-                ),
-            textAlign = TextAlign.Center,
-            modifier =
-                Modifier
-                    .align(Alignment.Center)
-                    .padding(horizontal = 48.dp),
-        )
-
-        // Previous Year Button (<)
-        Box(
-            modifier =
-                Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Surface(
-                onClick = onPreviousYear,
-                shape = CircleShape,
-                color = buttonBg,
-                border = border,
-                modifier = Modifier.size(36.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    RememberMaterialRoundedSymbol(
-                        name = "chevron_right",
-                        modifier = Modifier.graphicsLayer { scaleX = -1f },
-                        size = 20.dp,
-                        tint = textPrimary,
-                    )
-                }
-            }
-        }
-
-        // Next Year Button (>)
-        Box(
-            modifier =
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .size(40.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Surface(
-                onClick = onNextYear,
-                shape = CircleShape,
-                color = buttonBg,
-                border = border,
-                modifier = Modifier.size(36.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    RememberMaterialRoundedSymbol(
-                        name = "chevron_right",
-                        size = 20.dp,
-                        tint = textPrimary,
-                    )
-                }
-            }
-        }
-    }
-}
 
 private val MonthNamesEn = arrayOf(
     "January", "February", "March", "April", "May", "June",
@@ -167,6 +69,140 @@ private fun getLocalizedMonthName(month: YearMonth): String {
         val formatter = DateTimeFormatter.ofPattern("MMMM", locale)
         month.format(formatter)
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+    }
+}
+
+/**
+ * Prominent Year Header with giant year typography and paired navigation controls.
+ */
+@Composable
+fun YearNavigationHeader(
+    year: Int,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isDark = LocalIsDark.current
+    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
+
+    val prevBtnBg = if (isDark) Color(0xFF282830) else Color(0xFFE5E5EB)
+    val prevBtnBorder = BorderStroke(1.dp, if (isDark) Color(0xFF383842) else Color(0xFFDCDCE4))
+
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        // Giant prominent year heading
+        AnimatedContent(
+            targetState = year,
+            transitionSpec = {
+                val direction = if (targetState >= initialState) 1 else -1
+                (
+                    slideInHorizontally(animationSpec = tween(130, easing = FastOutSlowInEasing)) { width -> direction * width / 3 } +
+                        fadeIn(animationSpec = tween(130))
+                ).togetherWith(
+                    slideOutHorizontally(animationSpec = tween(110, easing = FastOutSlowInEasing)) { width -> -direction * width / 3 } +
+                        fadeOut(animationSpec = tween(110))
+                )
+            },
+            label = "YearTitleAnimation",
+        ) { targetYear ->
+            Text(
+                text = targetYear.toString(),
+                style =
+                    MaterialTheme.typography.displayMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 58.sp,
+                        letterSpacing = (-1.5).sp,
+                        color = textPrimary,
+                    ),
+                maxLines = 1,
+            )
+        }
+
+        // Previous & Next Year navigation buttons paired side-by-side
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Previous Year Button (<)
+            Surface(
+                onClick = onPreviousYear,
+                shape = CircleShape,
+                color = prevBtnBg,
+                border = prevBtnBorder,
+                modifier = Modifier.size(44.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        modifier = Modifier.graphicsLayer { scaleX = -1f },
+                        size = 22.dp,
+                        tint = textPrimary,
+                    )
+                }
+            }
+
+            // Next Year Button (>)
+            Surface(
+                onClick = onNextYear,
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(44.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        size = 22.dp,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Section Header: "THE YEAR AT A GLANCE" and "12 months" indicator.
+ */
+@Composable
+fun YearGlanceSectionHeader(
+    modifier: Modifier = Modifier,
+) {
+    val isDark = LocalIsDark.current
+    val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
+
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "THE YEAR AT A GLANCE",
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    letterSpacing = 1.2.sp,
+                    color = textSecondary.copy(alpha = 0.70f),
+                ),
+        )
+        Text(
+            text = "12 months",
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = textSecondary.copy(alpha = 0.60f),
+                ),
+        )
     }
 }
 
@@ -188,11 +224,6 @@ fun CalendarYearView(
     onDateSelected: (LocalDate) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val isDark = LocalIsDark.current
-    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
-
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -211,109 +242,30 @@ fun CalendarYearView(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            // 1. Stationary Navigation Header with snappy Year Title
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-            ) {
-                // Centered Year Title (lightweight 100ms slide/fade)
-                AnimatedContent(
-                    targetState = displayedYear,
-                    transitionSpec = {
-                        val direction = if (targetState >= initialState) 1 else -1
-                        (
-                            slideInHorizontally(animationSpec = tween(100, easing = FastOutSlowInEasing)) { width -> direction * width / 3 } +
-                                fadeIn(animationSpec = tween(100))
-                        ).togetherWith(
-                            slideOutHorizontally(animationSpec = tween(80, easing = FastOutSlowInEasing)) { width -> -direction * width / 3 } +
-                                fadeOut(animationSpec = tween(80))
-                        )
-                    },
-                    modifier = Modifier.align(Alignment.Center),
-                    label = "YearTitleAnimation",
-                ) { targetYear ->
-                    Text(
-                        text = targetYear.toString(),
-                        style =
-                            MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 28.sp,
-                                color = textPrimary,
-                            ),
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                    )
-                }
+            // 1. Prominent Year Header with paired navigation buttons
+            YearNavigationHeader(
+                year = displayedYear,
+                onPreviousYear = onPreviousYear,
+                onNextYear = onNextYear,
+            )
 
-                // Previous Year Button (<)
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.CenterStart)
-                            .size(40.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Surface(
-                        onClick = onPreviousYear,
-                        shape = CircleShape,
-                        color = buttonBg,
-                        border = border,
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            RememberMaterialRoundedSymbol(
-                                name = "chevron_right",
-                                modifier = Modifier.graphicsLayer { scaleX = -1f },
-                                size = 20.dp,
-                                tint = textPrimary,
-                            )
-                        }
-                    }
-                }
+            // 2. "THE YEAR AT A GLANCE" section indicator
+            YearGlanceSectionHeader()
 
-                // Next Year Button (>)
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(40.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Surface(
-                        onClick = onNextYear,
-                        shape = CircleShape,
-                        color = buttonBg,
-                        border = border,
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            RememberMaterialRoundedSymbol(
-                                name = "chevron_right",
-                                size = 20.dp,
-                                tint = textPrimary,
-                            )
-                        }
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(6.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 2. Months Grid (Directly rendered in-place without destroying/recreating 12 cards)
+            // 3. 12 Monthly Calendar Grids
             Column(
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 monthRows.forEach { rowMonths ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         rowMonths.forEach { month ->
                             YearMonthCard(
@@ -321,6 +273,7 @@ fun CalendarYearView(
                                 selectedDate = selectedDate,
                                 today = today,
                                 onMonthClick = onMonthSelected,
+                                onDateClick = onDateSelected,
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -333,13 +286,17 @@ fun CalendarYearView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Bottom clearance for floating Today bar
+            Spacer(modifier = Modifier.height(96.dp))
         }
     }
 }
 
 /**
  * Individual month card inside the Year View.
+ *
+ * Highlighted with a distinctive card container when it matches the selected date's month,
+ * while maintaining a minimal and airy aesthetic for other months.
  */
 @Composable
 fun YearMonthCard(
@@ -354,29 +311,36 @@ fun YearMonthCard(
     val isSelectedMonth = month.year == selectedDate.year && month.monthValue == selectedDate.monthValue
 
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
-    val cardBg = CalendarDesignTokens.resolveCardBg(isDark)
+    val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
+
+    val cardBg =
+        if (isSelectedMonth) {
+            if (isDark) Color(0xFF242428) else Color(0xFFEDEDF2)
+        } else {
+            Color.Transparent
+        }
 
     val cardBorder =
         if (isSelectedMonth) {
-            BorderStroke(
-                1.5.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.85f else 0.75f),
-            )
+            BorderStroke(1.dp, if (isDark) Color(0xFF383842) else Color(0xFFDCDCE4))
         } else {
-            BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
+            null
         }
 
     val monthName = remember(month.monthValue) {
         getLocalizedMonthName(month)
     }
+    val monthNumberString = remember(month.monthValue) {
+        String.format(Locale.US, "%02d", month.monthValue)
+    }
 
     Surface(
-        shape = CalendarDesignTokens.CardShape,
+        shape = RoundedCornerShape(18.dp),
         color = cardBg,
         border = cardBorder,
         modifier =
             modifier
-                .clip(CalendarDesignTokens.CardShape)
+                .clip(RoundedCornerShape(18.dp))
                 .clickable(
                     onClickLabel = "Open $monthName calendar",
                     role = Role.Button,
@@ -386,9 +350,9 @@ fun YearMonthCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                    .padding(horizontal = 10.dp, vertical = 10.dp),
         ) {
-            // Month Title & Highlight Indicator
+            // Month Title & Two-digit number with active accent indicator dot
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -402,47 +366,65 @@ fun YearMonthCard(
                         MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
-                            color = if (isSelectedMonth) MaterialTheme.colorScheme.primary else textPrimary,
+                            color = textPrimary,
                         ),
                     modifier = Modifier.weight(1f, fill = false),
                 )
 
-                if (isSelectedMonth) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(6.dp)
-                                .background(MaterialTheme.colorScheme.primary, CircleShape),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = monthNumberString,
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.5.sp,
+                                color = textSecondary.copy(alpha = 0.55f),
+                            ),
                     )
+
+                    if (isSelectedMonth) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(6.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Weekday Headers (M T W T F S S)
+            // Weekday Headers (M T W T F S S) with weekends highlighted
             YearWeekdayHeaderRow()
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Date Grid
+            // 6-week x 7-day Date Grid
             YearMonthDateGrid(
                 month = month,
                 selectedDate = selectedDate,
                 today = today,
+                onDateClick = onDateClick,
             )
         }
     }
 }
 
 /**
- * Compact localized 7-column weekday row for mini-calendars.
+ * Compact localized 7-column weekday row for mini-calendars with weekends in red.
  */
 @Composable
 private fun YearWeekdayHeaderRow(
     firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
 ) {
     val isDark = LocalIsDark.current
-    val textColor = CalendarDesignTokens.resolveTextSecondary(isDark)
+    val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
+    val weekendColor = CalendarDesignTokens.resolveWeekendColor(isDark)
+
     val dayLabels =
         remember(firstDayOfWeek) {
             val locale = Locale.getDefault()
@@ -460,7 +442,8 @@ private fun YearWeekdayHeaderRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        dayLabels.forEach { label ->
+        dayLabels.forEachIndexed { colIndex, label ->
+            val isWeekend = colIndex == 5 || colIndex == 6
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center,
@@ -469,9 +452,9 @@ private fun YearWeekdayHeaderRow(
                     text = label,
                     style =
                         MaterialTheme.typography.labelSmall.copy(
-                            color = textColor,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.5.sp,
+                            color = if (isWeekend) weekendColor else textSecondary.copy(alpha = 0.65f),
+                            fontWeight = if (isWeekend) FontWeight.Bold else FontWeight.SemiBold,
+                            fontSize = 10.sp,
                         ),
                     textAlign = TextAlign.Center,
                 )
@@ -483,16 +466,19 @@ private fun YearWeekdayHeaderRow(
 /**
  * Mini date grid for an individual month card in Year View.
  * Always renders 6 rows of 7 columns (42 cells) so all cards share an exact uniform height naturally.
- * Lightweight non-clickable cells for maximum recomposition and scrolling performance.
+ * Weekends are styled in red, selected day in prominent accent badge, and today in circular border.
  */
 @Composable
 private fun YearMonthDateGrid(
     month: YearMonth,
     selectedDate: LocalDate,
     today: LocalDate,
+    onDateClick: ((LocalDate) -> Unit)? = null,
 ) {
     val isDark = LocalIsDark.current
-    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
+    val textPrimary =
+        if (isDark) Color(0xFFE2E2E8) else Color(0xFF2C2C32)
+    val weekendColor = CalendarDesignTokens.resolveWeekendColor(isDark)
 
     // Compute calendar cells (always fixed to 6 weeks x 7 columns = 42 cells)
     val weeks =
@@ -527,7 +513,7 @@ private fun YearMonthDateGrid(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                week.forEach { dayNumber ->
+                week.forEachIndexed { colIndex, dayNumber ->
                     if (dayNumber == null) {
                         Spacer(
                             modifier =
@@ -536,26 +522,40 @@ private fun YearMonthDateGrid(
                                     .height(20.dp),
                         )
                     } else {
+                        val isWeekend = colIndex == 5 || colIndex == 6
                         val isSelectedDate = dayNumber == selectedDay
                         val isToday = dayNumber == todayDay
+
+                        val cellClickable =
+                            if (onDateClick != null) {
+                                Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple(bounded = true, radius = 12.dp),
+                                    onClick = { onDateClick(month.atDay(dayNumber)) },
+                                )
+                            } else {
+                                Modifier
+                            }
 
                         Box(
                             modifier =
                                 Modifier
                                     .weight(1f)
-                                    .height(20.dp),
+                                    .height(20.dp)
+                                    .then(cellClickable),
                             contentAlignment = Alignment.Center,
                         ) {
                             when {
                                 isSelectedDate -> {
+                                    // Prominent selected date badge
                                     Box(
                                         modifier =
                                             Modifier
-                                                .size(19.dp)
-                                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                                                .size(20.dp)
+                                                .background(MaterialTheme.colorScheme.primary, CircleShape)
                                                 .then(
                                                     if (isToday) {
-                                                        Modifier.border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                                        Modifier.border(1.dp, Color.White, CircleShape)
                                                     } else {
                                                         Modifier
                                                     }
@@ -568,19 +568,20 @@ private fun YearMonthDateGrid(
                                                 MaterialTheme.typography.labelSmall.copy(
                                                     fontSize = 10.5.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
                                                 ),
                                             textAlign = TextAlign.Center,
                                         )
                                     }
                                 }
                                 isToday -> {
+                                    // Today outline badge
                                     Box(
                                         modifier =
                                             Modifier
-                                                .size(19.dp)
+                                                .size(20.dp)
                                                 .border(
-                                                    1.dp,
+                                                    1.2.dp,
                                                     MaterialTheme.colorScheme.primary,
                                                     CircleShape,
                                                 ),
@@ -598,7 +599,21 @@ private fun YearMonthDateGrid(
                                         )
                                     }
                                 }
+                                isWeekend -> {
+                                    // Weekend date in red
+                                    Text(
+                                        text = dayNumber.toString(),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 10.5.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = weekendColor,
+                                            ),
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
                                 else -> {
+                                    // Regular weekday date
                                     Text(
                                         text = dayNumber.toString(),
                                         style =
@@ -615,6 +630,98 @@ private fun YearMonthDateGrid(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Polished floating Today navigation bar anchored above the bottom safe area.
+ * Displays "TODAY" accent badge, formatted date string, and jump arrow icon.
+ */
+@Composable
+fun YearTodayFloatingBar(
+    today: LocalDate,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isDark = LocalIsDark.current
+    val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
+
+    val barBg = if (isDark) Color(0xFF222228) else Color(0xFFEDEDF2)
+    val barBorder = BorderStroke(1.dp, if (isDark) Color(0xFF383842) else Color(0xFFDCDCE4))
+
+    val todayFormatted =
+        remember(today) {
+            val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
+            today.format(formatter)
+        }
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = barBg,
+        border = barBorder,
+        shadowElevation = 6.dp,
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .semantics {
+                    role = Role.Button
+                    contentDescription = "Jump to Today, $todayFormatted"
+                },
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // "TODAY" Accent Pill Badge
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                ) {
+                    Text(
+                        text = "TODAY",
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.8.sp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            ),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    )
+                }
+
+                // Full Formatted Date String
+                Text(
+                    text = todayFormatted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.5.sp,
+                            color = textPrimary,
+                        ),
+                )
+            }
+
+            // Navigation Arrow
+            RememberMaterialRoundedSymbol(
+                name = "arrow_forward",
+                size = 18.dp,
+                tint = if (isDark) Color(0xFFC4C4CE) else Color(0xFF555562),
+                weight = FontWeight.SemiBold,
+            )
         }
     }
 }

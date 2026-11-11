@@ -454,7 +454,7 @@ private fun AccentThemeCard(
             if (selected) {
                 swatchColor
             } else {
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.55f)
+                if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
             },
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "accentBorderColor",
@@ -463,9 +463,9 @@ private fun AccentThemeCard(
         targetValue =
             if (isDark) {
                 if (selected) {
-                    Color(0xFF262638).copy(alpha = 0.90f)
+                    Color(0xFF2C2C36)
                 } else {
-                    Color(0xFF1E1E28).copy(alpha = 0.75f)
+                    Color(0xFF262626)
                 }
             } else {
                 if (selected) {
@@ -573,14 +573,14 @@ private fun LiveThemePreviewCard(
     val isDarkLocal = LocalIsDark.current
     val previewBg =
         if (isDarkLocal) {
-            Color(0xFF141419).copy(alpha = 0.65f)
+            Color(0xFF262626)
         } else {
             MaterialTheme.colorScheme.surfaceContainer
         }
     val previewBorder =
         BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDarkLocal) 0.35f else 0.55f),
+            if (isDarkLocal) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
         )
 
     Surface(

@@ -1071,6 +1071,9 @@ fun RememberNavGraph(
                                 launchSingleTop = true
                             }
                         },
+                        onNavigateToSearch = {
+                            openMainTab(MainTab.Search)
+                        },
                     )
                 }
 

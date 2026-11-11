@@ -197,7 +197,7 @@ fun IconAndColorSheet(
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val sheetBg = if (isDark) Color(30, 30, 30).copy(alpha = 0.75f) else MaterialTheme.colorScheme.surface
+    val sheetBg = if (isDark) Color(0xFF242424) else MaterialTheme.colorScheme.surface
     val textPrimary = MaterialTheme.colorScheme.onSurface
     val textSecondary = MaterialTheme.colorScheme.onSurfaceVariant
     val cardBorder = MaterialTheme.colorScheme.outlineVariant

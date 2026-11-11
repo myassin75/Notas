@@ -54,6 +54,7 @@ fun CalendarTopBar(
     subtitle: String,
     currentViewMode: CalendarViewMode,
     onViewModeSelected: (CalendarViewMode) -> Unit,
+    onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isDark = LocalIsDark.current
@@ -129,7 +130,7 @@ fun CalendarTopBar(
                         color = textPrimary,
                     ),
             )
-            if (subtitle.isNotBlank()) {
+            if (subtitle.isNotBlank() && currentViewMode != CalendarViewMode.YEAR) {
                 Text(
                     text = subtitle,
                     maxLines = 1,
@@ -139,6 +140,27 @@ fun CalendarTopBar(
                             fontSize = 13.sp,
                             color = textSecondary,
                         ),
+                )
+            }
+        }
+
+        // Right: Search Button
+        Surface(
+            onClick = onSearchClick,
+            shape = CalendarDesignTokens.MenuButtonShape,
+            color = CalendarDesignTokens.resolveCardBg(isDark),
+            border =
+                BorderStroke(
+                    width = 1.dp,
+                    color = CalendarDesignTokens.resolveCardBorder(isDark),
+                ),
+            modifier = Modifier.size(42.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                RememberMaterialRoundedSymbol(
+                    name = "search",
+                    size = 20.dp,
+                    tint = textPrimary,
                 )
             }
         }
