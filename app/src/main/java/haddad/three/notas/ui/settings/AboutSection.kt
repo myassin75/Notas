@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -359,11 +360,15 @@ private fun AboutSettingsBlock(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    AppIconImage(
+                    val iconSize = if (isSmallLandscape) 64.dp else 84.dp
+                    Image(
+                        painter = painterResource(id = R.drawable.darck_logo),
+                        contentDescription = stringResource(R.string.app_name),
+                        contentScale = ContentScale.Fit,
                         modifier =
                             Modifier
-                                .size(if (isSmallLandscape) 64.dp else 84.dp)
-                                .clip(CircleShape)
+                                .size(iconSize)
+                                .clip(RoundedCornerShape(iconSize * 0.22f))
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null,

@@ -190,7 +190,7 @@ private fun PortraitLayout(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(
-                                text = "SmartNotas",
+                                text = "Notas",
                                 fontSize = 34.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TitleDark,
@@ -313,7 +313,7 @@ private fun LandscapeLayout(
                     AnimatedVisibility(visible = titleVisible, enter = blockEnter) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "SmartNotas",
+                                text = "Notas",
                                 fontSize = 30.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TitleDark,
