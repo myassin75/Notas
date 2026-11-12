@@ -97,9 +97,10 @@ function initDeviceSwitcher() {
   if (!switchBtns.length || !phoneImg) return;
 
   const views = {
-    notes: 'assets/screenshots/notes_populated.png',
-    calendar: 'assets/screenshots/calendar_year.png',
-    search: 'assets/screenshots/search_filters.png',
+    notes: 'assets/screenshots/home_swipe_actions.png',
+    calendar: 'assets/screenshots/year_calendar_new.png',
+    sync: 'assets/screenshots/backup_sync_screen.png',
+    ai: 'assets/screenshots/ai_agent_running.png',
   };
 
   switchBtns.forEach((btn) => {
