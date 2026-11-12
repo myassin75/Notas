@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Notas — A modern Android productivity application and engineering case study bringing notes, tasks, schedules, and notifications into one unified ecosystem. Developed by Mohamed Yassin Haddad.">
+  <meta name="author" content="Mohamed Yassin Haddad">
+  <title>Notas — Technical Showcase & Engineering Case Study</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+  <!-- Typography: Space Grotesk, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/sections.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       0. SITE HEADER & ACCESSIBLE NAVIGATION (Modern Web Guidance Compliant)
+       ======================================================================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="site-logo" href="#hero">
+        <img src="assets/images/logo.png" alt="Notas Logo" width="32" height="32">
+        <span>NOTAS</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary Navigation">
+        <button
+          class="menu-button"
+          type="button"
+          popovertarget="site-menu"
+          popovertargetaction="toggle"
+          aria-controls="site-menu"
+          aria-label="Toggle navigation menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+
+        <ul id="site-menu" class="site-menu">
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#tech-stack">Tech Stack</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#journey">Journey</a></li>
+          <li><a href="#challenges">Challenges</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#developer">Developer</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn btn-outline btn-sm" href="https://github.com/myassin75/Notas" target="_blank" rel="noopener noreferrer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       1. HERO SECTION
+       ======================================================================== -->
+  <section id="hero" class="hero-section">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span class="badge-dot"></span>
+          <span>Technical Case Study & Product Showcase</span>
+        </div>
+
+        <h1 class="hero-title">
+          An intelligent way to organize your <span class="gradient-text">digital life.</span>
+        </h1>
+
+        <p class="hero-description">
+          A modern Android productivity application bringing notes, tasks, schedules, and notifications together in one organized ecosystem. Engineered offline-first with Jetpack Compose, Room, and a scalable TypeScript serverless sync engine.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#architecture" class="btn btn-primary">
+            <span>Explore Architecture</span>
+            <span class="btn-icon-right">→</span>
+          </a>
+          <a href="#overview" class="btn btn-secondary">Project Overview</a>
+          <a href="https://github.com/myassin75/Notas" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span>Repository</span>
+          </a>
+        </div>
+
+        <div class="hero-pills">
+          <span class="tech-pill">Kotlin 2.0</span>
+          <span class="tech-pill">Jetpack Compose</span>
+          <span class="tech-pill">Room SQLite</span>
+          <span class="tech-pill">TypeScript</span>
+          <span class="tech-pill">PostgreSQL</span>
+          <span class="tech-pill">Prisma ORM</span>
+        </div>
+      </div>
+
+      <!-- Smartphone Frame Mockup with Live Toggle -->
+      <div class="hero-device-container">
+        <div class="device-switcher" role="group" aria-label="Preview screen views">
+          <button class="device-switch-btn active" data-view="notes" type="button">Notes View</button>
+          <button class="device-switch-btn" data-view="calendar" type="button">Year Calendar</button>
+          <button class="device-switch-btn" data-view="search" type="button">Search & Filters</button>
+        </div>
+
+        <div class="phone-mockup-wrapper">
+          <div class="phone-mockup">
+            <div class="phone-camera"></div>
+            <div class="phone-screen">
+              <img id="hero-phone-img" src="assets/screenshots/notes_populated.png" alt="Notas Application Interface" width="300" height="650">
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.8125rem; color: var(--text-muted); text-align: center; margin-top: var(--space-2);">
+          Interactive UI preview captured from live Android emulator
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       2. PROJECT OVERVIEW
+       ======================================================================== -->
+  <section id="overview" class="overview-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">01 / Motivation & Scope</div>
+        <h2 class="section-title">The Philosophy Behind Notas</h2>
+        <p class="section-description">
+          Engineered to eliminate productivity fragmentation by unifying notes, structured checklists, agenda timelines, and alarm-level notifications into a cohesive, private, offline-first system.
+        </p>
+      </div>
+
+      <div class="overview-grid">
+        <div class="overview-editorial">
+          <h3>Why Another Productivity App?</h3>
+          <p>
+            Modern mobile productivity is plagued by fragmentation: users maintain one app for free-form thoughts, a second for to-do checklists, a third for calendar scheduling, and a separate system clock for alarms. This context switching causes missed deadlines, dispersed knowledge, and cognitive overload.
+          </p>
+          <p>
+            Notas was engineered from the ground up to solve this through <strong>unified domain modeling</strong>. A single entity in Notas can serve as rich Markdown documentation, contain nested checkable subtasks, schedule an exact AlarmManager reminder, and appear on the interactive yearly calendar—all without duplicating records or jumping between disjointed interfaces.
+          </p>
+
+          <div class="overview-pillars">
+            <div class="pillar-card">
+              <div class="pillar-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>Zero Latency & Offline-First</span>
+              </div>
+              <div class="pillar-desc">
+                Local Room database acts as the immutable single source of truth. The application never blocks user interaction on network availability.
+              </div>
+            </div>
+
+            <div class="pillar-card">
+              <div class="pillar-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Hardware Privacy Vault</span>
+              </div>
+              <div class="pillar-desc">
+                Per-note AES-256-GCM encryption backed by the Android Keystore. Sensitive entries remain encrypted on disk and in memory until biometric unlocking.
+              </div>
+            </div>
+
+            <div class="pillar-card">
+              <div class="pillar-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Deterministic Scheduling</span>
+              </div>
+              <div class="pillar-desc">
+                4-tier importance notification engine utilizing Android AlarmManager with DND bypass for critical time-sensitive events.
+              </div>
+            </div>
+
+            <div class="pillar-card">
+              <div class="pillar-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                <span>Clean Serverless Parity</span>
+              </div>
+              <div class="pillar-desc">
+                TypeScript Vercel backend using Prisma ORM with full schema parity for seamless delta synchronization and encrypted cloud backups.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Specifications Panel -->
+        <div class="specs-panel">
+          <div class="specs-header">Project Engineering Specifications</div>
+          <div class="specs-list">
+            <div class="spec-row">
+              <span class="spec-label">Project Name</span>
+              <span class="spec-value">Notas</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Category</span>
+              <span class="spec-value">Productivity / PKM</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Target Platform</span>
+              <span class="spec-value">Android (API 26 to 35)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">App Architecture</span>
+              <span class="spec-value">Clean Arch + MVI (UDF)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">UI Toolkit</span>
+              <span class="spec-value">100% Jetpack Compose M3</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Local Persistence</span>
+              <span class="spec-value">Room SQLite (v8 Schema)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Cloud Backend</span>
+              <span class="spec-value">Vercel Serverless (Node 20+)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Cloud Database</span>
+              <span class="spec-value">PostgreSQL + Prisma ORM</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Build Flavors</span>
+              <span class="spec-value">Offline (Clean) & Online (Sync)</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Creator & Lead</span>
+              <span class="spec-value">Mohamed Yassin Haddad</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Open Source</span>
+              <span class="spec-value">MIT Licensed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       3. FEATURES SHOWCASE
+       ======================================================================== -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header center">
+        <div class="section-tag">02 / Capabilities</div>
+        <h2 class="section-title">Designed for Focus. Built for Power.</h2>
+        <p class="section-description">
+          Each feature in Notas is designed to remove friction, preserve user agency, and provide complete data ownership without sacrificing modern aesthetics.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1: Smart Notes -->
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </div>
+            <div class="feature-tech-tag">Jetpack Compose • AST Parser</div>
+            <h3 class="feature-title">Smart Markdown Notes</h3>
+            <p class="feature-desc">
+              Full rich-text styling supporting headings, bold, italic, code blocks, and lists. Includes scoped FileProvider attachments and 16:9 hero image framing with custom focal coordinates.
+            </p>
+          </div>
+          <div class="feature-img-box" data-lightbox-src="assets/screenshots/notes_populated.png" data-lightbox-title="Smart Markdown Notes & Shoulders" data-lightbox-category="Notes Module" data-lightbox-desc="Populated notes view showcasing color badges, shoulders, pinned notes, and formatted Markdown excerpts.">
+            <img src="assets/screenshots/notes_populated.png" alt="Notas Markdown Notes Interface" loading="lazy">
+            <span class="feature-zoom-hint">Click to enlarge</span>
+          </div>
+        </div>
+
+        <!-- Feature 2: Year & Month Calendar -->
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div class="feature-tech-tag">LazyGrid • java.time Engine</div>
+            <h3 class="feature-title">Year at a Glance Calendar</h3>
+            <p class="feature-desc">
+              Custom-built 12-month overview displaying full year grids with responsive 2-column layouts, distinguished weekend styling, active day highlights, and an anchored floating Today navigation bar.
+            </p>
+          </div>
+          <div class="feature-img-box" data-lightbox-src="assets/screenshots/calendar_year.png" data-lightbox-title="Year at a Glance 12-Month Calendar" data-lightbox-category="Calendar Module" data-lightbox-desc="Complete custom-built 12-month calendar grid with prominent year typography, paired navigation, and floating today action bar.">
+            <img src="assets/screenshots/calendar_year.png" alt="Notas Year Calendar Screen" loading="lazy">
+            <span class="feature-zoom-hint">Click to enlarge</span>
+          </div>
+        </div>
+
+        <!-- Feature 3: Hierarchical Checklists -->
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            </div>
+            <div class="feature-tech-tag">Room Hierarchical DAG • Reorder</div>
+            <h3 class="feature-title">Nested Checklist Engine</h3>
+            <p class="feature-desc">
+              Hierarchical checklist architecture supporting parent-child subtasks. Checking all child tasks automatically marks the parent done, with drag-and-drop reordering and distinct active vs. done grouping.
+            </p>
+          </div>
+          <div class="feature-img-box" data-lightbox-src="assets/screenshots/calendar_month.png" data-lightbox-title="Monthly Calendar & Agenda" data-lightbox-category="Schedule Module" data-lightbox-desc="Monthly view with day agenda showing upcoming tasks, events, and empty day illustration.">
+            <img src="assets/screenshots/calendar_month.png" alt="Notas Agenda & Tasks Screen" loading="lazy">
+            <span class="feature-zoom-hint">Click to enlarge</span>
+          </div>
+        </div>
+
+        <!-- Feature 4: Search & Precision Filtering -->
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <div class="feature-tech-tag">Full-Text Search • FTS SQLite</div>
+            <h3 class="feature-title">Global Search & Filters</h3>
+            <p class="feature-desc">
+              Instant indexing across titles, Markdown bodies, checklists, tags, and archived items. Filter by item type (Notes, Tasks, Events), custom date ranges, and completion status.
+            </p>
+          </div>
+          <div class="feature-img-box" data-lightbox-src="assets/screenshots/search_filters.png" data-lightbox-title="Search & Precision Filters" data-lightbox-category="Search Module" data-lightbox-desc="Opaque modal bottom sheet for filter criteria: item type, date range, task completion status, and category tags.">
+            <img src="assets/screenshots/search_filters.png" alt="Notas Search Filters Screen" loading="lazy">
+            <span class="feature-zoom-hint">Click to enlarge</span>
+          </div>
+        </div>
+
+        <!-- Feature 5: Category Shoulders -->
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+            <div class="feature-tech-tag">Relational Indices • Flow Filter</div>
+            <h3 class="feature-title">Contextual Shoulders</h3>
+            <p class="feature-desc">
+              Fast organizational buckets ("Shoulders") grouping related work. Assignable with a single swipe gesture and customizable with dedicated accent colors for immediate visual separation.
+            </p>
+          </div>
+          <div class="feature-img-box" data-lightbox-src="assets/screenshots/category_shoulder.png" data-lightbox-title="Contextual Shoulder Picker" data-lightbox-category="Organization Module" data-lightbox-desc="Fast contextual category assignment sheet with color indicators and instant creation.">
+            <img src="assets/screenshots/category_shoulder.png" alt="Notas Category Shoulder Screen" loading="lazy">
+            <span class="feature-zoom-hint">Click to enlarge</span>
+          </div>
+        </div>
+
+        <!-- Feature 6: Unified Dark Design System -->
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon-badge">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </div>
+            <div class="feature-tech-tag">Material 3 • Dynamic Tokens</div>
+            <h3 class="feature-title">Crafted Dark Theme System</h3>
+            <p class="feature-desc">
+              Engineered dark theme with calibrated charcoal surfaces (#242424, #262626, #3A3A3A), pure OLED black option, and 6 vibrant mode-adaptive accent palettes with live in-app preview.
+            </p>
+          </div>
+          <div class="feature-img-box" data-lightbox-src="assets/screenshots/accent_sheet.png" data-lightbox-title="Theme Accent Switcher" data-lightbox-category="Design System" data-lightbox-desc="Live theme preview card displaying primary actions, active chips, and 6 vibrant theme accents.">
+            <img src="assets/screenshots/accent_sheet.png" alt="Notas Theme Accent Sheet Screen" loading="lazy">
+            <span class="feature-zoom-hint">Click to enlarge</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       4. TECHNOLOGY STACK
+       ======================================================================== -->
+  <section id="tech-stack" class="tech-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag gold">03 / Engineering Stack</div>
+        <h2 class="section-title">Verified Architecture & Technologies</h2>
+        <p class="section-description">
+          Notas relies on battle-tested frameworks across the native mobile client and serverless cloud backend, adhering to clean architecture principles.
+        </p>
+      </div>
+
+      <div class="tech-roles-grid">
+        <!-- Role 1: Android Client -->
+        <div class="tech-role-card">
+          <div class="tech-role-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            <span>Android Development</span>
+          </div>
+          <div class="tech-items-list">
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Kotlin 2.0</div>
+                <div class="tech-item-role">Modern language, Coroutines, StateFlow, sealed models</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Jetpack Compose</div>
+                <div class="tech-item-role">100% declarative UI toolkit with Material Design 3</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Dagger Hilt</div>
+                <div class="tech-item-role">Compile-time dependency injection across build flavors</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Android Architecture</div>
+                <div class="tech-item-role">ViewModel, Navigation, WorkManager, AlarmManager</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role 2: Persistence & Security -->
+        <div class="tech-role-card">
+          <div class="tech-role-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            <span>Local Persistence</span>
+          </div>
+          <div class="tech-items-list">
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Room Database</div>
+                <div class="tech-item-role">SQLite ORM with relational indices & schema migrations</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Android Keystore</div>
+                <div class="tech-item-role">Hardware-backed AES-256-GCM cipher for locked notes</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">DataStore Preferences</div>
+                <div class="tech-item-role">Asynchronous, transactional typed settings store</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">FileProvider & SAF</div>
+                <div class="tech-item-role">Scoped app-private storage for photos & attachments</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role 3: Serverless Backend -->
+        <div class="tech-role-card">
+          <div class="tech-role-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            <span>Cloud & Serverless API</span>
+          </div>
+          <div class="tech-items-list">
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">TypeScript / Node 20+</div>
+                <div class="tech-item-role">Strictly typed serverless functions (@vercel/node)</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Prisma ORM 5.22</div>
+                <div class="tech-item-role">Type-safe queries, migrations & connection pooling</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">PostgreSQL</div>
+                <div class="tech-item-role">Relational storage (Supabase/Neon) with PgBouncer</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">S3-Compatible Storage</div>
+                <div class="tech-item-role">AWS S3 / Cloudflare R2 for encrypted backup archives</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role 4: Quality & DevOps -->
+        <div class="tech-role-card">
+          <div class="tech-role-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+            <span>Tooling & Quality</span>
+          </div>
+          <div class="tech-items-list">
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Vitest & JUnit 5</div>
+                <div class="tech-item-role">Automated test suites across Android and backend API</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Detekt & Lint Baseline</div>
+                <div class="tech-item-role">Static analysis, cyclomatic complexity & code smell guards</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">Flavor Hygiene Tasks</div>
+                <div class="tech-item-role">Custom Gradle tasks verifying zero trackers in offline APK</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <div>
+                <div class="tech-item-name">GitHub Actions & Fastlane</div>
+                <div class="tech-item-role">Automated build verification and release pipeline</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       5. SYSTEM ARCHITECTURE
+       ======================================================================== -->
+  <section id="architecture" class="architecture-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag green">04 / System Architecture</div>
+        <h2 class="section-title">Layered, Unidirectional & Offline-First</h2>
+        <p class="section-description">
+          A clean separation of concerns separating native presentation from domain rules and cloud synchronization, ensuring deterministic behavior under intermittent connectivity.
+        </p>
+      </div>
+
+      <div class="architecture-container">
+        <!-- Interactive Layer Visual Flow -->
+        <div class="arch-visual-flow" role="region" aria-label="Architecture Layer Stack">
+          <div class="arch-layer active" data-layer="presentation">
+            <div class="arch-layer-name">1. Presentation</div>
+            <div class="arch-layer-components">
+              <span class="arch-component-pill">Jetpack Compose UI</span>
+              <span class="arch-component-pill">MVI ViewModels</span>
+              <span class="arch-component-pill">Immutable StateFlow</span>
+              <span class="arch-component-pill">Compose Theme Tokens</span>
+            </div>
+          </div>
+
+          <div class="arch-layer" data-layer="domain">
+            <div class="arch-layer-name">2. Domain Logic</div>
+            <div class="arch-layer-components">
+              <span class="arch-component-pill">Recurrence Rules Engine</span>
+              <span class="arch-component-pill">Hierarchical Checklist DAG</span>
+              <span class="arch-component-pill">Markdown Visual Transformer</span>
+              <span class="arch-component-pill">Conflict Merging Logic</span>
+            </div>
+          </div>
+
+          <div class="arch-layer" data-layer="data">
+            <div class="arch-layer-name">3. Offline-First Data</div>
+            <div class="arch-layer-components">
+              <span class="arch-component-pill">Room Database (SQLite)</span>
+              <span class="arch-component-pill">Android Keystore AES-256</span>
+              <span class="arch-component-pill">DataStore Preferences</span>
+              <span class="arch-component-pill">FileProvider Scoped Media</span>
+            </div>
+          </div>
+
+          <div class="arch-layer" data-layer="sync">
+            <div class="arch-layer-name">4. Transport & Sync</div>
+            <div class="arch-layer-components">
+              <span class="arch-component-pill">Change Recorder Journal</span>
+              <span class="arch-component-pill">Delta Sync Protocol</span>
+              <span class="arch-component-pill">Firebase ID Token Auth</span>
+              <span class="arch-component-pill">Rate Limiting Interceptor</span>
+            </div>
+          </div>
+
+          <div class="arch-layer" data-layer="cloud">
+            <div class="arch-layer-name">5. Cloud Serverless</div>
+            <div class="arch-layer-components">
+              <span class="arch-component-pill">Vercel Serverless Functions</span>
+              <span class="arch-component-pill">Prisma ORM 5.22</span>
+              <span class="arch-component-pill">PostgreSQL with PgBouncer</span>
+              <span class="arch-component-pill">AWS S3 / Cloudflare R2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer Details Box -->
+        <div id="arch-layer-details" style="margin-bottom: var(--space-8);">
+          <div class="card">
+            <div class="card-meta">SELECTED ARCHITECTURAL LAYER</div>
+            <h4 class="card-title">Presentation Layer (Android Client)</h4>
+            <p style="margin-bottom: var(--space-4);">
+              Built 100% in Jetpack Compose following MVI / MVVM and Unidirectional Data Flow (UDF). ViewModels expose immutable StateFlow to composables while UI events flow backwards through type-safe sealed interfaces. Implements custom theme tokens, window insets, and adaptive layouts for phones, foldables, and tablets.
+            </p>
+            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+              <span class="badge"><span class="badge-dot"></span>Jetpack Compose & Material 3</span>
+              <span class="badge"><span class="badge-dot"></span>StateFlow & SharedFlow</span>
+              <span class="badge"><span class="badge-dot"></span>Dagger Hilt ViewModels</span>
+              <span class="badge"><span class="badge-dot"></span>Multi-window Inset Handling</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deep Dive Architectural Tabs -->
+        <div class="arch-deep-dive">
+          <div class="tab-nav">
+            <button class="tab-btn arch-tab-btn active" data-target="tab-udf" type="button">Data Flow (UDF)</button>
+            <button class="tab-btn arch-tab-btn" data-target="tab-sync" type="button">Offline Delta Sync</button>
+            <button class="tab-btn arch-tab-btn" data-target="tab-backup" type="button">Deterministic Backup</button>
+            <button class="tab-btn arch-tab-btn" data-target="tab-security" type="button">Hardware Keystore Vault</button>
+          </div>
+
+          <div id="tab-udf" class="tab-pane arch-tab-pane active">
+            <h4 style="margin-bottom: var(--space-2);">Unidirectional Data Flow (UDF) Execution</h4>
+            <p style="margin-bottom: var(--space-4);">
+              UI components never mutate state directly. User interactions emit sealed <code>UiEvent</code> objects to the ViewModel. The ViewModel interacts with domain use cases, writes to the Room repository, and Room emits new reactive database snapshots into <code>StateFlow</code>, automatically recomposing only the affected Compose nodes.
+            </p>
+            <div class="code-block">
+<span class="code-comment">// MVI Unidirectional Data Flow Contract</span>
+<span class="code-keyword">sealed interface</span> <span class="code-type">EditNoteIntent</span> {
+    <span class="code-keyword">data class</span> <span class="code-type">UpdateContent</span>(<span class="code-keyword">val</span> body: <span class="code-type">String</span>) : <span class="code-type">EditNoteIntent</span>
+    <span class="code-keyword">data class</span> <span class="code-type">ToggleCheckItem</span>(<span class="code-keyword">val</span> itemId: <span class="code-type">Long</span>, <span class="code-keyword">val</span> checked: <span class="code-type">Boolean</span>) : <span class="code-type">EditNoteIntent</span>
+    <span class="code-keyword">data object</span> <span class="code-type">SaveAndExit</span> : <span class="code-type">EditNoteIntent</span>
+}
+
+<span class="code-keyword">val</span> uiState: <span class="code-type">StateFlow</span>&lt;<span class="code-type">NoteUiState</span>&gt; = repository.observeNote(noteId)
+    .map { entity -> entity.toUiState() }
+    .stateIn(viewModelScope, <span class="code-type">SharingStarted</span>.WhileSubscribed(5_000), <span class="code-type">NoteUiState</span>.Loading)
+            </div>
+          </div>
+
+          <div id="tab-sync" class="tab-pane arch-tab-pane">
+            <h4 style="margin-bottom: var(--space-2);">Hybrid Logical Clock (HLC) & Delta Sync</h4>
+            <p style="margin-bottom: var(--space-4);">
+              To enable concurrent offline modifications across multiple devices without data loss, Notas uses an append-only change journal paired with Hybrid Logical Clocks. When online, pending delta changes are pushed to Vercel in atomic transactions. The backend compares field revision watermarks, merges non-conflicting field updates, and returns server deltas.
+            </p>
+            <div class="code-block">
+<span class="code-comment">// Bidirectional Sync Batch Payload</span>
+POST /api/v1/sync/push
+Authorization: Bearer &lt;Firebase_Token&gt;
+{
+  <span class="code-string">"deviceId"</span>: <span class="code-string">"pixel8-uuid-v4"</span>,
+  <span class="code-string">"clientHlc"</span>: <span class="code-string">"1731367200000:0001:pixel8"</span>,
+  <span class="code-string">"mutations"</span>: [
+    { <span class="code-string">"entity"</span>: <span class="code-string">"NOTE"</span>, <span class="code-string">"id"</span>: <span class="code-string">"uuid"</span>, <span class="code-string">"action"</span>: <span class="code-string">"UPDATE"</span>, <span class="code-string">"fields"</span>: { <span class="code-string">"body"</span>: <span class="code-string">"..."</span> } }
+  ]
+}
+            </div>
+          </div>
+
+          <div id="tab-backup" class="tab-pane arch-tab-pane">
+            <h4 style="margin-bottom: var(--space-2);">Deterministic In-Memory ZIP Serialization</h4>
+            <p style="margin-bottom: var(--space-4);">
+              Full backups export complete application data as a portable ZIP archive containing <code>notes.json</code>, <code>settings.json</code>, and embedded media under <code>media/&lt;noteId&gt;/</code>. The backup serializer resolves private <code>content://</code> URIs into portable relative entries (<code>REL:media/...</code>), allowing painless transfer across devices and platforms.
+            </p>
+            <div class="code-block">
+<span class="code-comment">// Structure of Exported Notas Backup Archive</span>
+remember_backup_20261112_1845.zip
+├── notes.json            <span class="code-comment">// Active, pinned, archived, and trashed notes</span>
+├── settings.json         <span class="code-comment">// Themes, density cap, reminder preferences</span>
+└── media/
+    ├── &lt;note_id_1&gt;/
+    │   ├── picture.jpg   <span class="code-comment">// Hero cover image</span>
+    │   └── att_0.pdf     <span class="code-comment">// Attached document</span>
+    └── manifest.json     <span class="code-comment">// Verification checksums & media counts</span>
+            </div>
+          </div>
+
+          <div id="tab-security" class="tab-pane arch-tab-pane">
+            <h4 style="margin-bottom: var(--space-2);">Android Keystore & Cryptographic Privacy</h4>
+            <p style="margin-bottom: var(--space-4);">
+              When a note is locked, its contents are encrypted using a 256-bit AES master key stored in the device's hardware Secure Element / StrongBox. Decryption keys never touch disk. Biometric authentication (Class 3 BiometricPrompt) or PIN entry triggers cryptographic cipher initialization in memory with automatic zeroization upon screen lock.
+            </p>
+            <div class="code-block">
+<span class="code-comment">// Hardware Keystore Cipher Initialization</span>
+<span class="code-keyword">val</span> keyStore = <span class="code-type">KeyStore</span>.getInstance(<span class="code-string">"AndroidKeyStore"</span>).apply { load(<span class="code-keyword">null</span>) }
+<span class="code-keyword">val</span> cipher = <span class="code-type">Cipher</span>.getInstance(<span class="code-string">"AES/GCM/NoPadding"</span>)
+<span class="code-keyword">val</span> secretKey = keyStore.getKey(KEY_ALIAS, <span class="code-keyword">null</span>) <span class="code-keyword">as</span> <span class="code-type">SecretKey</span>
+cipher.init(<span class="code-type">Cipher</span>.ENCRYPT_MODE, secretKey)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       6. DEVELOPMENT JOURNEY
+       ======================================================================== -->
+  <section id="journey" class="journey-section">
+    <div class="container">
+      <div class="section-header center">
+        <div class="section-tag">05 / Chronology</div>
+        <h2 class="section-title">The Engineering Evolution</h2>
+        <p class="section-description">
+          From architectural prototype to a dual-flavor production codebase: a transparent record of development milestones and engineering iterations.
+        </p>
+      </div>
+
+      <div class="timeline">
+        <!-- Milestone 1 -->
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Milestone 01 • Ideation & Domain Modeling</div>
+            <h3 class="timeline-title">Unifying Disjointed Productivity Tools</h3>
+            <p class="timeline-desc">
+              Analyzed workflows across Google Keep, Notion, and TickTick. Identified that separating notes, tasks, and calendar events causes cognitive friction. Architected a unified SQLite schema in Room capable of modeling notes, hierarchical checklists, and scheduled events in a cohesive relational database.
+            </p>
+          </div>
+        </div>
+
+        <!-- Milestone 2 -->
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Milestone 02 • Native Compose UI & Design Tokens</div>
+            <h3 class="timeline-title">Building the Calibrated Dark Design System</h3>
+            <p class="timeline-desc">
+              Created an editorial-grade dark interface rejecting generic bright grey surfaces. Standardized on a unified dark hierarchy (#242424 base, #262626 cards, #3A3A3A dividers) with 6 dynamic theme accents, custom squircle shapes, and accessible typography with device font-scaling caps.
+            </p>
+          </div>
+        </div>
+
+        <!-- Milestone 3 -->
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Milestone 03 • Core Local Engine & Scheduling</div>
+            <h3 class="timeline-title">Markdown AST & Hardware Alarms</h3>
+            <p class="timeline-desc">
+              Implemented custom Compose <code>VisualTransformation</code> for live Markdown formatting. Engineered a hierarchical checklist DAG with parent-child check bubbling, and integrated Android <code>AlarmManager.setExactAndAllowWhileIdle()</code> for guaranteed notification delivery.
+            </p>
+          </div>
+        </div>
+
+        <!-- Milestone 4 -->
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Milestone 04 • Calendar Overhaul</div>
+            <h3 class="timeline-title">12-Month Year at a Glance Grid</h3>
+            <p class="timeline-desc">
+              Redesigned the Calendar screen from scratch: built an interactive 12-month overview with responsive 2-column monthly grids, prominent 58sp year typography, paired previous/next controls, highlighted weekends, and an anchored floating Today navigation bar.
+            </p>
+          </div>
+        </div>
+
+        <!-- Milestone 5 -->
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Milestone 05 • Cloud Synchronization & Serverless API</div>
+            <h3 class="timeline-title">TypeScript, Prisma & PostgreSQL on Vercel</h3>
+            <p class="timeline-desc">
+              Developed a serverless REST backend on Vercel Node.js. Authored Prisma schemas mirroring Room entities with 100% parity. Implemented incremental delta sync protocols, Firebase Admin token authentication, rate limiting, and S3-compatible private backup storage.
+            </p>
+          </div>
+        </div>
+
+        <!-- Milestone 6 -->
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Milestone 06 • Architectural Splitting & Privacy Hygiene</div>
+            <h3 class="timeline-title">Pure Offline Flavor & Zero-Network Guarantee</h3>
+            <p class="timeline-desc">
+              Decoupled the codebase into two specialized flavors: an <strong>Offline Master</strong> flavor completely stripped of Google Play Services, Firebase SDKs, and INTERNET permissions for ultimate privacy; and an <strong>Online Flavor</strong> with full cloud delta sync. Enforced via custom Gradle hygiene verification tasks.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       7. ENGINEERING CHALLENGES
+       ======================================================================== -->
+  <section id="challenges" class="challenges-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag gold">06 / Case Studies</div>
+        <h2 class="section-title">Deep Technical Challenges & Solutions</h2>
+        <p class="section-description">
+          Real problems encountered during the development of Notas, the engineering approaches evaluated, the implementations deployed, and the verified results.
+        </p>
+      </div>
+
+      <div class="challenges-grid">
+        <!-- Challenge 1 -->
+        <div class="challenge-card">
+          <h3 class="challenge-title">
+            <span class="badge" style="background: rgba(13,128,242,0.15); color: var(--accent-primary);">CASE 01</span>
+            <span>Concurrent Conflict Resolution in Offline-First Synchronization</span>
+          </h3>
+          <div class="challenge-steps">
+            <div class="challenge-step step-problem">
+              <div class="step-header">1. The Problem</div>
+              <div class="step-body">
+                Users edit notes across multiple devices while disconnected. Naive "last-write-wins" (LWW) based on wall-clock time causes clock-drift anomalies and overwrites concurrent edits made to different fields (e.g., editing note text on phone while checking checklist items on tablet).
+              </div>
+            </div>
+            <div class="challenge-step step-approach">
+              <div class="step-header">2. Technical Approach</div>
+              <div class="step-body">
+                Evaluated full CRDTs (too high storage overhead for mobile SQLite) vs. field-level revision watermarks with Hybrid Logical Clocks (HLC). Selected HLC with per-column mutation recording in a local change journal table.
+              </div>
+            </div>
+            <div class="challenge-step step-implementation">
+              <div class="step-header">3. Implementation</div>
+              <div class="step-body">
+                Room DAOs record modified field names inside <code>PendingChangeEntity</code>. The Vercel TypeScript API executes atomic Prisma transactions that merge incoming field modifications against server snapshots, only bumping revision for fields that actually changed.
+              </div>
+            </div>
+            <div class="challenge-step step-result">
+              <div class="step-header">4. Verified Result</div>
+              <div class="step-body">
+                Concurrent edits to different fields merge automatically with 0 data loss. Clock skew between devices is neutralized by HLC monotonicity. 58 of 58 automated Vitest tests pass with zero merge anomalies.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Challenge 2 -->
+        <div class="challenge-card">
+          <h3 class="challenge-title">
+            <span class="badge" style="background: rgba(255,59,48,0.15); color: var(--accent-crimson);">CASE 02</span>
+            <span>Aggressive OEM Battery Optimization vs. Guaranteed Alarms</span>
+          </h3>
+          <div class="challenge-steps">
+            <div class="challenge-step step-problem">
+              <div class="step-header">1. The Problem</div>
+              <div class="step-body">
+                Aggressive Android OEM battery killers (MIUI, OneUI, EMUI) terminate background tasks and delay standard <code>WorkManager</code> or <code>AlarmManager</code> timers by up to 45 minutes, causing missed critical reminders and alarms.
+              </div>
+            </div>
+            <div class="challenge-step step-approach">
+              <div class="step-header">2. Technical Approach</div>
+              <div class="step-body">
+                Implemented a 4-tier importance architecture (Low, Normal, High, Critical). For Critical reminders, use exact wake alarms with system alarm volume channels and Do Not Disturb (DND) bypass flags.
+              </div>
+            </div>
+            <div class="challenge-step step-implementation">
+              <div class="step-header">3. Implementation</div>
+              <div class="step-body">
+                Configured <code>AlarmManager.setExactAndAllowWhileIdle()</code> targeting <code>ReminderReceiver</code>. If marked Critical, fires an alarm audio stream and schedules an ongoing 15-minute repeat cycle that cannot be dismissed by simply swiping the notification away.
+              </div>
+            </div>
+            <div class="challenge-step step-result">
+              <div class="step-header">4. Verified Result</div>
+              <div class="step-body">
+                Deterministic sub-second alarm firing on device lock and deep Doze mode, tested and validated across standard AOSP and OEM device profiles.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Challenge 3 -->
+        <div class="challenge-card">
+          <h3 class="challenge-title">
+            <span class="badge" style="background: rgba(46,204,113,0.15); color: var(--accent-green);">CASE 03</span>
+            <span>Build Flavor Hygiene & Complete Network Isolation</span>
+          </h3>
+          <div class="challenge-steps">
+            <div class="challenge-step step-problem">
+              <div class="step-header">1. The Problem</div>
+              <div class="step-body">
+                Privacy-focused users require a guarantee that the application contains no internet permissions, tracking SDKs, or cloud dependencies. Merely disabling network calls in code is insufficient—the compiled binary itself must be provably isolated.
+              </div>
+            </div>
+            <div class="challenge-step step-approach">
+              <div class="step-header">2. Technical Approach</div>
+              <div class="step-body">
+                Separated the project into modular Gradle product flavors: <code>offline</code> and <code>playstore/github</code>. Inverted dependencies using Dagger Hilt interface bindings so the offline flavor compiles with zero Firebase or Play Services libraries.
+              </div>
+            </div>
+            <div class="challenge-step step-implementation">
+              <div class="step-header">3. Implementation</div>
+              <div class="step-body">
+                Created a custom Gradle verification task <code>verifyOfflineFlavorHygiene</code>. The task automatically parses the merged <code>AndroidManifest.xml</code> of the offline APK and fails the build if <code>android.permission.INTERNET</code> or any proprietary analytics class is present.
+              </div>
+            </div>
+            <div class="challenge-step step-result">
+              <div class="step-header">4. Verified Result</div>
+              <div class="step-body">
+                Automated CI reports: <em>"SUCCESS: Offline flavor is 100% clean of Firebase, Google Play Services, and INTERNET permission."</em> Complete privacy guarantee for air-gapped devices.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Challenge 4 -->
+        <div class="challenge-card">
+          <h3 class="challenge-title">
+            <span class="badge" style="background: rgba(212,175,55,0.15); color: var(--accent-gold);">CASE 04</span>
+            <span>Smooth 60/120 FPS Rendering for 12-Month Year Calendar Grids</span>
+          </h3>
+          <div class="challenge-steps">
+            <div class="challenge-step step-problem">
+              <div class="step-header">1. The Problem</div>
+              <div class="step-body">
+                Rendering all 12 months with 365 individual date cells, weekday headers, and interactive state highlights in Jetpack Compose triggered excessive recompositions and dropped frames during year navigation and vertical scrolling.
+              </div>
+            </div>
+            <div class="challenge-step step-approach">
+              <div class="step-header">2. Technical Approach</div>
+              <div class="step-body">
+                Decoupled the date generation logic from the composable tree into a precomputed immutable year matrix. Leveraged derived state and static squircle draw modifiers rather than allocating nested composable boxes for every date cell.
+              </div>
+            </div>
+            <div class="challenge-step step-implementation">
+              <div class="step-header">3. Implementation</div>
+              <div class="step-body">
+                Authored <code>CalendarYearComponents.kt</code> with custom <code>rememberYearMonths(year)</code> caching, isolated recomposition scopes per month card, and pure draw modifiers for weekend text colors and selected day circles.
+              </div>
+            </div>
+            <div class="challenge-step step-result">
+              <div class="step-header">4. Verified Result</div>
+              <div class="step-body">
+                Flawless 120Hz scrolling on Pixel emulators and physical devices, with instant animated transitions between years and zero UI lag.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       8. APPLICATION GALLERY (With Accessible Lightbox Dialog)
+       ======================================================================== -->
+  <section id="gallery" class="gallery-section">
+    <div class="container">
+      <div class="section-header center">
+        <div class="section-tag">07 / Visual Gallery</div>
+        <h2 class="section-title">Production Interface Showcase</h2>
+        <p class="section-description">
+          Authentic application screenshots captured from live emulator and physical test devices. Click any interface to inspect full-resolution details and technical context.
+        </p>
+      </div>
+
+      <!-- Category Filter Bar -->
+      <div class="gallery-filter-bar" role="group" aria-label="Filter gallery by category">
+        <button class="btn btn-sm gallery-filter-btn active" data-category="all" type="button">All Screens</button>
+        <button class="btn btn-sm gallery-filter-btn" data-category="notes" type="button">Notes & Checklists</button>
+        <button class="btn btn-sm gallery-filter-btn" data-category="calendar" type="button">Calendar & Agenda</button>
+        <button class="btn btn-sm gallery-filter-btn" data-category="settings" type="button">Settings & Theming</button>
+        <button class="btn btn-sm gallery-filter-btn" data-category="search" type="button">Search & Organization</button>
+      </div>
+
+      <!-- Gallery Grid -->
+      <div class="gallery-grid">
+        <!-- Item 1: Populated Notes -->
+        <div class="gallery-card" data-category="notes" data-lightbox-src="assets/screenshots/notes_populated.png" data-lightbox-title="Populated Notes & Pinned Items" data-lightbox-category="Notes Module" data-lightbox-desc="Main notes stream showing pinned items, shoulder badges, color tags, and formatted Markdown preview." data-lightbox-tech="Jetpack Compose • Room Flow • Markdown Transformer">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/notes_populated.png" alt="Populated Notes Stream" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Populated Notes Stream</div>
+            <div class="gallery-sub">Notes, Shoulders & Pinned Cards</div>
+          </div>
+        </div>
+
+        <!-- Item 2: Year Calendar -->
+        <div class="gallery-card" data-category="calendar" data-lightbox-src="assets/screenshots/calendar_year.png" data-lightbox-title="Year at a Glance 12-Month Calendar" data-lightbox-category="Calendar Module" data-lightbox-desc="Redesigned 12-month calendar grid with prominent year typography and floating today navigation bar." data-lightbox-tech="Jetpack Compose LazyGrid • java.time • Draw Modifiers">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/calendar_year.png" alt="Year Calendar Overview" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Year Overview Calendar</div>
+            <div class="gallery-sub">12-Month Grid & Today Action Bar</div>
+          </div>
+        </div>
+
+        <!-- Item 3: Monthly Calendar -->
+        <div class="gallery-card" data-category="calendar" data-lightbox-src="assets/screenshots/calendar_month.png" data-lightbox-title="Monthly Calendar & Daily Agenda" data-lightbox-category="Calendar Module" data-lightbox-desc="Month calendar view with interactive date selector, upcoming agenda cards, and quick event creation." data-lightbox-tech="Compose Material 3 • Recurrence Engine">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/calendar_month.png" alt="Monthly Calendar View" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Month & Agenda View</div>
+            <div class="gallery-sub">Date Selection & Timeline Cards</div>
+          </div>
+        </div>
+
+        <!-- Item 4: Theme Accent Selector -->
+        <div class="gallery-card" data-category="settings" data-lightbox-src="assets/screenshots/accent_sheet.png" data-lightbox-title="Theme Accent Bottom Sheet" data-lightbox-category="Design System" data-lightbox-desc="Opaque modal bottom sheet showing live theme preview card, sample action buttons, and 6 vibrant accent swatches." data-lightbox-tech="Custom AppBottomSheet • 100% Opaque #242424">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/accent_sheet.png" alt="Theme Accent Color Sheet" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Accent Theme Picker</div>
+            <div class="gallery-sub">Live UI Preview & Opaque Modal</div>
+          </div>
+        </div>
+
+        <!-- Item 5: Search & Precision Filters -->
+        <div class="gallery-card" data-category="search" data-lightbox-src="assets/screenshots/search_filters.png" data-lightbox-title="Search & Filter Bottom Sheet" data-lightbox-category="Search Module" data-lightbox-desc="Comprehensive search filters modal for narrowing notes by entity type, date range, and checklist completion." data-lightbox-tech="FTS SQLite • Scoped Filter Predicates">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/search_filters.png" alt="Search Filters Sheet" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Search Filter Criteria</div>
+            <div class="gallery-sub">Type, Date & Status Filters</div>
+          </div>
+        </div>
+
+        <!-- Item 6: Contextual Category Shoulders -->
+        <div class="gallery-card" data-category="search" data-lightbox-src="assets/screenshots/category_shoulder.png" data-lightbox-title="Contextual Shoulder Picker" data-lightbox-category="Organization Module" data-lightbox-desc="Fast contextual category assignment sheet for grouping notes into color-coded work streams." data-lightbox-tech="Room Relational Indexing • Flow Emission">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/category_shoulder.png" alt="Category Shoulder Assignment" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Shoulder Assignment</div>
+            <div class="gallery-sub">Category Management & Colors</div>
+          </div>
+        </div>
+
+        <!-- Item 7: Empty Home State -->
+        <div class="gallery-card" data-category="notes" data-lightbox-src="assets/screenshots/home_screen.png" data-lightbox-title="Minimalist Empty State" data-lightbox-category="Notes Module" data-lightbox-desc="Polished empty state welcoming the user with quick capture cards and clean typography." data-lightbox-tech="Jetpack Compose • Vector Graphics">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/home_screen.png" alt="Empty Home Screen" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Clean Workspace</div>
+            <div class="gallery-sub">Empty State & Quick Actions</div>
+          </div>
+        </div>
+
+        <!-- Item 8: Welcome Onboarding -->
+        <div class="gallery-card" data-category="settings" data-lightbox-src="assets/screenshots/welcome_screen.png" data-lightbox-title="Welcome Onboarding Screen" data-lightbox-category="Onboarding Module" data-lightbox-desc="Introductory onboarding screen presenting Notas branding, core proposition, and creator attribution." data-lightbox-tech="Adaptive System Window Insets • M3 Card">
+          <div class="gallery-preview">
+            <img src="assets/screenshots/welcome_screen.png" alt="Welcome Onboarding Screen" loading="lazy">
+          </div>
+          <div class="gallery-info">
+            <div class="gallery-caption">Welcome Experience</div>
+            <div class="gallery-sub">Product Introduction & Branding</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       ACCESSIBLE LIGHTBOX DIALOG (Modern Web Guidance Compliant)
+       ======================================================================== -->
+  <dialog id="lightbox-dialog" closedby="any" aria-labelledby="lightbox-title">
+    <button id="lightbox-close" class="lightbox-close-btn" type="button" aria-label="Close image preview">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+
+    <div class="lightbox-content">
+      <div class="lightbox-image-box">
+        <img id="lightbox-img" src="" alt="Enlarged screenshot">
+      </div>
+      <div class="lightbox-details">
+        <div>
+          <div id="lightbox-category" class="card-meta">MODULE NAME</div>
+          <h3 id="lightbox-title" style="margin-bottom: var(--space-4);">Screenshot Title</h3>
+          <p id="lightbox-desc" style="font-size: 0.9375rem; line-height: 1.7; margin-bottom: var(--space-6);">
+            Detailed architectural context and technical implementation details.
+          </p>
+        </div>
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); margin-bottom: var(--space-2);">
+            UNDERLYING FRAMEWORK STACK
+          </div>
+          <div id="lightbox-specs" class="badge" style="width: fit-content;">Jetpack Compose • Room • M3</div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ========================================================================
+       9. DEVELOPER SECTION
+       ======================================================================== -->
+  <section id="developer" class="developer-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">08 / Creator</div>
+        <h2 class="section-title">Engineered by Mohamed Yassin Haddad</h2>
+        <p class="section-description">
+          A software engineer specializing in native Android engineering with Jetpack Compose, scalable cloud architectures with TypeScript & PostgreSQL, and craft-driven interfaces.
+        </p>
+      </div>
+
+      <div class="developer-card">
+        <div class="developer-avatar-box">
+          <img src="assets/images/logo.png" alt="Mohamed Yassin Haddad Avatar" width="200" height="200">
+        </div>
+
+        <div class="developer-info">
+          <h3 class="developer-name">Mohamed Yassin Haddad</h3>
+          <div class="developer-role">Full-Stack & Android Software Engineer</div>
+          <p class="developer-bio">
+            Passionate about building software that respects user privacy, eliminates latency through offline-first design, and pairs robust computer science fundamentals with high-end aesthetic craft. Notas represents the culmination of deep exploration across mobile systems programming, clean architecture, and distributed synchronization.
+          </p>
+
+          <div class="developer-links">
+            <a class="btn btn-primary btn-sm" href="https://github.com/myassin75" target="_blank" rel="noopener noreferrer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              <span>GitHub Profile</span>
+            </a>
+            <a class="btn btn-secondary btn-sm" href="https://github.com/myassin75/Notas" target="_blank" rel="noopener noreferrer">
+              <span>View Repository</span>
+            </a>
+            <a class="btn btn-outline btn-sm" href="mailto:hayassin755@gmail.com">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              <span>Get in Touch</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       10. CLOSING SECTION & FOOTER
+       ======================================================================== -->
+  <section class="closing-section">
+    <div class="container">
+      <div class="section-tag gold" style="margin-bottom: var(--space-6);">Craft • Engineering • Performance</div>
+      <h2 class="closing-title">Built with curiosity.<br>Engineered with purpose.</h2>
+      <p class="closing-desc">
+        Notas demonstrates how thoughtful architectural decisions, offline-first data modeling, and relentless UI polish can transform daily productivity software.
+      </p>
+
+      <div class="closing-actions">
+        <a class="btn btn-primary" href="https://github.com/myassin75/Notas" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>Explore Source on GitHub</span>
+          <span class="btn-icon-right">→</span>
+        </a>
+        <a class="btn btn-secondary" href="#hero">Back to Top ↑</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div style="display: flex; align-items: center; gap: var(--space-3);">
+        <img src="assets/images/logo.png" alt="Notas Logo" width="22" height="22">
+        <span>Notas — Android Productivity Application & Case Study</span>
+      </div>
+      <div>
+        Designed & Engineered by <a href="https://github.com/myassin75" target="_blank" rel="noopener noreferrer" style="color: var(--text-primary); font-weight: 600;">Mohamed Yassin Haddad</a> • MIT License
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/main.js"></script>
+</body>
+</html>
