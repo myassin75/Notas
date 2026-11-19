@@ -104,18 +104,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
+import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.data.InteractionPrefs
 import haddad.three.notas.data.NoteLayoutMode
 import haddad.three.notas.data.NoteRepository
@@ -147,7 +137,6 @@ import haddad.three.notas.ui.modifiers.PillBottomScrimExtra
 import haddad.three.notas.ui.modifiers.applyToScrollableList
 import haddad.three.notas.ui.modifiers.rememberContentOverflowScrollEnabled
 import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
-import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.ui.theme.GlassVariant
 import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.LocalReducedMotion
@@ -156,6 +145,17 @@ import haddad.three.notas.ui.theme.LocalSnackbarHostState
 import haddad.three.notas.ui.theme.LocalThemeState
 import haddad.three.notas.ui.theme.glassContainerColor
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -175,8 +175,7 @@ internal object HistoryDesignTokens {
 }
 
 @Composable
-internal fun historyScreenBg(): Color =
-    if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
+internal fun historyScreenBg(): Color = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
 
 @Composable
 internal fun historyMainSurface(): Color =

@@ -3,6 +3,21 @@ package haddad.three.notas.ui.search
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.SearchHistoryEntry
+import haddad.three.notas.data.SearchPreferences
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -24,21 +39,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.ChecklistItemDao
-import haddad.three.notas.data.ChecklistItemEntity
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.NoteDao
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteReminder
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.SearchHistoryEntry
-import haddad.three.notas.data.SearchPreferences
-import haddad.three.notas.data.ShoulderDao
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.data.ShoulderRepository
 import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -73,13 +73,13 @@ class SearchViewModelTest {
     }
 
     private class FakeSearchPreferences : SearchPreferences(FakePreferencesDataStore()) {
-        private val _recent = MutableStateFlow<List<SearchHistoryEntry>>(emptyList())
-        override val recentSearches: Flow<List<SearchHistoryEntry>> = _recent
+        private val _recentSearches = MutableStateFlow<List<SearchHistoryEntry>>(emptyList())
+        override val recentSearches: Flow<List<SearchHistoryEntry>> = _recentSearches
 
         override suspend fun addSearchQuery(query: String) {
             val trimmed = query.trim()
             if (trimmed.isBlank()) return
-            _recent.update { list ->
+            _recentSearches.update { list ->
                 val updated = list.filterNot { it.query.equals(trimmed, ignoreCase = true) }.toMutableList()
                 updated.add(0, SearchHistoryEntry(trimmed, System.currentTimeMillis()))
                 updated.take(10)
@@ -87,19 +87,26 @@ class SearchViewModelTest {
         }
 
         override suspend fun removeSearchQuery(query: String) {
-            _recent.update { list -> list.filterNot { it.query.equals(query, ignoreCase = true) } }
+            _recentSearches.update { list -> list.filterNot { it.query.equals(query, ignoreCase = true) } }
         }
 
         override suspend fun clearRecentSearches() {
-            _recent.value = emptyList()
+            _recentSearches.value = emptyList()
         }
     }
 
     private fun TestScope.createViewModel(): SearchViewModel {
         val fakeNoteDao =
             object : haddad.three.notas.data.BaseFakeNoteDao() {
-                override fun searchNotes(ftsQuery: String, ownerId: String?): Flow<List<NoteWithItems>> = activeSearchResultsFlow
-                override fun searchArchived(ftsQuery: String, ownerId: String?): Flow<List<NoteWithItems>> = archivedSearchResultsFlow
+                override fun searchNotes(
+                    ftsQuery: String,
+                    ownerId: String?,
+                ): Flow<List<NoteWithItems>> = activeSearchResultsFlow
+
+                override fun searchArchived(
+                    ftsQuery: String,
+                    ownerId: String?,
+                ): Flow<List<NoteWithItems>> = archivedSearchResultsFlow
             }
 
         val fakeItemDao = object : haddad.three.notas.data.BaseFakeChecklistItemDao() {}
@@ -146,6 +153,7 @@ class SearchViewModelTest {
         kind: NoteKind = NoteKind.NOTE,
         updatedAt: Long = 1000L,
         reminderAt: Long? = null,
+        endAt: Long? = null,
         reminders: List<NoteReminder> = emptyList(),
         shoulderId: Long? = null,
         completedAt: Long? = null,
@@ -164,6 +172,7 @@ class SearchViewModelTest {
                     createdAt = updatedAt,
                     updatedAt = updatedAt,
                     reminderAt = reminderAt,
+                    endAt = endAt,
                     reminders = reminders,
                     shoulderId = shoulderId,
                     completedAt = completedAt,
@@ -219,9 +228,9 @@ class SearchViewModelTest {
     fun category_counts_properly_classify_notes_tasks_events_without_double_counting() =
         runTest {
             val viewModel = createViewModel()
-            val noteItem = createNote(id = 1L, title = "General note", kind = NoteKind.NOTE, reminderAt = null)
-            val taskItem = createNote(id = 2L, title = "Groceries task", kind = NoteKind.LIST)
-            val eventItem = createNote(id = 3L, title = "Doctor event", kind = NoteKind.NOTE, reminderAt = 1700000000L)
+            val noteItem = createNote(id = 1L, title = "General note", kind = NoteKind.NOTE, reminderAt = null, endAt = null)
+            val taskItem = createNote(id = 2L, title = "Groceries task", kind = NoteKind.LIST, reminderAt = 1699990000L, endAt = null)
+            val eventItem = createNote(id = 3L, title = "Doctor event", kind = NoteKind.NOTE, reminderAt = 1700000000L, endAt = 1700003600L)
 
             activeSearchResultsFlow.value = listOf(noteItem, taskItem, eventItem)
             viewModel.submitSearch("doc")
@@ -239,9 +248,9 @@ class SearchViewModelTest {
     fun category_filtering_restricts_visible_results_to_chosen_type() =
         runTest {
             val viewModel = createViewModel()
-            val noteItem = createNote(id = 1L, title = "Note item", kind = NoteKind.NOTE, reminderAt = null)
-            val taskItem = createNote(id = 2L, title = "Task item", kind = NoteKind.LIST)
-            val eventItem = createNote(id = 3L, title = "Event item", kind = NoteKind.NOTE, reminderAt = 1700000000L)
+            val noteItem = createNote(id = 1L, title = "Note item", kind = NoteKind.NOTE, reminderAt = null, endAt = null)
+            val taskItem = createNote(id = 2L, title = "Task item", kind = NoteKind.LIST, reminderAt = 1699990000L, endAt = null)
+            val eventItem = createNote(id = 3L, title = "Event item", kind = NoteKind.NOTE, reminderAt = 1700000000L, endAt = 1700003600L)
 
             activeSearchResultsFlow.value = listOf(noteItem, taskItem, eventItem)
             viewModel.submitSearch("item")
@@ -417,6 +426,7 @@ class SearchViewModelTest {
                     title = "Incomplete task",
                     kind = NoteKind.LIST,
                     completedAt = null,
+                    reminderAt = 1699990000L,
                     items = listOf(ChecklistItemEntity(noteId = 1L, text = "Subtask", checked = false, sortOrder = 0.0)),
                 )
             val doneTask =
@@ -425,6 +435,7 @@ class SearchViewModelTest {
                     title = "Completed task",
                     kind = NoteKind.LIST,
                     completedAt = 123456L,
+                    reminderAt = 1699990000L,
                     items = listOf(ChecklistItemEntity(noteId = 2L, text = "Done subtask", checked = true, sortOrder = 0.0)),
                 )
 
@@ -451,6 +462,7 @@ class SearchViewModelTest {
                     title = "Incomplete task",
                     kind = NoteKind.LIST,
                     completedAt = null,
+                    reminderAt = 1699990000L,
                     items = listOf(ChecklistItemEntity(noteId = 1L, text = "Subtask", checked = false, sortOrder = 0.0)),
                 )
             val doneTask =
@@ -459,6 +471,7 @@ class SearchViewModelTest {
                     title = "Completed task",
                     kind = NoteKind.LIST,
                     completedAt = 123456L,
+                    reminderAt = 1699990000L,
                     items = listOf(ChecklistItemEntity(noteId = 2L, text = "Done subtask", checked = true, sortOrder = 0.0)),
                 )
 
@@ -533,6 +546,7 @@ class SearchViewModelTest {
                     kind = NoteKind.LIST,
                     shoulderId = 77L,
                     completedAt = null,
+                    reminderAt = 1699990000L,
                 )
             val wrongShoulderTask =
                 createNote(
@@ -541,6 +555,7 @@ class SearchViewModelTest {
                     kind = NoteKind.LIST,
                     shoulderId = 99L,
                     completedAt = null,
+                    reminderAt = 1699990000L,
                 )
             val completedTask =
                 createNote(
@@ -549,6 +564,7 @@ class SearchViewModelTest {
                     kind = NoteKind.LIST,
                     shoulderId = 77L,
                     completedAt = 12345L,
+                    reminderAt = 1699990000L,
                 )
 
             activeSearchResultsFlow.value = listOf(matchingTask, wrongShoulderTask, completedTask)

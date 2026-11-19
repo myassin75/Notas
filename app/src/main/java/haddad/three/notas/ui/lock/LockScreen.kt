@@ -36,11 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.LockPrefs
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.feedback.appClickable
+import kotlinx.coroutines.launch
 
 @Composable
 fun LockScreen(

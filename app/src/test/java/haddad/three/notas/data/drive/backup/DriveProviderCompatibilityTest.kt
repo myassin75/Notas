@@ -67,7 +67,6 @@ import java.net.URL
 import javax.crypto.KeyGenerator
 
 class DriveProviderCompatibilityTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -78,73 +77,128 @@ class DriveProviderCompatibilityTest {
     ) : AuthRepository {
         override val authState: Flow<AuthState> = emptyFlow()
         override val currentUser: AuthUser? get() = user
-        override suspend fun registerWithEmailAndPassword(email: String, password: String, username: String?): AuthResult<AuthUser> = AuthResult.Success(user!!)
-        override suspend fun loginWithEmailAndPassword(email: String, password: String): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
+        override suspend fun registerWithEmailAndPassword(
+            email: String,
+            password: String,
+            username: String?,
+        ): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
+        override suspend fun loginWithEmailAndPassword(
+            email: String,
+            password: String,
+        ): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
         override suspend fun signInWithGoogle(context: Context): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
         override suspend fun sendEmailVerification(): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun reloadUser(): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
         override suspend fun sendPasswordResetEmail(email: String): AuthResult<Unit> = AuthResult.Success(Unit)
-        override suspend fun confirmPasswordReset(actionCode: String, newPassword: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
+        override suspend fun confirmPasswordReset(
+            actionCode: String,
+            newPassword: String,
+        ): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun verifyPasswordResetCode(actionCode: String): AuthResult<String> = AuthResult.Success("test@example.com")
+
         override suspend fun applyActionCode(actionCode: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun updatePassword(newPassword: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun syncBackendProfile(): AuthResult<BackendProfile> = AuthResult.Error("Not implemented")
-        override suspend fun signOut() { user = null }
+
+        override suspend fun signOut() {
+            user = null
+        }
+
         override suspend fun getIdToken(forceRefresh: Boolean): String? = "firebase_id_token"
     }
 
     private class FakeBackupApiClient : BackupApiClient({ _ -> error("Unused") }) {
-        val backups = mutableListOf(
-            BackupItemDto(
-                id = "s3_backup_1",
-                fileName = "notas_backup_s3.zip",
-                sizeBytes = "1048576",
-                sha256Checksum = "sha_abc",
-                notesCount = 15,
-                tasksCount = 5,
-                eventsCount = 0,
-                categoriesCount = 2,
-                schemaVersion = 1,
-                isEncrypted = false,
-                status = "ready",
-                createdAt = "2026-11-04T12:00:00Z",
-                updatedAt = "2026-11-04T12:00:00Z",
-            ),
-        )
+        val backups =
+            mutableListOf(
+                BackupItemDto(
+                    id = "s3_backup_1",
+                    fileName = "notas_backup_s3.zip",
+                    sizeBytes = "1048576",
+                    sha256Checksum = "sha_abc",
+                    notesCount = 15,
+                    tasksCount = 5,
+                    eventsCount = 0,
+                    categoriesCount = 2,
+                    schemaVersion = 1,
+                    isEncrypted = false,
+                    status = "ready",
+                    createdAt = "2026-11-04T12:00:00Z",
+                    updatedAt = "2026-11-04T12:00:00Z",
+                ),
+            )
 
-        override suspend fun listBackups(idToken: String): CloudBackupResult<List<BackupItemDto>> =
-            CloudBackupResult.Success(backups)
+        override suspend fun listBackups(idToken: String): CloudBackupResult<List<BackupItemDto>> = CloudBackupResult.Success(backups)
 
-        override suspend fun createBackup(idToken: String, payload: CreateBackupRequestDto): CloudBackupResult<CreateBackupResponseDto> =
-            CloudBackupResult.Success(CreateBackupResponseDto("s3_b2", "https://s3/up", 900))
+        override suspend fun createBackup(
+            idToken: String,
+            payload: CreateBackupRequestDto,
+        ): CloudBackupResult<CreateBackupResponseDto> = CloudBackupResult.Success(CreateBackupResponseDto("s3_b2", "https://s3/up", 900))
 
-        override suspend fun uploadFileToPresignedUrl(presignedUrl: String, file: File, contentType: String, onProgress: ((Float) -> Unit)?): CloudBackupResult<Unit> =
-            CloudBackupResult.Success(Unit)
+        override suspend fun uploadFileToPresignedUrl(
+            presignedUrl: String,
+            file: File,
+            contentType: String,
+            onProgress: ((Float) -> Unit)?,
+        ): CloudBackupResult<Unit> = CloudBackupResult.Success(Unit)
 
-        override suspend fun verifyBackup(idToken: String, backupId: String): CloudBackupResult<VerifyBackupResponseDto> =
-            CloudBackupResult.Success(VerifyBackupResponseDto(backupId, "ready", "2026-11-04T12:00:00Z", "1048576", "Verified successfully"))
+        override suspend fun verifyBackup(
+            idToken: String,
+            backupId: String,
+        ): CloudBackupResult<VerifyBackupResponseDto> = CloudBackupResult.Success(VerifyBackupResponseDto(backupId, "ready", "2026-11-04T12:00:00Z", "1048576", "Verified successfully"))
 
-        override suspend fun downloadFileFromPresignedUrl(presignedUrl: String, targetFile: File, onProgress: ((Float) -> Unit)?): CloudBackupResult<Unit> =
-            CloudBackupResult.Success(Unit)
+        override suspend fun downloadFileFromPresignedUrl(
+            presignedUrl: String,
+            targetFile: File,
+            onProgress: ((Float) -> Unit)?,
+        ): CloudBackupResult<Unit> = CloudBackupResult.Success(Unit)
     }
 
     private class FakeNoteDao : haddad.three.notas.data.BaseFakeNoteDao()
+
     private class FakeShoulderDao : haddad.three.notas.data.BaseFakeShoulderDao()
+
     private class FakeChecklistItemDao : haddad.three.notas.data.BaseFakeChecklistItemDao()
+
     private class FakeAttachmentDao : haddad.three.notas.data.BaseFakeAttachmentDao()
 
     private class FakeGoogleDriveAuthDelegate : GoogleDriveAuthDelegate {
         var isRevoked = false
-        override suspend fun authorize(context: Context, forceAccountSelection: Boolean): GoogleDriveAuthorizationResult {
+
+        override suspend fun authorize(
+            context: Context,
+            forceAccountSelection: Boolean,
+        ): GoogleDriveAuthorizationResult {
             if (isRevoked) return GoogleDriveAuthorizationResult.Failure(IllegalStateException("Revoked"))
             return GoogleDriveAuthorizationResult.Success("drive_token", "alice@example.com")
         }
-        override suspend fun parseConsentResult(context: Context, data: android.content.Intent?): GoogleDriveAuthorizationResult =
-            GoogleDriveAuthorizationResult.Success("drive_token", "alice@example.com")
-        override suspend fun disconnect(context: Context, accountEmail: String?, accessToken: String?) {
+
+        override suspend fun parseConsentResult(
+            context: Context,
+            data: android.content.Intent?,
+        ): GoogleDriveAuthorizationResult = GoogleDriveAuthorizationResult.Success("drive_token", "alice@example.com")
+
+        override suspend fun disconnect(
+            context: Context,
+            accountEmail: String?,
+            accessToken: String?,
+        ) {
             isRevoked = true
         }
-        override suspend fun invalidateToken(context: Context, token: String) {
+
+        override suspend fun invalidateToken(
+            context: Context,
+            token: String,
+        ) {
             isRevoked = true
         }
     }
@@ -167,11 +221,14 @@ class DriveProviderCompatibilityTest {
     fun setUp() {
         val fakeFilesDir = tempFolder.newFolder("files")
         val fakeCacheDir = tempFolder.newFolder("cache")
-        fakeContext = object : ContextWrapper(null) {
-            override fun getApplicationContext(): Context = this
-            override fun getFilesDir(): File = fakeFilesDir
-            override fun getCacheDir(): File = fakeCacheDir
-        }
+        fakeContext =
+            object : ContextWrapper(null) {
+                override fun getApplicationContext(): Context = this
+
+                override fun getFilesDir(): File = fakeFilesDir
+
+                override fun getCacheDir(): File = fakeCacheDir
+            }
 
         authRepository = FakeAuthRepository()
         backupApiClient = FakeBackupApiClient()
@@ -181,19 +238,20 @@ class DriveProviderCompatibilityTest {
         attachmentDao = FakeAttachmentDao()
 
         val shoulderRepo = ShoulderRepository(shoulderDao, null, authRepository)
-        noteRepository = NoteRepository(
-            noteDao = noteDao,
-            database = null,
-            itemDao = itemDao,
-            attachmentDao = attachmentDao,
-            scheduler = null,
-            shoulderRepository = shoulderRepo,
-            appMediaStorage = null,
-            tombstoneRecorder = null,
-            authRepository = authRepository,
-            ioDispatcher = testDispatcher,
-            defaultDispatcher = testDispatcher,
-        )
+        noteRepository =
+            NoteRepository(
+                noteDao = noteDao,
+                database = null,
+                itemDao = itemDao,
+                attachmentDao = attachmentDao,
+                scheduler = null,
+                shoulderRepository = shoulderRepo,
+                appMediaStorage = null,
+                tombstoneRecorder = null,
+                authRepository = authRepository,
+                ioDispatcher = testDispatcher,
+                defaultDispatcher = testDispatcher,
+            )
 
         val keyGen = KeyGenerator.getInstance("AES").apply { init(256) }
         val masterKey = keyGen.generateKey()
@@ -203,93 +261,107 @@ class DriveProviderCompatibilityTest {
 
         driveAuthDelegate = FakeGoogleDriveAuthDelegate()
         drivePrefs = DriveAuthPreferences(fakeContext)
-        driveApiClient = GoogleDriveApiClient(
-            httpFactory = { url ->
-                object : HttpURLConnection(URL(url)) {
-                    override fun getResponseCode(): Int = 200
-                    override fun getInputStream(): java.io.InputStream = java.io.ByteArrayInputStream("{}".toByteArray())
-                    override fun getOutputStream(): java.io.OutputStream = java.io.ByteArrayOutputStream()
-                    override fun disconnect() {}
-                    override fun usingProxy(): Boolean = false
-                    override fun connect() {}
-                }
-            },
-        )
+        driveApiClient =
+            GoogleDriveApiClient(
+                httpFactory = { url ->
+                    object : HttpURLConnection(URL(url)) {
+                        override fun getResponseCode(): Int = 200
 
-        archiveManager = DriveBackupArchiveManager(
-            noteDao = noteDao,
-            shoulderDao = shoulderDao,
-            itemDao = itemDao,
-            themePrefs = ThemePrefs(fakeContext),
-            notesUiPrefs = NotesUiPrefs(fakeContext),
-            viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-            lockPrefs = LockPrefs(fakeContext),
-            interactionPrefs = InteractionPrefs(fakeContext),
-            quickCapturePrefs = QuickCapturePrefs(fakeContext),
-            reminderPrefs = ReminderPrefs(fakeContext),
-            defaultNotePrefs = DefaultNotePrefs(fakeContext),
-            updatePrefs = UpdatePrefs(fakeContext),
-            json = Json { ignoreUnknownKeys = true },
-        )
+                        override fun getInputStream(): java.io.InputStream = java.io.ByteArrayInputStream("{}".toByteArray())
+
+                        override fun getOutputStream(): java.io.OutputStream = java.io.ByteArrayOutputStream()
+
+                        override fun disconnect() {}
+
+                        override fun usingProxy(): Boolean = false
+
+                        override fun connect() {}
+                    }
+                },
+            )
+
+        archiveManager =
+            DriveBackupArchiveManager(
+                noteDao = noteDao,
+                shoulderDao = shoulderDao,
+                itemDao = itemDao,
+                themePrefs = ThemePrefs(fakeContext),
+                notesUiPrefs = NotesUiPrefs(fakeContext),
+                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                lockPrefs = LockPrefs(fakeContext),
+                interactionPrefs = InteractionPrefs(fakeContext),
+                quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                reminderPrefs = ReminderPrefs(fakeContext),
+                defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                updatePrefs = UpdatePrefs(fakeContext),
+                json = Json { ignoreUnknownKeys = true },
+            )
     }
 
     @Test
     fun testS3BackupsRemainAccessibleAndUnaffectedByDrive() {
         runBlocking {
-            val s3Manager = CloudBackupManager(
-                context = fakeContext,
-                authRepository = authRepository,
-                backupApiClient = backupApiClient,
-                noteDao = noteDao,
-                shoulderDao = shoulderDao,
-                itemDao = itemDao,
-                attachmentDao = attachmentDao,
-                noteRepository = noteRepository,
-                themePrefs = ThemePrefs(fakeContext),
-                notesUiPrefs = NotesUiPrefs(fakeContext),
-                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-                lockPrefs = LockPrefs(fakeContext),
-                interactionPrefs = InteractionPrefs(fakeContext),
-                quickCapturePrefs = QuickCapturePrefs(fakeContext),
-                reminderPrefs = ReminderPrefs(fakeContext),
-                defaultNotePrefs = DefaultNotePrefs(fakeContext),
-                updatePrefs = UpdatePrefs(fakeContext),
-                database = null,
-                scheduler = null,
-                ioDispatcher = testDispatcher,
-            )
+            val s3Manager =
+                CloudBackupManager(
+                    context = fakeContext,
+                    authRepository = authRepository,
+                    backupApiClient = backupApiClient,
+                    noteDao = noteDao,
+                    shoulderDao = shoulderDao,
+                    itemDao = itemDao,
+                    attachmentDao = attachmentDao,
+                    noteRepository = noteRepository,
+                    themePrefs = ThemePrefs(fakeContext),
+                    notesUiPrefs = NotesUiPrefs(fakeContext),
+                    viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                    lockPrefs = LockPrefs(fakeContext),
+                    interactionPrefs = InteractionPrefs(fakeContext),
+                    quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                    reminderPrefs = ReminderPrefs(fakeContext),
+                    defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                    updatePrefs = UpdatePrefs(fakeContext),
+                    database = null,
+                    scheduler = null,
+                    ioDispatcher = testDispatcher,
+                )
 
-            val driveProvider = GoogleDriveBackupProvider(
-                context = fakeContext,
-                driveApiClient = driveApiClient,
-                driveAuthDelegate = driveAuthDelegate,
-                drivePrefs = drivePrefs,
-                mekManager = mekManager,
-                envelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, mekManager, InMemoryCryptoStorage()),
-                archiveManager = archiveManager,
-                authRepository = authRepository,
-                noteDao = noteDao,
-                shoulderDao = shoulderDao,
-                itemDao = itemDao,
-                noteRepository = noteRepository,
-                themePrefs = ThemePrefs(fakeContext),
-                notesUiPrefs = NotesUiPrefs(fakeContext),
-                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-                lockPrefs = LockPrefs(fakeContext),
-                interactionPrefs = InteractionPrefs(fakeContext),
-                quickCapturePrefs = QuickCapturePrefs(fakeContext),
-                reminderPrefs = ReminderPrefs(fakeContext),
-                defaultNotePrefs = DefaultNotePrefs(fakeContext),
-                updatePrefs = UpdatePrefs(fakeContext),
-                database = null,
-                scheduler = null,
-                ioDispatcher = testDispatcher,
-            )
+            val driveProvider =
+                GoogleDriveBackupProvider(
+                    context = fakeContext,
+                    driveApiClient = driveApiClient,
+                    driveAuthDelegate = driveAuthDelegate,
+                    drivePrefs = drivePrefs,
+                    mekManager = mekManager,
+                    envelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, mekManager, InMemoryCryptoStorage()),
+                    archiveManager = archiveManager,
+                    authRepository = authRepository,
+                    noteDao = noteDao,
+                    shoulderDao = shoulderDao,
+                    itemDao = itemDao,
+                    noteRepository = noteRepository,
+                    themePrefs = ThemePrefs(fakeContext),
+                    notesUiPrefs = NotesUiPrefs(fakeContext),
+                    viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                    lockPrefs = LockPrefs(fakeContext),
+                    interactionPrefs = InteractionPrefs(fakeContext),
+                    quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                    reminderPrefs = ReminderPrefs(fakeContext),
+                    defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                    updatePrefs = UpdatePrefs(fakeContext),
+                    database = null,
+                    scheduler = null,
+                    ioDispatcher = testDispatcher,
+                )
 
             // 1. Fetch S3 backups
             s3Manager.refreshBackupsList()
             assertEquals(1, s3Manager.uiState.value.backups.size)
-            assertEquals("s3_backup_1", s3Manager.uiState.value.backups.first().id)
+            assertEquals(
+                "s3_backup_1",
+                s3Manager.uiState.value.backups
+                    .first()
+                    .id,
+            )
 
             // 2. Disconnect Google Drive
             driveProvider.disconnect()
@@ -298,39 +370,45 @@ class DriveProviderCompatibilityTest {
             // 3. Verify S3 backups are completely unaffected and still accessible
             s3Manager.refreshBackupsList()
             assertEquals(1, s3Manager.uiState.value.backups.size)
-            assertEquals("s3_backup_1", s3Manager.uiState.value.backups.first().id)
+            assertEquals(
+                "s3_backup_1",
+                s3Manager.uiState.value.backups
+                    .first()
+                    .id,
+            )
         }
     }
 
     @Test
     fun testGoogleDriveDisconnectDoesNotAffectFirebaseAuth() {
         runBlocking {
-            val driveProvider = GoogleDriveBackupProvider(
-                context = fakeContext,
-                driveApiClient = driveApiClient,
-                driveAuthDelegate = driveAuthDelegate,
-                drivePrefs = drivePrefs,
-                mekManager = mekManager,
-                envelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, mekManager, InMemoryCryptoStorage()),
-                archiveManager = archiveManager,
-                authRepository = authRepository,
-                noteDao = noteDao,
-                shoulderDao = shoulderDao,
-                itemDao = itemDao,
-                noteRepository = noteRepository,
-                themePrefs = ThemePrefs(fakeContext),
-                notesUiPrefs = NotesUiPrefs(fakeContext),
-                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-                lockPrefs = LockPrefs(fakeContext),
-                interactionPrefs = InteractionPrefs(fakeContext),
-                quickCapturePrefs = QuickCapturePrefs(fakeContext),
-                reminderPrefs = ReminderPrefs(fakeContext),
-                defaultNotePrefs = DefaultNotePrefs(fakeContext),
-                updatePrefs = UpdatePrefs(fakeContext),
-                database = null,
-                scheduler = null,
-                ioDispatcher = testDispatcher,
-            )
+            val driveProvider =
+                GoogleDriveBackupProvider(
+                    context = fakeContext,
+                    driveApiClient = driveApiClient,
+                    driveAuthDelegate = driveAuthDelegate,
+                    drivePrefs = drivePrefs,
+                    mekManager = mekManager,
+                    envelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, mekManager, InMemoryCryptoStorage()),
+                    archiveManager = archiveManager,
+                    authRepository = authRepository,
+                    noteDao = noteDao,
+                    shoulderDao = shoulderDao,
+                    itemDao = itemDao,
+                    noteRepository = noteRepository,
+                    themePrefs = ThemePrefs(fakeContext),
+                    notesUiPrefs = NotesUiPrefs(fakeContext),
+                    viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                    lockPrefs = LockPrefs(fakeContext),
+                    interactionPrefs = InteractionPrefs(fakeContext),
+                    quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                    reminderPrefs = ReminderPrefs(fakeContext),
+                    defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                    updatePrefs = UpdatePrefs(fakeContext),
+                    database = null,
+                    scheduler = null,
+                    ioDispatcher = testDispatcher,
+                )
 
             // User is signed into Firebase Auth
             assertNotNull(authRepository.currentUser)
@@ -357,32 +435,33 @@ class DriveProviderCompatibilityTest {
             // Simulate revoked Google Drive credentials
             driveAuthDelegate.disconnect(fakeContext, "alice@example.com")
 
-            val driveProvider = GoogleDriveBackupProvider(
-                context = fakeContext,
-                driveApiClient = driveApiClient,
-                driveAuthDelegate = driveAuthDelegate,
-                drivePrefs = drivePrefs,
-                mekManager = mekManager,
-                envelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, mekManager, InMemoryCryptoStorage()),
-                archiveManager = archiveManager,
-                authRepository = authRepository,
-                noteDao = noteDao,
-                shoulderDao = shoulderDao,
-                itemDao = itemDao,
-                noteRepository = noteRepository,
-                themePrefs = ThemePrefs(fakeContext),
-                notesUiPrefs = NotesUiPrefs(fakeContext),
-                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-                lockPrefs = LockPrefs(fakeContext),
-                interactionPrefs = InteractionPrefs(fakeContext),
-                quickCapturePrefs = QuickCapturePrefs(fakeContext),
-                reminderPrefs = ReminderPrefs(fakeContext),
-                defaultNotePrefs = DefaultNotePrefs(fakeContext),
-                updatePrefs = UpdatePrefs(fakeContext),
-                database = null,
-                scheduler = null,
-                ioDispatcher = testDispatcher,
-            )
+            val driveProvider =
+                GoogleDriveBackupProvider(
+                    context = fakeContext,
+                    driveApiClient = driveApiClient,
+                    driveAuthDelegate = driveAuthDelegate,
+                    drivePrefs = drivePrefs,
+                    mekManager = mekManager,
+                    envelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, mekManager, InMemoryCryptoStorage()),
+                    archiveManager = archiveManager,
+                    authRepository = authRepository,
+                    noteDao = noteDao,
+                    shoulderDao = shoulderDao,
+                    itemDao = itemDao,
+                    noteRepository = noteRepository,
+                    themePrefs = ThemePrefs(fakeContext),
+                    notesUiPrefs = NotesUiPrefs(fakeContext),
+                    viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                    lockPrefs = LockPrefs(fakeContext),
+                    interactionPrefs = InteractionPrefs(fakeContext),
+                    quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                    reminderPrefs = ReminderPrefs(fakeContext),
+                    defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                    updatePrefs = UpdatePrefs(fakeContext),
+                    database = null,
+                    scheduler = null,
+                    ioDispatcher = testDispatcher,
+                )
 
             val result = driveProvider.createBackup()
             assertTrue(result is DriveResult.Unauthorized)

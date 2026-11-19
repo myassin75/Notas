@@ -30,9 +30,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.distinctUntilChanged
 import haddad.three.notas.R
 import haddad.three.notas.ui.theme.LocalIsDark
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun RememberInlineSearchField(

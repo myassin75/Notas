@@ -49,7 +49,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.data.ThemeMode
@@ -61,6 +60,7 @@ import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.components.RememberButton
 import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.ThemeColors
+import kotlinx.coroutines.launch
 
 private fun AccentTheme.previewColor(isDark: Boolean): Color =
     if (isDark) {

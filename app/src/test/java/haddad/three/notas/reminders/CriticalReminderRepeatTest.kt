@@ -1,14 +1,14 @@
 package haddad.three.notas.reminders
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.CriticalRingDuration
 import haddad.three.notas.data.Importance
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteReminder
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 class CriticalReminderRepeatTest {
     private val now = 10_000_000L

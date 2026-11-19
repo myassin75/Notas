@@ -8,7 +8,6 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
 
 class Migration12To13Test {
-
     @Test
     fun migration_12_to_13_creates_sync_snapshots_and_attachment_promotions_tables_and_indices() {
         val executedSqls = mutableListOf<String>()
@@ -39,25 +38,27 @@ class Migration12To13Test {
     }
 
     private fun createFakeDatabase(executedSqls: MutableList<String>): SupportSQLiteDatabase {
-        val handler = InvocationHandler { _, method, args ->
-            when (method.name) {
-                "execSQL" -> {
-                    val sql = args?.get(0) as String
-                    executedSqls.add(sql)
-                    null
-                }
-                "query" -> {
-                    val queryStr = when (val firstArg = args?.get(0)) {
-                        is String -> firstArg
-                        is SupportSQLiteQuery -> firstArg.sql
-                        else -> firstArg.toString()
+        val handler =
+            InvocationHandler { _, method, args ->
+                when (method.name) {
+                    "execSQL" -> {
+                        val sql = args?.get(0) as String
+                        executedSqls.add(sql)
+                        null
                     }
-                    executedSqls.add(queryStr)
-                    null
+                    "query" -> {
+                        val queryStr =
+                            when (val firstArg = args?.get(0)) {
+                                is String -> firstArg
+                                is SupportSQLiteQuery -> firstArg.sql
+                                else -> firstArg.toString()
+                            }
+                        executedSqls.add(queryStr)
+                        null
+                    }
+                    else -> null
                 }
-                else -> null
             }
-        }
         return Proxy.newProxyInstance(
             SupportSQLiteDatabase::class.java.classLoader,
             arrayOf(SupportSQLiteDatabase::class.java),
@@ -65,4 +66,3 @@ class Migration12To13Test {
         ) as SupportSQLiteDatabase
     }
 }
-

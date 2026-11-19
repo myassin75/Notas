@@ -26,12 +26,12 @@ import haddad.three.notas.data.sync.journal.SyncJournalDao
 import haddad.three.notas.data.sync.journal.SyncJournalEntity
 import haddad.three.notas.data.sync.journal.SyncSequenceDao
 import haddad.three.notas.data.sync.journal.SyncSequenceEntity
-import haddad.three.notas.data.sync.transport.SyncInboxDao
-import haddad.three.notas.data.sync.transport.SyncInboxEntity
 import haddad.three.notas.data.sync.snapshot.SyncAttachmentPromotionDao
 import haddad.three.notas.data.sync.snapshot.SyncAttachmentPromotionEntity
 import haddad.three.notas.data.sync.snapshot.SyncSnapshotDao
 import haddad.three.notas.data.sync.snapshot.SyncSnapshotEntity
+import haddad.three.notas.data.sync.transport.SyncInboxDao
+import haddad.three.notas.data.sync.transport.SyncInboxEntity
 import haddad.three.notas.data.sync.transport.SyncWatermarkDao
 import haddad.three.notas.data.sync.transport.SyncWatermarkEntity
 import kotlinx.serialization.decodeFromString
@@ -170,8 +170,7 @@ abstract class RememberDatabase : RoomDatabase() {
                     MIGRATION_10_11,
                     MIGRATION_11_12,
                     MIGRATION_12_13,
-                )
-                .fallbackToDestructiveMigration(false)
+                ).fallbackToDestructiveMigration(false)
                 .build()
 
         internal val MIGRATION_1_2 =

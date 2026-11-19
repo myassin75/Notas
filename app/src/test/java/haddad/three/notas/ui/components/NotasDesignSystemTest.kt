@@ -3,18 +3,17 @@ package haddad.three.notas.ui.components
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import haddad.three.notas.ui.theme.NotasTokens
+import haddad.three.notas.ui.theme.NotasTypography
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.ui.theme.NotasTokens
-import haddad.three.notas.ui.theme.NotasTypography
 
 /**
  * Unit tests validating Phase 02 Figma Design Tokens and Reusable Component properties.
  */
 class NotasDesignSystemTest {
-
     @Test
     fun notasTokens_lightPalette_matchesFigmaAuditExactly() {
         assertEquals(Color(0xFFF5F5F5), NotasTokens.LightBackground)

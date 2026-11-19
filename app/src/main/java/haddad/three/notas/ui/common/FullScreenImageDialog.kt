@@ -67,11 +67,11 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.ui.components.RememberIconButton
 import haddad.three.notas.ui.feedback.appCombinedClickable
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt

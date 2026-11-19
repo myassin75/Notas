@@ -38,6 +38,7 @@ data class AmbientPalette(
  * When [isOledBlack] is active, the base is pure true black (#000000) with
  * restrained neutral charcoal blooms for OLED battery savings and true black depth.
  */
+@Suppress("UnusedParameter", "UNUSED_PARAMETER")
 fun resolveAmbientPalette(
     accentTheme: AccentTheme,
     isOledBlack: Boolean = false,
@@ -61,6 +62,7 @@ fun resolveAmbientPalette(
  * Renders the ambient background wallpaper at the application root.
  * In Dark Mode: solid uniform #181818 background (or pure #000000 for OLED black).
  */
+@Suppress("UnusedParameter", "UNUSED_PARAMETER")
 @Composable
 fun AmbientBackground(
     accentTheme: AccentTheme,
@@ -70,8 +72,9 @@ fun AmbientBackground(
 ) {
     val bgColor = if (isOledBlack) Color(0xFF000000) else ThemeColors.DarkBackground
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(bgColor),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(bgColor),
     )
 }

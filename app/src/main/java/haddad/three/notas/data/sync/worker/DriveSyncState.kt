@@ -5,13 +5,31 @@ package haddad.three.notas.data.sync.worker
  */
 sealed interface DriveSyncState {
     data object Idle : DriveSyncState
+
     data object Scheduled : DriveSyncState
+
     data object Running : DriveSyncState
+
     data object WaitingForNetwork : DriveSyncState
-    data class Retrying(val attempt: Int, val maxAttempts: Int, val delayMillis: Long? = null) : DriveSyncState
-    data class AuthenticationRequired(val message: String? = null) : DriveSyncState
-    data class Completed(val timestampEpochMillis: Long) : DriveSyncState
-    data class Failed(val errorCategory: SyncErrorCategory, val message: String? = null) : DriveSyncState
+
+    data class Retrying(
+        val attempt: Int,
+        val maxAttempts: Int,
+        val delayMillis: Long? = null,
+    ) : DriveSyncState
+
+    data class AuthenticationRequired(
+        val message: String? = null,
+    ) : DriveSyncState
+
+    data class Completed(
+        val timestampEpochMillis: Long,
+    ) : DriveSyncState
+
+    data class Failed(
+        val errorCategory: SyncErrorCategory,
+        val message: String? = null,
+    ) : DriveSyncState
 }
 
 /**
@@ -33,14 +51,24 @@ enum class SyncErrorCategory {
  * Result returned by [DriveSyncCoordinator.executeSync].
  */
 sealed interface SyncExecutionResult {
-    data class Success(val completedAtEpochMillis: Long) : SyncExecutionResult
-    data class Skipped(val reason: String) : SyncExecutionResult
+    data class Success(
+        val completedAtEpochMillis: Long,
+    ) : SyncExecutionResult
+
+    data class Skipped(
+        val reason: String,
+    ) : SyncExecutionResult
+
     data class Retry(
         val errorCategory: SyncErrorCategory,
         val message: String,
         val retryAfterSeconds: Long? = null,
     ) : SyncExecutionResult
-    data class Fatal(val errorCategory: SyncErrorCategory, val message: String) : SyncExecutionResult
+
+    data class Fatal(
+        val errorCategory: SyncErrorCategory,
+        val message: String,
+    ) : SyncExecutionResult
 }
 
 /**
@@ -54,4 +82,3 @@ data class DriveSyncPreferencesState(
     val lastErrorCategory: SyncErrorCategory? = null,
     val lastErrorMessage: String? = null,
 )
-

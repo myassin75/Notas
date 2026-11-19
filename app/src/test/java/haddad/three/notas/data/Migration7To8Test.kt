@@ -14,7 +14,6 @@ import java.lang.reflect.Proxy
 import java.util.UUID
 
 class Migration7To8Test {
-
     private data class TestRow(
         val id: Long,
         var uuid: String = "",
@@ -23,29 +22,34 @@ class Migration7To8Test {
 
     @Test
     fun migration_7_to_8_adds_columns_populates_uuids_and_creates_unique_indices() {
-        val shoulders = mutableListOf(
-            TestRow(id = 1L, name = "Inbox"),
-            TestRow(id = 2L, name = "Projects"),
-        )
-        val notes = mutableListOf(
-            TestRow(id = 10L, name = "Note 1"),
-            TestRow(id = 20L, name = "Note 2"),
-            TestRow(id = 30L, name = "Note 3"),
-        )
-        val checklistItems = mutableListOf(
-            TestRow(id = 100L, name = "Task 1"),
-            TestRow(id = 101L, name = "Task 2"),
-        )
-        val attachments = mutableListOf(
-            TestRow(id = 200L, name = "photo.jpg"),
-        )
+        val shoulders =
+            mutableListOf(
+                TestRow(id = 1L, name = "Inbox"),
+                TestRow(id = 2L, name = "Projects"),
+            )
+        val notes =
+            mutableListOf(
+                TestRow(id = 10L, name = "Note 1"),
+                TestRow(id = 20L, name = "Note 2"),
+                TestRow(id = 30L, name = "Note 3"),
+            )
+        val checklistItems =
+            mutableListOf(
+                TestRow(id = 100L, name = "Task 1"),
+                TestRow(id = 101L, name = "Task 2"),
+            )
+        val attachments =
+            mutableListOf(
+                TestRow(id = 200L, name = "photo.jpg"),
+            )
 
-        val tableData = mapOf(
-            "shoulders" to shoulders,
-            "notes" to notes,
-            "checklist_items" to checklistItems,
-            "attachments" to attachments,
-        )
+        val tableData =
+            mapOf(
+                "shoulders" to shoulders,
+                "notes" to notes,
+                "checklist_items" to checklistItems,
+                "attachments" to attachments,
+            )
 
         val executedSqls = mutableListOf<String>()
 
@@ -104,42 +108,48 @@ class Migration7To8Test {
         tableData: Map<String, List<TestRow>>,
         executedSqls: MutableList<String>,
     ): SupportSQLiteDatabase {
-        val handler = object : InvocationHandler {
-            override fun invoke(proxy: Any?, method: Method, args: Array<out Any?>?): Any? {
-                when (method.name) {
-                    "execSQL" -> {
-                        val sql = args?.get(0) as String
-                        executedSqls.add(sql)
-                        if (args.size > 1 && args[1] != null) {
-                            @Suppress("UNCHECKED_CAST")
-                            val bindArgs = args[1] as Array<Any?>
-                            val uuid = bindArgs[0] as String
-                            val id = (bindArgs[1] as Number).toLong()
+        val handler =
+            object : InvocationHandler {
+                override fun invoke(
+                    proxy: Any?,
+                    method: Method,
+                    args: Array<out Any?>?,
+                ): Any? {
+                    when (method.name) {
+                        "execSQL" -> {
+                            val sql = args?.get(0) as String
+                            executedSqls.add(sql)
+                            if (args.size > 1 && args[1] != null) {
+                                @Suppress("UNCHECKED_CAST")
+                                val bindArgs = args[1] as Array<Any?>
+                                val uuid = bindArgs[0] as String
+                                val id = (bindArgs[1] as Number).toLong()
 
-                            // Update corresponding table row
-                            tableData.values.forEach { rows ->
-                                rows.firstOrNull { it.id == id }?.let { it.uuid = uuid }
+                                // Update corresponding table row
+                                tableData.values.forEach { rows ->
+                                    rows.firstOrNull { it.id == id }?.let { it.uuid = uuid }
+                                }
                             }
+                            return null
                         }
-                        return null
-                    }
-                    "query" -> {
-                        val queryStr = when (val firstArg = args?.get(0)) {
-                            is String -> firstArg
-                            is SupportSQLiteQuery -> firstArg.sql
-                            else -> firstArg.toString()
-                        }
-                        executedSqls.add(queryStr)
+                        "query" -> {
+                            val queryStr =
+                                when (val firstArg = args?.get(0)) {
+                                    is String -> firstArg
+                                    is SupportSQLiteQuery -> firstArg.sql
+                                    else -> firstArg.toString()
+                                }
+                            executedSqls.add(queryStr)
 
-                        // Find matching table
-                        val tableName = tableData.keys.firstOrNull { queryStr.contains("`$it`") || queryStr.contains(" $it") }
-                        val rows = if (tableName != null) tableData[tableName] ?: emptyList() else emptyList()
-                        return createFakeCursor(rows)
+                            // Find matching table
+                            val tableName = tableData.keys.firstOrNull { queryStr.contains("`$it`") || queryStr.contains(" $it") }
+                            val rows = if (tableName != null) tableData[tableName] ?: emptyList() else emptyList()
+                            return createFakeCursor(rows)
+                        }
+                        else -> return null
                     }
-                    else -> return null
                 }
             }
-        }
 
         return Proxy.newProxyInstance(
             SupportSQLiteDatabase::class.java.classLoader,
@@ -150,28 +160,32 @@ class Migration7To8Test {
 
     private fun createFakeCursor(rows: List<TestRow>): Cursor {
         var currentIndex = -1
-        val handler = object : InvocationHandler {
-            override fun invoke(proxy: Any?, method: Method, args: Array<out Any?>?): Any? {
-                return when (method.name) {
-                    "moveToNext" -> {
-                        currentIndex++
-                        currentIndex < rows.size
+        val handler =
+            object : InvocationHandler {
+                override fun invoke(
+                    proxy: Any?,
+                    method: Method,
+                    args: Array<out Any?>?,
+                ): Any? =
+                    when (method.name) {
+                        "moveToNext" -> {
+                            currentIndex++
+                            currentIndex < rows.size
+                        }
+                        "getColumnIndexOrThrow", "getColumnIndex" -> {
+                            val colName = args?.get(0) as String
+                            if (colName == "id") 0 else -1
+                        }
+                        "getLong" -> {
+                            rows[currentIndex].id
+                        }
+                        "getString" -> {
+                            rows[currentIndex].name
+                        }
+                        "close" -> null
+                        else -> null
                     }
-                    "getColumnIndexOrThrow", "getColumnIndex" -> {
-                        val colName = args?.get(0) as String
-                        if (colName == "id") 0 else -1
-                    }
-                    "getLong" -> {
-                        rows[currentIndex].id
-                    }
-                    "getString" -> {
-                        rows[currentIndex].name
-                    }
-                    "close" -> null
-                    else -> null
-                }
             }
-        }
 
         return Proxy.newProxyInstance(
             Cursor::class.java.classLoader,

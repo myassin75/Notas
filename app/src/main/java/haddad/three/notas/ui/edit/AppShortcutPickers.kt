@@ -42,12 +42,12 @@ import androidx.core.content.IntentCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import haddad.three.notas.R
 import haddad.three.notas.ui.common.AppBottomSheet
 import haddad.three.notas.ui.components.RememberTextButton
 import haddad.three.notas.ui.feedback.appClickable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // Intent.EXTRA_SHORTCUT_* constants are deprecated on the SDK; keys are stable for CREATE_SHORTCUT results.
 private const val EXTRA_LEGACY_SHORTCUT_INTENT = "android.intent.extra.shortcut.INTENT"

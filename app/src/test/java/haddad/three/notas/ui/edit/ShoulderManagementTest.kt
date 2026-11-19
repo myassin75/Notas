@@ -1,12 +1,6 @@
 package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.ShoulderEntity
 import haddad.three.notas.ui.components.formatColorToHex
 import haddad.three.notas.ui.components.isColorDark
@@ -15,9 +9,14 @@ import haddad.three.notas.ui.components.parseHsvFromHex
 import haddad.three.notas.ui.components.parseNoteColorHex
 import haddad.three.notas.ui.components.readableBadgeColors
 import haddad.three.notas.ui.components.rgbToHsv
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 class ShoulderManagementTest {
-
     // -------------------------------------------------------------------------
     // 1. HEX Parsing and Validation
     // -------------------------------------------------------------------------
@@ -169,14 +168,15 @@ class ShoulderManagementTest {
 
     @Test
     fun shoulderIdentity_storedColorHexIsAuthoritative_immuneToThemeAccent() {
-        val shoulder = ShoulderEntity(
-            id = 42L,
-            name = "Finance",
-            normalizedName = "finance",
-            colorHex = "#29A4AB",
-            createdAt = 1000L,
-            updatedAt = 1000L,
-        )
+        val shoulder =
+            ShoulderEntity(
+                id = 42L,
+                name = "Finance",
+                normalizedName = "finance",
+                colorHex = "#29A4AB",
+                createdAt = 1000L,
+                updatedAt = 1000L,
+            )
 
         val themeAccentA = Color(0xFF800000)
         val themeAccentB = Color(0xFF047D06)
@@ -198,22 +198,24 @@ class ShoulderManagementTest {
 
     @Test
     fun shoulderEditing_preservesIdAndUpdatesAttributesWithoutCreatingNewEntity() {
-        val existing = ShoulderEntity(
-            id = 15L,
-            name = "Project Alpha",
-            normalizedName = "project alpha",
-            colorHex = "#800000",
-            createdAt = 1000L,
-            updatedAt = 1000L,
-        )
+        val existing =
+            ShoulderEntity(
+                id = 15L,
+                name = "Project Alpha",
+                normalizedName = "project alpha",
+                colorHex = "#800000",
+                createdAt = 1000L,
+                updatedAt = 1000L,
+            )
 
         // When user edits name and color
-        val updated = existing.copy(
-            name = "Project Beta",
-            normalizedName = "project beta",
-            colorHex = "#047D06",
-            updatedAt = 2000L,
-        )
+        val updated =
+            existing.copy(
+                name = "Project Beta",
+                normalizedName = "project beta",
+                colorHex = "#047D06",
+                updatedAt = 2000L,
+            )
 
         // ID must be preserved
         assertEquals(15L, updated.id)
@@ -224,14 +226,15 @@ class ShoulderManagementTest {
 
     @Test
     fun shoulderUnassignment_clearsAssociationWithoutAlteringEntity() {
-        val shoulder = ShoulderEntity(
-            id = 10L,
-            name = "Work",
-            normalizedName = "work",
-            colorHex = "#04147D",
-            createdAt = 1000L,
-            updatedAt = 1000L,
-        )
+        val shoulder =
+            ShoulderEntity(
+                id = 10L,
+                name = "Work",
+                normalizedName = "work",
+                colorHex = "#04147D",
+                createdAt = 1000L,
+                updatedAt = 1000L,
+            )
 
         var assignedShoulderId: Long? = shoulder.id
         assertEquals(10L, assignedShoulderId)

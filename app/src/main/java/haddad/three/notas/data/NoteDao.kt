@@ -16,7 +16,13 @@ data class NoteWithItems(
     val attachments: List<NoteAttachmentEntity> = emptyList(),
     @androidx.room.Relation(parentColumn = "shoulderId", entityColumn = "id")
     val shoulder: ShoulderEntity? = null,
-)
+) {
+    val hasEndDate: Boolean get() = note.hasEndDate
+    val hasStartDate: Boolean get() = note.hasStartDate
+    val isEvent: Boolean get() = note.isEvent
+    val isTask: Boolean get() = note.isTask
+    val isNote: Boolean get() = note.isNote
+}
 
 @Dao
 interface NoteDao {
@@ -32,7 +38,7 @@ interface NoteDao {
           AND archived = 0
           AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
         ORDER BY updatedAt DESC
-        """
+        """,
     )
     fun observeActive(ownerId: String? = null): Flow<List<NoteWithItems>>
 
@@ -45,7 +51,7 @@ interface NoteDao {
           AND (reminderAt IS NOT NULL OR endAt IS NOT NULL OR isAllDay = 1 OR (reminders IS NOT NULL AND reminders != '[]' AND reminders != ''))
           AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
         ORDER BY reminderAt ASC, endAt ASC
-        """
+        """,
     )
     fun observeScheduled(ownerId: String? = null): Flow<List<NoteWithItems>>
 
@@ -56,7 +62,7 @@ interface NoteDao {
         WHERE trashed = 1
           AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
         ORDER BY updatedAt DESC
-        """
+        """,
     )
     fun observeTrashed(ownerId: String? = null): Flow<List<NoteWithItems>>
 
@@ -68,7 +74,7 @@ interface NoteDao {
           AND trashed = 0
           AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
         ORDER BY updatedAt DESC
-        """
+        """,
     )
     fun observeArchived(ownerId: String? = null): Flow<List<NoteWithItems>>
 
@@ -128,7 +134,10 @@ interface NoteDao {
         ORDER BY notes.updatedAt DESC
         """,
     )
-    fun searchNotes(ftsQuery: String, ownerId: String? = null): Flow<List<NoteWithItems>>
+    fun searchNotes(
+        ftsQuery: String,
+        ownerId: String? = null,
+    ): Flow<List<NoteWithItems>>
 
     /**
      * FTS over archived (non-trashed) notes. Drives the collapsible "Archive (N)" section
@@ -147,7 +156,10 @@ interface NoteDao {
         ORDER BY notes.updatedAt DESC
         """,
     )
-    fun searchArchived(ftsQuery: String, ownerId: String? = null): Flow<List<NoteWithItems>>
+    fun searchArchived(
+        ftsQuery: String,
+        ownerId: String? = null,
+    ): Flow<List<NoteWithItems>>
 
     /**
      * FTS over trashed notes. Powers the collapsible "Trash (N)" section inside main-tab
@@ -164,7 +176,10 @@ interface NoteDao {
         ORDER BY notes.trashedAt DESC
         """,
     )
-    fun searchTrashed(ftsQuery: String, ownerId: String? = null): Flow<List<NoteWithItems>>
+    fun searchTrashed(
+        ftsQuery: String,
+        ownerId: String? = null,
+    ): Flow<List<NoteWithItems>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(note: NoteEntity): Long
@@ -240,7 +255,10 @@ interface NoteDao {
           AND ((:ownerId IS NULL AND ownerId IS NULL) OR ownerId = :ownerId)
         """,
     )
-    suspend fun moveAllArchivedToTrash(ownerId: String? = null, updatedAt: Long)
+    suspend fun moveAllArchivedToTrash(
+        ownerId: String? = null,
+        updatedAt: Long,
+    )
 
     @Query("DELETE FROM notes WHERE trashed = 1 AND trashedAt IS NOT NULL AND trashedAt < :cutoff")
     suspend fun deleteTrashedOlderThan(cutoff: Long)
@@ -253,7 +271,10 @@ interface NoteDao {
     suspend fun guestNotes(): List<NoteWithItems>
 
     @Query("UPDATE notes SET ownerId = :targetOwnerId, updatedAt = :now WHERE ownerId IS NULL")
-    suspend fun claimGuestNotes(targetOwnerId: String, now: Long): Int
+    suspend fun claimGuestNotes(
+        targetOwnerId: String,
+        now: Long,
+    ): Int
 }
 
 @Dao

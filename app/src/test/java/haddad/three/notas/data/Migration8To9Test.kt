@@ -12,7 +12,6 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
 class Migration8To9Test {
-
     private data class TestRow(
         val id: Long,
         val uuid: String,
@@ -22,29 +21,34 @@ class Migration8To9Test {
 
     @Test
     fun migration_8_to_9_adds_ownerId_columns_indices_and_preserves_null_for_existing_records() {
-        val shoulders = mutableListOf(
-            TestRow(id = 1L, uuid = "shoulder-uuid-1", name = "Work", ownerId = null),
-            TestRow(id = 2L, uuid = "shoulder-uuid-2", name = "Personal", ownerId = null),
-        )
-        val notes = mutableListOf(
-            TestRow(id = 10L, uuid = "note-uuid-1", name = "Note 1", ownerId = null),
-            TestRow(id = 20L, uuid = "note-uuid-2", name = "Note 2", ownerId = null),
-            TestRow(id = 30L, uuid = "note-uuid-3", name = "Note 3", ownerId = null),
-        )
-        val checklistItems = mutableListOf(
-            TestRow(id = 100L, uuid = "item-uuid-1", name = "Task 1", ownerId = null),
-            TestRow(id = 101L, uuid = "item-uuid-2", name = "Task 2", ownerId = null),
-        )
-        val attachments = mutableListOf(
-            TestRow(id = 200L, uuid = "att-uuid-1", name = "doc.pdf", ownerId = null),
-        )
+        val shoulders =
+            mutableListOf(
+                TestRow(id = 1L, uuid = "shoulder-uuid-1", name = "Work", ownerId = null),
+                TestRow(id = 2L, uuid = "shoulder-uuid-2", name = "Personal", ownerId = null),
+            )
+        val notes =
+            mutableListOf(
+                TestRow(id = 10L, uuid = "note-uuid-1", name = "Note 1", ownerId = null),
+                TestRow(id = 20L, uuid = "note-uuid-2", name = "Note 2", ownerId = null),
+                TestRow(id = 30L, uuid = "note-uuid-3", name = "Note 3", ownerId = null),
+            )
+        val checklistItems =
+            mutableListOf(
+                TestRow(id = 100L, uuid = "item-uuid-1", name = "Task 1", ownerId = null),
+                TestRow(id = 101L, uuid = "item-uuid-2", name = "Task 2", ownerId = null),
+            )
+        val attachments =
+            mutableListOf(
+                TestRow(id = 200L, uuid = "att-uuid-1", name = "doc.pdf", ownerId = null),
+            )
 
-        val tableData = mapOf(
-            "shoulders" to shoulders,
-            "notes" to notes,
-            "checklist_items" to checklistItems,
-            "attachments" to attachments,
-        )
+        val tableData =
+            mapOf(
+                "shoulders" to shoulders,
+                "notes" to notes,
+                "checklist_items" to checklistItems,
+                "attachments" to attachments,
+            )
 
         val executedSqls = mutableListOf<String>()
         val fakeDb = createFakeDatabase(tableData, executedSqls)
@@ -101,29 +105,35 @@ class Migration8To9Test {
         tableData: Map<String, List<TestRow>>,
         executedSqls: MutableList<String>,
     ): SupportSQLiteDatabase {
-        val handler = object : InvocationHandler {
-            override fun invoke(proxy: Any?, method: Method, args: Array<out Any?>?): Any? {
-                when (method.name) {
-                    "execSQL" -> {
-                        val sql = args?.get(0) as String
-                        executedSqls.add(sql)
-                        return null
-                    }
-                    "query" -> {
-                        val queryStr = when (val firstArg = args?.get(0)) {
-                            is String -> firstArg
-                            is SupportSQLiteQuery -> firstArg.sql
-                            else -> firstArg.toString()
+        val handler =
+            object : InvocationHandler {
+                override fun invoke(
+                    proxy: Any?,
+                    method: Method,
+                    args: Array<out Any?>?,
+                ): Any? {
+                    when (method.name) {
+                        "execSQL" -> {
+                            val sql = args?.get(0) as String
+                            executedSqls.add(sql)
+                            return null
                         }
-                        executedSqls.add(queryStr)
-                        val tableName = tableData.keys.firstOrNull { queryStr.contains("`$it`") || queryStr.contains(" $it") }
-                        val rows = if (tableName != null) tableData[tableName] ?: emptyList() else emptyList()
-                        return createFakeCursor(rows)
+                        "query" -> {
+                            val queryStr =
+                                when (val firstArg = args?.get(0)) {
+                                    is String -> firstArg
+                                    is SupportSQLiteQuery -> firstArg.sql
+                                    else -> firstArg.toString()
+                                }
+                            executedSqls.add(queryStr)
+                            val tableName = tableData.keys.firstOrNull { queryStr.contains("`$it`") || queryStr.contains(" $it") }
+                            val rows = if (tableName != null) tableData[tableName] ?: emptyList() else emptyList()
+                            return createFakeCursor(rows)
+                        }
+                        else -> return null
                     }
-                    else -> return null
                 }
             }
-        }
         return Proxy.newProxyInstance(
             SupportSQLiteDatabase::class.java.classLoader,
             arrayOf(SupportSQLiteDatabase::class.java),
@@ -134,44 +144,49 @@ class Migration8To9Test {
     private fun createFakeCursor(rows: List<TestRow>): Cursor {
         val columns = arrayOf("id", "uuid", "ownerId", "name")
         var position = -1
-        val handler = object : InvocationHandler {
-            override fun invoke(proxy: Any?, method: Method, args: Array<out Any?>?): Any? {
-                when (method.name) {
-                    "close" -> return null
-                    "moveToNext" -> {
-                        position++
-                        return position < rows.size
-                    }
-                    "getColumnIndexOrThrow" -> {
-                        val name = args?.get(0) as String
-                        val index = columns.indexOf(name)
-                        if (index == -1) throw IllegalArgumentException("Column $name not found")
-                        return index
-                    }
-                    "getLong" -> {
-                        val index = args?.get(0) as Int
-                        return when (index) {
-                            0 -> rows[position].id
-                            else -> 0L
+        val handler =
+            object : InvocationHandler {
+                override fun invoke(
+                    proxy: Any?,
+                    method: Method,
+                    args: Array<out Any?>?,
+                ): Any? {
+                    when (method.name) {
+                        "close" -> return null
+                        "moveToNext" -> {
+                            position++
+                            return position < rows.size
                         }
-                    }
-                    "getString" -> {
-                        val index = args?.get(0) as Int
-                        return when (index) {
-                            1 -> rows[position].uuid
-                            2 -> rows[position].ownerId
-                            3 -> rows[position].name
-                            else -> null
+                        "getColumnIndexOrThrow" -> {
+                            val name = args?.get(0) as String
+                            val index = columns.indexOf(name)
+                            if (index == -1) throw IllegalArgumentException("Column $name not found")
+                            return index
                         }
+                        "getLong" -> {
+                            val index = args?.get(0) as Int
+                            return when (index) {
+                                0 -> rows[position].id
+                                else -> 0L
+                            }
+                        }
+                        "getString" -> {
+                            val index = args?.get(0) as Int
+                            return when (index) {
+                                1 -> rows[position].uuid
+                                2 -> rows[position].ownerId
+                                3 -> rows[position].name
+                                else -> null
+                            }
+                        }
+                        "isNull" -> {
+                            val index = args?.get(0) as Int
+                            return index == 2 && rows[position].ownerId == null
+                        }
+                        else -> return null
                     }
-                    "isNull" -> {
-                        val index = args?.get(0) as Int
-                        return index == 2 && rows[position].ownerId == null
-                    }
-                    else -> return null
                 }
             }
-        }
         return Proxy.newProxyInstance(
             Cursor::class.java.classLoader,
             arrayOf(Cursor::class.java),

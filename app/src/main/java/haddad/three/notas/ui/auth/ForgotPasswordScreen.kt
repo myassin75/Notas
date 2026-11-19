@@ -59,33 +59,37 @@ fun ForgotPasswordScreen(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(palette.notasBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(palette.notasBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Top Navigation Bar
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (!state.isLinkSent) {
                         IconButton(
                             onClick = onBackClick,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
+                            modifier =
+                                Modifier
+                                    .size(36.dp)
+                                    .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
                         ) {
                             RememberMaterialRoundedSymbol(
                                 name = "arrow_back",
@@ -141,10 +145,11 @@ fun ForgotPasswordScreen(
                         placeholder = "you@example.com",
                         isError = state.emailError != null,
                         errorMessage = state.emailError,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Done,
-                        ),
+                        keyboardOptions =
+                            KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Done,
+                            ),
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -166,15 +171,17 @@ fun ForgotPasswordScreen(
                         border = androidx.compose.foundation.BorderStroke(1.dp, palette.stroke),
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .background(palette.success.copy(alpha = 0.12f), CircleShape),
+                                modifier =
+                                    Modifier
+                                        .size(56.dp)
+                                        .background(palette.success.copy(alpha = 0.12f), CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 RememberMaterialRoundedSymbol(
@@ -217,9 +224,10 @@ fun ForgotPasswordScreen(
                                     text = "Didn't receive it? Resend link",
                                     style = NotasTypography.BodyMedium,
                                     color = palette.primaryText,
-                                    modifier = Modifier
-                                        .clickable { viewModel.resendResetLink() }
-                                        .padding(vertical = 4.dp),
+                                    modifier =
+                                        Modifier
+                                            .clickable { viewModel.resendResetLink() }
+                                            .padding(vertical = 4.dp),
                                 )
                             }
                         }
@@ -238,9 +246,10 @@ fun ForgotPasswordScreen(
             // Bottom Footer
             if (!state.isLinkSent) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

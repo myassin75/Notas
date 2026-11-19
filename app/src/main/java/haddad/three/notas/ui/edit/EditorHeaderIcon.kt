@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -45,24 +46,17 @@ internal fun EditorHeaderIcon(
     val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val accent = NoteColors.at(colorIndex)
     val hasCustomColor = !NoteColors.isNone(colorIndex)
+    val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
     val effectiveTint =
         if (!hasCustomColor) {
-            MaterialTheme.colorScheme.primary
+            defaultIconColor
         } else if (isDark) {
             accent.dark
         } else {
             accent.light
         }
 
-    val slotBgModifier =
-        if (hasCustomColor) {
-            Modifier.background(
-                effectiveTint.copy(alpha = if (isDark) 0.25f else 0.15f),
-                shape = iconSlotShape,
-            )
-        } else {
-            Modifier
-        }
+    val slotBgModifier = Modifier
 
     val slotBorderModifier =
         if (showBoundary) {
@@ -70,7 +64,7 @@ internal fun EditorHeaderIcon(
                 if (hasCustomColor) {
                     effectiveTint.copy(alpha = 0.5f)
                 } else {
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
+                    if (isDark) Color(0xFF3A3A3D) else Color(0xFFD1D1D6)
                 }
             Modifier.border(
                 width = 1.dp,

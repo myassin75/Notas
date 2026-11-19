@@ -1,5 +1,10 @@
 package haddad.three.notas.ui.home
 
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.matches
+import haddad.three.notas.ui.components.NoteCardUiModel
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,11 +14,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.NotesFilter
-import haddad.three.notas.data.ViewOptions
-import haddad.three.notas.data.matches
-import haddad.three.notas.ui.components.NoteCardUiModel
 
 internal fun homeStateFlow(
     filter: Flow<NotesFilter>,

@@ -1,6 +1,7 @@
 package haddad.three.notas.ui.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,12 +46,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteRepository
 import haddad.three.notas.data.NotesUiPrefs
@@ -59,6 +53,11 @@ import haddad.three.notas.data.NotesUiState
 import haddad.three.notas.data.ThemeMode
 import haddad.three.notas.data.ThemePrefs
 import haddad.three.notas.data.ThemeState
+import haddad.three.notas.data.auth.AppAuthState
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+import haddad.three.notas.data.migrated
 import haddad.three.notas.notifications.appNotificationSettingsIntent
 import haddad.three.notas.notifications.canPostNotifications
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
@@ -70,12 +69,13 @@ import haddad.three.notas.ui.components.SettingsRowCard
 import haddad.three.notas.ui.theme.LocalSemanticPalette
 import haddad.three.notas.ui.theme.NotasTokens
 import haddad.three.notas.ui.theme.NotasTypography
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-import haddad.three.notas.data.auth.AuthRepository
-import haddad.three.notas.data.auth.AuthState
-import haddad.three.notas.data.auth.AppAuthState
-import haddad.three.notas.data.auth.AuthUser
 
 data class GuestProfileStats(
     val notesCount: Int = 0,
@@ -84,81 +84,92 @@ data class GuestProfileStats(
 )
 
 @HiltViewModel
-class GuestProfileViewModel @Inject constructor(
-    noteRepository: NoteRepository,
-    val authRepository: AuthRepository? = null,
-    private val themePrefs: ThemePrefs? = null,
-    private val notesUiPrefs: NotesUiPrefs? = null,
-) : ViewModel() {
-    val stats: StateFlow<GuestProfileStats> = noteRepository.observeActive()
-        .map { list ->
-            GuestProfileStats(
-                notesCount = list.count { it.note.kind == NoteKind.NOTE && it.note.reminderAt == null },
-                tasksCount = list.count { it.note.kind == NoteKind.LIST },
-                eventsCount = list.count { it.note.reminderAt != null || it.note.endAt != null },
-            )
+class GuestProfileViewModel
+    @Inject
+    constructor(
+        noteRepository: NoteRepository,
+        val authRepository: AuthRepository? = null,
+        private val themePrefs: ThemePrefs? = null,
+        private val notesUiPrefs: NotesUiPrefs? = null,
+    ) : ViewModel() {
+        val stats: StateFlow<GuestProfileStats> =
+            noteRepository
+                .observeActive()
+                .map { list ->
+                    GuestProfileStats(
+                        notesCount = list.count { it.isNote },
+                        tasksCount = list.count { it.isTask },
+                        eventsCount = list.count { it.isEvent },
+                    )
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = GuestProfileStats(),
+                )
+
+        val authState: StateFlow<AuthState> =
+            authRepository
+                ?.authState
+                ?.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = AuthState.Loading,
+                ) ?: MutableStateFlow(AuthState.Unauthenticated)
+
+        val appAuthState: StateFlow<AppAuthState> =
+            authRepository
+                ?.appAuthState
+                ?.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = AppAuthState.Initializing,
+                ) ?: MutableStateFlow(AppAuthState.Guest)
+
+        val currentUser: AuthUser?
+            get() = authRepository?.currentUser
+
+        fun signOut() {
+            viewModelScope.launch {
+                authRepository?.signOut()
+            }
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = GuestProfileStats(),
-        )
 
-    val authState: StateFlow<AuthState> = authRepository?.authState
-        ?.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = AuthState.Loading,
-        ) ?: MutableStateFlow(AuthState.Unauthenticated)
+        fun syncBackendProfile() {
+            viewModelScope.launch {
+                authRepository?.syncBackendProfile()
+            }
+        }
 
-    val appAuthState: StateFlow<AppAuthState> = authRepository?.appAuthState
-        ?.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = AppAuthState.Initializing,
-        ) ?: MutableStateFlow(AppAuthState.Guest)
+        val themeState: StateFlow<ThemeState> =
+            themePrefs
+                ?.state
+                ?.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = ThemeState(),
+                ) ?: MutableStateFlow(ThemeState())
 
-    val currentUser: AuthUser?
-        get() = authRepository?.currentUser
+        val notesUiState: StateFlow<NotesUiState> =
+            notesUiPrefs
+                ?.state
+                ?.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5_000),
+                    initialValue = NotesUiState(),
+                ) ?: MutableStateFlow(NotesUiState())
 
-    fun signOut() {
-        viewModelScope.launch {
-            authRepository?.signOut()
+        fun setThemeMode(mode: ThemeMode) {
+            viewModelScope.launch {
+                themePrefs?.setThemeMode(mode)
+            }
+        }
+
+        fun setFirstDayOfWeek(day: String) {
+            viewModelScope.launch {
+                notesUiPrefs?.setFirstDayOfWeek(day)
+            }
         }
     }
-
-    fun syncBackendProfile() {
-        viewModelScope.launch {
-            authRepository?.syncBackendProfile()
-        }
-    }
-
-    val themeState: StateFlow<ThemeState> = themePrefs?.state
-        ?.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ThemeState(),
-        ) ?: MutableStateFlow(ThemeState())
-
-    val notesUiState: StateFlow<NotesUiState> = notesUiPrefs?.state
-        ?.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = NotesUiState(),
-        ) ?: MutableStateFlow(NotesUiState())
-
-    fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch {
-            themePrefs?.setThemeMode(mode)
-        }
-    }
-
-    fun setFirstDayOfWeek(day: String) {
-        viewModelScope.launch {
-            notesUiPrefs?.setFirstDayOfWeek(day)
-        }
-    }
-}
 
 /**
  * Guest Profile screen matching Notas Figma reference (Node 14:317).
@@ -193,40 +204,45 @@ fun GuestProfileScreen(
     var notificationsEnabled by remember { mutableStateOf(canPostNotifications(context)) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                notificationsEnabled = canPostNotifications(context)
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    notificationsEnabled = canPostNotifications(context)
+                }
             }
-        }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(palette.notasBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(palette.notasBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             // Top Bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(
                     onClick = onBackClick,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
                 ) {
                     RememberMaterialRoundedSymbol(
                         name = "arrow_back",
@@ -262,16 +278,24 @@ fun GuestProfileScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     if (currentUser != null) {
                         val displayName = currentUser.displayName?.takeIf { it.isNotBlank() } ?: currentUser.email
-                        val initials = currentUser.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.toString() }?.take(2)?.joinToString("")?.uppercase()?.ifBlank { null }
-                            ?: currentUser.email.firstOrNull()?.uppercase()
-                            ?: "U"
+                        val initials =
+                            currentUser.displayName
+                                ?.split(" ")
+                                ?.mapNotNull { it.firstOrNull()?.toString() }
+                                ?.take(2)
+                                ?.joinToString("")
+                                ?.uppercase()
+                                ?.ifBlank { null }
+                                ?: currentUser.email.firstOrNull()?.uppercase()
+                                ?: "U"
                         val badgeText = if (currentUser.isEmailVerified) "Email Verified" else "Email Unverified"
 
                         AccountHeader(
@@ -320,9 +344,10 @@ fun GuestProfileScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
                     ) {
                         Text(
                             text = "Cloud Sync & Account",
@@ -331,12 +356,13 @@ fun GuestProfileScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = when (val state = appAuthState) {
-                                is AppAuthState.LoadingProfile -> "Synchronizing profile with Notas Cloud..."
-                                is AppAuthState.Authenticated -> "Cloud sync active & connected"
-                                is AppAuthState.RecoverableError -> "Sync status: ${state.message}"
-                                else -> "Connected to Notas Cloud"
-                            },
+                            text =
+                                when (val state = appAuthState) {
+                                    is AppAuthState.LoadingProfile -> "Synchronizing profile with Notas Cloud..."
+                                    is AppAuthState.Authenticated -> "Cloud sync active & connected"
+                                    is AppAuthState.RecoverableError -> "Sync status: ${state.message}"
+                                    else -> "Connected to Notas Cloud"
+                                },
                             style = NotasTypography.BodyMedium,
                             color = if (appAuthState is AppAuthState.RecoverableError) palette.error else palette.primaryText,
                         )
@@ -397,9 +423,10 @@ fun GuestProfileScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
                     ) {
                         Text(
                             text = "Backup & sync",
@@ -468,11 +495,13 @@ fun GuestProfileScreen(
                 )
                 SettingsRow(
                     title = "Appearance",
-                    valueText = when (themeState.themeMode) {
-                        ThemeMode.LIGHT -> "Light"
-                        ThemeMode.DARK, ThemeMode.BLACK -> "Dark"
-                        ThemeMode.SYSTEM -> "System"
-                    },
+                    valueText =
+                        when (themeState.themeMode.migrated()) {
+                            ThemeMode.LIGHT -> "Light"
+                            ThemeMode.DARK -> "Dark"
+                            ThemeMode.SYSTEM -> "System"
+                            else -> "System"
+                        },
                     onClick = {
                         if (onAppearanceClick != null) {
                             onAppearanceClick()
@@ -483,11 +512,12 @@ fun GuestProfileScreen(
                 )
                 SettingsRow(
                     title = "Start of week",
-                    valueText = when (notesUiState.firstDayOfWeek.uppercase()) {
-                        "SUNDAY" -> "Sunday"
-                        "SATURDAY" -> "Saturday"
-                        else -> "Monday"
-                    },
+                    valueText =
+                        when (notesUiState.firstDayOfWeek.uppercase()) {
+                            "SUNDAY" -> "Sunday"
+                            "SATURDAY" -> "Saturday"
+                            else -> "Monday"
+                        },
                     showDivider = false,
                     onClick = {
                         if (onStartOfWeekClick != null) {
@@ -523,16 +553,16 @@ fun GuestProfileScreen(
                         ThemeMode.DARK to "Dark",
                         ThemeMode.SYSTEM to "System default",
                     ).forEach { (mode, label) ->
-                        val isSelected = (themeState.themeMode == mode || (mode == ThemeMode.DARK && themeState.themeMode == ThemeMode.BLACK))
+                        val isSelected = themeState.themeMode.migrated() == mode
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    viewModel.setThemeMode(mode)
-                                    showAppearanceDialog = false
-                                }
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        viewModel.setThemeMode(mode)
+                                        showAppearanceDialog = false
+                                    }.padding(horizontal = 12.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
@@ -585,14 +615,14 @@ fun GuestProfileScreen(
                     ).forEach { (key, label) ->
                         val isSelected = notesUiState.firstDayOfWeek.equals(key, ignoreCase = true)
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    viewModel.setFirstDayOfWeek(key)
-                                    showStartOfWeekDialog = false
-                                }
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        viewModel.setFirstDayOfWeek(key)
+                                        showStartOfWeekDialog = false
+                                    }.padding(horizontal = 12.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
@@ -652,10 +682,10 @@ private fun StatItem(
 @Composable
 private fun StatDivider(color: Color) {
     Box(
-        modifier = Modifier
-            .height(28.dp)
-            .width(1.dp)
-            .background(color = color),
+        modifier =
+            Modifier
+                .height(28.dp)
+                .width(1.dp)
+                .background(color = color),
     )
 }
-

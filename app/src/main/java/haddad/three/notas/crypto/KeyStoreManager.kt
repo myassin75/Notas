@@ -108,13 +108,14 @@ class AndroidKeyStoreManager : KeyStoreManager {
         accountId: String,
     ): SecretKey {
         // Try account-scoped KEK alias first. If missing, fall back to legacy un-partitioned KEK alias.
-        val kek = if (hasKek(kekVersion, accountId)) {
-            getOrCreateKek(kekVersion, accountId)
-        } else if (hasKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)) {
-            getOrCreateKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)
-        } else {
-            getOrCreateKek(kekVersion, accountId)
-        }
+        val kek =
+            if (hasKek(kekVersion, accountId)) {
+                getOrCreateKek(kekVersion, accountId)
+            } else if (hasKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)) {
+                getOrCreateKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)
+            } else {
+                getOrCreateKek(kekVersion, accountId)
+            }
 
         val rawKeyBytes =
             EncryptedContainer.decrypt(
@@ -194,13 +195,14 @@ class SoftwareKeyStoreManager : KeyStoreManager {
         kekVersion: Int,
         accountId: String,
     ): SecretKey {
-        val kek = if (hasKek(kekVersion, accountId)) {
-            getOrCreateKek(kekVersion, accountId)
-        } else if (hasKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)) {
-            getOrCreateKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)
-        } else {
-            getOrCreateKek(kekVersion, accountId)
-        }
+        val kek =
+            if (hasKek(kekVersion, accountId)) {
+                getOrCreateKek(kekVersion, accountId)
+            } else if (hasKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)) {
+                getOrCreateKek(kekVersion, CryptoStorage.GUEST_ACCOUNT_ID)
+            } else {
+                getOrCreateKek(kekVersion, accountId)
+            }
 
         val rawKeyBytes =
             EncryptedContainer.decrypt(

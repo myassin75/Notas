@@ -76,32 +76,49 @@ fun GoogleDriveBackupSection(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val uiState by (driveBackupProvider?.uiState ?: flowOf(haddad.three.notas.data.drive.model.DriveBackupUiState()))
-        .collectAsStateWithLifecycle(initialValue = haddad.three.notas.data.drive.model.DriveBackupUiState())
-    val prefsState by (drivePrefs?.state ?: flowOf(haddad.three.notas.data.drive.auth.DrivePreferencesState()))
-        .collectAsStateWithLifecycle(initialValue = haddad.three.notas.data.drive.auth.DrivePreferencesState())
+    val uiState by (
+        driveBackupProvider?.uiState ?: flowOf(
+            haddad.three.notas.data.drive.model
+                .DriveBackupUiState(),
+        )
+    ).collectAsStateWithLifecycle(
+        initialValue =
+            haddad.three.notas.data.drive.model
+                .DriveBackupUiState(),
+    )
+    val prefsState by (
+        drivePrefs?.state ?: flowOf(
+            haddad.three.notas.data.drive.auth
+                .DrivePreferencesState(),
+        )
+    ).collectAsStateWithLifecycle(
+        initialValue =
+            haddad.three.notas.data.drive.auth
+                .DrivePreferencesState(),
+    )
 
     var backupToRestore by remember { mutableStateOf<DriveBackupItem?>(null) }
     var backupToDelete by remember { mutableStateOf<DriveBackupItem?>(null) }
     var selectedRestoreMode by remember { mutableStateOf(RestoreMode.REPLACE) }
 
     // Consent prompt launcher for Google Identity Services
-    val consentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult(),
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            scope.launch {
-                val parsed = driveAuthDelegate?.parseConsentResult(context, result.data)
-                if (parsed is GoogleDriveAuthorizationResult.Success) {
-                    drivePrefs?.setConnected(parsed.accountEmail)
-                    driveBackupProvider?.refreshBackupsList()
-                    snackbarHostState.showSnackbar("Connected Google Drive: ${parsed.accountEmail}")
-                } else if (parsed is GoogleDriveAuthorizationResult.Failure) {
-                    snackbarHostState.showSnackbar("Authorization failed: ${parsed.cause.localizedMessage}")
+    val consentLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartIntentSenderForResult(),
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                scope.launch {
+                    val parsed = driveAuthDelegate?.parseConsentResult(context, result.data)
+                    if (parsed is GoogleDriveAuthorizationResult.Success) {
+                        drivePrefs?.setConnected(parsed.accountEmail)
+                        driveBackupProvider?.refreshBackupsList()
+                        snackbarHostState.showSnackbar("Connected Google Drive: ${parsed.accountEmail}")
+                    } else if (parsed is GoogleDriveAuthorizationResult.Failure) {
+                        snackbarHostState.showSnackbar("Authorization failed: ${parsed.cause.localizedMessage}")
+                    }
                 }
             }
         }
-    }
 
     LaunchedEffect(prefsState.isConnected) {
         if (prefsState.isConnected) {
@@ -117,9 +134,10 @@ fun GoogleDriveBackupSection(
             // Header Item
             GroupedListItem(position = if (!prefsState.isConnected) GroupPosition.ONLY else GroupPosition.FIRST) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Row(
@@ -140,11 +158,12 @@ fun GoogleDriveBackupSection(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                text = if (prefsState.isConnected) {
-                                    "Connected as ${prefsState.connectedEmail ?: "Google Account"}"
-                                } else {
-                                    "Client-side encrypted with AES-256-GCM. Stored in private appDataFolder."
-                                },
+                                text =
+                                    if (prefsState.isConnected) {
+                                        "Connected as ${prefsState.connectedEmail ?: "Google Account"}"
+                                    } else {
+                                        "Client-side encrypted with AES-256-GCM. Stored in private appDataFolder."
+                                    },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -184,9 +203,10 @@ fun GoogleDriveBackupSection(
                 // Actions & Status Item
                 GroupedListItem(position = GroupPosition.MIDDLE) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         if (uiState.status.isLoading) {
@@ -250,9 +270,10 @@ fun GoogleDriveBackupSection(
                 // Automatic Backup Settings Item
                 GroupedListItem(position = GroupPosition.MIDDLE) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
@@ -293,9 +314,10 @@ fun GoogleDriveBackupSection(
                 // Backup History Header & List
                 GroupedListItem(position = GroupPosition.LAST) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Row(
@@ -478,14 +500,11 @@ private fun BackupHistoryRow(
     }
 }
 
-private fun formatEpochMillis(millis: Long): String {
-    return SimpleDateFormat("MMM d, yyyy • HH:mm", Locale.getDefault()).format(Date(millis))
-}
+private fun formatEpochMillis(millis: Long): String = SimpleDateFormat("MMM d, yyyy • HH:mm", Locale.getDefault()).format(Date(millis))
 
-private fun formatBytes(bytes: Long): String {
-    return when {
+private fun formatBytes(bytes: Long): String =
+    when {
         bytes < 1024 -> "$bytes B"
         bytes < 1024 * 1024 -> "${bytes / 1024} KB"
         else -> String.format(Locale.US, "%.1f MB", bytes.toDouble() / (1024 * 1024))
     }
-}

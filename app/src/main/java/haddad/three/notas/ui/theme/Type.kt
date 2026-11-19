@@ -60,109 +60,121 @@ private fun TextStyle.withFontFamilyOnly(fontFamily: FontFamily): TextStyle = co
  * system default sans-serif is used with identical font weights, sizes, and line heights.
  */
 object NotasTypography {
-    val DisplayTitle = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
-        letterSpacing = (-0.5).sp,
-    )
+    val DisplayTitle =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 36.sp,
+            lineHeight = 44.sp,
+            letterSpacing = (-0.5).sp,
+        )
 
-    val ScreenTitle = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = (-0.4).sp,
-    )
+    val ScreenTitle =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
+            letterSpacing = (-0.4).sp,
+        )
 
-    val ModalTitle = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = (-0.3).sp,
-    )
+    val ModalTitle =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+            letterSpacing = (-0.3).sp,
+        )
 
-    val SectionTitle = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp,
-        letterSpacing = (-0.2).sp,
-    )
+    val SectionTitle =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            lineHeight = 26.sp,
+            letterSpacing = (-0.2).sp,
+        )
 
     val SectionHeader = SectionTitle
 
-    val CardHeader = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
-    )
+    val CardHeader =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+        )
 
-    val Button = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
-    )
+    val Button =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+        )
 
-    val BodyMedium = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-    )
+    val BodyMedium =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+        )
 
-    val Body = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-    )
+    val Body =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+        )
 
-    val BodyMedium13 = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-    )
+    val BodyMedium13 =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+        )
 
-    val Label = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-    )
+    val Label =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+        )
 
-    val Helper = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-    )
+    val Helper =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+        )
 
-    val Caption = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 11.sp,
-        lineHeight = 14.sp,
-    )
+    val Caption =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+        )
 
-    val CaptionMedium = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp,
-        lineHeight = 14.sp,
-    )
+    val CaptionMedium =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+        )
 
-    val TabLabel = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 12.sp,
-    )
+    val TabLabel =
+        TextStyle(
+            fontFamily = FontFamily.Default,
+            fontWeight = FontWeight.Normal,
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
+        )
 }
-
-

@@ -31,13 +31,21 @@ interface SyncSequenceDao {
     suspend fun insertOrUpdate(entity: SyncSequenceEntity)
 
     @Query("UPDATE sync_sequences SET lastAllocatedSequence = :sequence, updatedAt = :timestamp WHERE deviceId = :deviceId")
-    suspend fun setLastAllocatedSequence(deviceId: String, sequence: Long, timestamp: Long = System.currentTimeMillis()): Int
+    suspend fun setLastAllocatedSequence(
+        deviceId: String,
+        sequence: Long,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Int
 
     /**
      * Atomically sets or inserts the sequence for [deviceId].
      */
     @Transaction
-    suspend fun setSequence(deviceId: String, sequence: Long, timestamp: Long = System.currentTimeMillis()) {
+    suspend fun setSequence(
+        deviceId: String,
+        sequence: Long,
+        timestamp: Long = System.currentTimeMillis(),
+    ) {
         val updated = setLastAllocatedSequence(deviceId, sequence, timestamp)
         if (updated == 0) {
             insertOrUpdate(
@@ -55,7 +63,10 @@ interface SyncSequenceDao {
      * Guarantees monotonicity and survives application restarts.
      */
     @Transaction
-    suspend fun allocateNextSequence(deviceId: String, timestamp: Long = System.currentTimeMillis()): Long {
+    suspend fun allocateNextSequence(
+        deviceId: String,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Long {
         val current = getSequence(deviceId)
         val nextSeq = (current?.lastAllocatedSequence ?: 0L) + 1L
         insertOrUpdate(

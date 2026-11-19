@@ -3,10 +3,10 @@ package haddad.three.notas.ui.edit
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import haddad.three.notas.ui.common.MarkdownStyler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.ui.common.MarkdownStyler
 
 class MarkdownVisualTransformationBlockTest {
     @Test

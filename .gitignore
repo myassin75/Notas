@@ -3,9 +3,24 @@
 .kotlin/
 .idea/
 build/
+**/build/
 localdocs/
 *.lnk
 app/src/main/assets/HELP.md
+
+# Build artifacts & packages
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Logs & temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+UI/
 
 # Fastlane generated output (store metadata lives in fastlane/metadata and is committed)
 fastlane/report.xml

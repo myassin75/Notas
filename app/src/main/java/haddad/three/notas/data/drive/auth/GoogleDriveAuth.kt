@@ -56,4 +56,3 @@ object DriveAuthConstants {
     const val DRIVE_APPDATA_SCOPE = "https://www.googleapis.com/auth/drive.appdata"
     const val EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email"
 }
-

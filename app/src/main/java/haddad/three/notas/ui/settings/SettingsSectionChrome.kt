@@ -47,7 +47,13 @@ import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 object SettingsDesignTokens {
     val ScreenBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
-    val CardBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
+    val CardBg: Color @Composable get() =
+        if (haddad.three.notas.ui.theme.LocalIsDark.current) {
+            haddad.three.notas.ui.theme
+                .glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true)
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
     val PrimaryPurple: Color @Composable get() = MaterialTheme.colorScheme.primary
     val SoftLavender: Color
         @Composable get() {
@@ -76,7 +82,12 @@ fun SettingsSectionCard(
 ) {
     val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val containerColor =
-        if (isDark) haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true) else MaterialTheme.colorScheme.surface
+        if (isDark) {
+            haddad.three.notas.ui.theme
+                .glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark = true)
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
     val borderStroke =
         if (isDark) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)) else null
 

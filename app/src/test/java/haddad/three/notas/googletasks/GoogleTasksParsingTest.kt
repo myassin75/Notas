@@ -1,11 +1,11 @@
 package haddad.three.notas.googletasks
 
+import haddad.three.notas.data.RecurrenceUnit
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.data.RecurrenceUnit
 import java.time.Instant
 import java.util.Calendar
 

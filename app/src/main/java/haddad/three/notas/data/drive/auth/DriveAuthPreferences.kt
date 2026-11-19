@@ -45,24 +45,30 @@ class DriveAuthPreferences(
         val AUTO_BACKUP_ENABLED = booleanPreferencesKey("drive_auto_backup_enabled")
         val AUTO_BACKUP_FREQUENCY_DAYS = intPreferencesKey("drive_auto_backup_frequency_days")
         val AUTO_BACKUP_REQUIRES_WIFI = booleanPreferencesKey("drive_auto_backup_requires_wifi")
-        val LAST_BACKUP_EPOCH_MILLIS = androidx.datastore.preferences.core.longPreferencesKey("drive_last_backup_epoch_millis")
+        val LAST_BACKUP_EPOCH_MILLIS =
+            androidx.datastore.preferences.core
+                .longPreferencesKey("drive_last_backup_epoch_millis")
     }
 
-    val state: Flow<DrivePreferencesState> = dataStore.data.map { prefs ->
-        DrivePreferencesState(
-            isConnected = prefs[Keys.IS_CONNECTED] ?: false,
-            connectedEmail = prefs[Keys.CONNECTED_EMAIL],
-            connectedAccountId = prefs[Keys.CONNECTED_ACCOUNT_ID],
-            autoBackupEnabled = prefs[Keys.AUTO_BACKUP_ENABLED] ?: false,
-            autoBackupFrequencyDays = prefs[Keys.AUTO_BACKUP_FREQUENCY_DAYS] ?: 1,
-            autoBackupRequiresWifi = prefs[Keys.AUTO_BACKUP_REQUIRES_WIFI] ?: true,
-            lastBackupEpochMillis = prefs[Keys.LAST_BACKUP_EPOCH_MILLIS] ?: 0L,
-        )
-    }
+    val state: Flow<DrivePreferencesState> =
+        dataStore.data.map { prefs ->
+            DrivePreferencesState(
+                isConnected = prefs[Keys.IS_CONNECTED] ?: false,
+                connectedEmail = prefs[Keys.CONNECTED_EMAIL],
+                connectedAccountId = prefs[Keys.CONNECTED_ACCOUNT_ID],
+                autoBackupEnabled = prefs[Keys.AUTO_BACKUP_ENABLED] ?: false,
+                autoBackupFrequencyDays = prefs[Keys.AUTO_BACKUP_FREQUENCY_DAYS] ?: 1,
+                autoBackupRequiresWifi = prefs[Keys.AUTO_BACKUP_REQUIRES_WIFI] ?: true,
+                lastBackupEpochMillis = prefs[Keys.LAST_BACKUP_EPOCH_MILLIS] ?: 0L,
+            )
+        }
 
     suspend fun getState(): DrivePreferencesState = state.first()
 
-    suspend fun setConnected(email: String, accountId: String? = null) {
+    suspend fun setConnected(
+        email: String,
+        accountId: String? = null,
+    ) {
         dataStore.edit { prefs ->
             prefs[Keys.IS_CONNECTED] = true
             prefs[Keys.CONNECTED_EMAIL] = email
@@ -102,4 +108,3 @@ class DriveAuthPreferences(
         dataStore.edit { it.clear() }
     }
 }
-

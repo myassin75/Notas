@@ -7,7 +7,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class AuthDeepLinkParserTest {
-
     @Test
     fun parse_directVerifyEmailLink_extractsModeAndOobCode() {
         val url = "https://notas-7db14.firebaseapp.com/__/auth/action?mode=verifyEmail&oobCode=test-verify-123&apiKey=test-api-key&lang=en"
@@ -93,4 +92,3 @@ class AuthDeepLinkParserTest {
         assertNull(AuthDeepLinkParser.parse("https://notas-7db14.firebaseapp.com/"))
     }
 }
-

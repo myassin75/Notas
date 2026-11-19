@@ -1,15 +1,15 @@
 package haddad.three.notas.data
 
 import androidx.room.withTransaction
+import haddad.three.notas.di.DefaultDispatcher
+import haddad.three.notas.di.IoDispatcher
+import haddad.three.notas.reminders.ReminderScheduler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import haddad.three.notas.di.DefaultDispatcher
-import haddad.three.notas.di.IoDispatcher
-import haddad.three.notas.reminders.ReminderScheduler
 import java.util.Locale
 
 data class NoteOptions(
@@ -135,20 +135,18 @@ class NoteRepository(
             changeRecorder = changeRecorder,
         )
 
-    private fun matchesOwner(noteOwnerId: String?, filterOwnerId: String?): Boolean =
-        (filterOwnerId == null && noteOwnerId == null) || (filterOwnerId != null && noteOwnerId == filterOwnerId)
+    private fun matchesOwner(
+        noteOwnerId: String?,
+        filterOwnerId: String?,
+    ): Boolean = (filterOwnerId == null && noteOwnerId == null) || (filterOwnerId != null && noteOwnerId == filterOwnerId)
 
-    fun observeActive(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
-        noteDao.observeActive(ownerId).flowOn(ioDispatcher)
+    fun observeActive(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> = noteDao.observeActive(ownerId).flowOn(ioDispatcher)
 
-    fun observeScheduled(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
-        noteDao.observeScheduled(ownerId).flowOn(ioDispatcher)
+    fun observeScheduled(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> = noteDao.observeScheduled(ownerId).flowOn(ioDispatcher)
 
-    fun observeTrashed(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
-        noteDao.observeTrashed(ownerId).flowOn(ioDispatcher)
+    fun observeTrashed(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> = noteDao.observeTrashed(ownerId).flowOn(ioDispatcher)
 
-    fun observeArchived(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> =
-        noteDao.observeArchived(ownerId).flowOn(ioDispatcher)
+    fun observeArchived(ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> = noteDao.observeArchived(ownerId).flowOn(ioDispatcher)
 
     fun observe(id: Long): Flow<NoteWithItems?> = noteDao.observe(id).flowOn(ioDispatcher)
 
@@ -162,7 +160,10 @@ class NoteRepository(
      * whitespace, each term is escaped and turned into a prefix match (`term*`), so typing
      * "buy mil" will match "buy milk" as soon as the user has typed the third letter.
      */
-    fun searchNotes(query: String, ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> {
+    fun searchNotes(
+        query: String,
+        ownerId: String? = ownerIdProvider(),
+    ): Flow<List<NoteWithItems>> {
         val fts = toFtsPrefixQuery(query)
         return if (fts.isEmpty()) {
             flowOf(emptyList())
@@ -172,7 +173,10 @@ class NoteRepository(
     }
 
     /** Same FTS prefix match as [searchNotes], but scoped to archived notes only. */
-    fun searchArchivedNotes(query: String, ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> {
+    fun searchArchivedNotes(
+        query: String,
+        ownerId: String? = ownerIdProvider(),
+    ): Flow<List<NoteWithItems>> {
         val fts = toFtsPrefixQuery(query)
         return if (fts.isEmpty()) {
             flowOf(emptyList())
@@ -182,7 +186,10 @@ class NoteRepository(
     }
 
     /** Same FTS prefix match as [searchNotes], but scoped to trashed notes only. */
-    fun searchTrashedNotes(query: String, ownerId: String? = ownerIdProvider()): Flow<List<NoteWithItems>> {
+    fun searchTrashedNotes(
+        query: String,
+        ownerId: String? = ownerIdProvider(),
+    ): Flow<List<NoteWithItems>> {
         val fts = toFtsPrefixQuery(query)
         return if (fts.isEmpty()) {
             flowOf(emptyList())

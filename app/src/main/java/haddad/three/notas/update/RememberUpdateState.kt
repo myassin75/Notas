@@ -1,5 +1,7 @@
 package haddad.three.notas.update
 
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -8,8 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import haddad.three.notas.BuildConfig
-import haddad.three.notas.di.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -48,12 +48,7 @@ class RememberUpdateState
                     versionName = "9.9.9",
                     downloadUrl = "",
                     releaseNotes = "",
-                    remoteApkAssetUpdatedAt =
-                        if (BuildConfig.FLAVOR == "github") {
-                            DEV_RELEASE_MOCK_GITHUB_ASSET_UPDATED_AT
-                        } else {
-                            ""
-                        },
+                    remoteApkAssetUpdatedAt = "",
                     isDevReleaseMock = true,
                 )
             _updateSignalEpoch.value += 1

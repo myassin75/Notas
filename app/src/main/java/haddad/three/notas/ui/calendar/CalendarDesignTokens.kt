@@ -26,10 +26,10 @@ object CalendarDesignTokens {
     // Background & Card Surfaces
     val ScreenBgLight = Color(0xFFF8F7FA)
     val ScreenBgDark = Color(0xFF181818)
-    val CardBgLight = Color(0xFFFFFFFF)
-    val CardBgDark = Color(0xFF242424)
-    val CardBorderLight = Color(0xFFEFEFF3)
-    val CardBorderDark = Color(0xFF3A3A3A)
+    val CardBgLight = Color(0xFFF2F2F4)
+    val CardBgDark = Color(0xFF1F1F22)
+    val CardBorderLight = Color(0xFFE5E5EA)
+    val CardBorderDark = Color(0xFF2D2D30)
 
     // Typography Colors
     val TextPrimaryLight = Color(0xFF1E1B26)
@@ -61,9 +61,9 @@ object CalendarDesignTokens {
     val BirthdayIconTint = Color(0xFFD84C7B)
 
     // Component Shapes
-    val CardShape = RoundedCornerShape(22.dp)
-    val ItemCardShape = RoundedCornerShape(18.dp)
-    val IconBoxShape = RoundedCornerShape(12.dp)
+    val CardShape = RoundedCornerShape(28.dp)
+    val ItemCardShape = RoundedCornerShape(24.dp)
+    val IconBoxShape = RoundedCornerShape(14.dp)
     val SelectedDayShape = RoundedCornerShape(12.dp)
     val PillShape = CircleShape
     val MenuButtonShape = RoundedCornerShape(12.dp)
@@ -81,16 +81,15 @@ object CalendarDesignTokens {
 
     // Theme Helpers
     @Composable
-    fun resolveScreenBg(isDark: Boolean = false): Color =
-        if (isDark) Color.Transparent else MaterialTheme.colorScheme.background
+    fun resolveScreenBg(isDark: Boolean = false): Color = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background
 
     @Composable
     fun resolveCardBg(isDark: Boolean = false): Color =
-        haddad.three.notas.ui.theme.glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark)
+        haddad.three.notas.ui.theme
+            .glassContainerColor(haddad.three.notas.ui.theme.GlassVariant.StandardCard, isDark)
 
     @Composable
-    fun resolveCardBorder(isDark: Boolean = false): Color =
-        if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+    fun resolveCardBorder(isDark: Boolean = false): Color = if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
 
     @Composable
     fun resolveTextPrimary(isDark: Boolean = false): Color = MaterialTheme.colorScheme.onSurface
@@ -108,8 +107,7 @@ object CalendarDesignTokens {
     val WeekendColorDark = Color(0xFFFF5252)
 
     @Composable
-    fun resolveWeekendColor(isDark: Boolean = false): Color =
-        if (isDark) WeekendColorDark else WeekendColorLight
+    fun resolveWeekendColor(isDark: Boolean = false): Color = if (isDark) WeekendColorDark else WeekendColorLight
 
     /**
      * Cleans icon key strings (e.g. "symbol:school", "sym:school", "symbol_filled:school")

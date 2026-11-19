@@ -1,6 +1,5 @@
 package haddad.three.notas.data.sync
 
-import kotlinx.serialization.Serializable
 import haddad.three.notas.data.ChecklistItemEntity
 import haddad.three.notas.data.Importance
 import haddad.three.notas.data.NoteAttachmentEntity
@@ -9,6 +8,7 @@ import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.data.ShoulderEntity
 import haddad.three.notas.data.Visibility
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -88,7 +88,10 @@ object SyncDtoMapping {
         return runCatching { Instant.parse(isoString).toEpochMilli() }.getOrNull()
     }
 
-    fun shoulderToDto(shoulder: ShoulderEntity, isDeleted: Boolean = false): CategorySyncDto =
+    fun shoulderToDto(
+        shoulder: ShoulderEntity,
+        isDeleted: Boolean = false,
+    ): CategorySyncDto =
         CategorySyncDto(
             id = shoulder.uuid,
             name = shoulder.name,

@@ -64,8 +64,6 @@ fun CalendarNavigationHeader(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
-    val border = BorderStroke(1.dp, CalendarDesignTokens.resolveCardBorder(isDark))
-    val buttonBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     val annotatedTitle =
         remember(title, textPrimary, textSecondary) {
@@ -79,11 +77,11 @@ fun CalendarNavigationHeader(
                         SpanStyle(
                             fontWeight = FontWeight.Bold,
                             color = textPrimary,
-                            fontSize = 18.sp,
+                            fontSize = 20.sp,
                         ),
                     ) {
                         append(mainText)
-                        append(" ")
+                        append("  ")
                     }
                     withStyle(
                         SpanStyle(
@@ -101,7 +99,7 @@ fun CalendarNavigationHeader(
                         SpanStyle(
                             fontWeight = FontWeight.Bold,
                             color = textPrimary,
-                            fontSize = 18.sp,
+                            fontSize = 20.sp,
                         ),
                     ) {
                         append(trimmed)
@@ -114,130 +112,131 @@ fun CalendarNavigationHeader(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 6.dp),
+                .padding(horizontal = 6.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Date navigation cluster with date between the two arrows (< Date >)
+        // Left: Month and Year (e.g., "November  2026")
+        AnimatedContent(
+            targetState = annotatedTitle to subtitle,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) togetherWith
+                    fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing))
+            },
+            label = "CalendarHeaderTitleAnimation",
+            modifier = Modifier.weight(1f, fill = false),
+        ) { (currentAnnotatedTitle, currentSubtitle) ->
+            Column(
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(end = 8.dp),
+            ) {
+                Text(
+                    text = currentAnnotatedTitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (!currentSubtitle.isNullOrBlank()) {
+                    Text(
+                        text = currentSubtitle,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style =
+                            MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.sp,
+                                color = textSecondary,
+                            ),
+                    )
+                }
+            }
+        }
+
+        // Right: Navigation Controls Cluster: [Today]  <  >
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.weight(1f, fill = false),
         ) {
-            // Previous Button (<) with 40dp touch target
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center,
+            AnimatedVisibility(
+                visible = showTodayButton,
+                enter =
+                    fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) +
+                        expandHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing)),
+                exit =
+                    fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing)) +
+                        shrinkHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing)),
             ) {
-                Surface(
-                    onClick = onPrevious,
-                    shape = CircleShape,
-                    color = buttonBg,
-                    border = border,
-                    modifier = Modifier.size(32.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        RememberMaterialRoundedSymbol(
-                            name = "chevron_right",
-                            modifier = Modifier.graphicsLayer { scaleX = -1f },
-                            size = 18.dp,
-                            tint = textPrimary,
-                        )
+                val todayBg =
+                    if (isDark) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                    } else {
+                        Color(0xFFF1E6F5)
                     }
-                }
-            }
-
-            // Title and optional subtitle (Date positioned directly between the two arrows)
-            AnimatedContent(
-                targetState = annotatedTitle to subtitle,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) togetherWith
-                        fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing))
-                },
-                label = "CalendarHeaderTitleAnimation",
-            ) { (currentAnnotatedTitle, currentSubtitle) ->
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(horizontal = 6.dp),
+                val todayText =
+                    if (isDark) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        Color(0xFF7E398A)
+                    }
+                Surface(
+                    onClick = onToday,
+                    shape = CircleShape,
+                    color = todayBg,
+                    modifier =
+                        Modifier
+                            .height(30.dp)
+                            .defaultMinSize(minWidth = 54.dp),
                 ) {
-                    Text(
-                        text = currentAnnotatedTitle,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    if (!currentSubtitle.isNullOrBlank()) {
+                    Box(
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
                         Text(
-                            text = currentSubtitle,
+                            text = stringResource(R.string.calendar_today),
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                             style =
-                                MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 12.sp,
-                                    color = textSecondary,
+                                MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.5.sp,
+                                    color = todayText,
                                 ),
                         )
                     }
                 }
             }
 
-            // Next Button (>) with 40dp touch target
-            Box(
-                modifier = Modifier.size(40.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Surface(
-                    onClick = onNext,
-                    shape = CircleShape,
-                    color = buttonBg,
-                    border = border,
-                    modifier = Modifier.size(32.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        RememberMaterialRoundedSymbol(
-                            name = "chevron_right",
-                            size = 18.dp,
-                            tint = textPrimary,
-                        )
-                    }
-                }
-            }
-        }
+            Spacer(modifier = Modifier.width(4.dp))
 
-        // Right: Today Pill Button (animated appearance/disappearance)
-        AnimatedVisibility(
-            visible = showTodayButton,
-            enter =
-                fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) +
-                    expandHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing)),
-            exit =
-                fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing)) +
-                    shrinkHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing)),
-        ) {
-            Surface(
-                onClick = onToday,
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
+            // Previous Button (<) with clean icon and proper touch target
+            Box(
                 modifier =
                     Modifier
-                        .height(32.dp)
-                        .defaultMinSize(minWidth = 48.dp),
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onPrevious),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(R.string.calendar_today),
-                        maxLines = 1,
-                        style =
-                            MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.5.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            ),
-                    )
-                }
+                RememberMaterialRoundedSymbol(
+                    name = "chevron_right",
+                    modifier = Modifier.graphicsLayer { scaleX = -1f },
+                    size = 22.dp,
+                    tint = textPrimary,
+                )
+            }
+
+            // Next Button (>) with clean icon and proper touch target
+            Box(
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onNext),
+                contentAlignment = Alignment.Center,
+            ) {
+                RememberMaterialRoundedSymbol(
+                    name = "chevron_right",
+                    size = 22.dp,
+                    tint = textPrimary,
+                )
             }
         }
     }

@@ -45,8 +45,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.InteractionPrefs
 import haddad.three.notas.data.InteractionState
@@ -68,6 +66,8 @@ import haddad.three.notas.ui.edit.CalendarPickerDialog
 import haddad.three.notas.ui.edit.ReminderTimePickerDialog
 import haddad.three.notas.ui.feedback.appClickable
 import haddad.three.notas.ui.theme.RememberTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant

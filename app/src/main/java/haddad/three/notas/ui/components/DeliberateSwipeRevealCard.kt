@@ -39,12 +39,12 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.feedback.SwipeThresholdHaptic
 import haddad.three.notas.ui.feedback.appClickable
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 

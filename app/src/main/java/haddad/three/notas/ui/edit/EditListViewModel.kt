@@ -3,10 +3,6 @@ package haddad.three.notas.ui.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import haddad.three.notas.data.AppMediaStorage
 import haddad.three.notas.data.ChecklistItemEntity
 import haddad.three.notas.data.DefaultNotePrefs
@@ -16,6 +12,10 @@ import haddad.three.notas.data.getActiveReminders
 import haddad.three.notas.domain.checklist.ChecklistEditResult
 import haddad.three.notas.domain.checklist.ChecklistEditor
 import haddad.three.notas.domain.checklist.EditableItem
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -114,6 +114,7 @@ class EditListViewModel
                     if (it.localId == localId) it.copy(text = text) else it
                 }
             markDirty()
+            triggerAutoSave()
         }
 
         fun updateItemDetails(
@@ -125,6 +126,7 @@ class EditListViewModel
                     if (it.localId == localId) it.copy(details = details) else it
                 }
             markDirty()
+            triggerAutoSave()
         }
 
         fun toggleChecked(localId: Long) {
@@ -303,6 +305,7 @@ class EditListViewModel
             }
             _items.value = result.items.sortedBy { item -> item.sortOrder }
             markDirty()
+            triggerAutoSave()
         }
 
         fun removeItem(localId: Long) {
@@ -320,6 +323,7 @@ class EditListViewModel
                         }
                     }
             markDirty()
+            triggerAutoSave()
         }
 
         private fun currentItems(): List<ChecklistItemEntity> {
@@ -371,6 +375,15 @@ class EditListViewModel
             syncHasPersistedRow()
             startExternalFieldMirror(newId)
             return newId
+        }
+
+        override fun hasMeaningfulContent(): Boolean {
+            val t = title.value.trim()
+            val nonEmpty = _items.value.filter { it.text.trim().isNotEmpty() }
+            val opts = currentOptions()
+            return t.isNotEmpty() || nonEmpty.isNotEmpty() || attachments.value.isNotEmpty() ||
+                opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() ||
+                opts.iconKey != null || opts.shoulderId != null || opts.endAt != null || opts.isAllDay
         }
 
         private fun hasNetChanges(): Boolean {
@@ -426,19 +439,30 @@ class EditListViewModel
             return persistence.withLock {
                 if (missingNote.value) {
                     persistence.clearDirty()
+                    updateSaveStatus(EditorSaveStatus.IDLE)
+                    return@withLock null
+                }
+                val id = loadedId
+                if (id == null && !hasMeaningfulContent()) {
+                    persistence.clearDirty()
+                    updateSaveStatus(EditorSaveStatus.IDLE)
                     return@withLock null
                 }
                 if (!hasNetChanges()) {
                     acceptPersistedSnapshot(originalNote)
                     persistence.clearDirty()
+                    updateSaveStatus(EditorSaveStatus.SAVED)
                     return@withLock null
                 }
+                updateSaveStatus(EditorSaveStatus.SAVING)
                 val t = title.value
-                val id = loadedId
                 val finalTitle = t.ifBlank { untitledName }
                 val persistable = currentPersistable()
                 if (id == null) {
-                    if (!persistence.isDirty) return@withLock null
+                    if (!persistence.isDirty) {
+                        updateSaveStatus(EditorSaveStatus.IDLE)
+                        return@withLock null
+                    }
                     val epochAtWrite = persistence.currentEpoch()
                     // Creation goes through createListWithItems with the real persistable payload so
                     // pre-composed hierarchy/checked state in the draft is preserved on first save.
@@ -455,12 +479,16 @@ class EditListViewModel
                     savedList?.note?.let { note ->
                         updateTimestamps(note.createdAt, note.updatedAt)
                     }
+                    updateSaveStatus(EditorSaveStatus.SAVED)
 
                     return@withLock {
                         repository.moveToTrash(newId)
                     }
                 } else {
-                    if (!persistence.isDirty) return@withLock null
+                    if (!persistence.isDirty) {
+                        updateSaveStatus(EditorSaveStatus.SAVED)
+                        return@withLock null
+                    }
                     val old = originalNote
                     val oldItems = originalItems
                     val epochAtWrite = persistence.currentEpoch()
@@ -475,6 +503,7 @@ class EditListViewModel
                     savedList?.note?.let { note ->
                         updateTimestamps(note.createdAt, note.updatedAt)
                     }
+                    updateSaveStatus(EditorSaveStatus.SAVED)
 
                     if (old != null) {
                         return@withLock {

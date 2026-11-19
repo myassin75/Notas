@@ -11,12 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
 import haddad.three.notas.data.UpdatePrefs
@@ -32,6 +26,12 @@ import haddad.three.notas.update.RememberUpdateInfo
 import haddad.three.notas.update.RememberUpdateState
 import haddad.three.notas.update.UpdateAvailableNotifier
 import haddad.three.notas.update.notificationDedupeKey
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -199,7 +199,7 @@ class RememberUpdateViewModel
                     }
                 downloadResult.fold(
                     onSuccess = { apkFile ->
-                        if (BuildConfig.FLAVOR == "github" && updatePrefs.snapshot().saveUpdateApkToDownloads) {
+                        if (updatePrefs.snapshot().saveUpdateApkToDownloads) {
                             withContext(ioDispatcher) {
                                 copyUpdateApkToMediaStoreDownloads(
                                     context = appContext,

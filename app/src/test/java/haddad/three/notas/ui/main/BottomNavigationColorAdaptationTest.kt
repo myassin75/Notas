@@ -1,15 +1,15 @@
 package haddad.three.notas.ui.main
 
 import androidx.compose.ui.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.R
 import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.ui.theme.ThemeColors
 import haddad.three.notas.ui.theme.buildColorScheme
 import haddad.three.notas.ui.theme.resolveSemanticPalette
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /**
  * Unit tests verifying the NUVORA Bottom Navigation color adaptation:
@@ -21,7 +21,6 @@ import haddad.three.notas.ui.theme.resolveSemanticPalette
  * - Bottom nav glass container styling
  */
 class BottomNavigationColorAdaptationTest {
-
     @Test
     fun mainTab_preservesExactDestinationsAndOrder() {
         val tabs = MainTab.entries

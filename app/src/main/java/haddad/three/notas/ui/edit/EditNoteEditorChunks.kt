@@ -75,14 +75,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteReminder
@@ -97,6 +89,14 @@ import haddad.three.notas.ui.components.RememberIconButton
 import haddad.three.notas.ui.feedback.appClickable
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import haddad.three.notas.ui.theme.transparentLargeTopAppBarColors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * Bridges the editor's [MarkdownEditorState] with [EditNoteViewModel.body]. Owns the "last
@@ -191,13 +191,18 @@ internal fun rememberEditorBodyBridge(
         }
     }
 
+    val untitledName = stringResource(R.string.edit_note_title_new)
+
     if (isEditMode) {
-        LaunchedEffect(markdownEditorState, bridge) {
+        LaunchedEffect(markdownEditorState, bridge, untitledName) {
             try {
                 snapshotFlow { markdownEditorState.markdown }
                     .distinctUntilChanged()
                     .debounce(250)
-                    .collectLatest { bridge.flush() }
+                    .collectLatest {
+                        bridge.flush()
+                        vm.triggerAutoSave(untitledName)
+                    }
             } finally {
                 bridge.flush()
             }
@@ -210,8 +215,6 @@ internal fun rememberEditorBodyBridge(
         androidx.compose.ui.res
             .stringResource(haddad.three.notas.R.string.changes_saved)
     val undoMsg = stringResource(R.string.common_undo)
-
-    val untitledName = stringResource(R.string.edit_note_title_new)
 
     DisposableEffect(lifecycleOwner, bridge, vm, appScope) {
         val observer =

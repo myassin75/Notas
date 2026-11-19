@@ -8,7 +8,6 @@ import org.junit.Test
 import java.util.Locale
 
 class ShoulderColorUtilsTest {
-
     @Test
     fun hsvToRgb_doesNotCrash_atAnySpectrumBoundaries() {
         for (h in 0..360 step 5) {

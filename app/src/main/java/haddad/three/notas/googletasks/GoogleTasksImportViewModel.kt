@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.di.IoDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -18,9 +21,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import haddad.three.notas.BuildConfig
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.di.IoDispatcher
 import javax.inject.Inject
 
 /**

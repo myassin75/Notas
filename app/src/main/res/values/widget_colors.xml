@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_container_bg">#FFFFFF</color>
+    <color name="widget_card_bg">#F2F2F4</color>
+    <color name="widget_card_border">#E5E5EA</color>
+    <color name="widget_card_stripe_default">#D1D1D6</color>
+    <color name="widget_icon_container_bg">#E5E5EA</color>
+    <color name="widget_icon_tint_default">#8E8E93</color>
+    <color name="widget_card_bg_overdue">#FDECEB</color>
+    <color name="widget_icon_container_bg_overdue">#FAD4D1</color>
+    <color name="widget_action_btn_bg">#E5E5EA</color>
+    <color name="widget_action_btn_tint">#3C3C43</color>
+    <color name="widget_header_logo_tint">#1B1B20</color>
+</resources>

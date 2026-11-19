@@ -49,6 +49,11 @@
     <string name="common_enable">Enable</string>
     <string name="common_save">Save</string>
     <string name="common_done">Done</string>
+    <string name="editor_saving">Saving…</string>
+    <string name="editor_saved">Saved</string>
+    <string name="editor_unsaved_changes">Unsaved changes</string>
+    <string name="detail_pane_no_note_selected_title">No note selected</string>
+    <string name="detail_pane_no_note_selected_subtitle">Choose a note from the list, or create a new one to begin editing.</string>
     <string name="common_ok">OK</string>
     <string name="common_yes">Yes</string>
     <string name="common_no">No</string>
@@ -98,7 +103,7 @@
     <string name="widget_selected_label">Selected notes</string>
     <string name="widget_agenda_description">Track overdue reminders and what is coming up in the next 7 days.</string>
     <string name="widget_quick_capture_description">Create a new note or list from your home screen, with a tiny due-today status.</string>
-    <string name="widget_selected_description">Display all, starred, pinned, or tagged notes and lists.</string>
+    <string name="widget_selected_description">Display all, pinned, or tagged notes and lists.</string>
     <string name="widget_header_title">Notas</string>
 
     <!-- Lock and PIN -->

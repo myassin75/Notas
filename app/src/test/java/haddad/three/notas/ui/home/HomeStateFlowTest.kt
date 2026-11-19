@@ -1,5 +1,13 @@
 package haddad.three.notas.ui.home
 
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.SortDir
+import haddad.three.notas.data.SortKey
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.ui.components.toNoteCardUiModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,14 +26,6 @@ import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.NotesFilter
-import haddad.three.notas.data.SortDir
-import haddad.three.notas.data.SortKey
-import haddad.three.notas.data.ViewOptions
-import haddad.three.notas.ui.components.toNoteCardUiModel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeStateFlowTest {

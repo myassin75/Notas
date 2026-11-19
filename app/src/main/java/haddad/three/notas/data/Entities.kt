@@ -6,9 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Fts4
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.util.UUID
-import kotlinx.serialization.Serializable
 import haddad.three.notas.R
+import kotlinx.serialization.Serializable
+import java.util.UUID
 
 @Serializable
 enum class NoteKind { NOTE, LIST }
@@ -198,7 +198,30 @@ data class NoteEntity(
      * pin when un-done. See `HomeListArrangement.arrangeItems`.
      */
     val pinnedAt: Long? = null,
-)
+) {
+    /** True when the note has an explicit end timestamp or any reminder with an end timestamp. */
+    val hasEndDate: Boolean
+        get() = endAt != null || reminders.any { it.endAt != null }
+
+    /** True when the note has a start timestamp (reminderAt or reminders list). */
+    val hasStartDate: Boolean
+        get() = reminderAt != null || reminders.isNotEmpty()
+
+    /**
+     * Classification rule:
+     * - Has end date -> Event
+     * - Has start date and no end date -> Task
+     * - Has neither -> Note
+     */
+    val isEvent: Boolean
+        get() = hasEndDate
+
+    val isTask: Boolean
+        get() = !hasEndDate && hasStartDate
+
+    val isNote: Boolean
+        get() = !hasEndDate && !hasStartDate
+}
 
 /** True when the note is pinned to the top of Home. */
 val NoteEntity.pinned: Boolean

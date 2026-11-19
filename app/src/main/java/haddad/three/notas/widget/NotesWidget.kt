@@ -3,6 +3,7 @@ package haddad.three.notas.widget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -57,25 +58,30 @@ import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
+import androidx.glance.material3.ColorProviders
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.flow.first
 import haddad.three.notas.MainActivity
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ThemeState
 import haddad.three.notas.data.ViewOptions
 import haddad.three.notas.data.Visibility
 import haddad.three.notas.data.pinned
 import haddad.three.notas.di.NotesWidgetEntryPoint
+import haddad.three.notas.ui.components.parseColorHexOrNull
 import haddad.three.notas.ui.edit.DEFAULT_LIST_HEADER_SYMBOL
 import haddad.three.notas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
 import haddad.three.notas.ui.edit.NoteIcon
 import haddad.three.notas.ui.edit.resolveNoteIcon
 import haddad.three.notas.ui.home.sortNotes
+import haddad.three.notas.ui.theme.NoteColors
+import haddad.three.notas.ui.theme.buildColorScheme
+import kotlinx.coroutines.flow.first
 import java.util.Calendar
 
 /**
@@ -138,10 +144,22 @@ class NotesWidget : GlanceAppWidget() {
         context: Context,
         id: GlanceId,
     ) {
-        val noteRepository = widgetEntryPoint(context).noteRepository()
+        val entryPoint = widgetEntryPoint(context)
+        val noteRepository = entryPoint.noteRepository()
+        val themePrefs = entryPoint.themePrefs()
         val initialNotes = noteRepository.observeActive().first()
+        val initialThemeState = themePrefs.state.first()
         provideContent {
-            GlanceTheme {
+            val themeFlow = remember(themePrefs) { themePrefs.state }
+            val themeState by themeFlow.collectAsState(initial = initialThemeState)
+            val glanceColors =
+                remember(themeState.accentTheme) {
+                    ColorProviders(
+                        light = buildColorScheme(themeState.accentTheme, darkTheme = false),
+                        dark = buildColorScheme(themeState.accentTheme, darkTheme = true),
+                    )
+                }
+            GlanceTheme(colors = glanceColors) {
                 val activeNotesFlow = remember(noteRepository) { noteRepository.observeActive() }
                 val activeNotes by activeNotesFlow.collectAsState(initial = initialNotes)
                 val now = System.currentTimeMillis()
@@ -157,10 +175,22 @@ class QuickCaptureWidget : GlanceAppWidget() {
         context: Context,
         id: GlanceId,
     ) {
-        val noteRepository = widgetEntryPoint(context).noteRepository()
+        val entryPoint = widgetEntryPoint(context)
+        val noteRepository = entryPoint.noteRepository()
+        val themePrefs = entryPoint.themePrefs()
         val initialNotes = noteRepository.observeActive().first()
+        val initialThemeState = themePrefs.state.first()
         provideContent {
-            GlanceTheme {
+            val themeFlow = remember(themePrefs) { themePrefs.state }
+            val themeState by themeFlow.collectAsState(initial = initialThemeState)
+            val glanceColors =
+                remember(themeState.accentTheme) {
+                    ColorProviders(
+                        light = buildColorScheme(themeState.accentTheme, darkTheme = false),
+                        dark = buildColorScheme(themeState.accentTheme, darkTheme = true),
+                    )
+                }
+            GlanceTheme(colors = glanceColors) {
                 val activeNotesFlow = remember(noteRepository) { noteRepository.observeActive() }
                 val activeNotes by activeNotesFlow.collectAsState(initial = initialNotes)
                 val now = System.currentTimeMillis()
@@ -187,8 +217,10 @@ class SelectedWidget : GlanceAppWidget() {
         val entryPoint = widgetEntryPoint(context)
         val noteRepository = entryPoint.noteRepository()
         val viewOptionsPrefs = entryPoint.viewOptionsPrefs()
+        val themePrefs = entryPoint.themePrefs()
         val initialNotes = noteRepository.observeActive().first()
         val initialViewOptions = viewOptionsPrefs.state.first()
+        val initialThemeState = themePrefs.state.first()
         val appWidgetId =
             runCatching {
                 GlanceAppWidgetManager(context).getAppWidgetId(id)
@@ -199,7 +231,16 @@ class SelectedWidget : GlanceAppWidget() {
             }.getOrDefault(AppWidgetManager.INVALID_APPWIDGET_ID)
 
         provideContent {
-            GlanceTheme {
+            val themeFlow = remember(themePrefs) { themePrefs.state }
+            val themeState by themeFlow.collectAsState(initial = initialThemeState)
+            val glanceColors =
+                remember(themeState.accentTheme) {
+                    ColorProviders(
+                        light = buildColorScheme(themeState.accentTheme, darkTheme = false),
+                        dark = buildColorScheme(themeState.accentTheme, darkTheme = true),
+                    )
+                }
+            GlanceTheme(colors = glanceColors) {
                 val activeNotesFlow = remember(noteRepository) { noteRepository.observeActive() }
                 val activeNotes by activeNotesFlow.collectAsState(initial = initialNotes)
                 val viewOptionsFlow = remember(viewOptionsPrefs) { viewOptionsPrefs.state }
@@ -275,8 +316,8 @@ private fun AgendaWidgetContent(
         modifier =
             GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.widgetBackground)
-                .cornerRadius(20.dp)
+                .background(ColorProvider(R.color.widget_container_bg))
+                .cornerRadius(24.dp)
                 // No bottom padding: the list scrolls all the way to the widget's bottom edge, so a
                 // partially visible card is cut off by the edge instead of by a band of empty
                 // background. The trailing spacer item below restores the inset at the list's end.
@@ -348,8 +389,8 @@ private fun SelectedNotesWidgetContent(
         modifier =
             GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.widgetBackground)
-                .cornerRadius(20.dp)
+                .background(ColorProvider(R.color.widget_container_bg))
+                .cornerRadius(24.dp)
                 // Bottom edge stays unpadded for the same reason as the agenda widget above.
                 .padding(start = contentPadding, end = contentPadding, top = contentPadding),
     ) {
@@ -402,8 +443,8 @@ private fun QuickCaptureContent(
         modifier =
             GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.widgetBackground)
-                .cornerRadius(20.dp)
+                .background(ColorProvider(R.color.widget_container_bg))
+                .cornerRadius(24.dp)
                 .padding(12.dp),
     ) {
         WidgetHeader(
@@ -470,10 +511,10 @@ private fun WidgetHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
-                provider = ImageProvider(R.drawable.ic_stat_remember),
+                provider = ImageProvider(R.drawable.ic_logo_white),
                 contentDescription = null,
                 modifier = GlanceModifier.size((if (compact) WIDGET_HEADER_ICON_COMPACT_DP else WIDGET_HEADER_ICON_DP).dp),
-                colorFilter = ColorFilter.tint(GlanceTheme.colors.primary),
+                colorFilter = ColorFilter.tint(ColorProvider(R.color.widget_header_logo_tint)),
             )
             Spacer(GlanceModifier.width(WIDGET_HEADER_ICON_GAP_DP.dp))
             Text(
@@ -481,7 +522,7 @@ private fun WidgetHeader(
                 maxLines = 1,
                 style =
                     TextStyle(
-                        color = GlanceTheme.colors.primary,
+                        color = GlanceTheme.colors.onSurface,
                         fontSize = if (compact) 13.scaledSp() else 14.scaledSp(),
                         fontWeight = FontWeight.Medium,
                     ),
@@ -557,8 +598,8 @@ private fun WidgetIconButton(
     contentDescription: String,
     action: Action,
     compact: Boolean,
-    backgroundColor: ColorProvider = GlanceTheme.colors.primaryContainer,
-    contentColor: ColorProvider = GlanceTheme.colors.onPrimaryContainer,
+    backgroundColor: ColorProvider = ColorProvider(R.color.widget_action_btn_bg),
+    contentColor: ColorProvider = GlanceTheme.colors.onSurfaceVariant,
 ) {
     CircleIconButton(
         imageProvider = provider,
@@ -583,25 +624,34 @@ private fun QuickCaptureButton(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(GlanceTheme.colors.primaryContainer)
+                .background(ColorProvider(R.color.widget_card_bg))
                 .cornerRadius(18.dp)
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-                .clickable(actionStartActivity(intent)),
+                .clickable(actionStartActivity(intent))
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(
-            provider = imageProvider,
-            contentDescription = null,
-            modifier = GlanceModifier.size(22.dp),
-            colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimaryContainer),
-        )
+        Box(
+            modifier =
+                GlanceModifier
+                    .size(32.dp)
+                    .cornerRadius(10.dp)
+                    .background(ColorProvider(R.color.widget_icon_container_bg)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                provider = imageProvider,
+                contentDescription = null,
+                modifier = GlanceModifier.size(18.dp),
+                colorFilter = ColorFilter.tint(GlanceTheme.colors.primary),
+            )
+        }
         Spacer(GlanceModifier.width(10.dp))
         Text(
             text = label,
             maxLines = 1,
             style =
                 TextStyle(
-                    color = GlanceTheme.colors.onPrimaryContainer,
+                    color = GlanceTheme.colors.onSurface,
                     fontSize = 14.scaledSp(),
                     fontWeight = FontWeight.Medium,
                 ),
@@ -638,7 +688,7 @@ private fun AgendaEmptyState() {
                 text = context.getString(R.string.widget_empty_watermark),
                 style =
                     TextStyle(
-                        color = GlanceTheme.colors.primaryContainer,
+                        color = ColorProvider(R.color.widget_action_btn_bg),
                         fontSize = 34.scaledSp(),
                     ),
             )
@@ -665,13 +715,13 @@ private fun SelectedNotesEmptyState(
     val watermark =
         when (config.filterType) {
             SelectedNotesFilterType.ALL -> context.getString(R.string.widget_empty_all_watermark)
-            SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_empty_starred_watermark)
+            SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_empty_tag_watermark)
             SelectedNotesFilterType.PINNED -> context.getString(R.string.widget_empty_pinned_watermark)
         }
     val message =
         when (config.filterType) {
             SelectedNotesFilterType.ALL -> context.getString(R.string.widget_empty_all)
-            SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_empty_starred)
+            SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_empty_tag)
             SelectedNotesFilterType.PINNED -> context.getString(R.string.widget_empty_pinned)
         }
     val emptyClickAction =
@@ -690,7 +740,7 @@ private fun SelectedNotesEmptyState(
                 text = watermark,
                 style =
                     TextStyle(
-                        color = GlanceTheme.colors.primaryContainer,
+                        color = ColorProvider(R.color.widget_action_btn_bg),
                         fontSize = 34.scaledSp(),
                     ),
             )
@@ -709,6 +759,56 @@ private fun SelectedNotesEmptyState(
 }
 
 @Composable
+private fun resolveWidgetCardStripeColor(
+    context: Context,
+    note: NoteWithItems,
+    overdue: Boolean,
+): ColorProvider {
+    if (overdue) {
+        return GlanceTheme.colors.error
+    }
+    val isNight =
+        (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+
+    if (!NoteColors.isNone(note.note.colorIndex)) {
+        val spec = NoteColors.at(note.note.colorIndex)
+        return ColorProvider(if (isNight) spec.dark else spec.light)
+    }
+
+    val shoulderHex = note.shoulder?.colorHex
+    if (!shoulderHex.isNullOrBlank()) {
+        val parsed = parseColorHexOrNull(shoulderHex)
+        if (parsed != null) {
+            return ColorProvider(parsed)
+        }
+    }
+
+    return ColorProvider(R.color.widget_card_stripe_default)
+}
+
+@Composable
+private fun resolveWidgetIconTint(
+    context: Context,
+    note: NoteWithItems,
+    overdue: Boolean,
+): ColorProvider {
+    if (overdue) {
+        return GlanceTheme.colors.error
+    }
+    val isNight =
+        (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+
+    if (!NoteColors.isNone(note.note.colorIndex)) {
+        val spec = NoteColors.at(note.note.colorIndex)
+        return ColorProvider(if (isNight) spec.dark else spec.light)
+    }
+
+    return ColorProvider(R.color.widget_icon_tint_default)
+}
+
+@Composable
 private fun ReminderCard(
     note: NoteWithItems,
     context: Context,
@@ -716,28 +816,47 @@ private fun ReminderCard(
     overdue: Boolean,
     compact: Boolean,
 ) {
+    val stripeColor = resolveWidgetCardStripeColor(context, note, overdue)
+    val cardBg = ColorProvider(if (overdue) R.color.widget_card_bg_overdue else R.color.widget_card_bg)
+    val iconContainerBg = ColorProvider(if (overdue) R.color.widget_icon_container_bg_overdue else R.color.widget_icon_container_bg)
+    val iconTint = resolveWidgetIconTint(context, note, overdue)
+
     Row(
         modifier =
             GlanceModifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .background(if (overdue) GlanceTheme.colors.errorContainer else GlanceTheme.colors.surface)
+                .padding(vertical = 3.dp)
+                .background(cardBg)
                 .cornerRadius(18.dp)
                 .clickable(actionStartActivity(openNoteIntent(context, note.note.id)))
-                .padding(horizontal = if (compact) 8.dp else 10.dp, vertical = if (compact) 8.dp else 9.dp),
+                .padding(
+                    start = if (compact) 8.dp else 10.dp,
+                    end = if (compact) 8.dp else 10.dp,
+                    top = if (compact) 8.dp else 9.dp,
+                    bottom = if (compact) 8.dp else 9.dp,
+                ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Spacer(
+            modifier =
+                GlanceModifier
+                    .width(3.5.dp)
+                    .height(if (compact) 26.dp else 32.dp)
+                    .cornerRadius(2.dp)
+                    .background(stripeColor),
+        )
+        Spacer(GlanceModifier.width(if (compact) 6.dp else 8.dp))
         Box(
             modifier =
                 GlanceModifier
                     .size(if (compact) 28.dp else 32.dp)
-                    .cornerRadius(16.dp)
-                    .background(if (overdue) GlanceTheme.colors.error else GlanceTheme.colors.primaryContainer),
+                    .cornerRadius(if (compact) 8.dp else 10.dp)
+                    .background(iconContainerBg),
             contentAlignment = Alignment.Center,
         ) {
             NoteWidgetIcon(
                 note = note,
-                tint = if (overdue) GlanceTheme.colors.onError else GlanceTheme.colors.primary,
+                tint = iconTint,
             )
         }
         Spacer(GlanceModifier.width(if (compact) 8.dp else 10.dp))
@@ -747,7 +866,7 @@ private fun ReminderCard(
                 maxLines = 1,
                 style =
                     TextStyle(
-                        color = if (overdue) GlanceTheme.colors.onErrorContainer else GlanceTheme.colors.onSurface,
+                        color = GlanceTheme.colors.onSurface,
                         fontSize = if (compact) 13.scaledSp() else 14.scaledSp(),
                         fontWeight = FontWeight.Medium,
                     ),
@@ -771,13 +890,13 @@ private fun ReminderCard(
                     maxLines = 1,
                     style =
                         TextStyle(
-                            color = if (overdue) GlanceTheme.colors.onErrorContainer else GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 12.scaledSp(),
+                            color = GlanceTheme.colors.onSurfaceVariant,
+                            fontSize = 11.scaledSp(),
                         ),
                 )
             }
         }
-        Spacer(GlanceModifier.width(8.dp))
+        Spacer(GlanceModifier.width(6.dp))
         WidgetIconButton(
             provider = ImageProvider(R.drawable.ic_widget_done),
             contentDescription = context.getString(R.string.widget_mark_done_cd),
@@ -786,8 +905,8 @@ private fun ReminderCard(
                     actionParametersOf(WidgetNoteIdKey to note.note.id),
                 ),
             compact = compact,
-            backgroundColor = if (overdue) GlanceTheme.colors.error else GlanceTheme.colors.primaryContainer,
-            contentColor = if (overdue) GlanceTheme.colors.onError else GlanceTheme.colors.onPrimaryContainer,
+            backgroundColor = if (overdue) ColorProvider(R.color.widget_icon_container_bg_overdue) else ColorProvider(R.color.widget_action_btn_bg),
+            contentColor = if (overdue) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
         )
     }
 }
@@ -798,27 +917,47 @@ private fun SelectedNotesCard(
     context: Context,
     compact: Boolean,
 ) {
+    val stripeColor = resolveWidgetCardStripeColor(context, note, overdue = false)
+    val cardBg = ColorProvider(R.color.widget_card_bg)
+    val iconContainerBg = ColorProvider(R.color.widget_icon_container_bg)
+    val iconTint = resolveWidgetIconTint(context, note, overdue = false)
+
     Row(
         modifier =
             GlanceModifier
                 .fillMaxWidth()
-                .background(GlanceTheme.colors.surface)
+                .padding(vertical = 3.dp)
+                .background(cardBg)
                 .cornerRadius(18.dp)
                 .clickable(actionStartActivity(openNoteIntent(context, note.note.id)))
-                .padding(horizontal = if (compact) 8.dp else 10.dp, vertical = if (compact) 8.dp else 9.dp),
+                .padding(
+                    start = if (compact) 8.dp else 10.dp,
+                    end = if (compact) 8.dp else 10.dp,
+                    top = if (compact) 8.dp else 9.dp,
+                    bottom = if (compact) 8.dp else 9.dp,
+                ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Spacer(
+            modifier =
+                GlanceModifier
+                    .width(3.5.dp)
+                    .height(if (compact) 26.dp else 32.dp)
+                    .cornerRadius(2.dp)
+                    .background(stripeColor),
+        )
+        Spacer(GlanceModifier.width(if (compact) 6.dp else 8.dp))
         Box(
             modifier =
                 GlanceModifier
                     .size(if (compact) 28.dp else 32.dp)
-                    .cornerRadius(16.dp)
-                    .background(GlanceTheme.colors.primaryContainer),
+                    .cornerRadius(if (compact) 8.dp else 10.dp)
+                    .background(iconContainerBg),
             contentAlignment = Alignment.Center,
         ) {
             NoteWidgetIcon(
                 note = note,
-                tint = GlanceTheme.colors.primary,
+                tint = iconTint,
             )
         }
         Spacer(GlanceModifier.width(if (compact) 8.dp else 10.dp))
@@ -919,7 +1058,7 @@ private fun selectedNotesHeaderTitle(
 ): String =
     when (config.filterType) {
         SelectedNotesFilterType.ALL -> context.getString(R.string.widget_filter_all_notes)
-        SelectedNotesFilterType.SHOULDER -> context.getString(R.string.widget_filter_starred)
+        SelectedNotesFilterType.SHOULDER -> config.shoulder.ifBlank { context.getString(R.string.widget_header_title) }
         SelectedNotesFilterType.PINNED -> context.getString(R.string.widget_filter_pinned)
     }
 
@@ -937,7 +1076,13 @@ internal fun selectedNotesWidgetItems(
     val filtered =
         when (config.filterType) {
             SelectedNotesFilterType.ALL -> uncompletedActive
-            SelectedNotesFilterType.SHOULDER -> uncompletedActive.filter { it.note.shoulderId != null }
+            SelectedNotesFilterType.SHOULDER -> {
+                if (config.shoulder.isNotBlank()) {
+                    uncompletedActive.filter { it.shoulder?.name.equals(config.shoulder, ignoreCase = true) }
+                } else {
+                    uncompletedActive.filter { it.note.shoulderId != null }
+                }
+            }
             SelectedNotesFilterType.PINNED -> uncompletedActive.filter { it.note.pinned }
         }
     return sortNotes(filtered, viewOptions)
@@ -1322,8 +1467,8 @@ private const val WIDGET_SYMBOL_BITMAP_SIZE_PX = 64
 private const val WIDGET_SYMBOL_SOURCE_BITMAP_SIZE_PX = 192
 private const val WIDGET_SYMBOL_TEXT_SIZE_PX = 144f
 private const val WIDGET_SYMBOL_OUTPUT_PADDING_PX = 4f
-private const val WIDGET_HEADER_ICON_DP = 18f
-private const val WIDGET_HEADER_ICON_COMPACT_DP = 16f
+private const val WIDGET_HEADER_ICON_DP = 16f
+private const val WIDGET_HEADER_ICON_COMPACT_DP = 14f
 private const val WIDGET_HEADER_ICON_GAP_DP = 6f
 private const val QUICK_CAPTURE_HORIZONTAL_PADDING_DP = 12f
 private const val QUICK_CAPTURE_HEADER_TITLE_SP = 13

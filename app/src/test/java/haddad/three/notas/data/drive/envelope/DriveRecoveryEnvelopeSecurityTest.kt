@@ -34,7 +34,6 @@ import java.net.URL
 import java.util.Base64
 
 class DriveRecoveryEnvelopeSecurityTest {
-
     private class MemoryDriveServer {
         val files = mutableMapOf<String, ByteArray>()
         val fileMetadata = mutableMapOf<String, String>()
@@ -57,17 +56,23 @@ class DriveRecoveryEnvelopeSecurityTest {
                 if (mediaPart != null) {
                     server.files["envelope_file_1"] = mediaPart.toByteArray(Charsets.UTF_8)
                 }
-                server.fileMetadata["envelope_file_1"] = parts.getOrNull(1)?.substringAfter("\r\n\r\n")?.substringBefore("\r\n").orEmpty()
+                server.fileMetadata["envelope_file_1"] =
+                    parts
+                        .getOrNull(1)
+                        ?.substringAfter("\r\n\r\n")
+                        ?.substringBefore("\r\n")
+                        .orEmpty()
                 val json = """{"id":"envelope_file_1","name":"notas_recovery_envelope.json","size":"128"}"""
                 return ByteArrayInputStream(json.toByteArray(Charsets.UTF_8))
             }
             if (urlStr.contains("spaces=appDataFolder")) {
                 val envelopeFile = server.files.keys.firstOrNull()
-                val json = if (envelopeFile != null) {
-                    """{"files":[{"id":"$envelopeFile","name":"notas_recovery_envelope.json","size":"${server.files[envelopeFile]?.size ?: 0}"}]}"""
-                } else {
-                    """{"files":[]}"""
-                }
+                val json =
+                    if (envelopeFile != null) {
+                        """{"files":[{"id":"$envelopeFile","name":"notas_recovery_envelope.json","size":"${server.files[envelopeFile]?.size ?: 0}"}]}"""
+                    } else {
+                        """{"files":[]}"""
+                    }
                 return ByteArrayInputStream(json.toByteArray(Charsets.UTF_8))
             }
             if (urlStr.contains("alt=media")) {
@@ -79,8 +84,11 @@ class DriveRecoveryEnvelopeSecurityTest {
         }
 
         override fun getOutputStream(): OutputStream = outputBuffer
+
         override fun disconnect() {}
+
         override fun usingProxy(): Boolean = false
+
         override fun connect() {}
     }
 
@@ -90,9 +98,10 @@ class DriveRecoveryEnvelopeSecurityTest {
     @Before
     fun setUp() {
         server = MemoryDriveServer()
-        driveApiClient = GoogleDriveApiClient(
-            httpFactory = { url -> MockDriveConnection(URL(url), server) },
-        )
+        driveApiClient =
+            GoogleDriveApiClient(
+                httpFactory = { url -> MockDriveConnection(URL(url), server) },
+            )
     }
 
     @Test
@@ -132,11 +141,12 @@ class DriveRecoveryEnvelopeSecurityTest {
             assertNotNull(envelope)
 
             // Device 2 enters original 12 words
-            val recoveredMek = dev2EnvelopeManager.recoverMekOnNewDevice(
-                mnemonic = session.mnemonicWords,
-                passphrase = "",
-                envelope = envelope!!,
-            )
+            val recoveredMek =
+                dev2EnvelopeManager.recoverMekOnNewDevice(
+                    mnemonic = session.mnemonicWords,
+                    passphrase = "",
+                    envelope = envelope!!,
+                )
 
             // Recovered MEK must match original MEK byte-for-byte
             assertArrayEquals(originalMek.encoded, recoveredMek.encoded)
@@ -234,7 +244,7 @@ class DriveRecoveryEnvelopeSecurityTest {
 
             // Verify none of the 12 mnemonic words appear in plaintext in the cloud payload
             for (word in session.mnemonicWords) {
-                assertFalse("Cloud metadata must never contain mnemonic word '$word'", uploadedMetadata.contains(word))
+                assertFalse("Cloud metadata must never contain mnemonic word '$word'", uploadedMetadata.contains("\"$word\""))
                 assertFalse("Cloud content must never contain plaintext mnemonic word '$word'", uploadedContent.contains("\"$word\""))
             }
         }

@@ -28,9 +28,6 @@ import androidx.compose.ui.zIndex
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.QuickCapturePrefs
 import haddad.three.notas.data.QuickCaptureState
@@ -38,6 +35,9 @@ import haddad.three.notas.data.ReminderPreferencesState
 import haddad.three.notas.data.ReminderPrefs
 import haddad.three.notas.data.SnoozeType
 import haddad.three.notas.ui.components.RememberDropdownMenuItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun RemindersSection(

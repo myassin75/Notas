@@ -1,12 +1,12 @@
 package haddad.three.notas.widget
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.data.ViewOptions
 import haddad.three.notas.data.Visibility
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class NotesWidgetTest {
     @Test

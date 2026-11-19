@@ -70,7 +70,11 @@ interface SyncSnapshotDao {
     ): Int
 
     @Query("UPDATE sync_snapshots SET status = :newStatus, updatedAt = :timestamp WHERE snapshotId = :snapshotId")
-    suspend fun updateStatus(snapshotId: String, newStatus: String, timestamp: Long = System.currentTimeMillis()): Int
+    suspend fun updateStatus(
+        snapshotId: String,
+        newStatus: String,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Int
 
     @Query("DELETE FROM sync_snapshots WHERE snapshotId = :snapshotId")
     suspend fun deleteById(snapshotId: String): Int
@@ -106,7 +110,10 @@ interface SyncAttachmentPromotionDao {
     suspend fun getBySnapshotId(snapshotId: String): SyncAttachmentPromotionEntity?
 
     @Query("UPDATE sync_attachment_promotions SET status = 'COMPLETED', updatedAt = :timestamp WHERE snapshotId = :snapshotId")
-    suspend fun markCompleted(snapshotId: String, timestamp: Long = System.currentTimeMillis()): Int
+    suspend fun markCompleted(
+        snapshotId: String,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Int
 
     @Query("SELECT * FROM sync_attachment_promotions WHERE status = 'COMMITTED' ORDER BY createdAt ASC")
     suspend fun getPendingCommittedPromotions(): List<SyncAttachmentPromotionEntity>
@@ -117,4 +124,3 @@ interface SyncAttachmentPromotionDao {
     @Query("DELETE FROM sync_attachment_promotions")
     suspend fun clearAll()
 }
-

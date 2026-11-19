@@ -62,32 +62,36 @@ fun LoginScreen(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(palette.notasBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(palette.notasBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Top Navigation Bar
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(
                         onClick = onBackClick,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
                     ) {
                         RememberMaterialRoundedSymbol(
                             name = "arrow_back",
@@ -142,10 +146,11 @@ fun LoginScreen(
                     placeholder = "you@example.com",
                     isError = state.emailError != null,
                     errorMessage = state.emailError,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next,
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next,
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -159,10 +164,11 @@ fun LoginScreen(
                     placeholder = "••••••••",
                     isError = state.passwordError != null,
                     errorMessage = state.passwordError,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done,
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done,
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -177,9 +183,10 @@ fun LoginScreen(
                         text = "Forgot password?",
                         style = NotasTypography.BodyMedium,
                         color = palette.primaryText,
-                        modifier = Modifier
-                            .clickable(onClick = onForgotPasswordClick)
-                            .padding(vertical = 4.dp),
+                        modifier =
+                            Modifier
+                                .clickable(onClick = onForgotPasswordClick)
+                                .padding(vertical = 4.dp),
                     )
                 }
 
@@ -199,9 +206,10 @@ fun LoginScreen(
 
                 // Or Divider
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     HorizontalDivider(
@@ -233,9 +241,10 @@ fun LoginScreen(
 
             // Footer Link
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {

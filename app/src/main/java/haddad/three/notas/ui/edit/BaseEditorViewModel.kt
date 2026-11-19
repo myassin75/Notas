@@ -5,12 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import haddad.three.notas.data.AppMediaStorage
 import haddad.three.notas.data.DefaultNotePreferencesState
 import haddad.three.notas.data.DefaultNotePrefs
@@ -28,7 +22,22 @@ import haddad.three.notas.data.pinned
 import haddad.three.notas.di.SettingsDependenciesEntryPoint
 import haddad.three.notas.ui.common.HeroFraming
 import haddad.three.notas.ui.nav.Routes
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import haddad.three.notas.data.Visibility as NoteVisibility
+
+enum class EditorSaveStatus {
+    IDLE,
+    SAVING,
+    SAVED,
+    UNSAVED_CHANGES,
+}
 
 /**
  * Shared owner of every persisted field, setter, and note-lifecycle action common to both the
@@ -118,10 +127,10 @@ abstract class BaseEditorViewModel(
     private val _pictureHeroFraming = MutableStateFlow<String?>(null)
     val pictureHeroFraming: StateFlow<String?> = _pictureHeroFraming.asStateFlow()
 
-    private val _colorIndex = MutableStateFlow(8)
+    private val _colorIndex = MutableStateFlow(0)
     val colorIndex: StateFlow<Int> = _colorIndex.asStateFlow()
 
-    private val _iconKey = MutableStateFlow<String?>("${ICON_SYMBOL_PREFIX}calendar_month")
+    private val _iconKey = MutableStateFlow<String?>(null)
     val iconKey: StateFlow<String?> = _iconKey.asStateFlow()
 
     private val _actions = MutableStateFlow<List<NoteAction>>(emptyList())
@@ -187,6 +196,42 @@ abstract class BaseEditorViewModel(
         EditorPersistenceSession(initialDirty = noteId == null && prefillBody.isNotBlank())
     val hasUnsavedChanges: StateFlow<Boolean> = persistence.hasUnsavedChanges
 
+    private val _saveStatus = MutableStateFlow(EditorSaveStatus.IDLE)
+    val saveStatus: StateFlow<EditorSaveStatus> = _saveStatus.asStateFlow()
+
+    protected fun updateSaveStatus(status: EditorSaveStatus) {
+        _saveStatus.value = status
+    }
+
+    private var autoSaveJob: Job? = null
+
+    abstract fun hasMeaningfulContent(): Boolean
+
+    fun triggerAutoSave(
+        untitledName: String = "Untitled",
+        delayMs: Long = 650L,
+    ) {
+        if (!hasMeaningfulContent()) {
+            _saveStatus.value = EditorSaveStatus.IDLE
+            return
+        }
+        _saveStatus.value = EditorSaveStatus.UNSAVED_CHANGES
+        autoSaveJob?.cancel()
+        autoSaveJob =
+            viewModelScope.launch {
+                delay(delayMs)
+                if (persistence.isDirty && hasMeaningfulContent()) {
+                    _saveStatus.value = EditorSaveStatus.SAVING
+                    try {
+                        saveIfNeeded(untitledName)
+                        _saveStatus.value = EditorSaveStatus.SAVED
+                    } catch (e: Exception) {
+                        _saveStatus.value = EditorSaveStatus.UNSAVED_CHANGES
+                    }
+                }
+            }
+    }
+
     protected var loadedId: Long? = noteId
     protected var originalNote: haddad.three.notas.data.NoteEntity? = null
     private var remindersEditedLocally = false
@@ -216,6 +261,7 @@ abstract class BaseEditorViewModel(
 
     protected fun markDirty() {
         persistence.markDirty()
+        _saveStatus.value = EditorSaveStatus.UNSAVED_CHANGES
     }
 
     protected fun syncHasPersistedRow() {
@@ -320,6 +366,7 @@ abstract class BaseEditorViewModel(
         if (_title.value == value) return
         _title.value = value
         markDirty()
+        triggerAutoSave()
     }
 
     fun setReminder(
@@ -344,6 +391,7 @@ abstract class BaseEditorViewModel(
         _reminders.value = remindersList
         val soonest = remindersList.minByOrNull { it.reminderAt }
         _reminderAt.value = soonest?.reminderAt
+        _endAt.value = soonest?.endAt
         _recurrence.value = soonest?.recurrence?.sanitized()
         remindersEditedLocally = true
         markDirty()

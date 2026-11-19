@@ -71,7 +71,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.flow.first
 import haddad.three.notas.R
 import haddad.three.notas.ui.common.MarkdownText
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
@@ -86,6 +85,7 @@ import haddad.three.notas.ui.settings.SettingsDesignTokens
 import haddad.three.notas.ui.settings.SettingsSectionCard
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import haddad.three.notas.ui.theme.transparentLargeTopAppBarColors
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

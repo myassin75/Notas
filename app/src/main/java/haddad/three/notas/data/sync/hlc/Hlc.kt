@@ -15,7 +15,6 @@ data class Hlc(
     val logicalCounter: Int,
     val deviceId: String,
 ) : Comparable<Hlc> {
-
     init {
         require(physicalTime >= 0L) { "Physical time must be non-negative: $physicalTime" }
         require(logicalCounter >= 0) { "Logical counter must be non-negative: $logicalCounter" }
@@ -41,10 +40,12 @@ data class Hlc(
             require(parts.size == 3) {
                 "Invalid HLC string format: '$serialized'. Expected 'physicalTime:counter:deviceId'"
             }
-            val physical = parts[0].toLongOrNull()
-                ?: throw IllegalArgumentException("Invalid physical time component in HLC: '${parts[0]}'")
-            val counter = parts[1].toIntOrNull()
-                ?: throw IllegalArgumentException("Invalid logical counter component in HLC: '${parts[1]}'")
+            val physical =
+                parts[0].toLongOrNull()
+                    ?: throw IllegalArgumentException("Invalid physical time component in HLC: '${parts[0]}'")
+            val counter =
+                parts[1].toIntOrNull()
+                    ?: throw IllegalArgumentException("Invalid logical counter component in HLC: '${parts[1]}'")
             val node = parts[2]
             require(node.isNotBlank()) { "Device ID in HLC string cannot be blank: '$serialized'" }
             return Hlc(physical, counter, node)
@@ -56,4 +57,3 @@ data class Hlc(
         }
     }
 }
-

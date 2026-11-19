@@ -3,15 +3,15 @@ package haddad.three.notas.ui.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import haddad.three.notas.data.AppMediaStorage
 import haddad.three.notas.data.DefaultNotePrefs
 import haddad.three.notas.data.NoteOptions
 import haddad.three.notas.data.NoteRepository
 import haddad.three.notas.data.getActiveReminders
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -57,6 +57,16 @@ class EditNoteViewModel
             if (_body.value == value) return
             _body.value = value
             markDirty()
+            triggerAutoSave()
+        }
+
+        override fun hasMeaningfulContent(): Boolean {
+            val t = title.value.trim()
+            val b = _body.value.trim()
+            val opts = currentOptions()
+            return t.isNotEmpty() || b.isNotEmpty() || attachments.value.isNotEmpty() ||
+                opts.pictureUri != null || opts.reminderAt != null || opts.actions.isNotEmpty() ||
+                opts.iconKey != null || opts.shoulderId != null || opts.endAt != null || opts.isAllDay
         }
 
         override suspend fun persistNewDraftForAttachment(): Long {
@@ -106,19 +116,30 @@ class EditNoteViewModel
             return persistence.withLock {
                 if (missingNote.value) {
                     persistence.clearDirty()
+                    updateSaveStatus(EditorSaveStatus.IDLE)
+                    return@withLock null
+                }
+                val id = loadedId
+                if (id == null && !hasMeaningfulContent()) {
+                    persistence.clearDirty()
+                    updateSaveStatus(EditorSaveStatus.IDLE)
                     return@withLock null
                 }
                 if (!hasNetChanges()) {
                     acceptPersistedSnapshot(originalNote)
                     persistence.clearDirty()
+                    updateSaveStatus(EditorSaveStatus.SAVED)
                     return@withLock null
                 }
+                updateSaveStatus(EditorSaveStatus.SAVING)
                 val titleValue = title.value
                 val bodyValue = _body.value
-                val id = loadedId
                 val finalTitle = titleValue.ifBlank { untitledName }
                 if (id == null) {
-                    if (!persistence.isDirty) return@withLock null
+                    if (!persistence.isDirty) {
+                        updateSaveStatus(EditorSaveStatus.IDLE)
+                        return@withLock null
+                    }
                     val epochAtWrite = persistence.currentEpoch()
                     val newId = repository.createNote(finalTitle, bodyValue, colorIndex.value, currentOptions())
                     loadedId = newId
@@ -132,12 +153,16 @@ class EditNoteViewModel
                     if (savedNote != null) {
                         updateTimestamps(savedNote.createdAt, savedNote.updatedAt)
                     }
+                    updateSaveStatus(EditorSaveStatus.SAVED)
 
                     return@withLock {
                         repository.moveToTrash(newId)
                     }
                 } else {
-                    if (!persistence.isDirty) return@withLock null
+                    if (!persistence.isDirty) {
+                        updateSaveStatus(EditorSaveStatus.SAVED)
+                        return@withLock null
+                    }
                     val old = originalNote
                     val epochAtWrite = persistence.currentEpoch()
                     repository.updateNote(id, finalTitle, bodyValue, colorIndex.value, currentOptions())
@@ -150,6 +175,7 @@ class EditNoteViewModel
                     if (savedNote != null) {
                         updateTimestamps(savedNote.createdAt, savedNote.updatedAt)
                     }
+                    updateSaveStatus(EditorSaveStatus.SAVED)
 
                     if (old != null) {
                         return@withLock {

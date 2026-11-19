@@ -76,7 +76,6 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
 class DriveAttachmentRestoreSafetyTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -95,7 +94,9 @@ class DriveAttachmentRestoreSafetyTest {
     }
 
     private class FakeShoulderDao : haddad.three.notas.data.BaseFakeShoulderDao()
+
     private class FakeChecklistItemDao : haddad.three.notas.data.BaseFakeChecklistItemDao()
+
     private class FakeAttachmentDao : haddad.three.notas.data.BaseFakeAttachmentDao()
 
     private class FakeAuthRepository(
@@ -103,28 +104,67 @@ class DriveAttachmentRestoreSafetyTest {
     ) : AuthRepository {
         override val authState: Flow<AuthState> = emptyFlow()
         override val currentUser: AuthUser? get() = user
-        override suspend fun registerWithEmailAndPassword(email: String, password: String, username: String?): AuthResult<AuthUser> = AuthResult.Success(user!!)
-        override suspend fun loginWithEmailAndPassword(email: String, password: String): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
+        override suspend fun registerWithEmailAndPassword(
+            email: String,
+            password: String,
+            username: String?,
+        ): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
+        override suspend fun loginWithEmailAndPassword(
+            email: String,
+            password: String,
+        ): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
         override suspend fun signInWithGoogle(context: Context): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
         override suspend fun sendEmailVerification(): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun reloadUser(): AuthResult<AuthUser> = AuthResult.Success(user!!)
+
         override suspend fun sendPasswordResetEmail(email: String): AuthResult<Unit> = AuthResult.Success(Unit)
-        override suspend fun confirmPasswordReset(actionCode: String, newPassword: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
+        override suspend fun confirmPasswordReset(
+            actionCode: String,
+            newPassword: String,
+        ): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun verifyPasswordResetCode(actionCode: String): AuthResult<String> = AuthResult.Success("test@example.com")
+
         override suspend fun applyActionCode(actionCode: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun updatePassword(newPassword: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun syncBackendProfile(): AuthResult<BackendProfile> = AuthResult.Error("Not implemented")
-        override suspend fun signOut() { user = null }
+
+        override suspend fun signOut() {
+            user = null
+        }
+
         override suspend fun getIdToken(forceRefresh: Boolean): String? = "mock_token"
     }
 
     private class FakeGoogleDriveAuthDelegate : GoogleDriveAuthDelegate {
-        override suspend fun authorize(context: Context, forceAccountSelection: Boolean): GoogleDriveAuthorizationResult =
-            GoogleDriveAuthorizationResult.Success("test_drive_token", "drive_user@example.com")
-        override suspend fun parseConsentResult(context: Context, data: android.content.Intent?): GoogleDriveAuthorizationResult =
-            GoogleDriveAuthorizationResult.Success("test_drive_token", "drive_user@example.com")
-        override suspend fun disconnect(context: Context, accountEmail: String?, accessToken: String?) {}
-        override suspend fun invalidateToken(context: Context, token: String) {}
+        override suspend fun authorize(
+            context: Context,
+            forceAccountSelection: Boolean,
+        ): GoogleDriveAuthorizationResult = GoogleDriveAuthorizationResult.Success("test_drive_token", "drive_user@example.com")
+
+        override suspend fun parseConsentResult(
+            context: Context,
+            data: android.content.Intent?,
+        ): GoogleDriveAuthorizationResult = GoogleDriveAuthorizationResult.Success("test_drive_token", "drive_user@example.com")
+
+        override suspend fun disconnect(
+            context: Context,
+            accountEmail: String?,
+            accessToken: String?,
+        ) {}
+
+        override suspend fun invalidateToken(
+            context: Context,
+            token: String,
+        ) {}
     }
 
     private lateinit var fakeContext: Context
@@ -145,11 +185,14 @@ class DriveAttachmentRestoreSafetyTest {
     fun setUp() {
         fakeFilesDir = tempFolder.newFolder("files")
         fakeCacheDir = tempFolder.newFolder("cache")
-        fakeContext = object : ContextWrapper(null) {
-            override fun getApplicationContext(): Context = this
-            override fun getFilesDir(): File = fakeFilesDir
-            override fun getCacheDir(): File = fakeCacheDir
-        }
+        fakeContext =
+            object : ContextWrapper(null) {
+                override fun getApplicationContext(): Context = this
+
+                override fun getFilesDir(): File = fakeFilesDir
+
+                override fun getCacheDir(): File = fakeCacheDir
+            }
 
         val keyGen = KeyGenerator.getInstance("AES")
         keyGen.init(256)
@@ -168,35 +211,37 @@ class DriveAttachmentRestoreSafetyTest {
         authRepository = FakeAuthRepository()
 
         val shoulderRepo = ShoulderRepository(shoulderDao, null, authRepository)
-        noteRepository = NoteRepository(
-            noteDao = noteDao,
-            database = null,
-            itemDao = itemDao,
-            attachmentDao = attachmentDao,
-            scheduler = null,
-            shoulderRepository = shoulderRepo,
-            appMediaStorage = null,
-            tombstoneRecorder = null,
-            authRepository = authRepository,
-            ioDispatcher = testDispatcher,
-            defaultDispatcher = testDispatcher,
-        )
+        noteRepository =
+            NoteRepository(
+                noteDao = noteDao,
+                database = null,
+                itemDao = itemDao,
+                attachmentDao = attachmentDao,
+                scheduler = null,
+                shoulderRepository = shoulderRepo,
+                appMediaStorage = null,
+                tombstoneRecorder = null,
+                authRepository = authRepository,
+                ioDispatcher = testDispatcher,
+                defaultDispatcher = testDispatcher,
+            )
 
-        archiveManager = DriveBackupArchiveManager(
-            noteDao = noteDao,
-            shoulderDao = shoulderDao,
-            itemDao = itemDao,
-            themePrefs = ThemePrefs(fakeContext),
-            notesUiPrefs = NotesUiPrefs(fakeContext),
-            viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-            lockPrefs = LockPrefs(fakeContext),
-            interactionPrefs = InteractionPrefs(fakeContext),
-            quickCapturePrefs = QuickCapturePrefs(fakeContext),
-            reminderPrefs = ReminderPrefs(fakeContext),
-            defaultNotePrefs = DefaultNotePrefs(fakeContext),
-            updatePrefs = UpdatePrefs(fakeContext),
-            json = json,
-        )
+        archiveManager =
+            DriveBackupArchiveManager(
+                noteDao = noteDao,
+                shoulderDao = shoulderDao,
+                itemDao = itemDao,
+                themePrefs = ThemePrefs(fakeContext),
+                notesUiPrefs = NotesUiPrefs(fakeContext),
+                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                lockPrefs = LockPrefs(fakeContext),
+                interactionPrefs = InteractionPrefs(fakeContext),
+                quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                reminderPrefs = ReminderPrefs(fakeContext),
+                defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                updatePrefs = UpdatePrefs(fakeContext),
+                json = json,
+            )
     }
 
     private fun buildSampleEncryptedBackup(
@@ -207,49 +252,59 @@ class DriveAttachmentRestoreSafetyTest {
         val tempZip = tempFolder.newFile("temp_${UUID.randomUUID()}.zip")
         val createdAt = System.currentTimeMillis()
 
-        val sampleNote = NoteEntity(
-            id = 1L,
-            uuid = "note_1",
-            kind = NoteKind.NOTE,
-            title = "Test Note With Attachment",
-            body = "Body",
-            colorIndex = 0,
-            trashed = false,
-            createdAt = createdAt,
-            updatedAt = createdAt,
-        )
+        val sampleNote =
+            NoteEntity(
+                id = 1L,
+                uuid = "note_1",
+                kind = NoteKind.NOTE,
+                title = "Test Note With Attachment",
+                body = "Body",
+                colorIndex = 0,
+                trashed = false,
+                createdAt = createdAt,
+                updatedAt = createdAt,
+            )
 
         val attUuid = UUID.randomUUID().toString()
-        val sampleAttachment = NoteAttachmentEntity(
-            id = 10L,
-            noteId = 1L,
-            uuid = attUuid,
-            displayName = attachmentName,
-            mimeType = "image/jpeg",
-            uri = "file:///dummy/$attachmentName",
-        )
+        val sampleAttachment =
+            NoteAttachmentEntity(
+                id = 10L,
+                noteId = 1L,
+                uuid = attUuid,
+                displayName = attachmentName,
+                mimeType = "image/jpeg",
+                uri = "file:///dummy/$attachmentName",
+            )
 
-        val noteWithItems = NoteWithItems(
-            note = sampleNote,
-            items = emptyList(),
-            attachments = listOf(sampleAttachment),
-        )
+        val noteWithItems =
+            NoteWithItems(
+                note = sampleNote,
+                items = emptyList(),
+                attachments = listOf(sampleAttachment),
+            )
 
         // 1. Pack note JSON and attachments
         FileOutputStream(tempZip).use { fos ->
             ZipOutputStream(fos).use { zip ->
-                val notesJson = JSONObject().apply {
-                    put("version", 1)
-                    put("exportedAt", createdAt)
-                    put("categories", JSONArray())
-                    put("notes", JSONArray().apply { put(encodeNoteForBackup(noteWithItems)) })
-                }
+                val notesJson =
+                    JSONObject().apply {
+                        put("version", 1)
+                        put("exportedAt", createdAt)
+                        put("categories", JSONArray())
+                        put("notes", JSONArray().apply { put(encodeNoteForBackup(noteWithItems)) })
+                    }
                 zip.putNextEntry(ZipEntry(BackupIo.ENTRY_NOTES))
-                OutputStreamWriter(zip, Charsets.UTF_8).apply { write(notesJson.toString(2)); flush() }
+                OutputStreamWriter(zip, Charsets.UTF_8).apply {
+                    write(notesJson.toString(2))
+                    flush()
+                }
                 zip.closeEntry()
 
                 zip.putNextEntry(ZipEntry(BackupIo.ENTRY_SETTINGS))
-                OutputStreamWriter(zip, Charsets.UTF_8).apply { write("{}"); flush() }
+                OutputStreamWriter(zip, Charsets.UTF_8).apply {
+                    write("{}")
+                    flush()
+                }
                 zip.closeEntry()
 
                 zip.putNextEntry(ZipEntry("attachments/${sampleAttachment.uuid}_$attachmentName"))
@@ -259,21 +314,25 @@ class DriveAttachmentRestoreSafetyTest {
         }
 
         // 2. Build final ZIP with manifest
-        val manifest = DriveBackupManifest(
-            backupId = "backup_test_1",
-            createdAtEpochMillis = createdAt,
-            schemaVersion = 1,
-            notesCount = 1,
-            tasksCount = 0,
-            categoriesCount = 0,
-            attachmentsCount = 1,
-            plainSha256 = "",
-        )
+        val manifest =
+            DriveBackupManifest(
+                backupId = "backup_test_1",
+                createdAtEpochMillis = createdAt,
+                schemaVersion = 1,
+                notesCount = 1,
+                tasksCount = 0,
+                categoriesCount = 0,
+                attachmentsCount = 1,
+                plainSha256 = "",
+            )
 
         val perfectPlainZip = tempFolder.newFile("perfect_${UUID.randomUUID()}.zip")
         ZipOutputStream(FileOutputStream(perfectPlainZip)).use { outZip ->
             outZip.putNextEntry(ZipEntry(BackupIo.ENTRY_MANIFEST))
-            OutputStreamWriter(outZip, Charsets.UTF_8).apply { write(json.encodeToString(manifest)); flush() }
+            OutputStreamWriter(outZip, Charsets.UTF_8).apply {
+                write(json.encodeToString(manifest))
+                flush()
+            }
             outZip.closeEntry()
 
             java.util.zip.ZipInputStream(FileInputStream(tempZip)).use { inZip ->
@@ -302,26 +361,33 @@ class DriveAttachmentRestoreSafetyTest {
         runBlocking {
             // Setup existing attachments on disk
             val existingAttDir = File(fakeFilesDir, "note_attachments").apply { mkdirs() }
-            val existingFile = File(existingAttDir, "existing_precious_photo.jpg").apply {
-                writeText("PREVIOUS_ATTACHMENT_DO_NOT_LOSE")
-            }
+            val existingFile =
+                File(existingAttDir, "existing_precious_photo.jpg").apply {
+                    writeText("PREVIOUS_ATTACHMENT_DO_NOT_LOSE")
+                }
 
             val encryptedBackup = tempFolder.newFile("encrypted_backup.bin")
             buildSampleEncryptedBackup(encryptedBackup)
 
             // Setup mock HTTP connection returning encrypted backup
-            val mockApiClient = GoogleDriveApiClient(
-                httpFactory = { url ->
-                    object : HttpURLConnection(URL(url)) {
-                        override fun getResponseCode(): Int = 200
-                        override fun getInputStream(): InputStream = FileInputStream(encryptedBackup)
-                        override fun getOutputStream(): OutputStream = ByteArrayOutputStream()
-                        override fun disconnect() {}
-                        override fun usingProxy(): Boolean = false
-                        override fun connect() {}
-                    }
-                },
-            )
+            val mockApiClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        object : HttpURLConnection(URL(url)) {
+                            override fun getResponseCode(): Int = 200
+
+                            override fun getInputStream(): InputStream = FileInputStream(encryptedBackup)
+
+                            override fun getOutputStream(): OutputStream = ByteArrayOutputStream()
+
+                            override fun disconnect() {}
+
+                            override fun usingProxy(): Boolean = false
+
+                            override fun connect() {}
+                        }
+                    },
+                )
 
             // Make NoteDao throw on insert to simulate database failure
             noteDao.shouldThrowOnInsert = true
@@ -329,31 +395,32 @@ class DriveAttachmentRestoreSafetyTest {
             val drivePrefs = DriveAuthPreferences(fakeContext)
             val envelopeManager = DriveRecoveryEnvelopeManager(mockApiClient, mekManager, InMemoryCryptoStorage())
 
-            val provider = GoogleDriveBackupProvider(
-                context = fakeContext,
-                driveApiClient = mockApiClient,
-                driveAuthDelegate = FakeGoogleDriveAuthDelegate(),
-                drivePrefs = drivePrefs,
-                mekManager = mekManager,
-                envelopeManager = envelopeManager,
-                archiveManager = archiveManager,
-                authRepository = authRepository,
-                noteDao = noteDao,
-                shoulderDao = shoulderDao,
-                itemDao = itemDao,
-                noteRepository = noteRepository,
-                themePrefs = ThemePrefs(fakeContext),
-                notesUiPrefs = NotesUiPrefs(fakeContext),
-                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-                lockPrefs = LockPrefs(fakeContext),
-                interactionPrefs = InteractionPrefs(fakeContext),
-                quickCapturePrefs = QuickCapturePrefs(fakeContext),
-                reminderPrefs = ReminderPrefs(fakeContext),
-                defaultNotePrefs = DefaultNotePrefs(fakeContext),
-                updatePrefs = UpdatePrefs(fakeContext),
-                database = null,
-                scheduler = null,
-            )
+            val provider =
+                GoogleDriveBackupProvider(
+                    context = fakeContext,
+                    driveApiClient = mockApiClient,
+                    driveAuthDelegate = FakeGoogleDriveAuthDelegate(),
+                    drivePrefs = drivePrefs,
+                    mekManager = mekManager,
+                    envelopeManager = envelopeManager,
+                    archiveManager = archiveManager,
+                    authRepository = authRepository,
+                    noteDao = noteDao,
+                    shoulderDao = shoulderDao,
+                    itemDao = itemDao,
+                    noteRepository = noteRepository,
+                    themePrefs = ThemePrefs(fakeContext),
+                    notesUiPrefs = NotesUiPrefs(fakeContext),
+                    viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                    lockPrefs = LockPrefs(fakeContext),
+                    interactionPrefs = InteractionPrefs(fakeContext),
+                    quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                    reminderPrefs = ReminderPrefs(fakeContext),
+                    defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                    updatePrefs = UpdatePrefs(fakeContext),
+                    database = null,
+                    scheduler = null,
+                )
 
             val result = provider.restoreBackup("drive_file_123", RestoreMode.REPLACE)
             assertTrue(result is DriveResult.Error)
@@ -371,47 +438,54 @@ class DriveAttachmentRestoreSafetyTest {
             // Build backup with empty attachment (0 bytes)
             buildSampleEncryptedBackup(encryptedBackup, attachmentBytes = ByteArray(0))
 
-            val mockApiClient = GoogleDriveApiClient(
-                httpFactory = { url ->
-                    object : HttpURLConnection(URL(url)) {
-                        override fun getResponseCode(): Int = 200
-                        override fun getInputStream(): InputStream = FileInputStream(encryptedBackup)
-                        override fun getOutputStream(): OutputStream = ByteArrayOutputStream()
-                        override fun disconnect() {}
-                        override fun usingProxy(): Boolean = false
-                        override fun connect() {}
-                    }
-                },
-            )
+            val mockApiClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        object : HttpURLConnection(URL(url)) {
+                            override fun getResponseCode(): Int = 200
+
+                            override fun getInputStream(): InputStream = FileInputStream(encryptedBackup)
+
+                            override fun getOutputStream(): OutputStream = ByteArrayOutputStream()
+
+                            override fun disconnect() {}
+
+                            override fun usingProxy(): Boolean = false
+
+                            override fun connect() {}
+                        }
+                    },
+                )
 
             val drivePrefs = DriveAuthPreferences(fakeContext)
             val envelopeManager = DriveRecoveryEnvelopeManager(mockApiClient, mekManager, InMemoryCryptoStorage())
 
-            val provider = GoogleDriveBackupProvider(
-                context = fakeContext,
-                driveApiClient = mockApiClient,
-                driveAuthDelegate = FakeGoogleDriveAuthDelegate(),
-                drivePrefs = drivePrefs,
-                mekManager = mekManager,
-                envelopeManager = envelopeManager,
-                archiveManager = archiveManager,
-                authRepository = authRepository,
-                noteDao = noteDao,
-                shoulderDao = shoulderDao,
-                itemDao = itemDao,
-                noteRepository = noteRepository,
-                themePrefs = ThemePrefs(fakeContext),
-                notesUiPrefs = NotesUiPrefs(fakeContext),
-                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-                lockPrefs = LockPrefs(fakeContext),
-                interactionPrefs = InteractionPrefs(fakeContext),
-                quickCapturePrefs = QuickCapturePrefs(fakeContext),
-                reminderPrefs = ReminderPrefs(fakeContext),
-                defaultNotePrefs = DefaultNotePrefs(fakeContext),
-                updatePrefs = UpdatePrefs(fakeContext),
-                database = null,
-                scheduler = null,
-            )
+            val provider =
+                GoogleDriveBackupProvider(
+                    context = fakeContext,
+                    driveApiClient = mockApiClient,
+                    driveAuthDelegate = FakeGoogleDriveAuthDelegate(),
+                    drivePrefs = drivePrefs,
+                    mekManager = mekManager,
+                    envelopeManager = envelopeManager,
+                    archiveManager = archiveManager,
+                    authRepository = authRepository,
+                    noteDao = noteDao,
+                    shoulderDao = shoulderDao,
+                    itemDao = itemDao,
+                    noteRepository = noteRepository,
+                    themePrefs = ThemePrefs(fakeContext),
+                    notesUiPrefs = NotesUiPrefs(fakeContext),
+                    viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                    lockPrefs = LockPrefs(fakeContext),
+                    interactionPrefs = InteractionPrefs(fakeContext),
+                    quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                    reminderPrefs = ReminderPrefs(fakeContext),
+                    defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                    updatePrefs = UpdatePrefs(fakeContext),
+                    database = null,
+                    scheduler = null,
+                )
 
             val result = provider.restoreBackup("drive_file_empty_att", RestoreMode.REPLACE)
             assertTrue(result is DriveResult.Error)

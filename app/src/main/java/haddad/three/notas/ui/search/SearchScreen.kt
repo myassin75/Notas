@@ -15,10 +15,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -28,8 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -50,7 +51,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,9 +58,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -72,9 +74,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.compositeOver
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
@@ -151,125 +152,183 @@ fun SearchScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, top = 12.dp),
+                        .statusBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Header
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .widthIn(max = 760.dp)
+                            .padding(start = 20.dp, end = 20.dp, top = 12.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.main_tab_search),
-                        style =
-                            MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 26.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            ),
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = stringResource(R.string.search_subtitle),
-                        style =
-                            MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Search Bar + Filter Button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    val searchBarBg =
-                        if (isDark) {
-                            Color(0xFF262626)
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        }
-                    val searchBarBorder =
-                        if (isSearchFocused) {
-                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.85f else 0.75f))
-                        } else {
-                            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                        }
-
-                    Surface(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        color = searchBarBg,
-                        border = searchBarBorder,
+                    // Header
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Row(
+                        Text(
+                            text = stringResource(R.string.main_tab_search),
+                            style =
+                                MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 26.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                ),
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = stringResource(R.string.search_subtitle),
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Search Bar + Filter Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        val searchBarBg =
+                            if (isDark) {
+                                Color(0xFF262626)
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        val searchBarBorder =
+                            if (isSearchFocused) {
+                                BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.85f else 0.75f))
+                            } else {
+                                BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                            }
+
+                        Surface(
                             modifier =
                                 Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                                    .weight(1f)
+                                    .height(52.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = searchBarBg,
+                            border = searchBarBorder,
                         ) {
-                            val iconTint =
-                                if (isSearchFocused || uiState.query.isNotEmpty()) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            RememberMaterialRoundedSymbol(
-                                name = "search",
-                                size = 22.dp,
-                                tint = iconTint,
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Box(modifier = Modifier.weight(1f)) {
-                                if (uiState.query.isEmpty()) {
-                                    Text(
-                                        text = stringResource(R.string.search_placeholder),
-                                        color = if (isDark) Color(0xFFC8C6D4) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(horizontal = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val iconTint =
+                                    if (isSearchFocused || uiState.query.isNotEmpty()) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                RememberMaterialRoundedSymbol(
+                                    name = "search",
+                                    size = 22.dp,
+                                    tint = iconTint,
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Box(modifier = Modifier.weight(1f)) {
+                                    if (uiState.query.isEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.search_placeholder),
+                                            color = if (isDark) Color(0xFFC8C6D4) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                                        )
+                                    }
+                                    BasicTextField(
+                                        value = uiState.query,
+                                        onValueChange = onQueryChange,
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                        keyboardActions =
+                                            KeyboardActions(
+                                                onSearch = { onSubmitSearch(uiState.query) },
+                                            ),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .onFocusChanged { isSearchFocused = it.isFocused },
+                                        textStyle =
+                                            MaterialTheme.typography.bodyLarge.copy(
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 15.sp,
+                                            ),
                                     )
                                 }
-                                BasicTextField(
-                                    value = uiState.query,
-                                    onValueChange = onQueryChange,
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                    keyboardActions =
-                                        KeyboardActions(
-                                            onSearch = { onSubmitSearch(uiState.query) },
-                                        ),
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .onFocusChanged { isSearchFocused = it.isFocused },
-                                    textStyle =
-                                        MaterialTheme.typography.bodyLarge.copy(
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 15.sp,
-                                        ),
-                                )
+                                if (uiState.query.isNotEmpty()) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color.Transparent,
+                                        modifier =
+                                            Modifier
+                                                .size(28.dp)
+                                                .clip(CircleShape)
+                                                .clickable { onQueryChange("") },
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            RememberMaterialRoundedSymbol(
+                                                name = "close",
+                                                size = 18.dp,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                            if (uiState.query.isNotEmpty()) {
+                        }
+
+                        // Filter Button with Active Badge
+                        val hasActiveFilters = uiState.filters.activeCount > 0
+                        val filterBorder =
+                            if (hasActiveFilters) {
+                                BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                            } else {
+                                BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                            }
+
+                        Box {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = searchBarBg,
+                                border = filterBorder,
+                                modifier =
+                                    Modifier
+                                        .size(52.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .clickable { showFilters = true },
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "tune",
+                                        size = 22.dp,
+                                        tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            if (hasActiveFilters) {
                                 Surface(
                                     shape = CircleShape,
-                                    color = Color.Transparent,
+                                    color = MaterialTheme.colorScheme.primary,
                                     modifier =
                                         Modifier
-                                            .size(28.dp)
-                                            .clip(CircleShape)
-                                            .clickable { onQueryChange("") },
+                                            .align(Alignment.TopEnd)
+                                            .padding(4.dp)
+                                            .size(18.dp),
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        RememberMaterialRoundedSymbol(
-                                            name = "close",
-                                            size = 18.dp,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        Text(
+                                            text = uiState.filters.activeCount.toString(),
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
                                         )
                                     }
                                 }
@@ -277,608 +336,566 @@ fun SearchScreen(
                         }
                     }
 
-                    // Filter Button with Active Badge
-                    val hasActiveFilters = uiState.filters.activeCount > 0
-                    val filterBorder =
-                        if (hasActiveFilters) {
-                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-                        } else {
-                            BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-                        }
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    Box {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = searchBarBg,
-                            border = filterBorder,
-                            modifier =
-                                Modifier
-                                    .size(52.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable { showFilters = true },
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "tune",
-                                    size = 22.dp,
-                                    tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                        if (hasActiveFilters) {
+                    // Scope Pills Row
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        itemsIndexed(categories) { index, title ->
+                            val isSelected = uiState.filters.typeIndex == index
+
+                            val typeCount =
+                                when (index) {
+                                    0 -> uiState.allResultsCount
+                                    1 -> uiState.notesResultsCount
+                                    2 -> uiState.tasksResultsCount
+                                    3 -> uiState.eventsResultsCount
+                                    else -> 0
+                                }
+
+                            val iconName =
+                                when (index) {
+                                    1 -> "description"
+                                    2 -> "checklist"
+                                    3 -> "event"
+                                    else -> null
+                                }
+
+                            val pillBg =
+                                if (isSelected) {
+                                    if (isDark) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                                    } else {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    }
+                                } else {
+                                    if (isDark) {
+                                        Color(0xFF141419).copy(alpha = 0.60f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surface
+                                    }
+                                }
+
+                            val pillBorder =
+                                if (isSelected) {
+                                    BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                } else {
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.50f))
+                                }
+
+                            val pillContentColor =
+                                if (isSelected) {
+                                    if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+
                             Surface(
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = pillBg,
+                                border = pillBorder,
                                 modifier =
                                     Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(4.dp)
-                                        .size(18.dp),
+                                        .clip(CircleShape)
+                                        .clickable { onCategoryIndexChange(index) },
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    if (iconName != null) {
+                                        RememberMaterialRoundedSymbol(
+                                            name = iconName,
+                                            size = 16.dp,
+                                            tint = pillContentColor,
+                                        )
+                                    }
                                     Text(
-                                        text = uiState.filters.activeCount.toString(),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        text = title,
+                                        color = pillContentColor,
+                                        style =
+                                            MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                fontSize = 14.sp,
+                                            ),
                                     )
+                                    if (uiState.query.isNotBlank()) {
+                                        Text(
+                                            text = typeCount.toString(),
+                                            color = if (isSelected) pillContentColor else MaterialTheme.colorScheme.primary,
+                                            style =
+                                                MaterialTheme.typography.labelLarge.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                ),
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
+            }
+        },
+    ) { innerPadding ->
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 760.dp)
+                        .padding(horizontal = 20.dp),
+            ) {
+                if (uiState.query.isEmpty()) {
+                    // Initial State: Intro Card & Recent Searches
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        item {
+                            // Informational Card
+                            val infoCardBg =
+                                if (isDark) {
+                                    Color(0xFF262626)
+                                } else {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                }
+                            val infoCardBorder =
+                                if (isDark) {
+                                    BorderStroke(1.dp, Color(0xFF3A3A3A))
+                                } else {
+                                    null
+                                }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Scope Pills Row
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    itemsIndexed(categories) { index, title ->
-                        val isSelected = uiState.filters.typeIndex == index
-
-                        val typeCount =
-                            when (index) {
-                                0 -> uiState.allResultsCount
-                                1 -> uiState.notesResultsCount
-                                2 -> uiState.tasksResultsCount
-                                3 -> uiState.eventsResultsCount
-                                else -> 0
+                            Surface(
+                                shape = RoundedCornerShape(24.dp),
+                                color = infoCardBg,
+                                border = infoCardBorder,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalAlignment = Alignment.Top,
+                                ) {
+                                    val purple = MaterialTheme.colorScheme.primary
+                                    Canvas(modifier = Modifier.size(24.dp)) {
+                                        val p =
+                                            Path().apply {
+                                                moveTo(size.width * 0.5f, 0f)
+                                                cubicTo(size.width * 0.5f, size.height * 0.35f, size.width * 0.65f, size.height * 0.5f, size.width, size.height * 0.5f)
+                                                cubicTo(size.width * 0.65f, size.height * 0.5f, size.width * 0.5f, size.height * 0.65f, size.width * 0.5f, size.height)
+                                                cubicTo(size.width * 0.5f, size.height * 0.65f, size.width * 0.35f, size.height * 0.5f, 0f, size.height * 0.5f)
+                                                cubicTo(size.width * 0.35f, size.height * 0.5f, size.width * 0.5f, size.height * 0.35f, size.width * 0.5f, 0f)
+                                                close()
+                                            }
+                                        drawPath(p, color = purple)
+                                    }
+                                    Spacer(modifier = Modifier.width(14.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.search_intro_title),
+                                            style =
+                                                MaterialTheme.typography.titleMedium.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 16.sp,
+                                                    color = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimaryContainer,
+                                                ),
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.search_intro_desc),
+                                            style =
+                                                MaterialTheme.typography.bodyMedium.copy(
+                                                    fontSize = 13.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                ),
+                                        )
+                                    }
+                                }
                             }
+                        }
 
-                        val iconName =
-                            when (index) {
-                                1 -> "description"
-                                2 -> "checklist"
-                                3 -> "event"
-                                else -> null
+                        item {
+                            if (recentSearches.isNotEmpty()) {
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.search_recent_searches_title),
+                                        style =
+                                            MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                            ),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.search_clear_all),
+                                        style =
+                                            MaterialTheme.typography.labelLarge.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            ),
+                                        modifier = Modifier.clickable { onClearRecentSearches() },
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                val recentCardBg =
+                                    if (isDark) {
+                                        Color(0xFF262626)
+                                    } else {
+                                        MaterialTheme.colorScheme.surface
+                                    }
+                                val recentBorder =
+                                    BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
+
+                                Surface(
+                                    shape = RoundedCornerShape(24.dp),
+                                    color = recentCardBg,
+                                    border = recentBorder,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Column {
+                                        recentSearches.forEachIndexed { index, entry ->
+                                            Row(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable {
+                                                            onSubmitSearch(entry.query)
+                                                        }.padding(horizontal = 18.dp, vertical = 14.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                RememberMaterialRoundedSymbol(
+                                                    name = "history",
+                                                    size = 20.dp,
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                                Spacer(modifier = Modifier.width(14.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = entry.query,
+                                                        style =
+                                                            MaterialTheme.typography.bodyLarge.copy(
+                                                                fontWeight = FontWeight.Medium,
+                                                                fontSize = 15.sp,
+                                                                color = MaterialTheme.colorScheme.onSurface,
+                                                            ),
+                                                    )
+                                                    Text(
+                                                        text = formatRecentSearchDate(entry.timestamp),
+                                                        style =
+                                                            MaterialTheme.typography.bodySmall.copy(
+                                                                fontSize = 12.sp,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            ),
+                                                    )
+                                                }
+                                                Surface(
+                                                    shape = CircleShape,
+                                                    color = Color.Transparent,
+                                                    modifier =
+                                                        Modifier
+                                                            .size(28.dp)
+                                                            .clip(CircleShape)
+                                                            .clickable { onRemoveRecentSearch(entry.query) },
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        RememberMaterialRoundedSymbol(
+                                                            name = "close",
+                                                            size = 18.dp,
+                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            if (index < recentSearches.size - 1) {
+                                                HorizontalDivider(
+                                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
+                                                    thickness = 1.dp,
+                                                    modifier = Modifier.padding(horizontal = 18.dp),
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = stringResource(R.string.search_recent_searches_hint),
+                                    style =
+                                        MaterialTheme.typography.bodySmall.copy(
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        ),
+                                )
                             }
+                        }
+                    }
+                } else if (uiState.isLoading) {
+                    // Loading State with Semantic Accent
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp),
+                            strokeWidth = 3.dp,
+                        )
+                    }
+                } else if (uiState.searchResults.isEmpty()) {
+                    // Understated Empty Search Results State
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(horizontal = 24.dp),
+                        ) {
+                            val emptyCircleBg =
+                                if (isDark) {
+                                    Color(0xFF181820).copy(alpha = 0.80f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                }
+                            val emptyCircleBorder =
+                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.35f))
 
-                        val pillBg =
-                            if (isSelected) {
+                            Surface(
+                                shape = CircleShape,
+                                color = emptyCircleBg,
+                                border = emptyCircleBorder,
+                                modifier = Modifier.size(76.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "search_off",
+                                        size = 32.dp,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(R.string.search_empty_title),
+                                style =
+                                    MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    ),
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.search_empty_subtitle, uiState.query),
+                                style =
+                                    MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
+                                textAlign = TextAlign.Center,
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            val clearBtnBg =
                                 if (isDark) {
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
                                 } else {
                                     MaterialTheme.colorScheme.primaryContainer
                                 }
-                            } else {
+                            val clearBtnColor =
                                 if (isDark) {
-                                    Color(0xFF141419).copy(alpha = 0.60f)
+                                    MaterialTheme.colorScheme.primary
                                 } else {
-                                    MaterialTheme.colorScheme.surface
+                                    MaterialTheme.colorScheme.onPrimaryContainer
                                 }
-                            }
-
-                        val pillBorder =
-                            if (isSelected) {
-                                BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-                            } else {
-                                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.50f))
-                            }
-
-                        val pillContentColor =
-                            if (isSelected) {
-                                if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-
-                        Surface(
-                            shape = CircleShape,
-                            color = pillBg,
-                            border = pillBorder,
-                            modifier =
-                                Modifier
-                                    .clip(CircleShape)
-                                    .clickable { onCategoryIndexChange(index) },
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                if (iconName != null) {
-                                    RememberMaterialRoundedSymbol(
-                                        name = iconName,
-                                        size = 16.dp,
-                                        tint = pillContentColor,
-                                    )
-                                }
-                                Text(
-                                    text = title,
-                                    color = pillContentColor,
-                                    style =
-                                        MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            fontSize = 14.sp,
-                                        ),
-                                )
-                                if (uiState.query.isNotBlank()) {
-                                    Text(
-                                        text = typeCount.toString(),
-                                        color = if (isSelected) pillContentColor else MaterialTheme.colorScheme.primary,
-                                        style =
-                                            MaterialTheme.typography.labelLarge.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 13.sp,
-                                            ),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        },
-    ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 20.dp),
-        ) {
-            if (uiState.query.isEmpty()) {
-                // Initial State: Intro Card & Recent Searches
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    item {
-                        // Informational Card
-                        val infoCardBg =
-                            if (isDark) {
-                                Color(0xFF262626)
-                            } else {
-                                MaterialTheme.colorScheme.primaryContainer
-                            }
-                        val infoCardBorder =
-                            if (isDark) {
-                                BorderStroke(1.dp, Color(0xFF3A3A3A))
-                            } else {
-                                null
-                            }
-
-                        Surface(
-                            shape = RoundedCornerShape(24.dp),
-                            color = infoCardBg,
-                            border = infoCardBorder,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(18.dp),
-                                verticalAlignment = Alignment.Top,
-                            ) {
-                                val purple = MaterialTheme.colorScheme.primary
-                                Canvas(modifier = Modifier.size(24.dp)) {
-                                    val p =
-                                        Path().apply {
-                                            moveTo(size.width * 0.5f, 0f)
-                                            cubicTo(size.width * 0.5f, size.height * 0.35f, size.width * 0.65f, size.height * 0.5f, size.width, size.height * 0.5f)
-                                            cubicTo(size.width * 0.65f, size.height * 0.5f, size.width * 0.5f, size.height * 0.65f, size.width * 0.5f, size.height)
-                                            cubicTo(size.width * 0.5f, size.height * 0.65f, size.width * 0.35f, size.height * 0.5f, 0f, size.height * 0.5f)
-                                            cubicTo(size.width * 0.35f, size.height * 0.5f, size.width * 0.5f, size.height * 0.35f, size.width * 0.5f, 0f)
-                                            close()
-                                        }
-                                    drawPath(p, color = purple)
-                                }
-                                Spacer(modifier = Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.search_intro_title),
-                                        style =
-                                            MaterialTheme.typography.titleMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 16.sp,
-                                                color = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimaryContainer,
-                                            ),
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = stringResource(R.string.search_intro_desc),
-                                        style =
-                                            MaterialTheme.typography.bodyMedium.copy(
-                                                fontSize = 13.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            ),
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    item {
-                        if (recentSearches.isNotEmpty()) {
-                            Row(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.search_recent_searches_title),
-                                    style =
-                                        MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                        ),
-                                )
-                                Text(
-                                    text = stringResource(R.string.search_clear_all),
-                                    style =
-                                        MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp,
-                                            color = MaterialTheme.colorScheme.primary,
-                                        ),
-                                    modifier = Modifier.clickable { onClearRecentSearches() },
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            val recentCardBg =
-                                if (isDark) {
-                                    Color(0xFF262626)
-                                } else {
-                                    MaterialTheme.colorScheme.surface
-                                }
-                            val recentBorder =
-                                BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
-
                             Surface(
-                                shape = RoundedCornerShape(24.dp),
-                                color = recentCardBg,
-                                border = recentBorder,
-                                modifier = Modifier.fillMaxWidth(),
+                                shape = CircleShape,
+                                color = clearBtnBg,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                                modifier =
+                                    Modifier
+                                        .clip(CircleShape)
+                                        .clickable { onQueryChange("") },
                             ) {
-                                Column {
-                                    recentSearches.forEachIndexed { index, entry ->
-                                        Row(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        onSubmitSearch(entry.query)
-                                                    }.padding(horizontal = 18.dp, vertical = 14.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            RememberMaterialRoundedSymbol(
-                                                name = "history",
-                                                size = 20.dp,
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                            Spacer(modifier = Modifier.width(14.dp))
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = entry.query,
-                                                    style =
-                                                        MaterialTheme.typography.bodyLarge.copy(
-                                                            fontWeight = FontWeight.Medium,
-                                                            fontSize = 15.sp,
-                                                            color = MaterialTheme.colorScheme.onSurface,
-                                                        ),
-                                                )
-                                                Text(
-                                                    text = formatRecentSearchDate(entry.timestamp),
-                                                    style =
-                                                        MaterialTheme.typography.bodySmall.copy(
-                                                            fontSize = 12.sp,
-                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        ),
-                                                )
-                                            }
-                                            Surface(
-                                                shape = CircleShape,
-                                                color = Color.Transparent,
-                                                modifier =
-                                                    Modifier
-                                                        .size(28.dp)
-                                                        .clip(CircleShape)
-                                                        .clickable { onRemoveRecentSearch(entry.query) },
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    RememberMaterialRoundedSymbol(
-                                                        name = "close",
-                                                        size = 18.dp,
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        if (index < recentSearches.size - 1) {
-                                            HorizontalDivider(
-                                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.35f else 0.50f),
-                                                thickness = 1.dp,
-                                                modifier = Modifier.padding(horizontal = 18.dp),
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = stringResource(R.string.search_recent_searches_hint),
-                                style =
-                                    MaterialTheme.typography.bodySmall.copy(
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    ),
-                            )
-                        }
-                    }
-                }
-            } else if (uiState.isLoading) {
-                // Loading State with Semantic Accent
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(36.dp),
-                        strokeWidth = 3.dp,
-                    )
-                }
-            } else if (uiState.searchResults.isEmpty()) {
-                // Understated Empty Search Results State
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                    ) {
-                        val emptyCircleBg =
-                            if (isDark) {
-                                Color(0xFF181820).copy(alpha = 0.80f)
-                            } else {
-                                MaterialTheme.colorScheme.surfaceContainerHigh
-                            }
-                        val emptyCircleBorder =
-                            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.45f else 0.35f))
-
-                        Surface(
-                            shape = CircleShape,
-                            color = emptyCircleBg,
-                            border = emptyCircleBorder,
-                            modifier = Modifier.size(76.dp),
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "search_off",
-                                    size = 32.dp,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                Text(
+                                    text = stringResource(R.string.search_clear_button),
+                                    style =
+                                        MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = clearBtnColor,
+                                        ),
+                                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.search_empty_title),
-                            style =
-                                MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                ),
+                    }
+                } else {
+                    // Results State
+                    val sorts =
+                        listOf(
+                            SearchSortMode.RELEVANCE to stringResource(R.string.search_sort_relevance),
+                            SearchSortMode.NEWEST to stringResource(R.string.search_sort_newest),
+                            SearchSortMode.OLDEST to stringResource(R.string.search_sort_oldest),
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.search_empty_subtitle, uiState.query),
-                            style =
-                                MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                        val clearBtnBg =
-                            if (isDark) {
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-                            } else {
-                                MaterialTheme.colorScheme.primaryContainer
-                            }
-                        val clearBtnColor =
-                            if (isDark) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            }
-                        Surface(
-                            shape = CircleShape,
-                            color = clearBtnBg,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
                             modifier =
                                 Modifier
-                                    .clip(CircleShape)
-                                    .clickable { onQueryChange("") },
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            val resultsCount = uiState.searchResults.size
                             Text(
-                                text = stringResource(R.string.search_clear_button),
+                                text = pluralStringResource(R.plurals.search_results_count, resultsCount, resultsCount),
                                 style =
-                                    MaterialTheme.typography.labelLarge.copy(
+                                    MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = clearBtnColor,
+                                        fontSize = 18.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     ),
-                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                             )
-                        }
-                    }
-                }
-            } else {
-                // Results State
-                val sorts =
-                    listOf(
-                        SearchSortMode.RELEVANCE to stringResource(R.string.search_sort_relevance),
-                        SearchSortMode.NEWEST to stringResource(R.string.search_sort_newest),
-                        SearchSortMode.OLDEST to stringResource(R.string.search_sort_oldest),
-                    )
-
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val resultsCount = uiState.searchResults.size
-                        Text(
-                            text = pluralStringResource(R.plurals.search_results_count, resultsCount, resultsCount),
-                            style =
-                                MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                ),
-                        )
-                        val scopeText =
-                            when (uiState.filters.typeIndex) {
-                                1 -> stringResource(R.string.search_scope_in_notes)
-                                2 -> stringResource(R.string.search_scope_in_tasks)
-                                3 -> stringResource(R.string.search_scope_in_events)
-                                else -> stringResource(R.string.search_scope_across_all)
-                            }
-                        Text(
-                            text = scopeText,
-                            style =
-                                MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                        )
-                    }
-
-                    // Sort row
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.search_sort_by),
-                            style =
-                                MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                        )
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            items(sorts) { (mode, label) ->
-                                val isSelected = uiState.sortMode == mode
-                                val sortPillBg =
-                                    if (isSelected) {
-                                        if (isDark) {
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-                                        } else {
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        }
-                                    } else {
-                                        if (isDark) {
-                                            Color(0xFF141419).copy(alpha = 0.60f)
-                                        } else {
-                                            MaterialTheme.colorScheme.surface
-                                        }
-                                    }
-                                val sortPillBorder =
-                                    if (isSelected) {
-                                        BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-                                    } else {
-                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.50f))
-                                    }
-                                val sortPillColor =
-                                    if (isSelected) {
-                                        if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-
-                                Surface(
-                                    shape = CircleShape,
-                                    color = sortPillBg,
-                                    border = sortPillBorder,
-                                    modifier =
-                                        Modifier
-                                            .clip(CircleShape)
-                                            .clickable { onSortModeChange(mode) },
-                                ) {
-                                    Text(
-                                        text = label,
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                                        color = sortPillColor,
-                                        style =
-                                            MaterialTheme.typography.labelLarge.copy(
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 13.sp,
-                                            ),
-                                    )
+                            val scopeText =
+                                when (uiState.filters.typeIndex) {
+                                    1 -> stringResource(R.string.search_scope_in_notes)
+                                    2 -> stringResource(R.string.search_scope_in_tasks)
+                                    3 -> stringResource(R.string.search_scope_in_events)
+                                    else -> stringResource(R.string.search_scope_across_all)
                                 }
-                            }
-                        }
-                    }
-
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(uiState.searchResults, key = { it.note.id }) { result ->
-                            SearchResultCard(
-                                result = result,
-                                searchQuery = uiState.query,
-                                onClick = { onOpenNote(result) },
-                            )
-                        }
-                        item {
-                            Spacer(Modifier.height(16.dp))
                             Text(
-                                text = stringResource(R.string.search_results_seen_all, uiState.searchResults.size),
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 24.dp),
-                                textAlign = TextAlign.Center,
+                                text = scopeText,
                                 style =
                                     MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 13.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     ),
                             )
+                        }
+
+                        // Sort row
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.search_sort_by),
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    ),
+                            )
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                items(sorts) { (mode, label) ->
+                                    val isSelected = uiState.sortMode == mode
+                                    val sortPillBg =
+                                        if (isSelected) {
+                                            if (isDark) {
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                                            } else {
+                                                MaterialTheme.colorScheme.primaryContainer
+                                            }
+                                        } else {
+                                            if (isDark) {
+                                                Color(0xFF141419).copy(alpha = 0.60f)
+                                            } else {
+                                                MaterialTheme.colorScheme.surface
+                                            }
+                                        }
+                                    val sortPillBorder =
+                                        if (isSelected) {
+                                            BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+                                        } else {
+                                            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (isDark) 0.40f else 0.50f))
+                                        }
+                                    val sortPillColor =
+                                        if (isSelected) {
+                                            if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = sortPillBg,
+                                        border = sortPillBorder,
+                                        modifier =
+                                            Modifier
+                                                .clip(CircleShape)
+                                                .clickable { onSortModeChange(mode) },
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                                            color = sortPillColor,
+                                            style =
+                                                MaterialTheme.typography.labelLarge.copy(
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    fontSize = 13.sp,
+                                                ),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(uiState.searchResults, key = { it.note.id }) { result ->
+                                SearchResultCard(
+                                    result = result,
+                                    searchQuery = uiState.query,
+                                    onClick = { onOpenNote(result) },
+                                )
+                            }
+                            item {
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    text = stringResource(R.string.search_results_seen_all, uiState.searchResults.size),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 24.dp),
+                                    textAlign = TextAlign.Center,
+                                    style =
+                                        MaterialTheme.typography.bodySmall.copy(
+                                            fontSize = 13.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        ),
+                                )
+                            }
                         }
                     }
                 }
@@ -1583,47 +1600,26 @@ fun SearchResultCard(
                 null
             }
         }
-    val cardColors = elevatedCardColors()
-    val baseContainer =
-        if (isDark) {
-            Color(0xFF262626).copy(alpha = 0.85f)
-        } else {
-            cardColors.containerColor
-        }
-    val cardBg =
-        if (noteAccent != null) {
-            val tintAlpha = if (isDark) 0.08f else 0.06f
-            noteAccent.copy(alpha = tintAlpha).compositeOver(baseContainer)
-        } else {
-            baseContainer
-        }
-    val cardBorder =
-        if (noteAccent != null) {
-            BorderStroke(1.dp, noteAccent.copy(alpha = if (isDark) 0.35f else 0.25f))
-        } else {
-            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f))
-        }
+    val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
+    val iconColor = noteAccent ?: defaultIconColor
+    val cardBg = if (isDark) Color(0xFF1F1F22) else Color(0xFFF2F2F4)
+    val cardBorder = BorderStroke(1.dp, if (isDark) Color(0xFF2D2D30) else Color(0xFFE5E5EA))
 
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(28.dp),
         color = cardBg,
         border = cardBorder,
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(28.dp))
                 .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            val iconBoxBg =
-                if (isDark) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                }
+            val iconBoxBg = if (isDark) Color(0xFF2C2C30) else Color(0xFFE5E5EA)
             Box(
                 modifier =
                     Modifier
@@ -1635,7 +1631,7 @@ fun SearchResultCard(
                 RememberMaterialRoundedSymbol(
                     name = iconName,
                     size = 22.dp,
-                    tint = primaryColor,
+                    tint = iconColor,
                 )
             }
             Spacer(modifier = Modifier.width(14.dp))
@@ -1725,6 +1721,19 @@ fun SearchResultCard(
                                 )
                             }
                         }
+                        Spacer(modifier = Modifier.height(6.dp))
+                    } else if (result.note.body.isNotBlank()) {
+                        val bodySnippet = buildSnippetAroundMatch(result.note.body, searchQuery)
+                        Text(
+                            text = buildHighlightedString(bodySnippet, searchQuery, highlightColor, highlightBg),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 13.sp,
+                                    color = onSurfaceVariant,
+                                ),
+                        )
                         Spacer(modifier = Modifier.height(6.dp))
                     }
                 } else {
@@ -1866,7 +1875,14 @@ fun buildHighlightedString(
     }
 
     val resolvedHighlightColor = if (highlightColor != Color.Unspecified) highlightColor else Color.Unspecified
-    val resolvedHighlightBg = if (highlightBg != Color.Unspecified) highlightBg else if (resolvedHighlightColor != Color.Unspecified) resolvedHighlightColor.copy(alpha = 0.20f) else Color(0x33808080)
+    val resolvedHighlightBg =
+        if (highlightBg != Color.Unspecified) {
+            highlightBg
+        } else if (resolvedHighlightColor != Color.Unspecified) {
+            resolvedHighlightColor.copy(alpha = 0.20f)
+        } else {
+            Color(0x33808080)
+        }
 
     return buildAnnotatedString {
         var currentIndex = 0

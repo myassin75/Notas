@@ -1,9 +1,5 @@
 package haddad.three.notas.ui.home
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.GroupBy
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
@@ -13,6 +9,10 @@ import haddad.three.notas.data.SortDir
 import haddad.three.notas.data.SortKey
 import haddad.three.notas.data.ViewOptions
 import haddad.three.notas.data.matches
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /**
  * Covers the section-precedence contract in [arrangeItems], with an emphasis on the pinning

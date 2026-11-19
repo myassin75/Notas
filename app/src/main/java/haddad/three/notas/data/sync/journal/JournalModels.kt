@@ -50,4 +50,3 @@ data class SyncJournalDto(
         const val CURRENT_FORMAT_VERSION = 1
     }
 }
-

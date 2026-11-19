@@ -80,7 +80,9 @@ fun AppBottomSheet(
     // it doesn't consume most of the height and leave only a sliver for content.
     val landscape = isLandscape()
     val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
-    val isBlackTheme = haddad.three.notas.ui.theme.LocalThemeState.current.blackThemeActive(isDark)
+    val isBlackTheme =
+        haddad.three.notas.ui.theme.LocalThemeState.current
+            .blackThemeActive(isDark)
     val resolvedContainerColor =
         if (isDark) {
             if (isBlackTheme) Color(0xFF16161C) else Color(0xFF242424)

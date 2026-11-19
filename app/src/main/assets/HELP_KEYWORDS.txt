@@ -196,10 +196,36 @@ drag chip -> Swipe actions
 swipe action -> Swipe actions
 gesture -> Swipe actions
 
-# --- Offline flavor ---
-offline -> What's different in the Offline flavor
-no internet -> What's different in the Offline flavor
-without internet -> What's different in the Offline flavor
-internet permission -> What's different in the Offline flavor
-obtainium -> What's different in the Offline flavor
-obtainx -> What's different in the Offline flavor
+# --- Calendar and Views ---
+calendar -> Calendar views: Month, Week, Day, and Year | Calendar tasks and checkboxes
+month view -> Calendar views: Month, Week, Day, and Year
+week view -> Calendar views: Month, Week, Day, and Year
+day view -> Calendar views: Month, Week, Day, and Year
+timeline -> Calendar views: Month, Week, Day, and Year
+year view -> Calendar views: Month, Week, Day, and Year
+today button -> Calendar views: Month, Week, Day, and Year
+calendar checkbox -> Calendar tasks and checkboxes
+calendar tasks -> Calendar tasks and checkboxes
+schedule event -> Calendar tasks and checkboxes | Creating and organizing entries
+
+# --- Classification: Notes, Tasks, Events ---
+event -> Notes, Tasks, and Events
+events -> Notes, Tasks, and Events
+task vs event -> Notes, Tasks, and Events
+task or note -> Notes, Tasks, and Events
+end date -> Notes, Tasks, and Events
+classification -> Notes, Tasks, and Events
+
+# --- Card Design and Colors ---
+card colors -> Card design and colors
+neutral gray -> Card design and colors
+shoulder color -> Card design and colors
+icon color -> Card design and colors
+corner radius -> Card design and colors
+
+# --- Cloud Sync and Google Drive ---
+google drive -> Setting up Google Drive sync
+google drive sync -> Setting up Google Drive sync
+cloud sync -> Setting up Google Drive sync | Multi-device sync and conflict resolution
+sync conflict -> Multi-device sync and conflict resolution
+conflict resolution -> Multi-device sync and conflict resolution

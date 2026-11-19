@@ -15,13 +15,19 @@ interface SyncInboxDao {
     suspend fun update(entry: SyncInboxEntity)
 
     @Query("UPDATE sync_inbox SET status = :status WHERE journalId = :journalId")
-    suspend fun updateStatus(journalId: String, status: String): Int
+    suspend fun updateStatus(
+        journalId: String,
+        status: String,
+    ): Int
 
     @Query("SELECT * FROM sync_inbox WHERE journalId = :journalId LIMIT 1")
     suspend fun getByJournalId(journalId: String): SyncInboxEntity?
 
     @Query("SELECT * FROM sync_inbox WHERE deviceId = :deviceId AND sequence = :sequence LIMIT 1")
-    suspend fun getByDeviceAndSequence(deviceId: String, sequence: Long): SyncInboxEntity?
+    suspend fun getByDeviceAndSequence(
+        deviceId: String,
+        sequence: Long,
+    ): SyncInboxEntity?
 
     @Query("SELECT * FROM sync_inbox WHERE status = 'VALIDATED' ORDER BY sequence ASC")
     suspend fun getValidatedEntries(): List<SyncInboxEntity>
@@ -47,4 +53,3 @@ interface SyncInboxDao {
     @Query("DELETE FROM sync_inbox")
     suspend fun clearAll()
 }
-

@@ -7,13 +7,13 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import haddad.three.notas.ui.components.SyncStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import haddad.three.notas.ui.components.SyncStatus
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -58,7 +58,10 @@ class SyncStateStore(
         return prefs[cursorKey(userId)] ?: "0"
     }
 
-    suspend fun setSyncCursor(userId: String, cursor: String) {
+    suspend fun setSyncCursor(
+        userId: String,
+        cursor: String,
+    ) {
         dataStore.edit { it[cursorKey(userId)] = cursor }
     }
 
@@ -67,7 +70,10 @@ class SyncStateStore(
         return prefs[lastPushedKey(userId)] ?: 0L
     }
 
-    suspend fun setLastPushedAt(userId: String, timestamp: Long) {
+    suspend fun setLastPushedAt(
+        userId: String,
+        timestamp: Long,
+    ) {
         dataStore.edit { it[lastPushedKey(userId)] = timestamp }
     }
 
@@ -76,7 +82,10 @@ class SyncStateStore(
         return prefs[lastSyncedKey(userId)] ?: 0L
     }
 
-    suspend fun setLastSyncedAt(userId: String, timestamp: Long) {
+    suspend fun setLastSyncedAt(
+        userId: String,
+        timestamp: Long,
+    ) {
         dataStore.edit { it[lastSyncedKey(userId)] = timestamp }
     }
 
@@ -88,13 +97,17 @@ class SyncStateStore(
         }.getOrDefault(emptyList())
     }
 
-    suspend fun addTombstones(userId: String, tombstones: List<SyncTombstone>) {
+    suspend fun addTombstones(
+        userId: String,
+        tombstones: List<SyncTombstone>,
+    ) {
         if (tombstones.isEmpty()) return
         dataStore.edit { prefs ->
             val key = tombstonesKey(userId)
-            val current = runCatching {
-                prefs[key]?.let { json.decodeFromString<List<SyncTombstone>>(it) }
-            }.getOrNull().orEmpty()
+            val current =
+                runCatching {
+                    prefs[key]?.let { json.decodeFromString<List<SyncTombstone>>(it) }
+                }.getOrNull().orEmpty()
 
             val existingUuids = current.map { it.uuid }.toSet()
             val newItems = tombstones.filter { it.uuid !in existingUuids }
@@ -103,13 +116,17 @@ class SyncStateStore(
         }
     }
 
-    suspend fun removeTombstones(userId: String, uuids: Set<String>) {
+    suspend fun removeTombstones(
+        userId: String,
+        uuids: Set<String>,
+    ) {
         if (uuids.isEmpty()) return
         dataStore.edit { prefs ->
             val key = tombstonesKey(userId)
-            val current = runCatching {
-                prefs[key]?.let { json.decodeFromString<List<SyncTombstone>>(it) }
-            }.getOrNull().orEmpty()
+            val current =
+                runCatching {
+                    prefs[key]?.let { json.decodeFromString<List<SyncTombstone>>(it) }
+                }.getOrNull().orEmpty()
 
             val filtered = current.filter { it.uuid !in uuids }
             prefs[key] = json.encodeToString(filtered)
@@ -124,24 +141,29 @@ class SyncStateStore(
         }.getOrDefault(emptyList())
     }
 
-    suspend fun recordConflicts(userId: String, conflicts: List<SyncPushConflictDto>) {
+    suspend fun recordConflicts(
+        userId: String,
+        conflicts: List<SyncPushConflictDto>,
+    ) {
         if (conflicts.isEmpty()) return
         val now = System.currentTimeMillis()
-        val records = conflicts.map { conflict ->
-            SyncConflictRecord(
-                entityType = conflict.entityType,
-                entityId = conflict.id,
-                serverRevision = conflict.serverRevision,
-                reason = conflict.reason.take(200), // sanitize length, contains no tokens/content
-                timestamp = now,
-            )
-        }
+        val records =
+            conflicts.map { conflict ->
+                SyncConflictRecord(
+                    entityType = conflict.entityType,
+                    entityId = conflict.id,
+                    serverRevision = conflict.serverRevision,
+                    reason = conflict.reason.take(200), // sanitize length, contains no tokens/content
+                    timestamp = now,
+                )
+            }
         _syncConflicts.value = records
         dataStore.edit { prefs ->
             val key = conflictsKey(userId)
-            val current = runCatching {
-                prefs[key]?.let { json.decodeFromString<List<SyncConflictRecord>>(it) }
-            }.getOrNull().orEmpty()
+            val current =
+                runCatching {
+                    prefs[key]?.let { json.decodeFromString<List<SyncConflictRecord>>(it) }
+                }.getOrNull().orEmpty()
             // Keep at most 50 recent conflicts
             val updated = (records + current).take(50)
             prefs[key] = json.encodeToString(updated)
@@ -163,9 +185,13 @@ class SyncStateStore(
         val KEY_DEVICE_ID = stringPreferencesKey("sync_device_id")
 
         fun cursorKey(userId: String) = stringPreferencesKey("sync_cursor_$userId")
+
         fun lastPushedKey(userId: String) = longPreferencesKey("sync_last_pushed_$userId")
+
         fun lastSyncedKey(userId: String) = longPreferencesKey("sync_last_synced_$userId")
+
         fun tombstonesKey(userId: String) = stringPreferencesKey("sync_tombstones_$userId")
+
         fun conflictsKey(userId: String) = stringPreferencesKey("sync_conflicts_$userId")
     }
 }

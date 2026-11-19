@@ -1,6 +1,5 @@
 package haddad.three.notas.backup
 
-import org.json.JSONObject
 import haddad.three.notas.data.DefaultNotePrefs
 import haddad.three.notas.data.InteractionPrefs
 import haddad.three.notas.data.LockPrefs
@@ -10,6 +9,7 @@ import haddad.three.notas.data.ReminderPrefs
 import haddad.three.notas.data.ThemePrefs
 import haddad.three.notas.data.UpdatePrefs
 import haddad.three.notas.data.ViewOptionsPrefs
+import org.json.JSONObject
 
 object SettingsBackup {
     const val KEY_THEME = "theme_prefs"

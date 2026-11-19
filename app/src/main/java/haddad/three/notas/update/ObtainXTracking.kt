@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /** ObtainX, the author's Obtainium fork. Its GitHub and F-Droid builds share this package id. */
 internal const val OBTAINX_PACKAGE_ID = "dev.bikram.obtainx"
@@ -18,33 +18,25 @@ private const val TRACKED_APP_AUTHOR = "myassin75"
 private const val TRACKED_APP_NAME = "Notas"
 private const val DEV_RELEASE_APPLICATION_ID_SUFFIX = ".dev"
 
-/** Play builds are updated by Play; every other flavor can hand itself to ObtainX. */
+/** Updates can hand the application to ObtainX. */
 internal val supportsObtainXTracking: Boolean
-    get() = BuildConfig.FLAVOR != "playstore"
+    get() = true
 
 /** The package public releases ship under. devRelease appends `.dev` to local installs only. */
 internal fun releaseApplicationId(applicationId: String = BuildConfig.APPLICATION_ID): String = applicationId.removeSuffix(DEV_RELEASE_APPLICATION_ID_SUFFIX)
 
 /**
- * The `obtainium://app/` import payload for [flavor], or null where tracking isn't offered.
- *
- * - [releaseAppId] must be the package inside the APK ObtainX installs, or it rejects the update
- *   as an app-id change.
- * - `additionalSettings` is a JSON *string*: ObtainX decodes it a second time.
- * - The APK filter is anchored because ObtainX matches it against the asset name *or* its download
- *   URL, and every GitHub download URL contains "github".
- * - No `overrideSource`: ObtainX picks the GitHub or F-Droid source from the URL host.
- * - No `preferredApkIndex`: ObtainX treats a missing index as 0, and the index doesn't pick the CPU
- *   architecture anyway (ObtainX filters APKs by the device's ABI first).
+ * The `obtainium://app/` import payload.
  */
 internal fun buildObtainXTrackingJson(
-    flavor: String,
+    flavor: String = "Notas",
     releaseAppId: String,
 ): String? {
     val (url, apkFilterRegEx) =
         when (flavor) {
             "github" -> RELEASES_GITHUB_URL to """-github\.apk$"""
             "offline" -> RELEASES_GITHUB_URL to """-offline\.apk$"""
+            "Notas" -> RELEASES_GITHUB_URL to """\.apk$"""
             else -> return null
         }
     return buildJsonObject {
@@ -68,7 +60,7 @@ internal fun isObtainXInstalled(context: Context): Boolean = context.packageMana
  * it a second ObtainX instance is stacked inside Remember's task instead of opening ObtainX's own.
  */
 internal fun trackUpdatesViaObtainX(context: Context) {
-    val payload = buildObtainXTrackingJson(BuildConfig.FLAVOR, releaseApplicationId()) ?: return
+    val payload = buildObtainXTrackingJson("Notas", releaseApplicationId()) ?: return
     if (isObtainXInstalled(context)) {
         val importIntent =
             Intent(Intent.ACTION_VIEW, "obtainium://app/${Uri.encode(payload)}".toUri())

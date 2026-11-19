@@ -5,10 +5,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.LockPrefs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun LockSection(

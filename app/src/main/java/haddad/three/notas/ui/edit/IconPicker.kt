@@ -109,12 +109,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import haddad.three.notas.R
 import haddad.three.notas.data.ICON_PICKER_MAX_STARRED
 import haddad.three.notas.data.IconPickerPrefs
@@ -129,6 +123,12 @@ import haddad.three.notas.ui.components.RememberToggleButton
 import haddad.three.notas.ui.feedback.appClickable
 import haddad.three.notas.ui.feedback.appCombinedClickable
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.util.Locale
 
 private data class IconPickerAssets(

@@ -1,5 +1,7 @@
 package haddad.three.notas.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -59,10 +61,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.launch
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
 import haddad.three.notas.data.UpdateCheckSchedule
+import haddad.three.notas.data.UpdatePreferencesState
+import haddad.three.notas.data.UpdatePrefs
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.common.isLandscape
 import haddad.three.notas.ui.components.RememberDropdownMenuItem
@@ -79,6 +82,7 @@ import haddad.three.notas.update.RememberUpdateInfo
 import haddad.three.notas.update.isObtainXInstalled
 import haddad.three.notas.update.supportsObtainXTracking
 import haddad.three.notas.update.trackUpdatesViaObtainX
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -832,6 +836,99 @@ internal fun showsUpdatesSection(singleList: Boolean): Boolean = BuildConfig.CHE
 
 /** Whether the ObtainX card stands on its own on the settings page. See [showsUpdatesSection]. */
 internal fun showsStandaloneObtainXCard(singleList: Boolean): Boolean = obtainXIsOnlyUpdateOption && singleList
+
+@Composable
+internal fun UpdatesSection(
+    availableUpdate: RememberUpdateInfo?,
+    isCheckingUpdate: Boolean,
+    updatePrefs: UpdatePrefs,
+    updateState: UpdatePreferencesState,
+    onCheckUpdatesClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val canCheckDirectly = BuildConfig.CHECK_UPDATES
+    val releasesUrl = "https://github.com/${BuildConfig.GITHUB_REPO}/releases"
+
+    GroupedListColumn(modifier = modifier) {
+        if (canCheckDirectly) {
+            GroupedListItem(
+                position = if (supportsObtainXTracking) GroupPosition.FIRST else GroupPosition.ONLY,
+            ) {
+                SettingsRowItem(
+                    materialSymbolName = "sync",
+                    title =
+                        if (availableUpdate != null) {
+                            stringResource(R.string.settings_update_available_button, availableUpdate.versionName)
+                        } else if (isCheckingUpdate) {
+                            stringResource(R.string.play_update_bar_downloading)
+                        } else {
+                            stringResource(R.string.settings_check_for_updates)
+                        },
+                    titleColor = SettingsDesignTokens.PrimaryPurple,
+                    subtitle = "Current version: v${BuildConfig.VERSION_NAME}",
+                    onClick = onCheckUpdatesClick,
+                    trailingContent = {
+                        RememberMaterialRoundedSymbol(
+                            name = "chevron_right",
+                            size = 20.dp,
+                            tint = SettingsDesignTokens.TextSecondary,
+                        )
+                    },
+                )
+            }
+            GroupedListItem(position = GroupPosition.MIDDLE) {
+                UpdateCheckScheduleDropdown(
+                    selected = updateState.updateCheckSchedule,
+                    onSelect = { newSchedule ->
+                        scope.launch { updatePrefs.setUpdateCheckSchedule(newSchedule) }
+                    },
+                )
+            }
+            GroupedListItem(
+                position = if (supportsObtainXTracking) GroupPosition.MIDDLE else GroupPosition.LAST,
+            ) {
+                UpdateSettingsToggleItem(
+                    title = stringResource(R.string.settings_notify_new_updates),
+                    checked = updateState.notifyOnNewUpdates,
+                    onCheckedChange = { checked ->
+                        scope.launch { updatePrefs.setNotifyOnNewUpdates(checked) }
+                    },
+                )
+            }
+        } else {
+            GroupedListItem(
+                position = if (supportsObtainXTracking) GroupPosition.FIRST else GroupPosition.ONLY,
+            ) {
+                SettingsRowItem(
+                    materialSymbolName = "public",
+                    title = "Check latest version on GitHub",
+                    titleColor = SettingsDesignTokens.PrimaryPurple,
+                    subtitle = "Current version: v${BuildConfig.VERSION_NAME}",
+                    onClick = {
+                        runCatching {
+                            val intent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse(releasesUrl)).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            context.startActivity(intent)
+                        }
+                    },
+                    trailingContent = {
+                        SettingsArrowOutwardBadge()
+                    },
+                )
+            }
+        }
+
+        if (supportsObtainXTracking) {
+            GroupedListItem(position = GroupPosition.LAST) {
+                TrackUpdatesViaObtainXRow()
+            }
+        }
+    }
+}
 
 /**
  * The ObtainX item inside the Updates section: last after the update-check rows, or the only row in

@@ -1,6 +1,15 @@
 package haddad.three.notas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.data.withSyncedPrimaryReminder
+import haddad.three.notas.ui.nav.Routes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -13,15 +22,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteReminder
-import haddad.three.notas.data.ShoulderDao
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.data.ShoulderRepository
-import haddad.three.notas.data.getActiveReminders
-import haddad.three.notas.data.withSyncedPrimaryReminder
-import haddad.three.notas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditNoteIntegrityTest {
@@ -195,8 +195,7 @@ class EditNoteIntegrityTest {
 
         override suspend fun allShoulders(): List<ShoulderEntity> = shoulders.toList()
 
-        override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> =
-            shoulders.filter { it.ownerId == ownerId }
+        override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> = shoulders.filter { it.ownerId == ownerId }
 
         override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = flowOf(shoulders)
 
@@ -204,8 +203,7 @@ class EditNoteIntegrityTest {
 
         override suspend fun getByUuid(uuid: String): ShoulderEntity? = shoulders.firstOrNull { it.uuid == uuid }
 
-        override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? =
-            shoulders.firstOrNull { it.normalizedName == normalizedName }
+        override suspend fun getByNormalizedName(normalizedName: String): ShoulderEntity? = shoulders.firstOrNull { it.normalizedName == normalizedName }
 
         override suspend fun noteIdsForShoulder(shoulderId: Long): List<Long> = emptyList()
 
@@ -224,7 +222,10 @@ class EditNoteIntegrityTest {
             shoulders.removeAll { it.id == shoulder.id }
         }
 
-        override suspend fun setShoulderForNote(noteId: Long, shoulderId: Long?) {
+        override suspend fun setShoulderForNote(
+            noteId: Long,
+            shoulderId: Long?,
+        ) {
             // no-op for mock
         }
 

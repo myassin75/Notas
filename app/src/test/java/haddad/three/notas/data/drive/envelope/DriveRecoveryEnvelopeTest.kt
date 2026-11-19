@@ -25,7 +25,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class DriveRecoveryEnvelopeTest {
-
     private class MemoryDriveServer {
         val files = mutableMapOf<String, ByteArray>()
         val fileMetadata = mutableMapOf<String, String>()
@@ -69,11 +68,12 @@ class DriveRecoveryEnvelopeTest {
             }
             if (urlStr.contains("spaces=appDataFolder")) {
                 val envelopeFile = server.files.keys.firstOrNull()
-                val json = if (envelopeFile != null) {
-                    """{"files":[{"id":"$envelopeFile","name":"notas_recovery_envelope.json","size":"${server.files[envelopeFile]?.size ?: 0}"}]}"""
-                } else {
-                    """{"files":[]}"""
-                }
+                val json =
+                    if (envelopeFile != null) {
+                        """{"files":[{"id":"$envelopeFile","name":"notas_recovery_envelope.json","size":"${server.files[envelopeFile]?.size ?: 0}"}]}"""
+                    } else {
+                        """{"files":[]}"""
+                    }
                 return ByteArrayInputStream(json.toByteArray(Charsets.UTF_8))
             }
             if (urlStr.contains("alt=media")) {
@@ -95,6 +95,7 @@ class DriveRecoveryEnvelopeTest {
         }
 
         override fun usingProxy(): Boolean = false
+
         override fun connect() {}
     }
 
@@ -104,9 +105,10 @@ class DriveRecoveryEnvelopeTest {
     @Before
     fun setUp() {
         server = MemoryDriveServer()
-        driveApiClient = GoogleDriveApiClient(
-            httpFactory = { url -> MockDriveConnection(URL(url), server) },
-        )
+        driveApiClient =
+            GoogleDriveApiClient(
+                httpFactory = { url -> MockDriveConnection(URL(url), server) },
+            )
     }
 
     @Test
@@ -143,68 +145,70 @@ class DriveRecoveryEnvelopeTest {
     @Test
     fun testNewDeviceRecoveryUsing12WordMnemonic() {
         runBlocking {
-        // --- DEVICE 1: Source Device ---
-        val device1KeyStore = SoftwareKeyStoreManager()
-        val device1Storage = InMemoryCryptoStorage()
-        val device1MekManager = MekManager(device1KeyStore, device1Storage)
-        val device1RecoveryManager = RecoverySetupManager(device1MekManager)
-        val device1EnvelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, device1MekManager, device1Storage)
+            // --- DEVICE 1: Source Device ---
+            val device1KeyStore = SoftwareKeyStoreManager()
+            val device1Storage = InMemoryCryptoStorage()
+            val device1MekManager = MekManager(device1KeyStore, device1Storage)
+            val device1RecoveryManager = RecoverySetupManager(device1MekManager)
+            val device1EnvelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, device1MekManager, device1Storage)
 
-        val mek1 = device1MekManager.getOrCreateMasterKey()
+            val mek1 = device1MekManager.getOrCreateMasterKey()
 
-        // Device 1 user completes 12-word recovery setup
-        val session = device1RecoveryManager.startSetupSession()
-        val responses = session.challenges.associate { it.index to session.mnemonicWords[it.index] }
-        device1RecoveryManager.verifyChallengeAndComplete(session, responses, passphrase = "optional-passphrase")
+            // Device 1 user completes 12-word recovery setup
+            val session = device1RecoveryManager.startSetupSession()
+            val responses = session.challenges.associate { it.index to session.mnemonicWords[it.index] }
+            device1RecoveryManager.verifyChallengeAndComplete(session, responses, passphrase = "optional-passphrase")
 
-        // Sync recovery envelope to Google Drive
-        device1EnvelopeManager.syncRecoveryEnvelopeToDrive("mock_token")
+            // Sync recovery envelope to Google Drive
+            device1EnvelopeManager.syncRecoveryEnvelopeToDrive("mock_token")
 
-        // Encrypt confidential note with MEK1 on Device 1
-        val confidentialNote = "Confidential Journal Entry from Device 1".toByteArray(Charsets.UTF_8)
-        val encryptedNoteContainer = EncryptedContainer.encrypt(confidentialNote, mek1, aad = "note_42".toByteArray(Charsets.UTF_8))
+            // Encrypt confidential note with MEK1 on Device 1
+            val confidentialNote = "Confidential Journal Entry from Device 1".toByteArray(Charsets.UTF_8)
+            val encryptedNoteContainer = EncryptedContainer.encrypt(confidentialNote, mek1, aad = "note_42".toByteArray(Charsets.UTF_8))
 
-        // --- DEVICE 2: Fresh New Device (Simulated blank install, zero local SharedPreferences) ---
-        val device2KeyStore = SoftwareKeyStoreManager()
-        val device2Storage = InMemoryCryptoStorage() // Empty SharedPreferences
-        val device2MekManager = MekManager(device2KeyStore, device2Storage)
-        val device2EnvelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, device2MekManager, device2Storage)
+            // --- DEVICE 2: Fresh New Device (Simulated blank install, zero local SharedPreferences) ---
+            val device2KeyStore = SoftwareKeyStoreManager()
+            val device2Storage = InMemoryCryptoStorage() // Empty SharedPreferences
+            val device2MekManager = MekManager(device2KeyStore, device2Storage)
+            val device2EnvelopeManager = DriveRecoveryEnvelopeManager(driveApiClient, device2MekManager, device2Storage)
 
-        // Device 2 initially has no MEK
-        assertEquals(null, device2MekManager.getActiveMasterKey())
+            // Device 2 initially has no MEK
+            assertEquals(null, device2MekManager.getActiveMasterKey())
 
-        // Fetch envelope from Google Drive
-        val fetchedEnvelopeResult = device2EnvelopeManager.fetchRecoveryEnvelopeFromDrive("mock_token")
-        assertTrue(fetchedEnvelopeResult is DriveResult.Success)
-        val envelope = (fetchedEnvelopeResult as DriveResult.Success).data
-        assertNotNull(envelope)
+            // Fetch envelope from Google Drive
+            val fetchedEnvelopeResult = device2EnvelopeManager.fetchRecoveryEnvelopeFromDrive("mock_token")
+            assertTrue(fetchedEnvelopeResult is DriveResult.Success)
+            val envelope = (fetchedEnvelopeResult as DriveResult.Success).data
+            assertNotNull(envelope)
 
-        // User enters their 12-word recovery phrase on Device 2
-        val recoveredMek2 = device2EnvelopeManager.recoverMekOnNewDevice(
-            mnemonic = session.mnemonicWords,
-            passphrase = "optional-passphrase",
-            envelope = envelope!!,
-        )
+            // User enters their 12-word recovery phrase on Device 2
+            val recoveredMek2 =
+                device2EnvelopeManager.recoverMekOnNewDevice(
+                    mnemonic = session.mnemonicWords,
+                    passphrase = "optional-passphrase",
+                    envelope = envelope!!,
+                )
 
-        // Assert recovered MEK matches original MEK from Device 1 byte-for-byte
-        assertArrayEquals(mek1.encoded, recoveredMek2.encoded)
+            // Assert recovered MEK matches original MEK from Device 1 byte-for-byte
+            assertArrayEquals(mek1.encoded, recoveredMek2.encoded)
 
-        // Device 2 can decrypt notes created on Device 1
-        val decrypted = EncryptedContainer.decrypt(
-            containerBytes = encryptedNoteContainer,
-            key = recoveredMek2,
-            expectedAad = "note_42".toByteArray(Charsets.UTF_8),
-        )
-        assertArrayEquals(confidentialNote, decrypted)
+            // Device 2 can decrypt notes created on Device 1
+            val decrypted =
+                EncryptedContainer.decrypt(
+                    containerBytes = encryptedNoteContainer,
+                    key = recoveredMek2,
+                    expectedAad = "note_42".toByteArray(Charsets.UTF_8),
+                )
+            assertArrayEquals(confidentialNote, decrypted)
 
-        // Wrong passphrase on new device must be rejected with IntegrityVerificationException
-        assertThrows(IntegrityVerificationException::class.java) {
-            device2EnvelopeManager.recoverMekOnNewDevice(
-                mnemonic = session.mnemonicWords,
-                passphrase = "wrong-passphrase",
-                envelope = envelope,
-            )
+            // Wrong passphrase on new device must be rejected with IntegrityVerificationException
+            assertThrows(IntegrityVerificationException::class.java) {
+                device2EnvelopeManager.recoverMekOnNewDevice(
+                    mnemonic = session.mnemonicWords,
+                    passphrase = "wrong-passphrase",
+                    envelope = envelope,
+                )
+            }
         }
     }
-}
 }

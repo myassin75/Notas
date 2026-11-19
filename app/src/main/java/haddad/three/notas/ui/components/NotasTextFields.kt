@@ -72,11 +72,12 @@ fun NotasTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
 
     val borderColor by animateColorAsState(
-        targetValue = when {
-            isError -> NotasTokens.SemanticError
-            isFocused -> palette.primaryAction
-            else -> palette.divider
-        },
+        targetValue =
+            when {
+                isError -> NotasTokens.SemanticError
+                isFocused -> palette.primaryAction
+                else -> palette.divider
+            },
         label = "NotasTextFieldBorderColor",
     )
 
@@ -91,19 +92,18 @@ fun NotasTextField(
         }
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(NotasTokens.InputHeight)
-                .background(
-                    color = palette.inputSurface,
-                    shape = RoundedCornerShape(NotasTokens.InputRadius),
-                )
-                .border(
-                    width = 1.dp,
-                    color = borderColor,
-                    shape = RoundedCornerShape(NotasTokens.InputRadius),
-                )
-                .padding(horizontal = 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(NotasTokens.InputHeight)
+                    .background(
+                        color = palette.inputSurface,
+                        shape = RoundedCornerShape(NotasTokens.InputRadius),
+                    ).border(
+                        width = 1.dp,
+                        color = borderColor,
+                        shape = RoundedCornerShape(NotasTokens.InputRadius),
+                    ).padding(horizontal = 14.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
             Row(
@@ -183,10 +183,11 @@ fun PasswordTextField(
     errorMessage: String? = null,
     isError: Boolean = !errorMessage.isNullOrBlank(),
     enabled: Boolean = true,
-    keyboardOptions: KeyboardOptions = KeyboardOptions(
-        keyboardType = KeyboardType.Password,
-        imeAction = ImeAction.Done,
-    ),
+    keyboardOptions: KeyboardOptions =
+        KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done,
+        ),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
@@ -205,11 +206,12 @@ fun PasswordTextField(
         singleLine = true,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
-        visualTransformation = if (passwordVisible) {
-            VisualTransformation.None
-        } else {
-            PasswordVisualTransformation()
-        },
+        visualTransformation =
+            if (passwordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
         trailingIcon = {
             IconButton(
                 onClick = { passwordVisible = !passwordVisible },

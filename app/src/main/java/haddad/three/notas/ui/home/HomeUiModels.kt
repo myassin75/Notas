@@ -2,14 +2,14 @@ package haddad.three.notas.ui.home
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
 import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.data.NotesFilter
 import haddad.three.notas.data.ViewOptions
 import haddad.three.notas.ui.components.NoteCardUiModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
 
 @Immutable
 sealed class HomeListItem {
@@ -68,10 +68,6 @@ data class HomeState(
      * when every selected note is already pinned (a no-op tap).
      */
     val canPinSelected: Boolean = false,
-    /**
-     * True when at least one selected note is not starred. Same enablement rule as
-     * [canPinSelected] for the bulk Star button.
-     */
     /**
      * Archived notes that match the current search query + facet filters. Only non-empty while
      * [NotesFilter.text] is non-blank; drives the collapsible "Archive (N)" section on Home.

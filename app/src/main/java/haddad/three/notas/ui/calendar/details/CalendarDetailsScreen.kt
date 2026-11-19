@@ -44,13 +44,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import haddad.three.notas.R
+import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.ui.calendar.CalendarDesignTokens
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.edit.NoteIcon
 import haddad.three.notas.ui.edit.resolveNoteIcon
-import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.ui.theme.GlassVariant
 import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.LocalSemanticPalette
@@ -92,11 +92,12 @@ fun CalendarDetailsScreen(
     val isBlackTheme = themeState.blackThemeActive(isDark) || themeState.accentTheme == AccentTheme.PURE_BLACK
 
     val effectiveAccent = if (uiState.accentColor != Color.Unspecified) uiState.accentColor else MaterialTheme.colorScheme.primary
-    val globalActionAccent = if (isDark) {
-        if (isBlackTheme) Color(0xFFD4D4DE) else semanticPalette.primaryAction
-    } else {
-        MaterialTheme.colorScheme.primary
-    }
+    val globalActionAccent =
+        if (isDark) {
+            if (isBlackTheme) Color(0xFFD4D4DE) else semanticPalette.primaryAction
+        } else {
+            MaterialTheme.colorScheme.primary
+        }
     val onGlobalActionAccent = if (isDark) Color(0xFF242424) else Color.White
 
     val headerScreenBg = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background

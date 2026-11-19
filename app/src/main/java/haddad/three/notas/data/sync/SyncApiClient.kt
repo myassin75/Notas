@@ -1,11 +1,11 @@
 package haddad.three.notas.data.sync
 
+import haddad.three.notas.BuildConfig
+import haddad.three.notas.data.auth.BackendApiResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import haddad.three.notas.BuildConfig
-import haddad.three.notas.data.auth.BackendApiResponse
 import java.io.BufferedReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -32,182 +32,196 @@ open class SyncApiClient(
 
     constructor(httpFactory: (String) -> HttpURLConnection) : this(httpFactory, null)
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true
+        }
 
     val baseUrl: String
-        get() = (customBaseUrl ?: BuildConfig.BACKEND_API_BASE_URL)
-            .trimEnd('/')
-            .removeSuffix("/api/v1")
-            .removeSuffix("/api")
+        get() =
+            (customBaseUrl ?: BuildConfig.BACKEND_API_BASE_URL)
+                .trimEnd('/')
+                .removeSuffix("/api/v1")
+                .removeSuffix("/api")
 
     open suspend fun pushSync(
         idToken: String,
         payload: SyncPushRequestDto,
-    ): SyncResult<SyncPushResponseDto> = withContext(Dispatchers.IO) {
-        val endpoint = "$baseUrl/api/v1/sync/push"
+    ): SyncResult<SyncPushResponseDto> =
+        withContext(Dispatchers.IO) {
+            val endpoint = "$baseUrl/api/v1/sync/push"
 
-        try {
-            val connection = httpFactory(endpoint).apply {
-                requestMethod = "POST"
-                instanceFollowRedirects = false
-                doOutput = true
-                setRequestProperty("Authorization", "Bearer $idToken")
-                setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                setRequestProperty("Accept", "application/json")
-            }
+            try {
+                val connection =
+                    httpFactory(endpoint).apply {
+                        requestMethod = "POST"
+                        instanceFollowRedirects = false
+                        doOutput = true
+                        setRequestProperty("Authorization", "Bearer $idToken")
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        setRequestProperty("Accept", "application/json")
+                    }
 
-            val requestBody = json.encodeToString(payload)
-            OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use { writer ->
-                writer.write(requestBody)
-                writer.flush()
-            }
+                val requestBody = json.encodeToString(payload)
+                OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use { writer ->
+                    writer.write(requestBody)
+                    writer.flush()
+                }
 
-            val statusCode = connection.responseCode
-            val stream = if (statusCode in 200..299) connection.inputStream else connection.errorStream
-            val responseBody = stream?.bufferedReader()?.use(BufferedReader::readText).orEmpty()
+                val statusCode = connection.responseCode
+                val stream = if (statusCode in 200..299) connection.inputStream else connection.errorStream
+                val responseBody = stream?.bufferedReader()?.use(BufferedReader::readText).orEmpty()
 
-            when (statusCode) {
-                in 200..299 -> {
-                    val apiResponse = json.decodeFromString<BackendApiResponse<SyncPushResponseDto>>(responseBody)
-                    if (apiResponse.success && apiResponse.data != null) {
-                        SyncResult.Success(apiResponse.data)
-                    } else {
+                when (statusCode) {
+                    in 200..299 -> {
+                        val apiResponse = json.decodeFromString<BackendApiResponse<SyncPushResponseDto>>(responseBody)
+                        if (apiResponse.success && apiResponse.data != null) {
+                            SyncResult.Success(apiResponse.data)
+                        } else {
+                            SyncResult.Error(
+                                message = apiResponse.error?.message ?: "Unknown sync push error",
+                                code = apiResponse.error?.code ?: "PUSH_FAILED",
+                                statusCode = statusCode,
+                            )
+                        }
+                    }
+                    in listOf(301, 302, 307, 308) -> {
+                        val location = connection.getHeaderField("Location").orEmpty()
+                        val msg =
+                            if (location.contains("vercel.com") || location.contains("sso")) {
+                                "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard."
+                            } else {
+                                "Unexpected HTTP redirect to $location"
+                            }
                         SyncResult.Error(
-                            message = apiResponse.error?.message ?: "Unknown sync push error",
-                            code = apiResponse.error?.code ?: "PUSH_FAILED",
+                            message = msg,
+                            code = "DEPLOYMENT_PROTECTION_REDIRECT",
                             statusCode = statusCode,
                         )
                     }
-                }
-                in listOf(301, 302, 307, 308) -> {
-                    val location = connection.getHeaderField("Location").orEmpty()
-                    val msg = if (location.contains("vercel.com") || location.contains("sso")) {
-                        "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard."
-                    } else {
-                        "Unexpected HTTP redirect to $location"
+                    401 -> SyncResult.Unauthorized
+                    404 -> {
+                        val errorMsg =
+                            try {
+                                val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
+                                apiResponse.error?.message ?: "Sync endpoint not found (HTTP 404)"
+                            } catch (_: Exception) {
+                                "Sync endpoint not found (HTTP 404)"
+                            }
+                        SyncResult.Error(
+                            message = errorMsg,
+                            code = "NOT_FOUND",
+                            statusCode = 404,
+                        )
                     }
-                    SyncResult.Error(
-                        message = msg,
-                        code = "DEPLOYMENT_PROTECTION_REDIRECT",
-                        statusCode = statusCode,
-                    )
+                    429 -> SyncResult.RateLimited
+                    in 500..599 ->
+                        SyncResult.Error(
+                            message = "Backend server error ($statusCode)",
+                            code = "SERVER_ERROR",
+                            statusCode = statusCode,
+                        )
+                    else ->
+                        SyncResult.Error(
+                            message = "HTTP push failed with status $statusCode",
+                            code = "HTTP_$statusCode",
+                            statusCode = statusCode,
+                        )
                 }
-                401 -> SyncResult.Unauthorized
-                404 -> {
-                    val errorMsg = try {
-                        val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
-                        apiResponse.error?.message ?: "Sync endpoint not found (HTTP 404)"
-                    } catch (_: Exception) {
-                        "Sync endpoint not found (HTTP 404)"
-                    }
-                    SyncResult.Error(
-                        message = errorMsg,
-                        code = "NOT_FOUND",
-                        statusCode = 404,
-                    )
-                }
-                429 -> SyncResult.RateLimited
-                in 500..599 -> SyncResult.Error(
-                    message = "Backend server error ($statusCode)",
-                    code = "SERVER_ERROR",
-                    statusCode = statusCode,
-                )
-                else -> SyncResult.Error(
-                    message = "HTTP push failed with status $statusCode",
-                    code = "HTTP_$statusCode",
-                    statusCode = statusCode,
+            } catch (e: Exception) {
+                SyncResult.Error(
+                    message = e.localizedMessage ?: "Network error during sync push",
+                    code = "NETWORK_ERROR",
+                    cause = e,
                 )
             }
-        } catch (e: Exception) {
-            SyncResult.Error(
-                message = e.localizedMessage ?: "Network error during sync push",
-                code = "NETWORK_ERROR",
-                cause = e,
-            )
         }
-    }
 
     open suspend fun fetchChanges(
         idToken: String,
         sinceRevision: String,
         limit: Int = 100,
-    ): SyncResult<SyncChangesResponseDto> = withContext(Dispatchers.IO) {
-        val endpoint = "$baseUrl/api/v1/sync/changes?sinceRevision=$sinceRevision&limit=$limit"
+    ): SyncResult<SyncChangesResponseDto> =
+        withContext(Dispatchers.IO) {
+            val endpoint = "$baseUrl/api/v1/sync/changes?sinceRevision=$sinceRevision&limit=$limit"
 
-        try {
-            val connection = httpFactory(endpoint).apply {
-                requestMethod = "GET"
-                instanceFollowRedirects = false
-                setRequestProperty("Authorization", "Bearer $idToken")
-                setRequestProperty("Accept", "application/json")
-            }
+            try {
+                val connection =
+                    httpFactory(endpoint).apply {
+                        requestMethod = "GET"
+                        instanceFollowRedirects = false
+                        setRequestProperty("Authorization", "Bearer $idToken")
+                        setRequestProperty("Accept", "application/json")
+                    }
 
-            val statusCode = connection.responseCode
-            val stream = if (statusCode in 200..299) connection.inputStream else connection.errorStream
-            val responseBody = stream?.bufferedReader()?.use(BufferedReader::readText).orEmpty()
+                val statusCode = connection.responseCode
+                val stream = if (statusCode in 200..299) connection.inputStream else connection.errorStream
+                val responseBody = stream?.bufferedReader()?.use(BufferedReader::readText).orEmpty()
 
-            when (statusCode) {
-                in 200..299 -> {
-                    val apiResponse = json.decodeFromString<BackendApiResponse<SyncChangesResponseDto>>(responseBody)
-                    if (apiResponse.success && apiResponse.data != null) {
-                        SyncResult.Success(apiResponse.data)
-                    } else {
+                when (statusCode) {
+                    in 200..299 -> {
+                        val apiResponse = json.decodeFromString<BackendApiResponse<SyncChangesResponseDto>>(responseBody)
+                        if (apiResponse.success && apiResponse.data != null) {
+                            SyncResult.Success(apiResponse.data)
+                        } else {
+                            SyncResult.Error(
+                                message = apiResponse.error?.message ?: "Unknown sync changes error",
+                                code = apiResponse.error?.code ?: "FETCH_FAILED",
+                                statusCode = statusCode,
+                            )
+                        }
+                    }
+                    in listOf(301, 302, 307, 308) -> {
+                        val location = connection.getHeaderField("Location").orEmpty()
+                        val msg =
+                            if (location.contains("vercel.com") || location.contains("sso")) {
+                                "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard."
+                            } else {
+                                "Unexpected HTTP redirect to $location"
+                            }
                         SyncResult.Error(
-                            message = apiResponse.error?.message ?: "Unknown sync changes error",
-                            code = apiResponse.error?.code ?: "FETCH_FAILED",
+                            message = msg,
+                            code = "DEPLOYMENT_PROTECTION_REDIRECT",
                             statusCode = statusCode,
                         )
                     }
-                }
-                in listOf(301, 302, 307, 308) -> {
-                    val location = connection.getHeaderField("Location").orEmpty()
-                    val msg = if (location.contains("vercel.com") || location.contains("sso")) {
-                        "Staging server redirect: Vercel deployment protection active. Please disable deployment protection on the staging project in Vercel dashboard."
-                    } else {
-                        "Unexpected HTTP redirect to $location"
+                    401 -> SyncResult.Unauthorized
+                    404 -> {
+                        val errorMsg =
+                            try {
+                                val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
+                                apiResponse.error?.message ?: "Sync endpoint not found (HTTP 404)"
+                            } catch (_: Exception) {
+                                "Sync endpoint not found (HTTP 404)"
+                            }
+                        SyncResult.Error(
+                            message = errorMsg,
+                            code = "NOT_FOUND",
+                            statusCode = 404,
+                        )
                     }
-                    SyncResult.Error(
-                        message = msg,
-                        code = "DEPLOYMENT_PROTECTION_REDIRECT",
-                        statusCode = statusCode,
-                    )
+                    429 -> SyncResult.RateLimited
+                    in 500..599 ->
+                        SyncResult.Error(
+                            message = "Backend server error ($statusCode)",
+                            code = "SERVER_ERROR",
+                            statusCode = statusCode,
+                        )
+                    else ->
+                        SyncResult.Error(
+                            message = "HTTP fetch failed with status $statusCode",
+                            code = "HTTP_$statusCode",
+                            statusCode = statusCode,
+                        )
                 }
-                401 -> SyncResult.Unauthorized
-                404 -> {
-                    val errorMsg = try {
-                        val apiResponse = json.decodeFromString<BackendApiResponse<Unit>>(responseBody)
-                        apiResponse.error?.message ?: "Sync endpoint not found (HTTP 404)"
-                    } catch (_: Exception) {
-                        "Sync endpoint not found (HTTP 404)"
-                    }
-                    SyncResult.Error(
-                        message = errorMsg,
-                        code = "NOT_FOUND",
-                        statusCode = 404,
-                    )
-                }
-                429 -> SyncResult.RateLimited
-                in 500..599 -> SyncResult.Error(
-                    message = "Backend server error ($statusCode)",
-                    code = "SERVER_ERROR",
-                    statusCode = statusCode,
-                )
-                else -> SyncResult.Error(
-                    message = "HTTP fetch failed with status $statusCode",
-                    code = "HTTP_$statusCode",
-                    statusCode = statusCode,
+            } catch (e: Exception) {
+                SyncResult.Error(
+                    message = e.localizedMessage ?: "Network error during sync fetch",
+                    code = "NETWORK_ERROR",
+                    cause = e,
                 )
             }
-        } catch (e: Exception) {
-            SyncResult.Error(
-                message = e.localizedMessage ?: "Network error during sync fetch",
-                code = "NETWORK_ERROR",
-                cause = e,
-            )
         }
-    }
 }

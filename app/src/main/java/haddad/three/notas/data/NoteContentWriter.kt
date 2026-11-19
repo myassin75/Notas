@@ -116,18 +116,19 @@ internal class NoteContentWriter(
             val catUuid = options.shoulderId?.let { sId -> shoulderRepository?.getShoulderById(sId)?.uuid }
             changeRecorder?.recordNoteUpsert(noteEntity.copy(id = id), catUuid)
             if (validItems.isNotEmpty()) {
-                val checklistEntities = validItems.mapIndexed { index, text ->
-                    ChecklistItemEntity(
-                        noteId = id,
-                        ownerId = currentOwnerId,
-                        text = text,
-                        details = "",
-                        checked = false,
-                        sortOrder = (index + 1).toDouble(),
-                        parentId = null,
-                        depth = 0,
-                    )
-                }
+                val checklistEntities =
+                    validItems.mapIndexed { index, text ->
+                        ChecklistItemEntity(
+                            noteId = id,
+                            ownerId = currentOwnerId,
+                            text = text,
+                            details = "",
+                            checked = false,
+                            sortOrder = (index + 1).toDouble(),
+                            parentId = null,
+                            depth = 0,
+                        )
+                    }
                 itemDao.insertAll(checklistEntities)
                 checklistEntities.forEach { itemEntity ->
                     changeRecorder?.recordChecklistItemUpsert(itemEntity, noteEntity.uuid)

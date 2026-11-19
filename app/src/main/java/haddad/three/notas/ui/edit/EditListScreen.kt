@@ -70,11 +70,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteReminder
@@ -91,6 +86,11 @@ import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
 import haddad.three.notas.ui.theme.LocalAdaptiveNoteThemes
 import haddad.three.notas.ui.theme.LocalSnackbarHostState
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.io.File
 
 private enum class FocusField { TITLE, DETAILS }
@@ -536,12 +536,14 @@ fun EditListScreen(
             containerColor = Color.Transparent,
             topBar = {
                 val colorIndex by vm.colorIndex.collectAsStateWithLifecycle()
+                val saveStatus by vm.saveStatus.collectAsStateWithLifecycle()
                 EditorTitleTopBar(
                     contentKind = NoteKind.LIST,
                     title = title,
                     titlePlaceholder = titlePlaceholder,
                     iconKey = iconKey,
                     colorIndex = colorIndex,
+                    saveStatus = saveStatus,
                     existing = existing || persistedForToolbar,
                     isEditMode = isEditMode,
                     readOnly = readOnly,

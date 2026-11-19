@@ -54,84 +54,109 @@ import javax.inject.Singleton
  * - `attachments/`: raw binary files for attachments belonging to user's notes.
  */
 @Singleton
-class DriveBackupArchiveManager @Inject constructor(
-    private val noteDao: NoteDao,
-    private val shoulderDao: ShoulderDao,
-    private val itemDao: ChecklistItemDao,
-    private val themePrefs: ThemePrefs,
-    private val notesUiPrefs: NotesUiPrefs,
-    private val viewOptionsPrefs: ViewOptionsPrefs,
-    private val lockPrefs: LockPrefs,
-    private val interactionPrefs: InteractionPrefs,
-    private val quickCapturePrefs: QuickCapturePrefs,
-    private val reminderPrefs: ReminderPrefs,
-    private val defaultNotePrefs: DefaultNotePrefs,
-    private val updatePrefs: UpdatePrefs,
-    private val json: Json = Json { ignoreUnknownKeys = true },
-) {
-    /**
-     * Builds a plain ZIP archive from Room data and local attachments, computes its SHA-256 hash,
-     * and embeds the manifest.
-     */
-    suspend fun buildPlainZipArchive(
-        context: Context,
-        ownerId: String?,
-        targetZipFile: File,
-        backupId: String = UUID.randomUUID().toString(),
-    ): DriveBackupManifest = withContext(Dispatchers.IO) {
-        val userNotes = if (ownerId != null) noteDao.notesForOwner(ownerId) else noteDao.allNotes()
-        val userCategories = if (ownerId != null) shoulderDao.shouldersForOwner(ownerId) else shoulderDao.allShoulders()
+class DriveBackupArchiveManager
+    @Inject
+    constructor(
+        private val noteDao: NoteDao,
+        private val shoulderDao: ShoulderDao,
+        private val itemDao: ChecklistItemDao,
+        private val themePrefs: ThemePrefs,
+        private val notesUiPrefs: NotesUiPrefs,
+        private val viewOptionsPrefs: ViewOptionsPrefs,
+        private val lockPrefs: LockPrefs,
+        private val interactionPrefs: InteractionPrefs,
+        private val quickCapturePrefs: QuickCapturePrefs,
+        private val reminderPrefs: ReminderPrefs,
+        private val defaultNotePrefs: DefaultNotePrefs,
+        private val updatePrefs: UpdatePrefs,
+        private val json: Json = Json { ignoreUnknownKeys = true },
+    ) {
+        /**
+         * Builds a plain ZIP archive from Room data and local attachments, computes its SHA-256 hash,
+         * and embeds the manifest.
+         */
+        suspend fun buildPlainZipArchive(
+            context: Context,
+            ownerId: String?,
+            targetZipFile: File,
+            backupId: String = UUID.randomUUID().toString(),
+        ): DriveBackupManifest =
+            withContext(Dispatchers.IO) {
+                val userNotes = if (ownerId != null) noteDao.notesForOwner(ownerId) else noteDao.allNotes()
+                val userCategories = if (ownerId != null) shoulderDao.shouldersForOwner(ownerId) else shoulderDao.allShoulders()
 
-        val notesCount = userNotes.count { it.note.kind == NoteKind.NOTE }
-        val tasksCount = userNotes.count { it.note.kind == NoteKind.LIST }
-        val categoriesCount = userCategories.size
-        val allAttachments = userNotes.flatMap { it.attachments }
+                val notesCount = userNotes.count { it.note.kind == NoteKind.NOTE }
+                val tasksCount = userNotes.count { it.note.kind == NoteKind.LIST }
+                val categoriesCount = userCategories.size
+                val allAttachments = userNotes.flatMap { it.attachments }
 
-        val createdAt = System.currentTimeMillis()
-        val sourceDevice = "${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})"
+                val createdAt = System.currentTimeMillis()
+                val sourceDevice = "${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE})"
 
-        // 1. Build initial ZIP without plainSha256 in manifest
-        FileOutputStream(targetZipFile).use { fos ->
-            ZipOutputStream(fos).use { zip ->
-                // notes.json
-                val notesJson = JSONObject().apply {
-                    put("version", BackupIo.SCHEMA_VERSION)
-                    put("exportedAt", createdAt)
-                    ownerId?.let { put("ownerId", it) }
-                    put("categories", JSONArray().apply { userCategories.forEach { put(encodeShoulderForBackup(it)) } })
-                    put("notes", JSONArray().apply { userNotes.forEach { put(encodeNoteForBackup(it)) } })
-                }
-                writeZipTextEntry(zip, BackupIo.ENTRY_NOTES, notesJson.toString(2))
+                // 1. Build initial ZIP without plainSha256 in manifest
+                FileOutputStream(targetZipFile).use { fos ->
+                    ZipOutputStream(fos).use { zip ->
+                        // notes.json
+                        val notesJson =
+                            JSONObject().apply {
+                                put("version", BackupIo.SCHEMA_VERSION)
+                                put("exportedAt", createdAt)
+                                ownerId?.let { put("ownerId", it) }
+                                put("categories", JSONArray().apply { userCategories.forEach { put(encodeShoulderForBackup(it)) } })
+                                put("notes", JSONArray().apply { userNotes.forEach { put(encodeNoteForBackup(it)) } })
+                            }
+                        writeZipTextEntry(zip, BackupIo.ENTRY_NOTES, notesJson.toString(2))
 
-                // settings.json
-                val settingsJson = SettingsBackup.exportJson(
-                    themePrefs,
-                    notesUiPrefs,
-                    viewOptionsPrefs,
-                    lockPrefs,
-                    interactionPrefs,
-                    quickCapturePrefs,
-                    reminderPrefs,
-                    defaultNotePrefs,
-                    updatePrefs,
-                )
-                writeZipTextEntry(zip, BackupIo.ENTRY_SETTINGS, settingsJson.toString(2))
+                        // settings.json
+                        val settingsJson =
+                            SettingsBackup.exportJson(
+                                themePrefs,
+                                notesUiPrefs,
+                                viewOptionsPrefs,
+                                lockPrefs,
+                                interactionPrefs,
+                                quickCapturePrefs,
+                                reminderPrefs,
+                                defaultNotePrefs,
+                                updatePrefs,
+                            )
+                        writeZipTextEntry(zip, BackupIo.ENTRY_SETTINGS, settingsJson.toString(2))
 
-                // attachments/
-                for (att in allAttachments) {
-                    val file = resolveAttachmentFile(context, att.uri)
-                    if (file != null && file.exists() && file.isFile) {
-                        val entryName = "attachments/${att.uuid}_${sanitizeFileName(att.displayName)}"
-                        zip.putNextEntry(ZipEntry(entryName))
-                        FileInputStream(file).use { fis ->
-                            fis.copyTo(zip, bufferSize = 8192)
+                        // attachments/
+                        for (att in allAttachments) {
+                            val file = resolveAttachmentFile(context, att.uri)
+                            if (file != null && file.exists() && file.isFile) {
+                                val entryName = "attachments/${att.uuid}_${sanitizeFileName(att.displayName)}"
+                                zip.putNextEntry(ZipEntry(entryName))
+                                FileInputStream(file).use { fis ->
+                                    fis.copyTo(zip, bufferSize = 8192)
+                                }
+                                zip.closeEntry()
+                            }
                         }
-                        zip.closeEntry()
+
+                        // manifest.json
+                        val manifest =
+                            DriveBackupManifest(
+                                backupId = backupId,
+                                createdAtEpochMillis = createdAt,
+                                schemaVersion = BackupIo.SCHEMA_VERSION,
+                                notesCount = notesCount,
+                                tasksCount = tasksCount,
+                                categoriesCount = categoriesCount,
+                                attachmentsCount = allAttachments.size,
+                                ownerId = ownerId,
+                                sourceDevice = sourceDevice,
+                                plainSha256 = "", // Updated below
+                            )
+                        writeZipTextEntry(zip, BackupIo.ENTRY_MANIFEST, json.encodeToString(manifest))
                     }
                 }
 
-                // manifest.json
-                val manifest = DriveBackupManifest(
+                // 2. Compute SHA-256 of plain archive
+                val sha256 = computeFileSha256(targetZipFile)
+
+                DriveBackupManifest(
                     backupId = backupId,
                     createdAtEpochMillis = createdAt,
                     schemaVersion = BackupIo.SCHEMA_VERSION,
@@ -141,281 +166,274 @@ class DriveBackupArchiveManager @Inject constructor(
                     attachmentsCount = allAttachments.size,
                     ownerId = ownerId,
                     sourceDevice = sourceDevice,
-                    plainSha256 = "", // Updated below
-                )
-                writeZipTextEntry(zip, BackupIo.ENTRY_MANIFEST, json.encodeToString(manifest))
-            }
-        }
-
-        // 2. Compute SHA-256 of plain archive
-        val sha256 = computeFileSha256(targetZipFile)
-
-        DriveBackupManifest(
-            backupId = backupId,
-            createdAtEpochMillis = createdAt,
-            schemaVersion = BackupIo.SCHEMA_VERSION,
-            notesCount = notesCount,
-            tasksCount = tasksCount,
-            categoriesCount = categoriesCount,
-            attachmentsCount = allAttachments.size,
-            ownerId = ownerId,
-            sourceDevice = sourceDevice,
-            plainSha256 = sha256,
-        )
-    }
-
-    /**
-     * Encrypts the plain ZIP archive into a versioned `NOTAS_E1` binary container.
-     */
-    suspend fun encryptArchiveToFile(
-        plainZipFile: File,
-        encryptedContainerFile: File,
-        mek: SecretKey,
-        keyId: Int = CryptoConstants.DEFAULT_KEY_ID,
-        aad: ByteArray = ByteArray(0),
-    ) = withContext(Dispatchers.IO) {
-        FileInputStream(plainZipFile).use { fis ->
-            FileOutputStream(encryptedContainerFile).use { fos ->
-                EncryptedContainer.encryptStream(
-                    input = fis,
-                    output = fos,
-                    key = mek,
-                    keyId = keyId,
-                    aad = aad,
+                    plainSha256 = sha256,
                 )
             }
-        }
-    }
 
-    /**
-     * Decrypts a `NOTAS_E1` container into a staging plain ZIP archive, verifying integrity.
-     */
-    suspend fun decryptArchiveToFile(
-        encryptedContainerFile: File,
-        plainZipFile: File,
-        mek: SecretKey,
-        expectedAad: ByteArray? = null,
-    ) = withContext(Dispatchers.IO) {
-        FileInputStream(encryptedContainerFile).use { fis ->
-            FileOutputStream(plainZipFile).use { fos ->
-                EncryptedContainer.decryptStream(
-                    input = fis,
-                    output = fos,
-                    key = mek,
-                    expectedAad = expectedAad,
-                )
-            }
-        }
-    }
-
-    companion object {
-        const val MAX_ENTRIES = 10_000
-        const val MAX_TOTAL_DECOMPRESSED_BYTES = 500L * 1024 * 1024 // 500 MB limit against ZIP bombs
-        const val MAX_ENTRY_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB per entry limit
-    }
-
-    /**
-     * Inspects only the `manifest.json` header entry of a plain ZIP archive without extracting all entries.
-     */
-    suspend fun peekManifest(plainZipFile: File): DriveBackupManifest = withContext(Dispatchers.IO) {
-        ZipInputStream(FileInputStream(plainZipFile)).use { zipInput ->
-            var entry = zipInput.nextEntry
-            while (entry != null) {
-                if (entry.name == BackupIo.ENTRY_MANIFEST && !entry.isDirectory) {
-                    val bytes = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entry.name)
-                    val text = bytes.toString(Charsets.UTF_8)
-                    return@withContext json.decodeFromString<DriveBackupManifest>(text)
+        /**
+         * Encrypts the plain ZIP archive into a versioned `NOTAS_E1` binary container.
+         */
+        suspend fun encryptArchiveToFile(
+            plainZipFile: File,
+            encryptedContainerFile: File,
+            mek: SecretKey,
+            keyId: Int = CryptoConstants.DEFAULT_KEY_ID,
+            aad: ByteArray = ByteArray(0),
+        ) = withContext(Dispatchers.IO) {
+            FileInputStream(plainZipFile).use { fis ->
+                FileOutputStream(encryptedContainerFile).use { fos ->
+                    EncryptedContainer.encryptStream(
+                        input = fis,
+                        output = fos,
+                        key = mek,
+                        keyId = keyId,
+                        aad = aad,
+                    )
                 }
-                zipInput.closeEntry()
-                entry = zipInput.nextEntry
             }
         }
-        throw IllegalArgumentException("Archive is missing required manifest.json")
-    }
 
-    /**
-     * Extracts and validates manifest and JSON bodies from a decrypted plain ZIP archive into an isolated staging directory.
-     * Enforces strict anti-Zip Slip checks, entry count limits, decompressed size limits, duplicate entry prevention,
-     * and file type whitelisting.
-     */
-    suspend fun extractArchiveContents(
-        plainZipFile: File,
-        targetStagingDir: File? = null,
-    ): ExtractedArchiveData = withContext(Dispatchers.IO) {
-        var manifestText: String? = null
-        var notesText: String? = null
-        var settingsText: String? = null
-        val attachmentFiles = mutableMapOf<String, File>()
+        /**
+         * Decrypts a `NOTAS_E1` container into a staging plain ZIP archive, verifying integrity.
+         */
+        suspend fun decryptArchiveToFile(
+            encryptedContainerFile: File,
+            plainZipFile: File,
+            mek: SecretKey,
+            expectedAad: ByteArray? = null,
+        ) = withContext(Dispatchers.IO) {
+            FileInputStream(encryptedContainerFile).use { fis ->
+                FileOutputStream(plainZipFile).use { fos ->
+                    EncryptedContainer.decryptStream(
+                        input = fis,
+                        output = fos,
+                        key = mek,
+                        expectedAad = expectedAad,
+                    )
+                }
+            }
+        }
 
-        val extractDir = targetStagingDir ?: File(plainZipFile.parentFile, "extracted_${UUID.randomUUID()}").apply { mkdirs() }
-        val canonicalExtractDir = extractDir.canonicalPath
+        companion object {
+            const val MAX_ENTRIES = 10_000
+            const val MAX_TOTAL_DECOMPRESSED_BYTES = 500L * 1024 * 1024 // 500 MB limit against ZIP bombs
+            const val MAX_ENTRY_SIZE_BYTES = 100L * 1024 * 1024 // 100 MB per entry limit
+        }
 
-        val seenEntries = mutableSetOf<String>()
-        var totalEntries = 0
-        var totalDecompressedBytes = 0L
-
-        try {
-            ZipInputStream(FileInputStream(plainZipFile)).use { zipInput ->
-                var entry = zipInput.nextEntry
-                while (entry != null) {
-                    totalEntries++
-                    if (totalEntries > MAX_ENTRIES) {
-                        throw SecurityException("Archive exceeds maximum entry limit ($MAX_ENTRIES)")
-                    }
-
-                    val entryName = entry.name
-                    // Reject absolute paths, path traversal, backslashes, colon drives
-                    if (entryName.startsWith("/") || entryName.startsWith("\\") ||
-                        entryName.contains("..") || entryName.contains(":")
-                    ) {
-                        throw SecurityException("Malicious path traversal detected in archive entry: $entryName")
-                    }
-
-                    // Reject duplicate entries
-                    if (!seenEntries.add(entryName)) {
-                        throw SecurityException("Duplicate archive entry detected: $entryName")
-                    }
-
-                    when {
-                        entryName == BackupIo.ENTRY_MANIFEST -> {
-                            val data = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entryName)
-                            totalDecompressedBytes += data.size
-                            checkTotalSize(totalDecompressedBytes)
-                            manifestText = data.toString(Charsets.UTF_8)
+        /**
+         * Inspects only the `manifest.json` header entry of a plain ZIP archive without extracting all entries.
+         */
+        suspend fun peekManifest(plainZipFile: File): DriveBackupManifest =
+            withContext(Dispatchers.IO) {
+                ZipInputStream(FileInputStream(plainZipFile)).use { zipInput ->
+                    var entry = zipInput.nextEntry
+                    while (entry != null) {
+                        if (entry.name == BackupIo.ENTRY_MANIFEST && !entry.isDirectory) {
+                            val bytes = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entry.name)
+                            val text = bytes.toString(Charsets.UTF_8)
+                            return@withContext json.decodeFromString<DriveBackupManifest>(text)
                         }
-                        entryName == BackupIo.ENTRY_NOTES -> {
-                            val data = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entryName)
-                            totalDecompressedBytes += data.size
-                            checkTotalSize(totalDecompressedBytes)
-                            notesText = data.toString(Charsets.UTF_8)
-                        }
-                        entryName == BackupIo.ENTRY_SETTINGS -> {
-                            val data = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entryName)
-                            totalDecompressedBytes += data.size
-                            checkTotalSize(totalDecompressedBytes)
-                            settingsText = data.toString(Charsets.UTF_8)
-                        }
-                        entryName.startsWith("attachments/") && !entry.isDirectory -> {
-                            val subName = entryName.removePrefix("attachments/")
-                            // Enforce strict flat filename whitelist for attachments
-                            if (!subName.matches(Regex("^[a-zA-Z0-9._-]+$"))) {
-                                throw SecurityException("Invalid attachment filename: $subName")
+                        zipInput.closeEntry()
+                        entry = zipInput.nextEntry
+                    }
+                }
+                throw IllegalArgumentException("Archive is missing required manifest.json")
+            }
+
+        /**
+         * Extracts and validates manifest and JSON bodies from a decrypted plain ZIP archive into an isolated staging directory.
+         * Enforces strict anti-Zip Slip checks, entry count limits, decompressed size limits, duplicate entry prevention,
+         * and file type whitelisting.
+         */
+        suspend fun extractArchiveContents(
+            plainZipFile: File,
+            targetStagingDir: File? = null,
+        ): ExtractedArchiveData =
+            withContext(Dispatchers.IO) {
+                var manifestText: String? = null
+                var notesText: String? = null
+                var settingsText: String? = null
+                val attachmentFiles = mutableMapOf<String, File>()
+
+                val extractDir = targetStagingDir ?: File(plainZipFile.parentFile, "extracted_${UUID.randomUUID()}").apply { mkdirs() }
+                val canonicalExtractDir = extractDir.canonicalPath
+
+                val seenEntries = mutableSetOf<String>()
+                var totalEntries = 0
+                var totalDecompressedBytes = 0L
+
+                try {
+                    ZipInputStream(FileInputStream(plainZipFile)).use { zipInput ->
+                        var entry = zipInput.nextEntry
+                        while (entry != null) {
+                            totalEntries++
+                            if (totalEntries > MAX_ENTRIES) {
+                                throw SecurityException("Archive exceeds maximum entry limit ($MAX_ENTRIES)")
                             }
 
-                            val attFile = File(extractDir, subName)
-                            val canonicalAttPath = attFile.canonicalPath
-                            if (!canonicalAttPath.startsWith(canonicalExtractDir + File.separator)) {
-                                throw SecurityException("Zip Slip path traversal blocked: $entryName")
+                            val entryName = entry.name
+                            // Reject absolute paths, path traversal, backslashes, colon drives
+                            if (entryName.startsWith("/") || entryName.startsWith("\\") ||
+                                entryName.contains("..") || entryName.contains(":")
+                            ) {
+                                throw SecurityException("Malicious path traversal detected in archive entry: $entryName")
                             }
 
-                            attFile.parentFile?.mkdirs()
-                            var entryBytes = 0L
-                            FileOutputStream(attFile).use { fos ->
-                                val buffer = ByteArray(8192)
-                                var read: Int
-                                while (zipInput.read(buffer).also { read = it } != -1) {
-                                    entryBytes += read
-                                    totalDecompressedBytes += read
-                                    if (entryBytes > MAX_ENTRY_SIZE_BYTES) {
-                                        throw SecurityException("Attachment $entryName exceeds maximum entry size ($MAX_ENTRY_SIZE_BYTES bytes)")
-                                    }
+                            // Reject duplicate entries
+                            if (!seenEntries.add(entryName)) {
+                                throw SecurityException("Duplicate archive entry detected: $entryName")
+                            }
+
+                            when {
+                                entryName == BackupIo.ENTRY_MANIFEST -> {
+                                    val data = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entryName)
+                                    totalDecompressedBytes += data.size
                                     checkTotalSize(totalDecompressedBytes)
-                                    fos.write(buffer, 0, read)
+                                    manifestText = data.toString(Charsets.UTF_8)
+                                }
+                                entryName == BackupIo.ENTRY_NOTES -> {
+                                    val data = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entryName)
+                                    totalDecompressedBytes += data.size
+                                    checkTotalSize(totalDecompressedBytes)
+                                    notesText = data.toString(Charsets.UTF_8)
+                                }
+                                entryName == BackupIo.ENTRY_SETTINGS -> {
+                                    val data = readStreamWithLimit(zipInput, MAX_ENTRY_SIZE_BYTES, entryName)
+                                    totalDecompressedBytes += data.size
+                                    checkTotalSize(totalDecompressedBytes)
+                                    settingsText = data.toString(Charsets.UTF_8)
+                                }
+                                entryName.startsWith("attachments/") && !entry.isDirectory -> {
+                                    val subName = entryName.removePrefix("attachments/")
+                                    // Enforce strict flat filename whitelist for attachments
+                                    if (!subName.matches(Regex("^[a-zA-Z0-9._-]+$"))) {
+                                        throw SecurityException("Invalid attachment filename: $subName")
+                                    }
+
+                                    val attFile = File(extractDir, subName)
+                                    val canonicalAttPath = attFile.canonicalPath
+                                    if (!canonicalAttPath.startsWith(canonicalExtractDir + File.separator)) {
+                                        throw SecurityException("Zip Slip path traversal blocked: $entryName")
+                                    }
+
+                                    attFile.parentFile?.mkdirs()
+                                    var entryBytes = 0L
+                                    FileOutputStream(attFile).use { fos ->
+                                        val buffer = ByteArray(8192)
+                                        var read: Int
+                                        while (zipInput.read(buffer).also { read = it } != -1) {
+                                            entryBytes += read
+                                            totalDecompressedBytes += read
+                                            if (entryBytes > MAX_ENTRY_SIZE_BYTES) {
+                                                throw SecurityException("Attachment $entryName exceeds maximum entry size ($MAX_ENTRY_SIZE_BYTES bytes)")
+                                            }
+                                            checkTotalSize(totalDecompressedBytes)
+                                            fos.write(buffer, 0, read)
+                                        }
+                                    }
+                                    val uuid = attFile.name.substringBefore("_")
+                                    attachmentFiles[uuid] = attFile
+                                }
+                                entry.isDirectory -> {
+                                    // Only allow the top-level attachments/ directory entry if present
+                                    if (entryName != "attachments/") {
+                                        throw SecurityException("Unexpected directory in backup archive: $entryName")
+                                    }
+                                }
+                                else -> {
+                                    // Reject unexpected file types (executables, unexpected scripts, hidden files, unknown root files)
+                                    throw SecurityException("Unexpected file entry in backup archive: $entryName")
                                 }
                             }
-                            val uuid = attFile.name.substringBefore("_")
-                            attachmentFiles[uuid] = attFile
-                        }
-                        entry.isDirectory -> {
-                            // Only allow the top-level attachments/ directory entry if present
-                            if (entryName != "attachments/") {
-                                throw SecurityException("Unexpected directory in backup archive: $entryName")
-                            }
-                        }
-                        else -> {
-                            // Reject unexpected file types (executables, unexpected scripts, hidden files, unknown root files)
-                            throw SecurityException("Unexpected file entry in backup archive: $entryName")
+                            zipInput.closeEntry()
+                            entry = zipInput.nextEntry
                         }
                     }
-                    zipInput.closeEntry()
-                    entry = zipInput.nextEntry
+                } catch (e: Exception) {
+                    extractDir.deleteRecursively()
+                    throw e
                 }
+
+                val manifest =
+                    manifestText?.let {
+                        runCatching { json.decodeFromString<DriveBackupManifest>(it) }.getOrNull()
+                    } ?: throw IllegalArgumentException("Archive is missing or has corrupted manifest.json")
+
+                ExtractedArchiveData(
+                    manifest = manifest,
+                    notesJson = notesText,
+                    settingsJson = settingsText,
+                    attachmentFiles = attachmentFiles,
+                    extractedDirectory = extractDir,
+                )
             }
-        } catch (e: Exception) {
-            extractDir.deleteRecursively()
-            throw e
-        }
 
-        val manifest = manifestText?.let {
-            runCatching { json.decodeFromString<DriveBackupManifest>(it) }.getOrNull()
-        } ?: throw IllegalArgumentException("Archive is missing or has corrupted manifest.json")
-
-        ExtractedArchiveData(
-            manifest = manifest,
-            notesJson = notesText,
-            settingsJson = settingsText,
-            attachmentFiles = attachmentFiles,
-            extractedDirectory = extractDir,
-        )
-    }
-
-    private fun readStreamWithLimit(input: ZipInputStream, maxBytes: Long, entryName: String): ByteArray {
-        val buffer = ByteArray(8192)
-        val out = java.io.ByteArrayOutputStream()
-        var total = 0L
-        var read: Int
-        while (input.read(buffer).also { read = it } != -1) {
-            total += read
-            if (total > maxBytes) {
-                throw SecurityException("Archive entry $entryName exceeds maximum decompressed size limit ($maxBytes bytes)")
-            }
-            out.write(buffer, 0, read)
-        }
-        return out.toByteArray()
-    }
-
-    private fun checkTotalSize(totalBytes: Long) {
-        if (totalBytes > MAX_TOTAL_DECOMPRESSED_BYTES) {
-            throw SecurityException("Archive exceeds maximum total decompressed size limit ($MAX_TOTAL_DECOMPRESSED_BYTES bytes)")
-        }
-    }
-
-    fun computeFileSha256(file: File): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        FileInputStream(file).use { input ->
+        private fun readStreamWithLimit(
+            input: ZipInputStream,
+            maxBytes: Long,
+            entryName: String,
+        ): ByteArray {
             val buffer = ByteArray(8192)
+            val out = java.io.ByteArrayOutputStream()
+            var total = 0L
             var read: Int
             while (input.read(buffer).also { read = it } != -1) {
-                digest.update(buffer, 0, read)
+                total += read
+                if (total > maxBytes) {
+                    throw SecurityException("Archive entry $entryName exceeds maximum decompressed size limit ($maxBytes bytes)")
+                }
+                out.write(buffer, 0, read)
+            }
+            return out.toByteArray()
+        }
+
+        private fun checkTotalSize(totalBytes: Long) {
+            if (totalBytes > MAX_TOTAL_DECOMPRESSED_BYTES) {
+                throw SecurityException("Archive exceeds maximum total decompressed size limit ($MAX_TOTAL_DECOMPRESSED_BYTES bytes)")
             }
         }
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
 
-    private fun writeZipTextEntry(zip: ZipOutputStream, entryName: String, text: String) {
-        zip.putNextEntry(ZipEntry(entryName))
-        val writer = OutputStreamWriter(zip, Charsets.UTF_8)
-        writer.write(text)
-        writer.flush()
-        zip.closeEntry()
-    }
-
-    private fun resolveAttachmentFile(context: Context, uriString: String): File? {
-        return try {
-            val uri = Uri.parse(uriString)
-            if (uri.scheme == "file") {
-                uri.path?.let { File(it) }
-            } else {
-                File(context.filesDir, "note_attachments/${uri.lastPathSegment}")
+        fun computeFileSha256(file: File): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            FileInputStream(file).use { input ->
+                val buffer = ByteArray(8192)
+                var read: Int
+                while (input.read(buffer).also { read = it } != -1) {
+                    digest.update(buffer, 0, read)
+                }
             }
-        } catch (_: Exception) {
-            null
+            return digest.digest().joinToString("") { "%02x".format(it) }
         }
-    }
 
-    private fun sanitizeFileName(name: String): String =
-        name.replace(Regex("[^a-zA-Z0-9._-]"), "_").take(60)
-}
+        private fun writeZipTextEntry(
+            zip: ZipOutputStream,
+            entryName: String,
+            text: String,
+        ) {
+            zip.putNextEntry(ZipEntry(entryName))
+            val writer = OutputStreamWriter(zip, Charsets.UTF_8)
+            writer.write(text)
+            writer.flush()
+            zip.closeEntry()
+        }
+
+        private fun resolveAttachmentFile(
+            context: Context,
+            uriString: String,
+        ): File? =
+            try {
+                val uri = Uri.parse(uriString)
+                if (uri.scheme == "file") {
+                    uri.path?.let { File(it) }
+                } else {
+                    File(context.filesDir, "note_attachments/${uri.lastPathSegment}")
+                }
+            } catch (_: Exception) {
+                null
+            }
+
+        private fun sanitizeFileName(name: String): String = name.replace(Regex("[^a-zA-Z0-9._-]"), "_").take(60)
+    }
 
 data class ExtractedArchiveData(
     val manifest: DriveBackupManifest?,

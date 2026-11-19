@@ -37,8 +37,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteReminder
@@ -49,6 +47,8 @@ import haddad.three.notas.ui.components.NoteShelfState
 import haddad.three.notas.ui.modifiers.applyToFullBleedLayer
 import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
 import haddad.three.notas.ui.theme.LocalAdaptiveNoteThemes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
@@ -385,12 +385,14 @@ fun EditNoteScreen(
                 val title by vm.title.collectAsStateWithLifecycle()
                 val iconKey by vm.iconKey.collectAsStateWithLifecycle()
                 val colorIndex by vm.colorIndex.collectAsStateWithLifecycle()
+                val saveStatus by vm.saveStatus.collectAsStateWithLifecycle()
                 EditorTitleTopBar(
                     contentKind = NoteKind.NOTE,
                     title = title,
                     titlePlaceholder = titlePlaceholder,
                     iconKey = iconKey,
                     colorIndex = colorIndex,
+                    saveStatus = saveStatus,
                     existing = hasPersistedEditorRow,
                     isEditMode = isEditMode,
                     readOnly = readOnly,

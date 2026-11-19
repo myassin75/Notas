@@ -34,7 +34,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.AppMediaStorage
 import haddad.three.notas.data.NoteAttachmentEntity
@@ -45,6 +44,7 @@ import haddad.three.notas.ui.components.RememberIconButton
 import haddad.three.notas.ui.components.RememberOutlinedButton
 import haddad.three.notas.ui.components.RememberTextButton
 import haddad.three.notas.ui.feedback.appClickable
+import kotlinx.coroutines.launch
 
 @Composable
 fun AttachmentsSheet(

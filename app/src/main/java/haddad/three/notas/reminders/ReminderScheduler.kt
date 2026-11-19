@@ -8,8 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import haddad.three.notas.MainActivity
 import haddad.three.notas.R
 import haddad.three.notas.data.ChecklistItemEntity
@@ -25,6 +23,8 @@ import haddad.three.notas.diagnostics.DiagnosticLog
 import haddad.three.notas.notifications.canPostNotifications
 import haddad.three.notas.notifications.postNotificationIfAllowed
 import haddad.three.notas.ui.edit.iconEmojiPayload
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.Calendar
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -309,7 +309,7 @@ class ReminderScheduler(
         val notification =
             NotificationCompat
                 .Builder(context, CHANNEL_ID_SUMMARY)
-                .setSmallIcon(R.drawable.ic_stat_remember)
+                .setSmallIcon(R.drawable.ic_stat_notas)
                 .setContentTitle(context.getString(R.string.reminder_summary_title))
                 .setContentText(summaryText)
                 .setStyle(inboxStyle)

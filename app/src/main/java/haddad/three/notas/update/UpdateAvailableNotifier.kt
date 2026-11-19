@@ -66,7 +66,7 @@ class UpdateAvailableNotifier
             val notification =
                 NotificationCompat
                     .Builder(context, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_stat_remember)
+                    .setSmallIcon(R.drawable.ic_stat_notas)
                     .setContentTitle(context.getString(R.string.notification_update_available_title))
                     .setContentText(context.getString(R.string.notification_update_available_text, info.versionName))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)

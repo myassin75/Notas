@@ -1,14 +1,14 @@
 package haddad.three.notas.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.data.AppearanceMode
 import haddad.three.notas.data.ThemeMode
 import haddad.three.notas.data.effectiveDarkTheme
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /**
  * Unit tests for NUVORA's centralized theme system:
@@ -280,16 +280,40 @@ class ThemeSystemTest {
     @Test
     fun appearanceMode_effectiveDarkTheme_systemAndExplicitBehaviors() {
         // System Default must follow Android system appearance
-        assertEquals(true, haddad.three.notas.data.ThemeMode.SYSTEM.effectiveDarkTheme(systemDark = true))
-        assertEquals(false, haddad.three.notas.data.ThemeMode.SYSTEM.effectiveDarkTheme(systemDark = false))
+        assertEquals(
+            true,
+            haddad.three.notas.data.ThemeMode.SYSTEM
+                .effectiveDarkTheme(systemDark = true),
+        )
+        assertEquals(
+            false,
+            haddad.three.notas.data.ThemeMode.SYSTEM
+                .effectiveDarkTheme(systemDark = false),
+        )
 
         // Explicit Light selection must always be light regardless of system
-        assertEquals(false, haddad.three.notas.data.ThemeMode.LIGHT.effectiveDarkTheme(systemDark = true))
-        assertEquals(false, haddad.three.notas.data.ThemeMode.LIGHT.effectiveDarkTheme(systemDark = false))
+        assertEquals(
+            false,
+            haddad.three.notas.data.ThemeMode.LIGHT
+                .effectiveDarkTheme(systemDark = true),
+        )
+        assertEquals(
+            false,
+            haddad.three.notas.data.ThemeMode.LIGHT
+                .effectiveDarkTheme(systemDark = false),
+        )
 
         // Explicit Dark selection must always be dark regardless of system
-        assertEquals(true, haddad.three.notas.data.ThemeMode.DARK.effectiveDarkTheme(systemDark = true))
-        assertEquals(true, haddad.three.notas.data.ThemeMode.DARK.effectiveDarkTheme(systemDark = false))
+        assertEquals(
+            true,
+            haddad.three.notas.data.ThemeMode.DARK
+                .effectiveDarkTheme(systemDark = true),
+        )
+        assertEquals(
+            true,
+            haddad.three.notas.data.ThemeMode.DARK
+                .effectiveDarkTheme(systemDark = false),
+        )
     }
 
     @Test

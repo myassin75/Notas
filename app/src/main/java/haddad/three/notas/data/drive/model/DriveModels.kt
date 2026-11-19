@@ -115,31 +115,43 @@ data class RestoreSummary(
  * Result wrapper for Google Drive operations.
  */
 sealed interface DriveResult<out T> {
-    data class Success<T>(val data: T) : DriveResult<T>
+    data class Success<T>(
+        val data: T,
+    ) : DriveResult<T>
+
     data class Error(
         val message: String,
         val code: String? = null,
         val statusCode: Int? = null,
         val cause: Throwable? = null,
     ) : DriveResult<Nothing>
+
     data object Unauthorized : DriveResult<Nothing>
-    open class RateLimited(val retryAfterSeconds: Long? = null) : DriveResult<Nothing> {
+
+    open class RateLimited(
+        val retryAfterSeconds: Long? = null,
+    ) : DriveResult<Nothing> {
         override fun equals(other: Any?): Boolean = other is RateLimited && retryAfterSeconds == other.retryAfterSeconds
+
         override fun hashCode(): Int = retryAfterSeconds?.hashCode() ?: 0
+
         override fun toString(): String = "RateLimited(retryAfterSeconds=$retryAfterSeconds)"
+
         companion object : RateLimited(null)
     }
+
     data object Offline : DriveResult<Nothing>
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T> DriveResult<*>.toErrorResult(): DriveResult<T> = when (this) {
-    is DriveResult.Error -> this
-    is DriveResult.Unauthorized -> DriveResult.Unauthorized
-    is DriveResult.RateLimited -> this
-    is DriveResult.Offline -> DriveResult.Offline
-    is DriveResult.Success -> error("Cannot convert Success to Error")
-}
+fun <T> DriveResult<*>.toErrorResult(): DriveResult<T> =
+    when (this) {
+        is DriveResult.Error -> this
+        is DriveResult.Unauthorized -> DriveResult.Unauthorized
+        is DriveResult.RateLimited -> this
+        is DriveResult.Offline -> DriveResult.Offline
+        is DriveResult.Success -> error("Cannot convert Success to Error")
+    }
 
 /**
  * UI State for Google Drive backup operations.
@@ -161,14 +173,15 @@ enum class DriveBackupStatus {
 }
 
 val DriveBackupStatus.isLoading: Boolean
-    get() = this == DriveBackupStatus.AUTHORIZING ||
-        this == DriveBackupStatus.BACKUP_IN_PROGRESS ||
-        this == DriveBackupStatus.UPLOADING ||
-        this == DriveBackupStatus.RESTORE_IN_PROGRESS ||
-        this == DriveBackupStatus.DOWNLOADING ||
-        this == DriveBackupStatus.DECRYPTING ||
-        this == DriveBackupStatus.APPLYING_RESTORE ||
-        this == DriveBackupStatus.DELETING
+    get() =
+        this == DriveBackupStatus.AUTHORIZING ||
+            this == DriveBackupStatus.BACKUP_IN_PROGRESS ||
+            this == DriveBackupStatus.UPLOADING ||
+            this == DriveBackupStatus.RESTORE_IN_PROGRESS ||
+            this == DriveBackupStatus.DOWNLOADING ||
+            this == DriveBackupStatus.DECRYPTING ||
+            this == DriveBackupStatus.APPLYING_RESTORE ||
+            this == DriveBackupStatus.DELETING
 
 data class DriveBackupUiState(
     val status: DriveBackupStatus = DriveBackupStatus.IDLE,
@@ -184,4 +197,3 @@ data class DriveBackupUiState(
     val autoBackupFrequencyDays: Int = 1,
     val autoBackupRequiresWifi: Boolean = true,
 )
-

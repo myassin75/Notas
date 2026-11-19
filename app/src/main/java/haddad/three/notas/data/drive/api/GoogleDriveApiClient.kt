@@ -40,42 +40,47 @@ class GoogleDriveApiClient(
         pageSize: Int = 50,
         pageToken: String? = null,
         query: String? = null,
-    ): DriveResult<DriveFileListResponse> = withContext(Dispatchers.IO) {
-        val queryParams = mutableListOf<String>()
-        queryParams.add("spaces=${urlEncode(spaces)}")
-        queryParams.add("pageSize=$pageSize")
-        queryParams.add("fields=${urlEncode("nextPageToken,files(id,name,mimeType,size,createdTime,modifiedTime,properties,appProperties)")}")
-        queryParams.add("orderBy=${urlEncode("createdTime desc")}")
+    ): DriveResult<DriveFileListResponse> =
+        withContext(Dispatchers.IO) {
+            val queryParams = mutableListOf<String>()
+            queryParams.add("spaces=${urlEncode(spaces)}")
+            queryParams.add("pageSize=$pageSize")
+            queryParams.add("fields=${urlEncode("nextPageToken,files(id,name,mimeType,size,createdTime,modifiedTime,properties,appProperties)")}")
+            queryParams.add("orderBy=${urlEncode("createdTime desc")}")
 
-        if (!pageToken.isNullOrBlank()) {
-            queryParams.add("pageToken=${urlEncode(pageToken)}")
-        }
-        if (!query.isNullOrBlank()) {
-            queryParams.add("q=${urlEncode(query)}")
-        }
+            if (!pageToken.isNullOrBlank()) {
+                queryParams.add("pageToken=${urlEncode(pageToken)}")
+            }
+            if (!query.isNullOrBlank()) {
+                queryParams.add("q=${urlEncode(query)}")
+            }
 
-        val urlString = "$DRIVE_BASE_URL/files?${queryParams.joinToString("&")}"
-        executeWithRetry {
-            val conn = httpFactory(urlString)
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
+            val urlString = "$DRIVE_BASE_URL/files?${queryParams.joinToString("&")}"
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
 
-            val code = conn.responseCode
-            when (code) {
-                HttpURLConnection.HTTP_OK -> {
-                    val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                    val response = json.decodeFromString(DriveFileListResponse.serializer(), body)
-                    DriveResult.Success(response)
-                }
-                HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
-                else -> {
-                    val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                    DriveResult.Error("Drive listFiles failed with HTTP $code: $errorBody", statusCode = code)
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        val response = json.decodeFromString(DriveFileListResponse.serializer(), body)
+                        DriveResult.Success(response)
+                    }
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val errorBody =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive listFiles failed with HTTP $code: $errorBody", statusCode = code)
+                    }
                 }
             }
         }
-    }
 
     /**
      * Uploads file data using multipart/related upload for files up to 5 MB.
@@ -85,50 +90,55 @@ class GoogleDriveApiClient(
         metadataJson: String,
         fileData: ByteArray,
         mimeType: String = "application/octet-stream",
-    ): DriveResult<DriveFileDto> = withContext(Dispatchers.IO) {
-        val boundary = "====notas_drive_boundary_${System.currentTimeMillis()}===="
-        val urlString = "$DRIVE_UPLOAD_BASE_URL/files?uploadType=multipart"
+    ): DriveResult<DriveFileDto> =
+        withContext(Dispatchers.IO) {
+            val boundary = "====notas_drive_boundary_${System.currentTimeMillis()}===="
+            val urlString = "$DRIVE_UPLOAD_BASE_URL/files?uploadType=multipart"
 
-        executeWithRetry {
-            val conn = httpFactory(urlString)
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
-            conn.doOutput = true
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
+                conn.setRequestProperty("Content-Type", "multipart/related; boundary=$boundary")
+                conn.doOutput = true
 
-            conn.outputStream.use { os ->
-                // Part 1: Metadata
-                os.write("--$boundary\r\n".toByteArray(Charsets.UTF_8))
-                os.write("Content-Type: application/json; charset=UTF-8\r\n\r\n".toByteArray(Charsets.UTF_8))
-                os.write(metadataJson.toByteArray(Charsets.UTF_8))
-                os.write("\r\n".toByteArray(Charsets.UTF_8))
+                conn.outputStream.use { os ->
+                    // Part 1: Metadata
+                    os.write("--$boundary\r\n".toByteArray(Charsets.UTF_8))
+                    os.write("Content-Type: application/json; charset=UTF-8\r\n\r\n".toByteArray(Charsets.UTF_8))
+                    os.write(metadataJson.toByteArray(Charsets.UTF_8))
+                    os.write("\r\n".toByteArray(Charsets.UTF_8))
 
-                // Part 2: Media
-                os.write("--$boundary\r\n".toByteArray(Charsets.UTF_8))
-                os.write("Content-Type: $mimeType\r\n\r\n".toByteArray(Charsets.UTF_8))
-                os.write(fileData)
-                os.write("\r\n".toByteArray(Charsets.UTF_8))
+                    // Part 2: Media
+                    os.write("--$boundary\r\n".toByteArray(Charsets.UTF_8))
+                    os.write("Content-Type: $mimeType\r\n\r\n".toByteArray(Charsets.UTF_8))
+                    os.write(fileData)
+                    os.write("\r\n".toByteArray(Charsets.UTF_8))
 
-                // End Boundary
-                os.write("--$boundary--\r\n".toByteArray(Charsets.UTF_8))
-                os.flush()
-            }
-
-            val code = conn.responseCode
-            when (code) {
-                HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED -> {
-                    val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                    DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
+                    // End Boundary
+                    os.write("--$boundary--\r\n".toByteArray(Charsets.UTF_8))
+                    os.flush()
                 }
-                HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
-                else -> {
-                    val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                    DriveResult.Error("Drive multipart upload failed ($code): $errorBody", statusCode = code)
+
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED -> {
+                        val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
+                    }
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val errorBody =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive multipart upload failed ($code): $errorBody", statusCode = code)
+                    }
                 }
             }
         }
-    }
 
     /**
      * Streams an encrypted backup archive to Google Drive using a resumable upload session.
@@ -140,88 +150,99 @@ class GoogleDriveApiClient(
         file: File,
         mimeType: String = "application/octet-stream",
         onProgress: ((Float) -> Unit)? = null,
-    ): DriveResult<DriveFileDto> = withContext(Dispatchers.IO) {
-        val totalLength = file.length()
+    ): DriveResult<DriveFileDto> =
+        withContext(Dispatchers.IO) {
+            val totalLength = file.length()
 
-        // 1. Initiate Resumable Upload Session
-        val initUrl = "$DRIVE_UPLOAD_BASE_URL/files?uploadType=resumable"
-        val sessionUrlResult: DriveResult<String> = executeWithRetry {
-            val conn = httpFactory(initUrl)
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
-            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-            conn.setRequestProperty("X-Upload-Content-Type", mimeType)
-            conn.setRequestProperty("X-Upload-Content-Length", totalLength.toString())
-            conn.doOutput = true
+            // 1. Initiate Resumable Upload Session
+            val initUrl = "$DRIVE_UPLOAD_BASE_URL/files?uploadType=resumable"
+            val sessionUrlResult: DriveResult<String> =
+                executeWithRetry {
+                    val conn = httpFactory(initUrl)
+                    conn.requestMethod = "POST"
+                    conn.setRequestProperty("Authorization", "Bearer $accessToken")
+                    conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+                    conn.setRequestProperty("X-Upload-Content-Type", mimeType)
+                    conn.setRequestProperty("X-Upload-Content-Length", totalLength.toString())
+                    conn.doOutput = true
 
-            conn.outputStream.use { it.write(metadataJson.toByteArray(Charsets.UTF_8)) }
+                    conn.outputStream.use { it.write(metadataJson.toByteArray(Charsets.UTF_8)) }
 
-            val code = conn.responseCode
-            when (code) {
-                HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED -> {
-                    val location = conn.getHeaderField("Location")
-                        ?: return@executeWithRetry DriveResult.Error("Drive resumable session missing Location header")
-                    DriveResult.Success(location)
-                }
-                HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
-                else -> {
-                    val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                    DriveResult.Error("Drive init resumable failed ($code): $errorBody", statusCode = code)
-                }
-            }
-        }
-
-        if (sessionUrlResult !is DriveResult.Success) {
-            return@withContext sessionUrlResult.toErrorResult()
-        }
-
-        val sessionUrl = sessionUrlResult.data
-
-        // 2. Stream File Content with Chunked Upload & Progress
-        var uploadedBytes = 0L
-        val buffer = ByteArray(BUFFER_SIZE)
-
-        try {
-            FileInputStream(file).use { fis ->
-                val uploadConn = httpFactory(sessionUrl)
-                uploadConn.requestMethod = "PUT"
-                uploadConn.setRequestProperty("Content-Length", totalLength.toString())
-                uploadConn.setRequestProperty("Content-Range", "bytes 0-${totalLength - 1}/$totalLength")
-                uploadConn.doOutput = true
-                uploadConn.setFixedLengthStreamingMode(totalLength)
-
-                uploadConn.outputStream.use { os ->
-                    var read: Int
-                    while (fis.read(buffer).also { read = it } != -1) {
-                        os.write(buffer, 0, read)
-                        uploadedBytes += read
-                        if (totalLength > 0) {
-                            onProgress?.invoke(uploadedBytes.toFloat() / totalLength)
+                    val code = conn.responseCode
+                    when (code) {
+                        HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED -> {
+                            val location =
+                                conn.getHeaderField("Location")
+                                    ?: return@executeWithRetry DriveResult.Error("Drive resumable session missing Location header")
+                            DriveResult.Success(location)
+                        }
+                        HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                        429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                        else -> {
+                            val errorBody =
+                                conn.errorStream
+                                    ?.bufferedReader(Charsets.UTF_8)
+                                    ?.use { it.readText() }
+                                    .orEmpty()
+                            DriveResult.Error("Drive init resumable failed ($code): $errorBody", statusCode = code)
                         }
                     }
-                    os.flush()
                 }
 
-                val code = uploadConn.responseCode
-                when (code) {
-                    HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED -> {
-                        val body = uploadConn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                        onProgress?.invoke(1.0f)
-                        DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
+            if (sessionUrlResult !is DriveResult.Success) {
+                return@withContext sessionUrlResult.toErrorResult()
+            }
+
+            val sessionUrl = sessionUrlResult.data
+
+            // 2. Stream File Content with Chunked Upload & Progress
+            var uploadedBytes = 0L
+            val buffer = ByteArray(BUFFER_SIZE)
+
+            try {
+                FileInputStream(file).use { fis ->
+                    val uploadConn = httpFactory(sessionUrl)
+                    uploadConn.requestMethod = "PUT"
+                    uploadConn.setRequestProperty("Content-Length", totalLength.toString())
+                    uploadConn.setRequestProperty("Content-Range", "bytes 0-${totalLength - 1}/$totalLength")
+                    uploadConn.doOutput = true
+                    uploadConn.setFixedLengthStreamingMode(totalLength)
+
+                    uploadConn.outputStream.use { os ->
+                        var read: Int
+                        while (fis.read(buffer).also { read = it } != -1) {
+                            os.write(buffer, 0, read)
+                            uploadedBytes += read
+                            if (totalLength > 0) {
+                                onProgress?.invoke(uploadedBytes.toFloat() / totalLength)
+                            }
+                        }
+                        os.flush()
                     }
-                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                    429 -> DriveResult.RateLimited(uploadConn.getHeaderField("Retry-After")?.toLongOrNull())
-                    else -> {
-                        val err = uploadConn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                        DriveResult.Error("Drive stream upload failed ($code): $err", statusCode = code)
+
+                    val code = uploadConn.responseCode
+                    when (code) {
+                        HttpURLConnection.HTTP_OK, HttpURLConnection.HTTP_CREATED -> {
+                            val body = uploadConn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                            onProgress?.invoke(1.0f)
+                            DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
+                        }
+                        HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                        429 -> DriveResult.RateLimited(uploadConn.getHeaderField("Retry-After")?.toLongOrNull())
+                        else -> {
+                            val err =
+                                uploadConn.errorStream
+                                    ?.bufferedReader(Charsets.UTF_8)
+                                    ?.use { it.readText() }
+                                    .orEmpty()
+                            DriveResult.Error("Drive stream upload failed ($code): $err", statusCode = code)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                DriveResult.Error("Resumable upload failed due to network error", cause = e)
             }
-        } catch (e: Exception) {
-            DriveResult.Error("Resumable upload failed due to network error", cause = e)
         }
-    }
 
     /**
      * Downloads file payload directly to a staging target file with progress tracking.
@@ -231,46 +252,51 @@ class GoogleDriveApiClient(
         fileId: String,
         targetFile: File,
         onProgress: ((Float) -> Unit)? = null,
-    ): DriveResult<Unit> = withContext(Dispatchers.IO) {
-        val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}?alt=media"
+    ): DriveResult<Unit> =
+        withContext(Dispatchers.IO) {
+            val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}?alt=media"
 
-        executeWithRetry {
-            val conn = httpFactory(urlString)
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
 
-            val code = conn.responseCode
-            when (code) {
-                HttpURLConnection.HTTP_OK -> {
-                    val contentLength = conn.contentLengthLong
-                    var totalRead = 0L
-                    val buffer = ByteArray(BUFFER_SIZE)
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val contentLength = conn.contentLengthLong
+                        var totalRead = 0L
+                        val buffer = ByteArray(BUFFER_SIZE)
 
-                    FileOutputStream(targetFile).use { fos ->
-                        conn.inputStream.use { ins ->
-                            var read: Int
-                            while (ins.read(buffer).also { read = it } != -1) {
-                                fos.write(buffer, 0, read)
-                                totalRead += read
-                                if (contentLength > 0) {
-                                    onProgress?.invoke(totalRead.toFloat() / contentLength)
+                        FileOutputStream(targetFile).use { fos ->
+                            conn.inputStream.use { ins ->
+                                var read: Int
+                                while (ins.read(buffer).also { read = it } != -1) {
+                                    fos.write(buffer, 0, read)
+                                    totalRead += read
+                                    if (contentLength > 0) {
+                                        onProgress?.invoke(totalRead.toFloat() / contentLength)
+                                    }
                                 }
+                                fos.flush()
                             }
-                            fos.flush()
                         }
+                        onProgress?.invoke(1.0f)
+                        DriveResult.Success(Unit)
                     }
-                    onProgress?.invoke(1.0f)
-                    DriveResult.Success(Unit)
-                }
-                HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
-                else -> {
-                    val err = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                    DriveResult.Error("Drive download failed ($code): $err", statusCode = code)
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive download failed ($code): $err", statusCode = code)
+                    }
                 }
             }
         }
-    }
 
     /**
      * Deletes a file from Google Drive.
@@ -278,26 +304,31 @@ class GoogleDriveApiClient(
     suspend fun deleteFile(
         accessToken: String,
         fileId: String,
-    ): DriveResult<Unit> = withContext(Dispatchers.IO) {
-        val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}"
+    ): DriveResult<Unit> =
+        withContext(Dispatchers.IO) {
+            val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}"
 
-        executeWithRetry {
-            val conn = httpFactory(urlString)
-            conn.requestMethod = "DELETE"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "DELETE"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
 
-            val code = conn.responseCode
-            when (code) {
-                HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_OK -> DriveResult.Success(Unit)
-                HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
-                else -> {
-                    val err = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                    DriveResult.Error("Drive delete failed ($code): $err", statusCode = code)
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_OK -> DriveResult.Success(Unit)
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive delete failed ($code): $err", statusCode = code)
+                    }
                 }
             }
         }
-    }
 
     /**
      * Retrieves file metadata including properties and appProperties.
@@ -305,30 +336,35 @@ class GoogleDriveApiClient(
     suspend fun getFileMetadata(
         accessToken: String,
         fileId: String,
-    ): DriveResult<DriveFileDto> = withContext(Dispatchers.IO) {
-        val fields = urlEncode("id,name,mimeType,size,createdTime,modifiedTime,properties,appProperties")
-        val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}?fields=$fields"
+    ): DriveResult<DriveFileDto> =
+        withContext(Dispatchers.IO) {
+            val fields = urlEncode("id,name,mimeType,size,createdTime,modifiedTime,properties,appProperties")
+            val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}?fields=$fields"
 
-        executeWithRetry {
-            val conn = httpFactory(urlString)
-            conn.requestMethod = "GET"
-            conn.setRequestProperty("Authorization", "Bearer $accessToken")
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
 
-            val code = conn.responseCode
-            when (code) {
-                HttpURLConnection.HTTP_OK -> {
-                    val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                    DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
-                }
-                HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
-                429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
-                else -> {
-                    val err = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                    DriveResult.Error("Drive getMetadata failed ($code): $err", statusCode = code)
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
+                    }
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive getMetadata failed ($code): $err", statusCode = code)
+                    }
                 }
             }
         }
-    }
 
     private inline fun <T> executeWithRetry(
         maxAttempts: Int = 3,

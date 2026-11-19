@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import java.util.Locale
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -63,6 +62,7 @@ import haddad.three.notas.ui.components.parseNoteColorHex
 import haddad.three.notas.ui.components.readableBadgeColors
 import haddad.three.notas.ui.components.rgbToHsv
 import haddad.three.notas.ui.theme.LocalIsDark
+import java.util.Locale
 
 @Composable
 fun ShoulderPickerSheet(
@@ -459,7 +459,13 @@ private fun ShoulderListContent(
                                     .background(if (isSelected) primaryAccent else Color.Transparent)
                                     .border(
                                         if (isSelected) 0.dp else 1.5.dp,
-                                        if (isSelected) Color.Transparent else if (isDark) MaterialTheme.colorScheme.outlineVariant else Color(0xFFD1D1D6),
+                                        if (isSelected) {
+                                            Color.Transparent
+                                        } else if (isDark) {
+                                            MaterialTheme.colorScheme.outlineVariant
+                                        } else {
+                                            Color(0xFFD1D1D6)
+                                        },
                                         CircleShape,
                                     ),
                             contentAlignment = Alignment.Center,

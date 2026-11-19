@@ -10,16 +10,13 @@ import java.nio.charset.StandardCharsets
  * custom-scheme links, or nested links from Firebase Hosting / Dynamic Links).
  */
 object AuthDeepLinkParser {
-
     /**
      * Parses an incoming Android [Uri].
      *
      * @return [LaunchAction.AuthEmailAction] if valid `mode` and `oobCode` are present,
      * or `null` if the URI does not represent an auth email action.
      */
-    fun parse(uri: Uri?): LaunchAction.AuthEmailAction? {
-        return parse(uri?.toString())
-    }
+    fun parse(uri: Uri?): LaunchAction.AuthEmailAction? = parse(uri?.toString())
 
     /**
      * Parses a raw URL string. Handles both direct parameters and nested links
@@ -62,18 +59,22 @@ object AuthDeepLinkParser {
         for (param in queryString.split('&')) {
             if (param.isBlank()) continue
             val parts = param.split('=', limit = 2)
-            val key = try {
-                URLDecoder.decode(parts[0], StandardCharsets.UTF_8.toString())
-            } catch (_: Exception) {
-                parts[0]
-            }
-            val value = if (parts.size > 1) {
+            val key =
                 try {
-                    URLDecoder.decode(parts[1], StandardCharsets.UTF_8.toString())
+                    URLDecoder.decode(parts[0], StandardCharsets.UTF_8.toString())
                 } catch (_: Exception) {
-                    parts[1]
+                    parts[0]
                 }
-            } else ""
+            val value =
+                if (parts.size > 1) {
+                    try {
+                        URLDecoder.decode(parts[1], StandardCharsets.UTF_8.toString())
+                    } catch (_: Exception) {
+                        parts[1]
+                    }
+                } else {
+                    ""
+                }
             if (key.isNotEmpty() && !map.containsKey(key)) {
                 map[key] = value
             }

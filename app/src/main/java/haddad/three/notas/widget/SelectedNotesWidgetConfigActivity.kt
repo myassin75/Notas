@@ -51,14 +51,14 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.ShoulderRepository
 import haddad.three.notas.data.ThemePrefs
 import haddad.three.notas.data.ThemeState
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.theme.RememberTheme
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -247,14 +247,6 @@ private fun SelectedNotesConfigContent(
                     iconName = "notes",
                     selected = currentConfig.filterType == SelectedNotesFilterType.ALL,
                     onClick = { onSelectOption(SelectedNotesFilterType.ALL, "") },
-                )
-            }
-            item {
-                ConfigSelectionRow(
-                    label = stringResource(R.string.widget_config_category_starred),
-                    iconName = "star",
-                    selected = currentConfig.filterType == SelectedNotesFilterType.SHOULDER,
-                    onClick = { onSelectOption(SelectedNotesFilterType.SHOULDER, "") },
                 )
             }
             item {

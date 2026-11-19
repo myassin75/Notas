@@ -52,7 +52,10 @@ interface SyncJournalDao {
     suspend fun getById(journalId: String): SyncJournalEntity?
 
     @Query("SELECT * FROM sync_journals WHERE deviceId = :deviceId AND sequence = :sequence LIMIT 1")
-    suspend fun getByDeviceAndSequence(deviceId: String, sequence: Long): SyncJournalEntity?
+    suspend fun getByDeviceAndSequence(
+        deviceId: String,
+        sequence: Long,
+    ): SyncJournalEntity?
 
     @Query("SELECT * FROM sync_journals WHERE status = :status ORDER BY sequence ASC")
     suspend fun getByStatus(status: String): List<SyncJournalEntity>
@@ -76,16 +79,30 @@ interface SyncJournalDao {
     suspend fun getCreatedJournals(deviceId: String): List<SyncJournalEntity>
 
     @Query("UPDATE sync_journals SET status = :newStatus, driveFileId = :driveFileId, updatedAt = :timestamp WHERE journalId = :journalId")
-    suspend fun markUploaded(journalId: String, driveFileId: String, newStatus: String = JournalStatus.UPLOADED.name, timestamp: Long = System.currentTimeMillis()): Int
+    suspend fun markUploaded(
+        journalId: String,
+        driveFileId: String,
+        newStatus: String = JournalStatus.UPLOADED.name,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Int
 
     @Query("SELECT * FROM sync_journals WHERE driveFileId = :driveFileId LIMIT 1")
     suspend fun getByDriveFileId(driveFileId: String): SyncJournalEntity?
 
     @Query("UPDATE sync_journals SET status = :newStatus, updatedAt = :timestamp WHERE journalId = :journalId")
-    suspend fun updateStatus(journalId: String, newStatus: String, timestamp: Long): Int
+    suspend fun updateStatus(
+        journalId: String,
+        newStatus: String,
+        timestamp: Long,
+    ): Int
 
     @Query("UPDATE sync_journals SET status = :newStatus, uploadAttempts = uploadAttempts + 1, lastError = :error, updatedAt = :timestamp WHERE journalId = :journalId")
-    suspend fun recordUploadFailure(journalId: String, newStatus: String, error: String?, timestamp: Long): Int
+    suspend fun recordUploadFailure(
+        journalId: String,
+        newStatus: String,
+        error: String?,
+        timestamp: Long,
+    ): Int
 
     @Query("DELETE FROM sync_journals WHERE journalId = :journalId")
     suspend fun deleteById(journalId: String): Int
@@ -93,4 +110,3 @@ interface SyncJournalDao {
     @Query("DELETE FROM sync_journals")
     suspend fun clearAll()
 }
-

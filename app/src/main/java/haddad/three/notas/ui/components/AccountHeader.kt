@@ -46,11 +46,12 @@ fun UserAvatar(
 ) {
     val palette = LocalSemanticPalette.current
 
-    val baseModifier = modifier
-        .size(size)
-        .clip(CircleShape)
-        .background(palette.divider.copy(alpha = 0.5f))
-        .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+    val baseModifier =
+        modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(palette.divider.copy(alpha = 0.5f))
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
 
     Box(
         modifier = baseModifier,
@@ -66,11 +67,12 @@ fun UserAvatar(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Text(
                             text = initials.trim(),
-                            style = if (size >= NotasTokens.AvatarSizeLarge) {
-                                NotasTypography.ScreenTitle
-                            } else {
-                                NotasTypography.ModalTitle
-                            },
+                            style =
+                                if (size >= NotasTokens.AvatarSizeLarge) {
+                                    NotasTypography.ScreenTitle
+                                } else {
+                                    NotasTypography.ModalTitle
+                                },
                             color = palette.secondaryText,
                         )
                     }
@@ -79,11 +81,12 @@ fun UserAvatar(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Text(
                             text = initials.trim(),
-                            style = if (size >= NotasTokens.AvatarSizeLarge) {
-                                NotasTypography.ScreenTitle
-                            } else {
-                                NotasTypography.ModalTitle
-                            },
+                            style =
+                                if (size >= NotasTokens.AvatarSizeLarge) {
+                                    NotasTypography.ScreenTitle
+                                } else {
+                                    NotasTypography.ModalTitle
+                                },
                             color = palette.primaryText,
                         )
                     }
@@ -92,11 +95,12 @@ fun UserAvatar(
         } else {
             Text(
                 text = initials.trim(),
-                style = if (size >= NotasTokens.AvatarSizeLarge) {
-                    NotasTypography.ScreenTitle
-                } else {
-                    NotasTypography.ModalTitle
-                },
+                style =
+                    if (size >= NotasTokens.AvatarSizeLarge) {
+                        NotasTypography.ScreenTitle
+                    } else {
+                        NotasTypography.ModalTitle
+                    },
                 color = palette.primaryText,
             )
         }
@@ -111,7 +115,14 @@ fun AccountHeader(
     displayName: String,
     subtitle: String,
     modifier: Modifier = Modifier,
-    initials: String = displayName.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString("").uppercase().ifBlank { "N" },
+    initials: String =
+        displayName
+            .split(" ")
+            .mapNotNull { it.firstOrNull()?.toString() }
+            .take(2)
+            .joinToString("")
+            .uppercase()
+            .ifBlank { "N" },
     photoUrl: String? = null,
     badgeText: String? = null,
     avatarSize: Dp = NotasTokens.AvatarSize,
@@ -120,9 +131,10 @@ fun AccountHeader(
     val palette = LocalSemanticPalette.current
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         UserAvatar(
@@ -157,13 +169,13 @@ fun AccountHeader(
         if (!badgeText.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(8.dp))
             Box(
-                modifier = Modifier
-                    .background(
-                        color = palette.inputSurface,
-                        shape = RoundedCornerShape(100.dp),
-                    )
-                    .border(1.dp, palette.divider.copy(alpha = 0.6f), RoundedCornerShape(100.dp))
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
+                modifier =
+                    Modifier
+                        .background(
+                            color = palette.inputSurface,
+                            shape = RoundedCornerShape(100.dp),
+                        ).border(1.dp, palette.divider.copy(alpha = 0.6f), RoundedCornerShape(100.dp))
+                        .padding(horizontal = 10.dp, vertical = 3.dp),
             ) {
                 Text(
                     text = badgeText,
@@ -179,11 +191,14 @@ fun AccountHeader(
                 onClick = onEditClick,
                 shape = RoundedCornerShape(18.dp),
                 border = BorderStroke(1.dp, palette.cardBorder),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = palette.cardSurface,
-                    contentColor = palette.primaryText,
-                ),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        containerColor = palette.cardSurface,
+                        contentColor = palette.primaryText,
+                    ),
+                contentPadding =
+                    androidx.compose.foundation.layout
+                        .PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                 modifier = Modifier.height(36.dp),
             ) {
                 Text(

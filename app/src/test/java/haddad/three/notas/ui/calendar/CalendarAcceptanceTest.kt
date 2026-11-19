@@ -2,6 +2,18 @@ package haddad.three.notas.ui.calendar
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.ui.components.parseNoteColorHex
+import haddad.three.notas.ui.components.readableBadgeColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -23,18 +35,6 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.ChecklistItemDao
-import haddad.three.notas.data.ChecklistItemEntity
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.NoteDao
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.ui.components.parseNoteColorHex
-import haddad.three.notas.ui.components.readableBadgeColors
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -54,7 +54,6 @@ import java.time.ZoneId
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarAcceptanceTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private val scheduledNotesFlow = MutableStateFlow<List<NoteWithItems>>(emptyList())
 
@@ -71,25 +70,29 @@ class CalendarAcceptanceTest {
     private fun TestScope.createViewModel(
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
     ): CalendarViewModel {
-        val fakeDao = object : haddad.three.notas.data.BaseFakeNoteDao() {
-            override fun observeActive(ownerId: String?): Flow<List<NoteWithItems>> = scheduledNotesFlow
-            override fun observeScheduled(ownerId: String?): Flow<List<NoteWithItems>> = scheduledNotesFlow.map { list ->
-                list.filter {
-                    it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.reminders.isNotEmpty()
-                }
+        val fakeDao =
+            object : haddad.three.notas.data.BaseFakeNoteDao() {
+                override fun observeActive(ownerId: String?): Flow<List<NoteWithItems>> = scheduledNotesFlow
+
+                override fun observeScheduled(ownerId: String?): Flow<List<NoteWithItems>> =
+                    scheduledNotesFlow.map { list ->
+                        list.filter {
+                            it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.reminders.isNotEmpty()
+                        }
+                    }
             }
-        }
 
         val fakeItemDao = object : haddad.three.notas.data.BaseFakeChecklistItemDao() {}
         val fakeAttachmentDao = object : haddad.three.notas.data.BaseFakeAttachmentDao() {}
 
-        val repository = NoteRepository(
-            noteDao = fakeDao,
-            itemDao = fakeItemDao,
-            attachmentDao = fakeAttachmentDao,
-            ioDispatcher = testDispatcher,
-            defaultDispatcher = testDispatcher,
-        )
+        val repository =
+            NoteRepository(
+                noteDao = fakeDao,
+                itemDao = fakeItemDao,
+                attachmentDao = fakeAttachmentDao,
+                ioDispatcher = testDispatcher,
+                defaultDispatcher = testDispatcher,
+            )
 
         val viewModel = CalendarViewModel(repository, savedStateHandle, testDispatcher)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -103,291 +106,394 @@ class CalendarAcceptanceTest {
      * Ordinary notes without scheduled dates must never appear in the Calendar as all-day events.
      */
     @Test
-    fun test_1_an_undated_note_is_excluded() = runTest {
-        val viewModel = createViewModel()
-        val targetDate = LocalDate.of(2026, 10, 21)
-        val createdInstant = targetDate.atTime(11, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun test_1_an_undated_note_is_excluded() =
+        runTest {
+            val viewModel = createViewModel()
+            val targetDate = LocalDate.of(2026, 10, 21)
+            val createdInstant =
+                targetDate
+                    .atTime(11, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
-        val ordinaryNote = NoteWithItems(
-            note = NoteEntity(
-                id = 101L,
-                kind = NoteKind.NOTE,
-                title = "Shopping ideas",
-                body = "Milk, bread, apples",
-                colorIndex = 1,
-                trashed = false,
-                createdAt = createdInstant,
-                updatedAt = createdInstant,
-                reminderAt = null,
-                endAt = null,
-                isAllDay = false,
-            ),
-            items = emptyList(),
-        )
+            val ordinaryNote =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 101L,
+                            kind = NoteKind.NOTE,
+                            title = "Shopping ideas",
+                            body = "Milk, bread, apples",
+                            colorIndex = 1,
+                            trashed = false,
+                            createdAt = createdInstant,
+                            updatedAt = createdInstant,
+                            reminderAt = null,
+                            endAt = null,
+                            isAllDay = false,
+                        ),
+                    items = emptyList(),
+                )
 
-        scheduledNotesFlow.value = listOf(ordinaryNote)
-        viewModel.onDateSelected(targetDate)
-        advanceUntilIdle()
+            scheduledNotesFlow.value = listOf(ordinaryNote)
+            viewModel.onDateSelected(targetDate)
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertEquals("Undated note must not produce day timeline items", 0, state.dayTimelineItems.size)
-        assertEquals("Undated note must not produce all-day items", 0, state.dayAllDayItems.size)
-        assertEquals("Undated note must not appear in selectedDayEvents", 0, state.selectedDayEvents.size)
-        assertEquals("Undated note must not appear in selectedDayTasks", 0, state.selectedDayTasks.size)
-        val dayCell = state.monthDays.find { it.date == targetDate }
-        assertTrue("Day cell must have no dots for unscheduled note", dayCell == null || dayCell.dots.isEmpty())
-    }
+            val state = viewModel.uiState.value
+            assertEquals("Undated note must not produce day timeline items", 0, state.dayTimelineItems.size)
+            assertEquals("Undated note must not produce all-day items", 0, state.dayAllDayItems.size)
+            assertEquals("Undated note must not appear in selectedDayEvents", 0, state.selectedDayEvents.size)
+            assertEquals("Undated note must not appear in selectedDayTasks", 0, state.selectedDayTasks.size)
+            val dayCell = state.monthDays.find { it.date == targetDate }
+            assertTrue("Day cell must have no dots for unscheduled note", dayCell == null || dayCell.dots.isEmpty())
+        }
 
     /**
      * Requirement 2: A scheduled task appears on its correct date.
      */
     @Test
-    fun test_2_a_scheduled_task_appears_on_its_correct_date() = runTest {
-        val viewModel = createViewModel()
-        val taskDate = LocalDate.of(2026, 10, 22)
-        val taskMillis = taskDate.atTime(15, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun test_2_a_scheduled_task_appears_on_its_correct_date() =
+        runTest {
+            val viewModel = createViewModel()
+            val taskDate = LocalDate.of(2026, 10, 22)
+            val taskMillis =
+                taskDate
+                    .atTime(15, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
-        val scheduledTask = NoteWithItems(
-            note = NoteEntity(
-                id = 102L,
-                kind = NoteKind.LIST,
-                title = "Review quarterly metrics",
-                body = "",
-                colorIndex = 2,
-                trashed = false,
-                createdAt = taskMillis,
-                updatedAt = taskMillis,
-                reminderAt = taskMillis,
-                endAt = null,
-                isAllDay = false,
-            ),
-            items = listOf(
-                ChecklistItemEntity(id = 1L, noteId = 102L, text = "Check retention", checked = false, sortOrder = 0.0),
-            ),
-        )
+            val scheduledTask =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 102L,
+                            kind = NoteKind.LIST,
+                            title = "Review quarterly metrics",
+                            body = "",
+                            colorIndex = 2,
+                            trashed = false,
+                            createdAt = taskMillis,
+                            updatedAt = taskMillis,
+                            reminderAt = taskMillis,
+                            endAt = null,
+                            isAllDay = false,
+                        ),
+                    items =
+                        listOf(
+                            ChecklistItemEntity(id = 1L, noteId = 102L, text = "Check retention", checked = false, sortOrder = 0.0),
+                        ),
+                )
 
-        scheduledNotesFlow.value = listOf(scheduledTask)
+            scheduledNotesFlow.value = listOf(scheduledTask)
 
-        // Select task date
-        viewModel.onDateSelected(taskDate)
-        advanceUntilIdle()
+            // Select task date
+            viewModel.onDateSelected(taskDate)
+            advanceUntilIdle()
 
-        val stateOnDate = viewModel.uiState.value
-        assertEquals("Scheduled task must appear on its target date", 1, stateOnDate.selectedDayTasks.size)
-        val taskModel = stateOnDate.selectedDayTasks[0]
-        assertEquals("Review quarterly metrics", taskModel.title)
-        assertTrue(taskModel.isTask)
-        assertFalse(taskModel.isDone)
+            val stateOnDate = viewModel.uiState.value
+            assertEquals("Scheduled task must appear on its target date", 1, stateOnDate.selectedDayTasks.size)
+            val taskModel = stateOnDate.selectedDayTasks[0]
+            assertEquals("Review quarterly metrics", taskModel.title)
+            assertTrue(taskModel.isTask)
+            assertFalse(taskModel.isDone)
 
-        // Select adjacent date
-        viewModel.onDateSelected(taskDate.plusDays(1))
-        advanceUntilIdle()
+            // Select adjacent date
+            viewModel.onDateSelected(taskDate.plusDays(1))
+            advanceUntilIdle()
 
-        val stateNextDay = viewModel.uiState.value
-        assertEquals("Scheduled task must not appear on adjacent date", 0, stateNextDay.selectedDayTasks.size)
-    }
+            val stateNextDay = viewModel.uiState.value
+            assertEquals("Scheduled task must not appear on adjacent date", 0, stateNextDay.selectedDayTasks.size)
+        }
 
     /**
      * Requirement 3: An explicitly all-day event is displayed as all-day.
      */
     @Test
-    fun test_3_an_explicitly_all_day_event_is_displayed_as_all_day() = runTest {
-        val viewModel = createViewModel()
-        val holidayDate = LocalDate.of(2026, 10, 24)
-        val holidayMillis = holidayDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun test_3_an_explicitly_all_day_event_is_displayed_as_all_day() =
+        runTest {
+            val viewModel = createViewModel()
+            val holidayDate = LocalDate.of(2026, 10, 24)
+            val holidayMillis = holidayDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        val allDayEvent = NoteWithItems(
-            note = NoteEntity(
-                id = 103L,
-                kind = NoteKind.NOTE,
-                title = "Founder Day Off",
-                body = "Office closed worldwide",
-                colorIndex = 3,
-                trashed = false,
-                createdAt = holidayMillis,
-                updatedAt = holidayMillis,
-                reminderAt = holidayMillis,
-                endAt = holidayDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                isAllDay = true,
-            ),
-            items = emptyList(),
-        )
+            val allDayEvent =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 103L,
+                            kind = NoteKind.NOTE,
+                            title = "Founder Day Off",
+                            body = "Office closed worldwide",
+                            colorIndex = 3,
+                            trashed = false,
+                            createdAt = holidayMillis,
+                            updatedAt = holidayMillis,
+                            reminderAt = holidayMillis,
+                            endAt =
+                                holidayDate
+                                    .atTime(23, 59, 59)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            isAllDay = true,
+                        ),
+                    items = emptyList(),
+                )
 
-        scheduledNotesFlow.value = listOf(allDayEvent)
-        viewModel.onDateSelected(holidayDate)
-        advanceUntilIdle()
+            scheduledNotesFlow.value = listOf(allDayEvent)
+            viewModel.onDateSelected(holidayDate)
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertEquals("All-day event must appear in dayAllDayItems", 1, state.dayAllDayItems.size)
-        assertEquals(TimelineItemType.ALL_DAY, state.dayAllDayItems[0].type)
-        assertEquals("Founder Day Off", state.dayAllDayItems[0].title)
+            val state = viewModel.uiState.value
+            assertEquals("All-day event must appear in dayAllDayItems", 1, state.dayAllDayItems.size)
+            assertEquals(TimelineItemType.ALL_DAY, state.dayAllDayItems[0].type)
+            assertEquals("Founder Day Off", state.dayAllDayItems[0].title)
 
-        assertEquals("All-day event must appear in selectedDayEvents", 1, state.selectedDayEvents.size)
-        assertTrue(state.selectedDayEvents[0].isAllDay)
-        assertEquals("All day", state.selectedDayEvents[0].timeDisplay)
-    }
+            assertEquals("All-day event must appear in selectedDayEvents", 1, state.selectedDayEvents.size)
+            assertTrue(state.selectedDayEvents[0].isAllDay)
+            assertEquals("All day", state.selectedDayEvents[0].timeDisplay)
+        }
 
     /**
      * Requirement 4: A timed event preserves its start and end.
      */
     @Test
-    fun test_4_a_timed_event_preserves_its_start_and_end() = runTest {
-        val viewModel = createViewModel()
-        val eventDate = LocalDate.of(2026, 10, 26)
-        val startMillis = eventDate.atTime(13, 30).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val endMillis = eventDate.atTime(15, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun test_4_a_timed_event_preserves_its_start_and_end() =
+        runTest {
+            val viewModel = createViewModel()
+            val eventDate = LocalDate.of(2026, 10, 26)
+            val startMillis =
+                eventDate
+                    .atTime(13, 30)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            val endMillis =
+                eventDate
+                    .atTime(15, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
-        val timedEvent = NoteWithItems(
-            note = NoteEntity(
-                id = 104L,
-                kind = NoteKind.NOTE,
-                title = "Product Architecture Sync",
-                body = "Deep dive into calendar architecture",
-                colorIndex = 4,
-                trashed = false,
-                createdAt = startMillis,
-                updatedAt = startMillis,
-                reminderAt = startMillis,
-                endAt = endMillis,
-                isAllDay = false,
-            ),
-            items = emptyList(),
-        )
+            val timedEvent =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 104L,
+                            kind = NoteKind.NOTE,
+                            title = "Product Architecture Sync",
+                            body = "Deep dive into calendar architecture",
+                            colorIndex = 4,
+                            trashed = false,
+                            createdAt = startMillis,
+                            updatedAt = startMillis,
+                            reminderAt = startMillis,
+                            endAt = endMillis,
+                            isAllDay = false,
+                        ),
+                    items = emptyList(),
+                )
 
-        scheduledNotesFlow.value = listOf(timedEvent)
-        viewModel.onDateSelected(eventDate)
-        advanceUntilIdle()
+            scheduledNotesFlow.value = listOf(timedEvent)
+            viewModel.onDateSelected(eventDate)
+            advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertEquals("Timed event must appear in dayTimelineItems", 1, state.dayTimelineItems.size)
-        val timelineItem = state.dayTimelineItems[0]
-        assertEquals(13 * 60 + 30, timelineItem.startMinuteOfDay)
-        assertEquals(15 * 60, timelineItem.endMinuteOfDay)
-        assertEquals(90, timelineItem.endMinuteOfDay - timelineItem.startMinuteOfDay)
-        assertEquals("Product Architecture Sync", timelineItem.title)
+            val state = viewModel.uiState.value
+            assertEquals("Timed event must appear in dayTimelineItems", 1, state.dayTimelineItems.size)
+            val timelineItem = state.dayTimelineItems[0]
+            assertEquals(13 * 60 + 30, timelineItem.startMinuteOfDay)
+            assertEquals(15 * 60, timelineItem.endMinuteOfDay)
+            assertEquals(90, timelineItem.endMinuteOfDay - timelineItem.startMinuteOfDay)
+            assertEquals("Product Architecture Sync", timelineItem.title)
 
-        // Verify start and end times remain intact when updating note content
-        val updatedTimedEvent = timedEvent.note.copy(
-            body = "Updated discussion notes",
-            updatedAt = startMillis + 1000,
-        )
-        assertEquals(startMillis, updatedTimedEvent.reminderAt)
-        assertEquals(endMillis, updatedTimedEvent.endAt)
-    }
+            // Verify start and end times remain intact when updating note content
+            val updatedTimedEvent =
+                timedEvent.note.copy(
+                    body = "Updated discussion notes",
+                    updatedAt = startMillis + 1000,
+                )
+            assertEquals(startMillis, updatedTimedEvent.reminderAt)
+            assertEquals(endMillis, updatedTimedEvent.endAt)
+        }
 
     /**
      * Requirement 5: Changing the selected date updates the agenda correctly.
      */
     @Test
-    fun test_5_changing_the_selected_date_updates_the_agenda_correctly() = runTest {
-        val viewModel = createViewModel()
-        val date1 = LocalDate.of(2026, 10, 27)
-        val date2 = LocalDate.of(2026, 10, 28)
+    fun test_5_changing_the_selected_date_updates_the_agenda_correctly() =
+        runTest {
+            val viewModel = createViewModel()
+            val date1 = LocalDate.of(2026, 10, 27)
+            val date2 = LocalDate.of(2026, 10, 28)
 
-        val event1 = NoteWithItems(
-            note = NoteEntity(
-                id = 105L,
-                kind = NoteKind.NOTE,
-                title = "Event on Day 1",
-                body = "",
-                colorIndex = 1,
-                trashed = false,
-                createdAt = date1.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                updatedAt = date1.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                reminderAt = date1.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-            ),
-            items = emptyList(),
-        )
+            val event1 =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 105L,
+                            kind = NoteKind.NOTE,
+                            title = "Event on Day 1",
+                            body = "",
+                            colorIndex = 1,
+                            trashed = false,
+                            createdAt =
+                                date1
+                                    .atTime(10, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            updatedAt =
+                                date1
+                                    .atTime(10, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            reminderAt =
+                                date1
+                                    .atTime(10, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            endAt =
+                                date1
+                                    .atTime(11, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                        ),
+                    items = emptyList(),
+                )
 
-        val event2 = NoteWithItems(
-            note = NoteEntity(
-                id = 106L,
-                kind = NoteKind.NOTE,
-                title = "Event on Day 2",
-                body = "",
-                colorIndex = 2,
-                trashed = false,
-                createdAt = date2.atTime(14, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                updatedAt = date2.atTime(14, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                reminderAt = date2.atTime(14, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-            ),
-            items = emptyList(),
-        )
+            val event2 =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 106L,
+                            kind = NoteKind.NOTE,
+                            title = "Event on Day 2",
+                            body = "",
+                            colorIndex = 2,
+                            trashed = false,
+                            createdAt =
+                                date2
+                                    .atTime(14, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            updatedAt =
+                                date2
+                                    .atTime(14, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            reminderAt =
+                                date2
+                                    .atTime(14, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            endAt =
+                                date2
+                                    .atTime(15, 0)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                        ),
+                    items = emptyList(),
+                )
 
-        scheduledNotesFlow.value = listOf(event1, event2)
+            scheduledNotesFlow.value = listOf(event1, event2)
 
-        // Select Date 1
-        viewModel.onDateSelected(date1)
-        advanceUntilIdle()
+            // Select Date 1
+            viewModel.onDateSelected(date1)
+            advanceUntilIdle()
 
-        assertEquals(date1, viewModel.uiState.value.selectedDate)
-        assertEquals(1, viewModel.uiState.value.selectedDayEvents.size)
-        assertEquals("Event on Day 1", viewModel.uiState.value.selectedDayEvents[0].title)
+            assertEquals(date1, viewModel.uiState.value.selectedDate)
+            assertEquals(1, viewModel.uiState.value.selectedDayEvents.size)
+            assertEquals(
+                "Event on Day 1",
+                viewModel.uiState.value.selectedDayEvents[0]
+                    .title,
+            )
 
-        // Select Date 2
-        viewModel.onDateSelected(date2)
-        advanceUntilIdle()
+            // Select Date 2
+            viewModel.onDateSelected(date2)
+            advanceUntilIdle()
 
-        assertEquals(date2, viewModel.uiState.value.selectedDate)
-        assertEquals(1, viewModel.uiState.value.selectedDayEvents.size)
-        assertEquals("Event on Day 2", viewModel.uiState.value.selectedDayEvents[0].title)
+            assertEquals(date2, viewModel.uiState.value.selectedDate)
+            assertEquals(1, viewModel.uiState.value.selectedDayEvents.size)
+            assertEquals(
+                "Event on Day 2",
+                viewModel.uiState.value.selectedDayEvents[0]
+                    .title,
+            )
 
-        // Select an empty Date 3
-        viewModel.onDateSelected(LocalDate.of(2026, 10, 29))
-        advanceUntilIdle()
+            // Select an empty Date 3
+            viewModel.onDateSelected(LocalDate.of(2026, 10, 29))
+            advanceUntilIdle()
 
-        assertEquals(0, viewModel.uiState.value.selectedDayEvents.size)
-        assertEquals(0, viewModel.uiState.value.selectedDayTasks.size)
-    }
+            assertEquals(0, viewModel.uiState.value.selectedDayEvents.size)
+            assertEquals(0, viewModel.uiState.value.selectedDayTasks.size)
+        }
 
     /**
      * Requirement 6: Switching themes does not alter stored event colors.
      */
     @Test
-    fun test_6_switching_themes_does_not_alter_stored_event_colors() = runTest {
-        val eventDate = LocalDate.of(2026, 10, 30)
-        val startMillis = eventDate.atTime(9, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    fun test_6_switching_themes_does_not_alter_stored_event_colors() =
+        runTest {
+            val eventDate = LocalDate.of(2026, 10, 30)
+            val startMillis =
+                eventDate
+                    .atTime(9, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
-        val customShoulder = ShoulderEntity(
-            id = 55L,
-            name = "Finance",
-            normalizedName = "finance",
-            colorHex = "#2E7D32",
-            createdAt = startMillis,
-            updatedAt = startMillis,
-        )
+            val customShoulder =
+                ShoulderEntity(
+                    id = 55L,
+                    name = "Finance",
+                    normalizedName = "finance",
+                    colorHex = "#2E7D32",
+                    createdAt = startMillis,
+                    updatedAt = startMillis,
+                )
 
-        val storedEvent = NoteEntity(
-            id = 107L,
-            kind = NoteKind.NOTE,
-            title = "Quarterly Tax Prep",
-            body = "Review deductions",
-            colorIndex = 7,
-            trashed = false,
-            createdAt = startMillis,
-            updatedAt = startMillis,
-            reminderAt = startMillis,
-            shoulderId = 55L,
-        )
+            val storedEvent =
+                NoteEntity(
+                    id = 107L,
+                    kind = NoteKind.NOTE,
+                    title = "Quarterly Tax Prep",
+                    body = "Review deductions",
+                    colorIndex = 7,
+                    trashed = false,
+                    createdAt = startMillis,
+                    updatedAt = startMillis,
+                    reminderAt = startMillis,
+                    shoulderId = 55L,
+                )
 
-        val noteWithItems = NoteWithItems(
-            note = storedEvent,
-            items = emptyList(),
-            shoulder = customShoulder,
-        )
+            val noteWithItems =
+                NoteWithItems(
+                    note = storedEvent,
+                    items = emptyList(),
+                    shoulder = customShoulder,
+                )
 
-        // Verify stored colorIndex and custom shoulder colorHex remain identical across theme changes
-        val isLightTheme = false
-        val isDarkTheme = true
+            // Verify stored colorIndex and custom shoulder colorHex remain identical across theme changes
+            val isLightTheme = false
+            val isDarkTheme = true
 
-        val lightChipColor = parseNoteColorHex(noteWithItems.shoulder?.colorHex, Color.Blue)
-        val darkChipColor = parseNoteColorHex(noteWithItems.shoulder?.colorHex, Color.Blue)
+            val lightChipColor = parseNoteColorHex(noteWithItems.shoulder?.colorHex, Color.Blue)
+            val darkChipColor = parseNoteColorHex(noteWithItems.shoulder?.colorHex, Color.Blue)
 
-        // Stored color index is unaltered
-        assertEquals(7, noteWithItems.note.colorIndex)
-        assertEquals("#2E7D32", noteWithItems.shoulder?.colorHex)
-        assertEquals(lightChipColor, darkChipColor)
-    }
+            // Stored color index is unaltered
+            assertEquals(7, noteWithItems.note.colorIndex)
+            assertEquals("#2E7D32", noteWithItems.shoulder?.colorHex)
+            assertEquals(lightChipColor, darkChipColor)
+        }
 
     /**
      * Requirement 7: Shoulder colors remain consistent with Home.
@@ -421,58 +527,77 @@ class CalendarAcceptanceTest {
      * State restored from SavedStateHandle and database snapshot rehydrates calendar flawlessly.
      */
     @Test
-    fun test_8_existing_events_survive_application_restart() = runTest {
-        val savedDate = LocalDate.of(2026, 11, 15)
-        val savedMonth = YearMonth.of(2026, 11)
+    fun test_8_existing_events_survive_application_restart() =
+        runTest {
+            val savedDate = LocalDate.of(2026, 11, 15)
+            val savedMonth = YearMonth.of(2026, 11)
 
-        val initialSavedState = SavedStateHandle().apply {
-            set(CalendarViewModel.KEY_SELECTED_DATE, savedDate.toString())
-            set(CalendarViewModel.KEY_DISPLAYED_MONTH, savedMonth.toString())
-            set(CalendarViewModel.KEY_VIEW_MODE, "WEEK")
+            val initialSavedState =
+                SavedStateHandle().apply {
+                    set(CalendarViewModel.KEY_SELECTED_DATE, savedDate.toString())
+                    set(CalendarViewModel.KEY_DISPLAYED_MONTH, savedMonth.toString())
+                    set(CalendarViewModel.KEY_VIEW_MODE, "WEEK")
+                }
+
+            val eventMillis =
+                savedDate
+                    .atTime(16, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            val persistentEvent =
+                NoteWithItems(
+                    note =
+                        NoteEntity(
+                            id = 108L,
+                            kind = NoteKind.NOTE,
+                            title = "Client Presentation",
+                            body = "Q4 review deck",
+                            colorIndex = 5,
+                            trashed = false,
+                            createdAt = eventMillis,
+                            updatedAt = eventMillis,
+                            reminderAt = eventMillis,
+                            endAt = eventMillis + 3600000L,
+                        ),
+                    items = emptyList(),
+                )
+
+            scheduledNotesFlow.value = listOf(persistentEvent)
+
+            // Launch first instance
+            val vmBeforeKill = createViewModel(initialSavedState)
+            advanceUntilIdle()
+
+            assertEquals(savedDate, vmBeforeKill.uiState.value.selectedDate)
+            assertEquals(CalendarViewMode.WEEK, vmBeforeKill.uiState.value.viewMode)
+            assertEquals(1, vmBeforeKill.uiState.value.selectedDayEvents.size)
+            assertEquals(
+                "Client Presentation",
+                vmBeforeKill.uiState.value.selectedDayEvents[0]
+                    .title,
+            )
+
+            // Simulate process death and restart with new SavedStateHandle
+            val restoredSavedState =
+                SavedStateHandle().apply {
+                    set(CalendarViewModel.KEY_SELECTED_DATE, savedDate.toString())
+                    set(CalendarViewModel.KEY_DISPLAYED_MONTH, savedMonth.toString())
+                    set(CalendarViewModel.KEY_VIEW_MODE, "WEEK")
+                }
+
+            val vmAfterRestart = createViewModel(restoredSavedState)
+            advanceUntilIdle()
+
+            // Verify complete restoration
+            assertEquals(savedDate, vmAfterRestart.uiState.value.selectedDate)
+            assertEquals(savedMonth, vmAfterRestart.uiState.value.displayedMonth)
+            assertEquals(CalendarViewMode.WEEK, vmAfterRestart.uiState.value.viewMode)
+            assertEquals(1, vmAfterRestart.uiState.value.selectedDayEvents.size)
+            assertEquals(
+                "Client Presentation",
+                vmAfterRestart.uiState.value.selectedDayEvents[0]
+                    .title,
+            )
         }
-
-        val eventMillis = savedDate.atTime(16, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val persistentEvent = NoteWithItems(
-            note = NoteEntity(
-                id = 108L,
-                kind = NoteKind.NOTE,
-                title = "Client Presentation",
-                body = "Q4 review deck",
-                colorIndex = 5,
-                trashed = false,
-                createdAt = eventMillis,
-                updatedAt = eventMillis,
-                reminderAt = eventMillis,
-            ),
-            items = emptyList(),
-        )
-
-        scheduledNotesFlow.value = listOf(persistentEvent)
-
-        // Launch first instance
-        val vmBeforeKill = createViewModel(initialSavedState)
-        advanceUntilIdle()
-
-        assertEquals(savedDate, vmBeforeKill.uiState.value.selectedDate)
-        assertEquals(CalendarViewMode.WEEK, vmBeforeKill.uiState.value.viewMode)
-        assertEquals(1, vmBeforeKill.uiState.value.selectedDayEvents.size)
-        assertEquals("Client Presentation", vmBeforeKill.uiState.value.selectedDayEvents[0].title)
-
-        // Simulate process death and restart with new SavedStateHandle
-        val restoredSavedState = SavedStateHandle().apply {
-            set(CalendarViewModel.KEY_SELECTED_DATE, savedDate.toString())
-            set(CalendarViewModel.KEY_DISPLAYED_MONTH, savedMonth.toString())
-            set(CalendarViewModel.KEY_VIEW_MODE, "WEEK")
-        }
-
-        val vmAfterRestart = createViewModel(restoredSavedState)
-        advanceUntilIdle()
-
-        // Verify complete restoration
-        assertEquals(savedDate, vmAfterRestart.uiState.value.selectedDate)
-        assertEquals(savedMonth, vmAfterRestart.uiState.value.displayedMonth)
-        assertEquals(CalendarViewMode.WEEK, vmAfterRestart.uiState.value.viewMode)
-        assertEquals(1, vmAfterRestart.uiState.value.selectedDayEvents.size)
-        assertEquals("Client Presentation", vmAfterRestart.uiState.value.selectedDayEvents[0].title)
-    }
 }

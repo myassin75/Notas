@@ -37,9 +37,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import haddad.three.notas.data.InteractionPrefs
 import haddad.three.notas.data.InteractionState
 import haddad.three.notas.data.LockPrefs
@@ -53,8 +50,8 @@ import haddad.three.notas.data.ThemePrefs
 import haddad.three.notas.data.ThemeState
 import haddad.three.notas.data.UpdatePreferencesState
 import haddad.three.notas.data.UpdatePrefs
-import haddad.three.notas.data.effectiveDarkTheme
 import haddad.three.notas.data.auth.AuthDeepLinkParser
+import haddad.three.notas.data.effectiveDarkTheme
 import haddad.three.notas.di.ApplicationScope
 import haddad.three.notas.di.LaunchAction
 import haddad.three.notas.ui.InAppRatingAutoPromptHost
@@ -72,6 +69,9 @@ import haddad.three.notas.update.PlayInAppUpdateBannerUiState
 import haddad.three.notas.update.PlayInAppUpdateProgressController
 import haddad.three.notas.update.RememberUpdateState
 import haddad.three.notas.update.notificationDedupeKey
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint

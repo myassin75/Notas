@@ -76,12 +76,6 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
 import haddad.three.notas.data.ActionType
@@ -108,6 +102,12 @@ import haddad.three.notas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
 import haddad.three.notas.ui.nav.LocalNavAnimatedVisibilityScope
 import haddad.three.notas.ui.nav.LocalSharedTransitionScope
 import haddad.three.notas.update.UpdateCheckWorkScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 
 private data class DbStats(
@@ -450,7 +450,7 @@ fun DevOptionsRoute(
                                         stringResource(R.string.dev_options_db_version_format, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                                     stringResource(R.string.dev_options_info_package) to context.packageName,
                                     stringResource(R.string.dev_options_info_variant) to
-                                        stringResource(R.string.dev_options_db_build_format, BuildConfig.FLAVOR, BuildConfig.BUILD_TYPE),
+                                        stringResource(R.string.dev_options_db_build_format, "Notas", BuildConfig.BUILD_TYPE),
                                     stringResource(R.string.dev_options_info_installer) to (installerPackage ?: unknown),
                                     stringResource(R.string.dev_options_info_device) to
                                         stringResource(R.string.dev_options_device_format, Build.MANUFACTURER, Build.MODEL),
@@ -1206,7 +1206,7 @@ private fun fireTestSummary(context: Context) {
     val n =
         androidx.core.app.NotificationCompat
             .Builder(context, ReminderScheduler.CHANNEL_ID_SUMMARY)
-            .setSmallIcon(R.drawable.ic_stat_remember)
+            .setSmallIcon(R.drawable.ic_stat_notas)
             .setContentTitle(context.getString(R.string.dev_options_test_notif_summary_title))
             .setContentText(context.getString(R.string.dev_options_test_notif_summary_text))
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)

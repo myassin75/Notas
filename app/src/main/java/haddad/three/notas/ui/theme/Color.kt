@@ -701,6 +701,3 @@ object NotasTokens {
         val Blue = Color(0xFF4285F4)
     }
 }
-
-
-

@@ -2,6 +2,7 @@ package haddad.three.notas.ui.edit
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -63,8 +64,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
@@ -73,6 +72,8 @@ import haddad.three.notas.ui.components.RememberIconButton
 import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
 import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.transparentLargeTopAppBarColors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 private const val EDITOR_TITLE_MAX_LINES = 2
@@ -97,6 +98,7 @@ internal fun EditorTitleTopBar(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
     colorIndex: Int = 0,
+    saveStatus: EditorSaveStatus = EditorSaveStatus.IDLE,
     onTitleFocusChanged: (Boolean) -> Unit = {},
     showNavigateBack: Boolean = true,
     allowInitialTitleFocus: Boolean = true,
@@ -240,43 +242,94 @@ internal fun EditorTitleTopBar(
                             )
                         }
                     }
-                    if ((isEditMode || hasUnsavedChanges) && !readOnly) {
-                        var lastSaveClickMillis by remember { mutableStateOf(0L) }
+                    // Subtle save status feedback
+                    if (!readOnly && (isEditMode || hasUnsavedChanges || saveStatus != EditorSaveStatus.IDLE)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(end = 8.dp),
+                        ) {
+                            when (saveStatus) {
+                                EditorSaveStatus.SAVING -> {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "sync",
+                                        size = 14.dp,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.editor_saving),
+                                        style =
+                                            MaterialTheme.typography.labelMedium.copy(
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontSize = 12.sp,
+                                            ),
+                                    )
+                                }
+                                EditorSaveStatus.SAVED -> {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "done",
+                                        size = 14.dp,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.editor_saved),
+                                        style =
+                                            MaterialTheme.typography.labelMedium.copy(
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                fontSize = 12.sp,
+                                            ),
+                                    )
+                                }
+                                EditorSaveStatus.UNSAVED_CHANGES -> {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)),
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.editor_unsaved_changes),
+                                        style =
+                                            MaterialTheme.typography.labelMedium.copy(
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                                fontSize = 12.sp,
+                                            ),
+                                    )
+                                }
+                                EditorSaveStatus.IDLE -> Unit
+                            }
+                        }
+                    }
+                    if (isEditMode && !readOnly) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             modifier =
                                 Modifier
                                     .padding(end = 8.dp)
-                                    .height(40.dp)
+                                    .height(36.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        val now = System.currentTimeMillis()
-                                        if (now - lastSaveClickMillis > 600L) {
-                                            lastSaveClickMillis = now
-                                            onSave()
-                                        }
-                                    },
+                                    .clickable { onSave() },
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 14.dp),
+                                modifier = Modifier.padding(horizontal = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 RememberMaterialRoundedSymbol(
                                     name = "check",
-                                    size = 18.dp,
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    weight = FontWeight.Bold,
-                                    filled = false,
+                                    size = 16.dp,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    weight = FontWeight.SemiBold,
                                 )
                                 Text(
-                                    text = stringResource(R.string.common_save),
+                                    text = stringResource(R.string.common_done),
                                     style =
                                         MaterialTheme.typography.labelLarge.copy(
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 14.5.sp,
-                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            fontSize = 13.5.sp,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         ),
                                 )
                             }

@@ -1,6 +1,22 @@
 package haddad.three.notas.ui.event
 
 import androidx.lifecycle.SavedStateHandle
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ShoulderDao
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.ui.nav.Routes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -18,22 +34,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.ChecklistItemDao
-import haddad.three.notas.data.ChecklistItemEntity
-import haddad.three.notas.data.Importance
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.NoteDao
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteReminder
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.ShoulderDao
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.data.ShoulderRepository
-import haddad.three.notas.data.Visibility
-import haddad.three.notas.ui.nav.Routes
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -73,8 +73,7 @@ class EditEventViewModelTest {
                     return NoteWithItems(found, emptyList(), attachments = atts)
                 }
 
-                override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
-                    insertedNotes.firstOrNull { it.uuid == uuid }
+                override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = insertedNotes.firstOrNull { it.uuid == uuid }
 
                 override suspend fun insert(note: NoteEntity): Long {
                     val id = if (note.id > 0) note.id else (insertedNotes.size + 1).toLong()
@@ -96,8 +95,7 @@ class EditEventViewModelTest {
 
         val fakeAttachmentDao =
             object : haddad.three.notas.data.BaseFakeAttachmentDao() {
-                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> =
-                    insertedAttachments.filter { it.noteId == noteId }
+                override suspend fun attachmentsFor(noteId: Long): List<NoteAttachmentEntity> = insertedAttachments.filter { it.noteId == noteId }
 
                 override suspend fun insert(attachment: NoteAttachmentEntity): Long {
                     val id = (insertedAttachments.size + 1).toLong()
@@ -106,11 +104,9 @@ class EditEventViewModelTest {
                     return id
                 }
 
-                override suspend fun getById(id: Long): NoteAttachmentEntity? =
-                    insertedAttachments.firstOrNull { it.id == id }
+                override suspend fun getById(id: Long): NoteAttachmentEntity? = insertedAttachments.firstOrNull { it.id == id }
 
-                override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? =
-                    insertedAttachments.firstOrNull { it.uuid == uuid }
+                override suspend fun getByUuid(uuid: String): NoteAttachmentEntity? = insertedAttachments.firstOrNull { it.uuid == uuid }
 
                 override suspend fun deleteById(id: Long) {
                     insertedAttachments.removeAll { it.id == id }
@@ -138,6 +134,7 @@ class EditEventViewModelTest {
                 override fun observeAllShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow
 
                 override suspend fun allShoulders(): List<ShoulderEntity> = shoulders
+
                 override suspend fun shouldersForOwner(ownerId: String): List<ShoulderEntity> = shoulders.filter { it.ownerId == ownerId }
 
                 override fun observeActiveShoulders(): Flow<List<ShoulderEntity>> = shouldersFlow

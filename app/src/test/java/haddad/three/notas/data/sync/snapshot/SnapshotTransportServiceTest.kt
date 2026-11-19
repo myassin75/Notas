@@ -29,7 +29,6 @@ import java.net.URL
 import java.security.MessageDigest
 
 class SnapshotTransportServiceTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -50,213 +49,234 @@ class SnapshotTransportServiceTest {
     fun setUp() {
         val fakeFilesDir = tempFolder.newFolder("files")
         val fakeCacheDir = tempFolder.newFolder("cache")
-        fakeContext = object : ContextWrapper(null) {
-            override fun getApplicationContext(): Context = this
-            override fun getFilesDir(): File = fakeFilesDir
-            override fun getCacheDir(): File = fakeCacheDir
-        }
+        fakeContext =
+            object : ContextWrapper(null) {
+                override fun getApplicationContext(): Context = this
+
+                override fun getFilesDir(): File = fakeFilesDir
+
+                override fun getCacheDir(): File = fakeCacheDir
+            }
 
         fakeSnapshotDao = FakeSyncSnapshotDao()
         fakeAuthDelegate = FakeGoogleDriveAuthDelegate()
         fakeDriveApiClient = FakeGoogleDriveApiClient()
         drivePrefs = DriveAuthPreferences(fakeContext)
 
-        transport = GoogleDriveSyncTransport(
-            context = fakeContext,
-            driveApiClient = fakeDriveApiClient.asClient(),
-            driveAuthDelegate = fakeAuthDelegate,
-            drivePrefs = drivePrefs,
-            ioDispatcher = testDispatcher,
-        )
+        transport =
+            GoogleDriveSyncTransport(
+                context = fakeContext,
+                driveApiClient = fakeDriveApiClient.asClient(),
+                driveAuthDelegate = fakeAuthDelegate,
+                drivePrefs = drivePrefs,
+                ioDispatcher = testDispatcher,
+            )
 
-        transportService = SnapshotTransportService(
-            context = fakeContext,
-            transport = transport,
-            driveApiClient = fakeDriveApiClient.asClient(),
-            snapshotDao = fakeSnapshotDao,
-            ioDispatcher = testDispatcher,
-        )
+        transportService =
+            SnapshotTransportService(
+                context = fakeContext,
+                transport = transport,
+                driveApiClient = fakeDriveApiClient.asClient(),
+                snapshotDao = fakeSnapshotDao,
+                ioDispatcher = testDispatcher,
+            )
     }
 
     @Test
-    fun test_uploadSnapshot_transitionsToActiveOnlyAfterVerifiedUpload() = runBlocking {
-        // Arrange
-        val snapshotFile = tempFolder.newFile("test_snapshot.bin").apply {
-            writeBytes("DUMMY_ENCRYPTED_SNAPSHOT_DATA_12345".toByteArray(Charsets.UTF_8))
+    fun test_uploadSnapshot_transitionsToActiveOnlyAfterVerifiedUpload() =
+        runBlocking {
+            // Arrange
+            val snapshotFile =
+                tempFolder.newFile("test_snapshot.bin").apply {
+                    writeBytes("DUMMY_ENCRYPTED_SNAPSHOT_DATA_12345".toByteArray(Charsets.UTF_8))
+                }
+            val sha256 = computeSha256(snapshotFile)
+            val snapshotId = "snap-upload-001"
+
+            val entity =
+                SyncSnapshotEntity(
+                    snapshotId = snapshotId,
+                    creatorDeviceId = localDeviceId,
+                    createdAt = 1000L,
+                    formatVersion = 1,
+                    storagePath = snapshotFile.absolutePath,
+                    contentSha256 = sha256,
+                    coverageVectorJson = """{"$localDeviceId":5}""",
+                    snapshotHlc = "1000:0:$localDeviceId",
+                    status = SnapshotStatus.READY_TO_UPLOAD,
+                )
+            fakeSnapshotDao.insert(entity)
+
+            val manifest =
+                SyncSnapshotManifest(
+                    formatVersion = 1,
+                    databaseVersion = 13,
+                    snapshotId = snapshotId,
+                    accountEmail = testAccount,
+                    creatorDeviceId = localDeviceId,
+                    createdAtEpochMillis = 1000L,
+                    snapshotHlc = "1000:0:$localDeviceId",
+                    coverageVector = mapOf(localDeviceId to 5L),
+                )
+
+            // Act
+            val result = transportService.uploadSnapshot(snapshotEntity = entity, manifest = manifest)
+
+            // Assert
+            assertTrue("Upload must succeed: $result", result is SnapshotUploadResult.Success)
+            val success = result as SnapshotUploadResult.Success
+            assertNotNull(success.driveFileId)
+
+            // Mandatory Constraint 2: Transition to ACTIVE only after verified upload
+            val updated = fakeSnapshotDao.getById(snapshotId)
+            assertNotNull(updated)
+            assertEquals(SnapshotStatus.ACTIVE, updated!!.status)
+            assertEquals(success.driveFileId, updated.driveFileId)
         }
-        val sha256 = computeSha256(snapshotFile)
-        val snapshotId = "snap-upload-001"
-
-        val entity = SyncSnapshotEntity(
-            snapshotId = snapshotId,
-            creatorDeviceId = localDeviceId,
-            createdAt = 1000L,
-            formatVersion = 1,
-            storagePath = snapshotFile.absolutePath,
-            contentSha256 = sha256,
-            coverageVectorJson = """{"$localDeviceId":5}""",
-            snapshotHlc = "1000:0:$localDeviceId",
-            status = SnapshotStatus.READY_TO_UPLOAD,
-        )
-        fakeSnapshotDao.insert(entity)
-
-        val manifest = SyncSnapshotManifest(
-            formatVersion = 1,
-            databaseVersion = 13,
-            snapshotId = snapshotId,
-            accountEmail = testAccount,
-            creatorDeviceId = localDeviceId,
-            createdAtEpochMillis = 1000L,
-            snapshotHlc = "1000:0:$localDeviceId",
-            coverageVector = mapOf(localDeviceId to 5L),
-        )
-
-        // Act
-        val result = transportService.uploadSnapshot(snapshotEntity = entity, manifest = manifest)
-
-        // Assert
-        assertTrue("Upload must succeed: $result", result is SnapshotUploadResult.Success)
-        val success = result as SnapshotUploadResult.Success
-        assertNotNull(success.driveFileId)
-
-        // Mandatory Constraint 2: Transition to ACTIVE only after verified upload
-        val updated = fakeSnapshotDao.getById(snapshotId)
-        assertNotNull(updated)
-        assertEquals(SnapshotStatus.ACTIVE, updated!!.status)
-        assertEquals(success.driveFileId, updated.driveFileId)
-    }
 
     @Test
-    fun test_uploadSnapshot_authFailure_leavesStatusReadyToUpload() = runBlocking {
-        // Arrange: Simulate unauthorized
-        fakeDriveApiClient.simulateUnauthorized = true
+    fun test_uploadSnapshot_authFailure_leavesStatusReadyToUpload() =
+        runBlocking {
+            // Arrange: Simulate unauthorized
+            fakeDriveApiClient.simulateUnauthorized = true
 
-        val snapshotFile = tempFolder.newFile("test_snapshot_unauth.bin").apply {
-            writeBytes("SNAPSHOT_PAYLOAD".toByteArray(Charsets.UTF_8))
+            val snapshotFile =
+                tempFolder.newFile("test_snapshot_unauth.bin").apply {
+                    writeBytes("SNAPSHOT_PAYLOAD".toByteArray(Charsets.UTF_8))
+                }
+            val sha256 = computeSha256(snapshotFile)
+            val snapshotId = "snap-upload-unauth"
+
+            val entity =
+                SyncSnapshotEntity(
+                    snapshotId = snapshotId,
+                    creatorDeviceId = localDeviceId,
+                    createdAt = 1000L,
+                    formatVersion = 1,
+                    storagePath = snapshotFile.absolutePath,
+                    contentSha256 = sha256,
+                    coverageVectorJson = """{"$localDeviceId":1}""",
+                    snapshotHlc = "1000:0:$localDeviceId",
+                    status = SnapshotStatus.READY_TO_UPLOAD,
+                )
+            fakeSnapshotDao.insert(entity)
+
+            val manifest =
+                SyncSnapshotManifest(
+                    snapshotId = snapshotId,
+                    accountEmail = testAccount,
+                    creatorDeviceId = localDeviceId,
+                    createdAtEpochMillis = 1000L,
+                    snapshotHlc = "1000:0:$localDeviceId",
+                    coverageVector = mapOf(localDeviceId to 1L),
+                )
+
+            // Act
+            val result = transportService.uploadSnapshot(snapshotEntity = entity, manifest = manifest)
+
+            // Assert
+            assertTrue("Upload must fail with Unauthorized: $result", result is SnapshotUploadResult.Unauthorized)
+
+            // Invariant: Status must NEVER transition to ACTIVE
+            val notUpdated = fakeSnapshotDao.getById(snapshotId)
+            assertNotNull(notUpdated)
+            assertEquals(SnapshotStatus.READY_TO_UPLOAD, notUpdated!!.status)
+            assertNull(notUpdated.driveFileId)
         }
-        val sha256 = computeSha256(snapshotFile)
-        val snapshotId = "snap-upload-unauth"
-
-        val entity = SyncSnapshotEntity(
-            snapshotId = snapshotId,
-            creatorDeviceId = localDeviceId,
-            createdAt = 1000L,
-            formatVersion = 1,
-            storagePath = snapshotFile.absolutePath,
-            contentSha256 = sha256,
-            coverageVectorJson = """{"$localDeviceId":1}""",
-            snapshotHlc = "1000:0:$localDeviceId",
-            status = SnapshotStatus.READY_TO_UPLOAD,
-        )
-        fakeSnapshotDao.insert(entity)
-
-        val manifest = SyncSnapshotManifest(
-            snapshotId = snapshotId,
-            accountEmail = testAccount,
-            creatorDeviceId = localDeviceId,
-            createdAtEpochMillis = 1000L,
-            snapshotHlc = "1000:0:$localDeviceId",
-            coverageVector = mapOf(localDeviceId to 1L),
-        )
-
-        // Act
-        val result = transportService.uploadSnapshot(snapshotEntity = entity, manifest = manifest)
-
-        // Assert
-        assertTrue("Upload must fail with Unauthorized: $result", result is SnapshotUploadResult.Unauthorized)
-
-        // Invariant: Status must NEVER transition to ACTIVE
-        val notUpdated = fakeSnapshotDao.getById(snapshotId)
-        assertNotNull(notUpdated)
-        assertEquals(SnapshotStatus.READY_TO_UPLOAD, notUpdated!!.status)
-        assertNull(notUpdated.driveFileId)
-    }
 
     @Test
-    fun test_downloadSnapshot_verifiesSha256Integrity() = runBlocking {
-        // Arrange
-        val content = "DOWNLOADABLE_ENCRYPTED_SNAPSHOT_BYTES".toByteArray(Charsets.UTF_8)
-        val expectedSha = computeSha256(content)
-        val driveFileId = fakeDriveApiClient.addFile(
-            name = "snapshot_file.bin",
-            bytes = content,
-            appProperties = mapOf(
-                "type" to SnapshotTransportService.TYPE_SNAPSHOT,
-                "snapshotId" to "snap-download-1",
-                "contentSha256" to expectedSha,
-            ),
-        )
+    fun test_downloadSnapshot_verifiesSha256Integrity() =
+        runBlocking {
+            // Arrange
+            val content = "DOWNLOADABLE_ENCRYPTED_SNAPSHOT_BYTES".toByteArray(Charsets.UTF_8)
+            val expectedSha = computeSha256(content)
+            val driveFileId =
+                fakeDriveApiClient.addFile(
+                    name = "snapshot_file.bin",
+                    bytes = content,
+                    appProperties =
+                        mapOf(
+                            "type" to SnapshotTransportService.TYPE_SNAPSHOT,
+                            "snapshotId" to "snap-download-1",
+                            "contentSha256" to expectedSha,
+                        ),
+                )
 
-        val destFile = tempFolder.newFile("downloaded.bin")
+            val destFile = tempFolder.newFile("downloaded.bin")
 
-        // Act 1: Download with valid expectedSha256
-        val resultSuccess = transportService.downloadSnapshot(
-            driveFileId = driveFileId,
-            destinationFile = destFile,
-            expectedSha256 = expectedSha,
-        )
-        assertTrue("Download with valid hash must succeed: $resultSuccess", resultSuccess is SnapshotDownloadResult.Success)
-        assertEquals(expectedSha, computeSha256(destFile))
+            // Act 1: Download with valid expectedSha256
+            val resultSuccess =
+                transportService.downloadSnapshot(
+                    driveFileId = driveFileId,
+                    destinationFile = destFile,
+                    expectedSha256 = expectedSha,
+                )
+            assertTrue("Download with valid hash must succeed: $resultSuccess", resultSuccess is SnapshotDownloadResult.Success)
+            assertEquals(expectedSha, computeSha256(destFile))
 
-        // Act 2: Download with invalid/tampered expectedSha256
-        val tamperedDestFile = tempFolder.newFile("tampered_down.bin")
-        val resultFailure = transportService.downloadSnapshot(
-            driveFileId = driveFileId,
-            destinationFile = tamperedDestFile,
-            expectedSha256 = "0000000000000000000000000000000000000000000000000000000000000000",
-        )
-        assertTrue("Download with corrupted hash must fail: $resultFailure", resultFailure is SnapshotDownloadResult.Failure)
-    }
+            // Act 2: Download with invalid/tampered expectedSha256
+            val tamperedDestFile = tempFolder.newFile("tampered_down.bin")
+            val resultFailure =
+                transportService.downloadSnapshot(
+                    driveFileId = driveFileId,
+                    destinationFile = tamperedDestFile,
+                    expectedSha256 = "0000000000000000000000000000000000000000000000000000000000000000",
+                )
+            assertTrue("Download with corrupted hash must fail: $resultFailure", resultFailure is SnapshotDownloadResult.Failure)
+        }
 
     @Test
-    fun test_discoverRemoteSnapshots_parsesAndSortsValidHeaders() = runBlocking {
-        // Arrange: Add 2 snapshot files in Drive with different upload timestamps
-        fakeDriveApiClient.addFile(
-            name = "snapshot_old.bin",
-            bytes = byteArrayOf(1, 2, 3),
-            appProperties = mapOf(
-                "appId" to GoogleDriveSyncTransport.APP_ID,
-                "type" to SnapshotTransportService.TYPE_SNAPSHOT,
-                "snapshotId" to "snap-old",
-                "creatorDeviceId" to "device-alpha",
-                "formatVersion" to "1",
-                "contentSha256" to "sha-old",
-                "coverageVectorJson" to """{"device-alpha":10}""",
-                "snapshotHlc" to "1000:0:device-alpha",
-                "uploadedAt" to "100000",
-            ),
-        )
+    fun test_discoverRemoteSnapshots_parsesAndSortsValidHeaders() =
+        runBlocking {
+            // Arrange: Add 2 snapshot files in Drive with different upload timestamps
+            fakeDriveApiClient.addFile(
+                name = "snapshot_old.bin",
+                bytes = byteArrayOf(1, 2, 3),
+                appProperties =
+                    mapOf(
+                        "appId" to GoogleDriveSyncTransport.APP_ID,
+                        "type" to SnapshotTransportService.TYPE_SNAPSHOT,
+                        "snapshotId" to "snap-old",
+                        "creatorDeviceId" to "device-alpha",
+                        "formatVersion" to "1",
+                        "contentSha256" to "sha-old",
+                        "coverageVectorJson" to """{"device-alpha":10}""",
+                        "snapshotHlc" to "1000:0:device-alpha",
+                        "uploadedAt" to "100000",
+                    ),
+            )
 
-        fakeDriveApiClient.addFile(
-            name = "snapshot_new.bin",
-            bytes = byteArrayOf(4, 5, 6),
-            appProperties = mapOf(
-                "appId" to GoogleDriveSyncTransport.APP_ID,
-                "type" to SnapshotTransportService.TYPE_SNAPSHOT,
-                "snapshotId" to "snap-new",
-                "creatorDeviceId" to "device-beta",
-                "formatVersion" to "1",
-                "contentSha256" to "sha-new",
-                "coverageVectorJson" to """{"device-beta":20}""",
-                "snapshotHlc" to "2000:0:device-beta",
-                "uploadedAt" to "200000",
-            ),
-        )
+            fakeDriveApiClient.addFile(
+                name = "snapshot_new.bin",
+                bytes = byteArrayOf(4, 5, 6),
+                appProperties =
+                    mapOf(
+                        "appId" to GoogleDriveSyncTransport.APP_ID,
+                        "type" to SnapshotTransportService.TYPE_SNAPSHOT,
+                        "snapshotId" to "snap-new",
+                        "creatorDeviceId" to "device-beta",
+                        "formatVersion" to "1",
+                        "contentSha256" to "sha-new",
+                        "coverageVectorJson" to """{"device-beta":20}""",
+                        "snapshotHlc" to "2000:0:device-beta",
+                        "uploadedAt" to "200000",
+                    ),
+            )
 
-        // Act
-        val result = transportService.discoverRemoteSnapshots()
+            // Act
+            val result = transportService.discoverRemoteSnapshots()
 
-        // Assert
-        assertTrue("Discovery must succeed: $result", result is DriveResult.Success)
-        val snapshots = (result as DriveResult.Success).data
-        assertEquals(2, snapshots.size)
+            // Assert
+            assertTrue("Discovery must succeed: $result", result is DriveResult.Success)
+            val snapshots = (result as DriveResult.Success).data
+            assertEquals(2, snapshots.size)
 
-        // Must be sorted by uploadedAt descending
-        assertEquals("snap-new", snapshots[0].snapshotId)
-        assertEquals("snap-old", snapshots[1].snapshotId)
-        assertEquals(200000L, snapshots[0].uploadedAtEpochMillis)
-        assertEquals(100000L, snapshots[1].uploadedAtEpochMillis)
-    }
+            // Must be sorted by uploadedAt descending
+            assertEquals("snap-new", snapshots[0].snapshotId)
+            assertEquals("snap-old", snapshots[1].snapshotId)
+            assertEquals(200000L, snapshots[0].uploadedAtEpochMillis)
+            assertEquals(100000L, snapshots[1].uploadedAtEpochMillis)
+        }
 
     private fun computeSha256(file: File): String = computeSha256(file.readBytes())
 
@@ -280,11 +300,9 @@ class SnapshotTransportServiceTest {
 
         override suspend fun getById(snapshotId: String): SyncSnapshotEntity? = snapshots[snapshotId]
 
-        override suspend fun getByStatus(status: String): List<SyncSnapshotEntity> =
-            snapshots.values.filter { it.status == status }
+        override suspend fun getByStatus(status: String): List<SyncSnapshotEntity> = snapshots.values.filter { it.status == status }
 
-        override suspend fun getActiveSnapshot(): SyncSnapshotEntity? =
-            snapshots.values.firstOrNull { it.status == SnapshotStatus.ACTIVE }
+        override suspend fun getActiveSnapshot(): SyncSnapshotEntity? = snapshots.values.firstOrNull { it.status == SnapshotStatus.ACTIVE }
 
         override suspend fun getAllSnapshots(): List<SyncSnapshotEntity> = snapshots.values.toList()
 
@@ -295,15 +313,20 @@ class SnapshotTransportServiceTest {
             timestamp: Long,
         ): Int {
             val existing = snapshots[snapshotId] ?: return 0
-            snapshots[snapshotId] = existing.copy(
-                driveFileId = driveFileId,
-                status = newStatus,
-                updatedAt = timestamp,
-            )
+            snapshots[snapshotId] =
+                existing.copy(
+                    driveFileId = driveFileId,
+                    status = newStatus,
+                    updatedAt = timestamp,
+                )
             return 1
         }
 
-        override suspend fun updateStatus(snapshotId: String, newStatus: String, timestamp: Long): Int {
+        override suspend fun updateStatus(
+            snapshotId: String,
+            newStatus: String,
+            timestamp: Long,
+        ): Int {
             val existing = snapshots[snapshotId] ?: return 0
             snapshots[snapshotId] = existing.copy(status = newStatus, updatedAt = timestamp)
             return 1
@@ -318,20 +341,41 @@ class SnapshotTransportServiceTest {
 
     private class FakeGoogleDriveAuthDelegate : GoogleDriveAuthDelegate {
         var isRevoked = false
-        override suspend fun authorize(context: Context, forceAccountSelection: Boolean): GoogleDriveAuthorizationResult {
+
+        override suspend fun authorize(
+            context: Context,
+            forceAccountSelection: Boolean,
+        ): GoogleDriveAuthorizationResult {
             if (isRevoked) return GoogleDriveAuthorizationResult.Failure(IllegalStateException("Revoked"))
             return GoogleDriveAuthorizationResult.Success("test_token_123", "user@test.com")
         }
-        override suspend fun parseConsentResult(context: Context, data: android.content.Intent?): GoogleDriveAuthorizationResult =
-            GoogleDriveAuthorizationResult.Success("test_token_123", "user@test.com")
-        override suspend fun disconnect(context: Context, accountEmail: String?, accessToken: String?) {
+
+        override suspend fun parseConsentResult(
+            context: Context,
+            data: android.content.Intent?,
+        ): GoogleDriveAuthorizationResult = GoogleDriveAuthorizationResult.Success("test_token_123", "user@test.com")
+
+        override suspend fun disconnect(
+            context: Context,
+            accountEmail: String?,
+            accessToken: String?,
+        ) {
             isRevoked = true
         }
-        override suspend fun invalidateToken(context: Context, token: String) {}
+
+        override suspend fun invalidateToken(
+            context: Context,
+            token: String,
+        ) {}
     }
 
     private class FakeGoogleDriveApiClient {
-        data class DriveEntry(val id: String, val name: String, val bytes: ByteArray, val appProperties: Map<String, String>)
+        data class DriveEntry(
+            val id: String,
+            val name: String,
+            val bytes: ByteArray,
+            val appProperties: Map<String, String>,
+        )
 
         val files = mutableMapOf<String, DriveEntry>()
         var simulateUnauthorized = false
@@ -341,7 +385,11 @@ class SnapshotTransportServiceTest {
         var pendingUploadId: String? = null
         private var idCounter = 1
 
-        fun addFile(name: String, bytes: ByteArray, appProperties: Map<String, String>): String {
+        fun addFile(
+            name: String,
+            bytes: ByteArray,
+            appProperties: Map<String, String>,
+        ): String {
             val id = "drive_file_${idCounter++}"
             files[id] = DriveEntry(id, name, bytes, appProperties)
             return id
@@ -395,27 +443,31 @@ class SnapshotTransportServiceTest {
                                     val nextIndex = startIndex + pagedEntries.size
                                     val nextTokenStr = if (nextIndex < sortedEntries.size) nextIndex.toString() else null
 
-                                    val filesJson = pagedEntries.map { entry ->
-                                        val propsJson = entry.appProperties.entries.joinToString(",") { (k, v) ->
-                                            val escapedVal = v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
-                                            "\"$k\":\"$escapedVal\""
-                                        }
-                                        """{"id":"${entry.id}","name":"${entry.name}","size":"${entry.bytes.size}","appProperties":{$propsJson}}"""
-                                    }.joinToString(",")
+                                    val filesJson =
+                                        pagedEntries
+                                            .map { entry ->
+                                                val propsJson =
+                                                    entry.appProperties.entries.joinToString(",") { (k, v) ->
+                                                        val escapedVal = v.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+                                                        "\"$k\":\"$escapedVal\""
+                                                    }
+                                                """{"id":"${entry.id}","name":"${entry.name}","size":"${entry.bytes.size}","appProperties":{$propsJson}}"""
+                                            }.joinToString(",")
 
-                                    val resp = if (nextTokenStr != null) {
-                                        """{"files":[$filesJson],"nextPageToken":"$nextTokenStr"}"""
-                                    } else {
-                                        """{"files":[$filesJson]}"""
-                                    }
+                                    val resp =
+                                        if (nextTokenStr != null) {
+                                            """{"files":[$filesJson],"nextPageToken":"$nextTokenStr"}"""
+                                        } else {
+                                            """{"files":[$filesJson]}"""
+                                        }
                                     return ByteArrayInputStream(resp.toByteArray())
                                 }
                             }
                             return ByteArrayInputStream(byteArrayOf())
                         }
 
-                        override fun getOutputStream(): OutputStream {
-                            return object : ByteArrayOutputStream() {
+                        override fun getOutputStream(): OutputStream =
+                            object : ByteArrayOutputStream() {
                                 override fun close() {
                                     super.close()
                                     if (urlString.contains("uploadType=multipart")) {
@@ -424,22 +476,24 @@ class SnapshotTransportServiceTest {
                                         val devId = body.substringAfter("\"creatorDeviceId\":\"", "").substringBefore("\"")
                                         val id = pendingUploadId ?: "drive_file_${idCounter++}"
                                         pendingUploadId = null
-                                        files[id] = DriveEntry(
-                                            id = id,
-                                            name = "snapshot_${devId}_$snapId.bin",
-                                            bytes = toByteArray(),
-                                            appProperties = mapOf("snapshotId" to snapId, "type" to SnapshotTransportService.TYPE_SNAPSHOT),
-                                        )
+                                        files[id] =
+                                            DriveEntry(
+                                                id = id,
+                                                name = "snapshot_${devId}_$snapId.bin",
+                                                bytes = toByteArray(),
+                                                appProperties = mapOf("snapshotId" to snapId, "type" to SnapshotTransportService.TYPE_SNAPSHOT),
+                                            )
                                     }
                                 }
                             }
-                        }
 
                         override fun connect() {}
+
                         override fun disconnect() {}
+
                         override fun usingProxy(): Boolean = false
                     }
-                }
+                },
             )
         }
     }

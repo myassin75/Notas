@@ -17,7 +17,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class DriveAutoBackupWorkerTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -57,72 +56,79 @@ class DriveAutoBackupWorkerTest {
     }
 
     @Test
-    fun testSkippedWhenAutoBackupDisabled() = runBlocking {
-        drivePrefs.setAutoBackupSettings(enabled = false)
-        val state = drivePrefs.getState()
+    fun testSkippedWhenAutoBackupDisabled() =
+        runBlocking {
+            drivePrefs.setAutoBackupSettings(enabled = false)
+            val state = drivePrefs.getState()
 
-        val preCheck = evaluatePreconditions(state, mekManager)
-        assertEquals(ListenableWorker.Result.success(), preCheck)
-    }
-
-    @Test
-    fun testFailsWhenNotConnected() = runBlocking {
-        drivePrefs.setAutoBackupSettings(enabled = true)
-        drivePrefs.setDisconnected()
-        val state = drivePrefs.getState()
-
-        val preCheck = evaluatePreconditions(state, mekManager)
-        assertEquals(ListenableWorker.Result.failure(), preCheck)
-    }
+            val preCheck = evaluatePreconditions(state, mekManager)
+            assertEquals(ListenableWorker.Result.success(), preCheck)
+        }
 
     @Test
-    fun testFailsWhenMekNotAvailable() = runBlocking {
-        drivePrefs.setAutoBackupSettings(enabled = true)
-        drivePrefs.setConnected("user@example.com")
-        val state = drivePrefs.getState()
+    fun testFailsWhenNotConnected() =
+        runBlocking {
+            drivePrefs.setAutoBackupSettings(enabled = true)
+            drivePrefs.setDisconnected()
+            val state = drivePrefs.getState()
 
-        // No MEK created
-        val preCheck = evaluatePreconditions(state, mekManager)
-        assertEquals(ListenableWorker.Result.failure(), preCheck)
-    }
+            val preCheck = evaluatePreconditions(state, mekManager)
+            assertEquals(ListenableWorker.Result.failure(), preCheck)
+        }
 
     @Test
-    fun testPassesWhenAllConditionsMet() = runBlocking {
-        drivePrefs.setAutoBackupSettings(enabled = true)
-        drivePrefs.setConnected("user@example.com")
-        mekManager.getOrCreateMasterKey()
-        val state = drivePrefs.getState()
+    fun testFailsWhenMekNotAvailable() =
+        runBlocking {
+            drivePrefs.setAutoBackupSettings(enabled = true)
+            drivePrefs.setConnected("user@example.com")
+            val state = drivePrefs.getState()
 
-        val preCheck = evaluatePreconditions(state, mekManager)
-        assertEquals(null, preCheck) // Ready to execute
-    }
+            // No MEK created
+            val preCheck = evaluatePreconditions(state, mekManager)
+            assertEquals(ListenableWorker.Result.failure(), preCheck)
+        }
+
+    @Test
+    fun testPassesWhenAllConditionsMet() =
+        runBlocking {
+            drivePrefs.setAutoBackupSettings(enabled = true)
+            drivePrefs.setConnected("user@example.com")
+            mekManager.getOrCreateMasterKey()
+            val state = drivePrefs.getState()
+
+            val preCheck = evaluatePreconditions(state, mekManager)
+            assertEquals(null, preCheck) // Ready to execute
+        }
 
     @Test
     fun testResultMapping() {
-        val sampleBackupItem = DriveBackupItem(
-            fileId = "file_123",
-            backupId = "backup_456",
-            fileName = "notas_backup.bin",
-            sizeBytes = 1024,
-            createdAtEpochMillis = System.currentTimeMillis(),
-            schemaVersion = 5,
-            keyId = 1,
-            notesCount = 10,
-            tasksCount = 2,
-            categoriesCount = 1,
-            attachmentsCount = 0,
-            sourceDevice = "Test Phone",
-            plainSha256 = "abc123sha",
-        )
+        val sampleBackupItem =
+            DriveBackupItem(
+                fileId = "file_123",
+                backupId = "backup_456",
+                fileName = "notas_backup.bin",
+                sizeBytes = 1024,
+                createdAtEpochMillis = System.currentTimeMillis(),
+                schemaVersion = 5,
+                keyId = 1,
+                notesCount = 10,
+                tasksCount = 2,
+                categoriesCount = 1,
+                attachmentsCount = 0,
+                sourceDevice = "Test Phone",
+                plainSha256 = "abc123sha",
+            )
 
-        fun mapDriveResultToWorkerResult(res: DriveResult<DriveBackupItem>, attempt: Int): ListenableWorker.Result {
-            return when (res) {
+        fun mapDriveResultToWorkerResult(
+            res: DriveResult<DriveBackupItem>,
+            attempt: Int,
+        ): ListenableWorker.Result =
+            when (res) {
                 is DriveResult.Success -> ListenableWorker.Result.success()
                 is DriveResult.RateLimited, is DriveResult.Offline -> ListenableWorker.Result.retry()
                 is DriveResult.Unauthorized -> ListenableWorker.Result.failure()
                 is DriveResult.Error -> if (attempt < 3) ListenableWorker.Result.retry() else ListenableWorker.Result.failure()
             }
-        }
 
         assertEquals(ListenableWorker.Result.success(), mapDriveResultToWorkerResult(DriveResult.Success(sampleBackupItem), 1))
         assertEquals(ListenableWorker.Result.retry(), mapDriveResultToWorkerResult(DriveResult.RateLimited, 1))

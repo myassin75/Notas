@@ -37,7 +37,8 @@ enum class GlassVariant {
     Dialog,
     Input,
     Chip,
-    SolidReadability;
+    SolidReadability,
+    ;
 
     companion object {
         // Aliases for backward compatibility
@@ -181,8 +182,8 @@ fun glassBorderStroke(
 fun glassContentColor(
     variant: GlassVariant = GlassVariant.StandardCard,
     isDark: Boolean = LocalIsDark.current,
-): Color {
-    return when (variant) {
+): Color =
+    when (variant) {
         GlassVariant.SelectedCard ->
             if (isDark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
         GlassVariant.Chip ->
@@ -190,7 +191,6 @@ fun glassContentColor(
         else ->
             if (isDark) Color(0xFFE8E7F0) else MaterialTheme.colorScheme.onSurface
     }
-}
 
 /**
  * Reusable frosted-glass surface component.

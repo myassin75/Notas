@@ -71,7 +71,7 @@ object QuickCaptureNotifier {
         val notification =
             NotificationCompat
                 .Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_remember)
+                .setSmallIcon(R.drawable.ic_stat_notas)
                 .setContentTitle(context.getString(R.string.quick_capture_notification_title))
                 .setContentText(context.getString(R.string.quick_capture_notification_text))
                 .setContentIntent(pending)

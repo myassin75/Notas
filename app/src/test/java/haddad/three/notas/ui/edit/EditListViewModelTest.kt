@@ -1,6 +1,19 @@
 package haddad.three.notas.ui.edit
 
 import androidx.lifecycle.SavedStateHandle
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.ui.nav.Routes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -20,19 +33,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.ChecklistItemDao
-import haddad.three.notas.data.ChecklistItemEntity
-import haddad.three.notas.data.Importance
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.NoteDao
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.Visibility
-import haddad.three.notas.data.getActiveReminders
-import haddad.three.notas.ui.nav.Routes
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditListViewModelTest {
@@ -405,11 +405,12 @@ private class FakeNoteDao(
 
     override fun observeScheduled(ownerId: String?): Flow<List<NoteWithItems>> =
         flowOf(
-            store.notes.keys.mapNotNull { noteId ->
-                store.noteWithItems(noteId)
-            }.filter {
-                it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
-            }
+            store.notes.keys
+                .mapNotNull { noteId ->
+                    store.noteWithItems(noteId)
+                }.filter {
+                    it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay || it.note.getActiveReminders().isNotEmpty()
+                },
         )
 
     override fun observe(id: Long): Flow<NoteWithItems?> =
@@ -420,18 +421,18 @@ private class FakeNoteDao(
     override suspend fun get(id: Long): NoteWithItems? = store.noteWithItems(id)
 
     override suspend fun getByUuid(uuid: String): NoteWithItems? =
-        store.notes.values.firstOrNull { it.uuid == uuid }?.let { store.noteWithItems(it.id) }
+        store.notes.values
+            .firstOrNull { it.uuid == uuid }
+            ?.let { store.noteWithItems(it.id) }
 
-    override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? =
-        store.notes.values.firstOrNull { it.uuid == uuid }
+    override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = store.notes.values.firstOrNull { it.uuid == uuid }
 
     override suspend fun allNotes(): List<NoteWithItems> =
         store.notes.keys
             .sorted()
             .mapNotNull { noteId -> store.noteWithItems(noteId) }
 
-    override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> =
-        allNotes().filter { it.note.ownerId == ownerId }
+    override suspend fun notesForOwner(ownerId: String): List<NoteWithItems> = allNotes().filter { it.note.ownerId == ownerId }
 
     override suspend fun insert(note: NoteEntity): Long {
         val noteId = if (note.id > 0L) note.id else store.nextNoteId++
@@ -492,7 +493,9 @@ private class FakeChecklistItemDao(
             ?: emptyList()
 
     override suspend fun getByUuid(uuid: String): ChecklistItemEntity? =
-        store.itemsByNote.values.flatten().firstOrNull { it.uuid == uuid }
+        store.itemsByNote.values
+            .flatten()
+            .firstOrNull { it.uuid == uuid }
 
     override suspend fun insert(item: ChecklistItemEntity): Long {
         val itemId = if (item.id > 0L) item.id else store.nextItemId++

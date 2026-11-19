@@ -28,61 +28,62 @@ import java.util.concurrent.TimeUnit
  * - Network and battery constraints must be satisfied.
  */
 @HiltWorker
-class DriveAutoBackupWorker @AssistedInject constructor(
-    @Assisted appContext: Context,
-    @Assisted workerParams: WorkerParameters,
-    private val drivePrefs: DriveAuthPreferences,
-    private val driveBackupProvider: GoogleDriveBackupProvider,
-    private val mekManager: MekManager,
-) : CoroutineWorker(appContext, workerParams) {
+class DriveAutoBackupWorker
+    @AssistedInject
+    constructor(
+        @Assisted appContext: Context,
+        @Assisted workerParams: WorkerParameters,
+        private val drivePrefs: DriveAuthPreferences,
+        private val driveBackupProvider: GoogleDriveBackupProvider,
+        private val mekManager: MekManager,
+    ) : CoroutineWorker(appContext, workerParams) {
+        override suspend fun doWork(): Result = executeAutoBackup(runAttempt = runAttemptCount)
 
-    override suspend fun doWork(): Result = executeAutoBackup(runAttempt = runAttemptCount)
-
-    suspend fun executeAutoBackup(runAttempt: Int = 0): Result {
-        val state = drivePrefs.getState()
-        if (!state.autoBackupEnabled) {
-            return Result.success()
-        }
-
-        if (!state.isConnected) {
-            DiagnosticLog.record(applicationContext, "Drive auto-backup skipped: not connected to Google Drive")
-            return Result.failure()
-        }
-
-        if (mekManager.getActiveMasterKey() == null) {
-            DiagnosticLog.record(applicationContext, "Drive auto-backup skipped: MEK not available")
-            return Result.failure()
-        }
-
-        return try {
-            val result = driveBackupProvider.createBackup()
-            when (result) {
-                is DriveResult.Success -> {
-                    DiagnosticLog.record(applicationContext, "Drive auto-backup completed: backupId=${result.data.backupId}")
-                    Result.success()
-                }
-                is DriveResult.RateLimited -> Result.retry()
-                is DriveResult.Offline -> Result.retry()
-                is DriveResult.Unauthorized -> {
-                    DiagnosticLog.record(applicationContext, "Drive auto-backup failed: unauthorized token")
-                    Result.failure()
-                }
-                is DriveResult.Error -> {
-                    val attempt = runAttempt + 1
-                    DiagnosticLog.record(applicationContext, "Drive auto-backup error (attempt $attempt): ${result.message}")
-                    if (attempt < MAX_RETRY_ATTEMPTS) Result.retry() else Result.failure()
-                }
+        suspend fun executeAutoBackup(runAttempt: Int = 0): Result {
+            val state = drivePrefs.getState()
+            if (!state.autoBackupEnabled) {
+                return Result.success()
             }
-        } catch (e: Exception) {
-            DiagnosticLog.record(applicationContext, "Drive auto-backup crashed: ${e.message}", e)
-            if (runAttempt < MAX_RETRY_ATTEMPTS) Result.retry() else Result.failure()
+
+            if (!state.isConnected) {
+                DiagnosticLog.record(applicationContext, "Drive auto-backup skipped: not connected to Google Drive")
+                return Result.failure()
+            }
+
+            if (mekManager.getActiveMasterKey() == null) {
+                DiagnosticLog.record(applicationContext, "Drive auto-backup skipped: MEK not available")
+                return Result.failure()
+            }
+
+            return try {
+                val result = driveBackupProvider.createBackup()
+                when (result) {
+                    is DriveResult.Success -> {
+                        DiagnosticLog.record(applicationContext, "Drive auto-backup completed: backupId=${result.data.backupId}")
+                        Result.success()
+                    }
+                    is DriveResult.RateLimited -> Result.retry()
+                    is DriveResult.Offline -> Result.retry()
+                    is DriveResult.Unauthorized -> {
+                        DiagnosticLog.record(applicationContext, "Drive auto-backup failed: unauthorized token")
+                        Result.failure()
+                    }
+                    is DriveResult.Error -> {
+                        val attempt = runAttempt + 1
+                        DiagnosticLog.record(applicationContext, "Drive auto-backup error (attempt $attempt): ${result.message}")
+                        if (attempt < MAX_RETRY_ATTEMPTS) Result.retry() else Result.failure()
+                    }
+                }
+            } catch (e: Exception) {
+                DiagnosticLog.record(applicationContext, "Drive auto-backup crashed: ${e.message}", e)
+                if (runAttempt < MAX_RETRY_ATTEMPTS) Result.retry() else Result.failure()
+            }
+        }
+
+        companion object {
+            private const val MAX_RETRY_ATTEMPTS = 3
         }
     }
-
-    companion object {
-        private const val MAX_RETRY_ATTEMPTS = 3
-    }
-}
 
 /**
  * Idempotent scheduler for Google Drive automatic periodic backups.
@@ -98,17 +99,19 @@ object DriveAutoBackupScheduler {
         val workManager = WorkManager.getInstance(context)
         val networkType = if (requiresWifi) NetworkType.UNMETERED else NetworkType.CONNECTED
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(networkType)
-            .setRequiresBatteryNotLow(true)
-            .build()
+        val constraints =
+            Constraints
+                .Builder()
+                .setRequiredNetworkType(networkType)
+                .setRequiresBatteryNotLow(true)
+                .build()
 
-        val request = PeriodicWorkRequestBuilder<DriveAutoBackupWorker>(
-            repeatInterval = frequencyDays.toLong().coerceAtLeast(1L),
-            repeatIntervalTimeUnit = TimeUnit.DAYS,
-        )
-            .setConstraints(constraints)
-            .build()
+        val request =
+            PeriodicWorkRequestBuilder<DriveAutoBackupWorker>(
+                repeatInterval = frequencyDays.toLong().coerceAtLeast(1L),
+                repeatIntervalTimeUnit = TimeUnit.DAYS,
+            ).setConstraints(constraints)
+                .build()
 
         workManager.enqueueUniquePeriodicWork(
             UNIQUE_WORK_NAME,

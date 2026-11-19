@@ -220,8 +220,7 @@ fun OptionsPanel(
                     summary = "",
                     onClick = onOpenShoulders,
                     modifier = Modifier.fillMaxWidth(),
-                    iconTint = if (shoulder != null) shoulderColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    iconContainerColor = if (shoulder != null) shoulderColor.copy(alpha = if (isDark) 0.22f else 0.15f) else (if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.surfaceVariant),
+                    iconTint = if (shoulder != null) shoulderColor else MaterialTheme.colorScheme.primary,
                     summaryContent = {
                         if (shoulder != null) {
                             Row(
@@ -268,7 +267,6 @@ fun OptionsPanel(
                     onClick = onOpenReminder,
                     modifier = Modifier.fillMaxWidth(),
                     iconTint = if (reminderPermissionMissing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    iconContainerColor = if (reminderPermissionMissing) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
                     summaryContent = {
                         ReminderOptionSummary(
                             reminders = reminders,
@@ -288,7 +286,6 @@ fun OptionsPanel(
                     onClick = onOpenActions,
                     modifier = Modifier.fillMaxWidth(),
                     iconTint = MaterialTheme.colorScheme.primary,
-                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 )
 
                 HorizontalDivider(color = dividerColor, thickness = 1.dp, modifier = Modifier.padding(horizontal = 16.dp))
@@ -310,7 +307,6 @@ fun OptionsPanel(
                         },
                     modifier = Modifier.fillMaxWidth(),
                     iconTint = MaterialTheme.colorScheme.primary,
-                    iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     summaryContent = { BehaviorOptionSummary(visibility, importance) },
                 )
             }
@@ -748,7 +744,6 @@ private fun OptionCell(
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
-    iconContainerColor: Color? = null,
     fixedHeight: Boolean = false,
     summaryContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
@@ -764,15 +759,11 @@ private fun OptionCell(
             modifier
                 .fillMaxWidth()
                 .then(clickableModifier)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier =
-                Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(iconContainerColor ?: MaterialTheme.colorScheme.primaryContainer),
+            modifier = Modifier.size(28.dp),
             contentAlignment = Alignment.Center,
         ) {
             OptionCellIcon(
@@ -781,7 +772,7 @@ private fun OptionCell(
                 iconTint = iconTint,
             )
         }
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(16.dp))
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center,
@@ -845,12 +836,12 @@ private fun OptionCellIcon(
         Image(
             painter = painter,
             contentDescription = null,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(24.dp),
         )
     } else {
         RememberMaterialRoundedSymbol(
             name = symbolName,
-            size = 20.dp,
+            size = 24.dp,
             tint = iconTint,
             weight = FontWeight.Normal,
             filled = false,

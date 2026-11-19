@@ -1,11 +1,11 @@
 package haddad.three.notas.reminders
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteReminder
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 
 class ReminderDismissReceiverTest {
     @Test

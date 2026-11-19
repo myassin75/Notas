@@ -281,127 +281,140 @@ fun AgendaEventCard(
 
         // Event Card
         Surface(
-            onClick = onClick,
             shape = CalendarDesignTokens.ItemCardShape,
             color = cardBg,
             border = BorderStroke(1.dp, cardBorder),
-            modifier = Modifier.weight(1f),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .clip(CalendarDesignTokens.ItemCardShape),
         ) {
             Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val resolvedIconBg =
-                    if (event.iconBgColor != Color.Unspecified && event.iconBgColor != CalendarDesignTokens.CategoryPurpleBg) {
-                        event.iconBgColor
-                    } else {
-                        MaterialTheme.colorScheme.primaryContainer
-                    }
-                val resolvedIconTint =
-                    if (event.iconTint != Color.Unspecified && event.iconTint != CalendarDesignTokens.CategoryPurpleIcon) {
-                        event.iconTint
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
-
-                // Category Icon Squircle
-                Box(
+                // Clickable area for details (Icon, Title, Subtitle, Shoulder)
+                Row(
                     modifier =
                         Modifier
-                            .size(CalendarDesignTokens.IconBoxSize)
-                            .background(resolvedIconBg, shape = CalendarDesignTokens.IconBoxShape),
-                    contentAlignment = Alignment.Center,
+                            .weight(1f)
+                            .clickable(onClick = onClick)
+                            .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CalendarEventIcon(
-                        iconName = event.iconName,
-                        tint = resolvedIconTint,
-                        size = 20.dp,
-                    )
-                }
+                    val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
+                    val defaultIconBg = if (isDark) Color(0xFF2C2C30) else Color(0xFFE5E5EA)
+                    val resolvedIconBg =
+                        if (event.iconBgColor != Color.Unspecified && event.iconBgColor != CalendarDesignTokens.CategoryPurpleBg) {
+                            event.iconBgColor
+                        } else {
+                            defaultIconBg
+                        }
+                    val resolvedIconTint =
+                        if (event.iconTint != Color.Unspecified && event.iconTint != CalendarDesignTokens.CategoryPurpleIcon) {
+                            event.iconTint
+                        } else {
+                            defaultIconColor
+                        }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    // Category Icon Squircle
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(CalendarDesignTokens.IconBoxSize)
+                                .background(resolvedIconBg, shape = CalendarDesignTokens.IconBoxShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CalendarEventIcon(
+                            iconName = event.iconName,
+                            tint = resolvedIconTint,
+                            size = 20.dp,
+                        )
+                    }
 
-                // Title, Description, and Shoulder Chip
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = event.title,
-                        style =
-                            MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.5.sp,
-                                color = if (event.isDone && event.isTask) textSecondary else textPrimary,
-                                textDecoration = if (event.isDone && event.isTask) TextDecoration.LineThrough else null,
-                            ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    val displaySubtitle = event.description.ifBlank { event.subtitle }
-                    if (displaySubtitle.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Title, Description, and Shoulder Chip
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = displaySubtitle,
+                            text = event.title,
                             style =
-                                MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 12.5.sp,
-                                    color = textSecondary,
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.5.sp,
+                                    color = if (event.isDone && event.isTask) textSecondary else textPrimary,
+                                    textDecoration = if (event.isDone && event.isTask) TextDecoration.LineThrough else null,
                                 ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                    }
-                    if (!event.shoulderName.isNullOrBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        val fallbackPrimary = MaterialTheme.colorScheme.primary
-                        val chipColor =
-                            remember(event.shoulderColorHex, fallbackPrimary) {
-                                haddad.three.notas.ui.components.parseNoteColorHex(event.shoulderColorHex, fallbackPrimary)
-                            }
-                        val (badgeBg, badgeFg) =
-                            remember(chipColor, isDark) {
-                                haddad.three.notas.ui.components.readableBadgeColors(chipColor, isDark)
-                            }
-                        Surface(
-                            shape = CircleShape,
-                            color = badgeBg,
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        val displaySubtitle = event.description.ifBlank { event.subtitle }
+                        if (displaySubtitle.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = displaySubtitle,
+                                style =
+                                    MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 12.5.sp,
+                                        color = textSecondary,
+                                    ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        if (!event.shoulderName.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            val fallbackPrimary = MaterialTheme.colorScheme.primary
+                            val chipColor =
+                                remember(event.shoulderColorHex, fallbackPrimary) {
+                                    haddad.three.notas.ui.components
+                                        .parseNoteColorHex(event.shoulderColorHex, fallbackPrimary)
+                                }
+                            val (badgeBg, badgeFg) =
+                                remember(chipColor, isDark) {
+                                    haddad.three.notas.ui.components
+                                        .readableBadgeColors(chipColor, isDark)
+                                }
+                            Surface(
+                                shape = CircleShape,
+                                color = badgeBg,
                             ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "local_offer",
-                                    size = 11.dp,
-                                    tint = badgeFg,
-                                    weight = FontWeight.Bold,
-                                    filled = false,
-                                )
-                                Text(
-                                    text = event.shoulderName,
-                                    style =
-                                        MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp,
-                                            color = badgeFg,
-                                        ),
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    RememberMaterialRoundedSymbol(
+                                        name = "local_offer",
+                                        size = 11.dp,
+                                        tint = badgeFg,
+                                        weight = FontWeight.Bold,
+                                        filled = false,
+                                    )
+                                    Text(
+                                        text = event.shoulderName,
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                color = badgeFg,
+                                            ),
+                                    )
+                                }
                             }
                         }
                     }
                 }
 
-                // If it's a task with toggle support, show interactive completion checkbox with 36dp touch target
+                // If it's a task with toggle support, show interactive completion checkbox with 44dp touch target
                 if (event.isTask && onToggleDone != null) {
-                    Spacer(modifier = Modifier.width(6.dp))
                     Box(
                         modifier =
                             Modifier
-                                .size(36.dp)
+                                .padding(end = 8.dp)
+                                .size(44.dp)
                                 .clip(CircleShape)
-                                .clickable { onToggleDone(event.id, !event.isDone) },
+                                .clickable { onToggleDone(event.id, event.isDone) },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (event.isDone) {
@@ -432,10 +445,10 @@ fun AgendaEventCard(
                         }
                     }
                 } else if (event.isDone) {
-                    Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier =
                             Modifier
+                                .padding(end = 12.dp)
                                 .size(24.dp)
                                 .background(CalendarDesignTokens.DotGreen.copy(alpha = 0.15f), shape = CircleShape),
                         contentAlignment = Alignment.Center,

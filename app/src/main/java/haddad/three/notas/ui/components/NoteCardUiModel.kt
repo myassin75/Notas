@@ -1,14 +1,14 @@
 package haddad.three.notas.ui.components
 
 import androidx.compose.runtime.Immutable
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.toPersistentList
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.data.getActiveReminders
 import haddad.three.notas.data.pinned
 import haddad.three.notas.ui.edit.NoteIcon
 import haddad.three.notas.ui.edit.resolveNoteIcon
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.toPersistentList
 
 @Immutable
 data class NoteCardUiModel(

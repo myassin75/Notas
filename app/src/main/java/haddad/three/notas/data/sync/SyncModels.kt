@@ -100,14 +100,20 @@ data class SyncTombstone(
  * Result of a sync operation.
  */
 sealed interface SyncResult<out T> {
-    data class Success<T>(val data: T) : SyncResult<T>
+    data class Success<T>(
+        val data: T,
+    ) : SyncResult<T>
+
     data class Error(
         val message: String,
         val code: String? = null,
         val statusCode: Int? = null,
         val cause: Throwable? = null,
     ) : SyncResult<Nothing>
+
     data object Unauthorized : SyncResult<Nothing>
+
     data object RateLimited : SyncResult<Nothing>
+
     data object Offline : SyncResult<Nothing>
 }

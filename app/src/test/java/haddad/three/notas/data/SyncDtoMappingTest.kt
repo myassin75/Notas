@@ -1,27 +1,27 @@
 package haddad.three.notas.data
 
+import haddad.three.notas.data.sync.SyncDtoMapping
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.data.sync.SyncDtoMapping
 import java.util.UUID
 
 class SyncDtoMappingTest {
-
     @Test
     fun shoulderToDto_mapsAllFieldsAndPreservesUuid() {
-        val shoulder = ShoulderEntity(
-            id = 42L,
-            uuid = UUID.randomUUID().toString(),
-            name = "Work Projects",
-            normalizedName = "work projects",
-            colorHex = "#3B82F6",
-            createdAt = 1700000000000L,
-            updatedAt = 1700001000000L,
-        )
+        val shoulder =
+            ShoulderEntity(
+                id = 42L,
+                uuid = UUID.randomUUID().toString(),
+                name = "Work Projects",
+                normalizedName = "work projects",
+                colorHex = "#3B82F6",
+                createdAt = 1700000000000L,
+                updatedAt = 1700001000000L,
+            )
 
         val dto = SyncDtoMapping.shoulderToDto(shoulder)
 
@@ -36,28 +36,30 @@ class SyncDtoMappingTest {
 
     @Test
     fun checklistItemToDto_mapsParentUuidRelation() {
-        val parentItem = ChecklistItemEntity(
-            id = 100L,
-            uuid = UUID.randomUUID().toString(),
-            noteId = 1L,
-            text = "Parent task",
-            checked = false,
-            sortOrder = 1.0,
-            parentId = null,
-            depth = 0,
-            details = "Parent details",
-        )
-        val childItem = ChecklistItemEntity(
-            id = 101L,
-            uuid = UUID.randomUUID().toString(),
-            noteId = 1L,
-            text = "Child subtask",
-            checked = true,
-            sortOrder = 2.0,
-            parentId = parentItem.id,
-            depth = 1,
-            details = "Child details",
-        )
+        val parentItem =
+            ChecklistItemEntity(
+                id = 100L,
+                uuid = UUID.randomUUID().toString(),
+                noteId = 1L,
+                text = "Parent task",
+                checked = false,
+                sortOrder = 1.0,
+                parentId = null,
+                depth = 0,
+                details = "Parent details",
+            )
+        val childItem =
+            ChecklistItemEntity(
+                id = 101L,
+                uuid = UUID.randomUUID().toString(),
+                noteId = 1L,
+                text = "Child subtask",
+                checked = true,
+                sortOrder = 2.0,
+                parentId = parentItem.id,
+                depth = 1,
+                details = "Child details",
+            )
 
         val parentDto = SyncDtoMapping.checklistItemToDto(parentItem, parentUuid = null)
         val childDto = SyncDtoMapping.checklistItemToDto(childItem, parentUuid = parentItem.uuid)
@@ -75,68 +77,74 @@ class SyncDtoMappingTest {
 
     @Test
     fun noteWithItemsToDto_mapsRelationshipsToUuids() {
-        val shoulder = ShoulderEntity(
-            id = 10L,
-            uuid = UUID.randomUUID().toString(),
-            name = "Personal",
-            normalizedName = "personal",
-            createdAt = 1700000000000L,
-            updatedAt = 1700000000000L,
-        )
+        val shoulder =
+            ShoulderEntity(
+                id = 10L,
+                uuid = UUID.randomUUID().toString(),
+                name = "Personal",
+                normalizedName = "personal",
+                createdAt = 1700000000000L,
+                updatedAt = 1700000000000L,
+            )
 
-        val note = NoteEntity(
-            id = 1L,
-            uuid = UUID.randomUUID().toString(),
-            kind = NoteKind.LIST,
-            title = "Trip Prep",
-            body = "Pack essentials",
-            colorIndex = 3,
-            shoulderId = shoulder.id,
-            trashed = false,
-            createdAt = 1700000000000L,
-            updatedAt = 1700002000000L,
-            reminderAt = 1700010000000L,
-            importance = Importance.HIGH,
-            visibility = Visibility.DEFAULT,
-        )
+        val note =
+            NoteEntity(
+                id = 1L,
+                uuid = UUID.randomUUID().toString(),
+                kind = NoteKind.LIST,
+                title = "Trip Prep",
+                body = "Pack essentials",
+                colorIndex = 3,
+                shoulderId = shoulder.id,
+                trashed = false,
+                createdAt = 1700000000000L,
+                updatedAt = 1700002000000L,
+                reminderAt = 1700010000000L,
+                importance = Importance.HIGH,
+                visibility = Visibility.DEFAULT,
+            )
 
-        val parentItem = ChecklistItemEntity(
-            id = 201L,
-            uuid = UUID.randomUUID().toString(),
-            noteId = note.id,
-            text = "Passport",
-            checked = true,
-            sortOrder = 1.0,
-            parentId = null,
-            depth = 0,
-        )
+        val parentItem =
+            ChecklistItemEntity(
+                id = 201L,
+                uuid = UUID.randomUUID().toString(),
+                noteId = note.id,
+                text = "Passport",
+                checked = true,
+                sortOrder = 1.0,
+                parentId = null,
+                depth = 0,
+            )
 
-        val childItem = ChecklistItemEntity(
-            id = 202L,
-            uuid = UUID.randomUUID().toString(),
-            noteId = note.id,
-            text = "Check visa pages",
-            checked = false,
-            sortOrder = 2.0,
-            parentId = parentItem.id,
-            depth = 1,
-        )
+        val childItem =
+            ChecklistItemEntity(
+                id = 202L,
+                uuid = UUID.randomUUID().toString(),
+                noteId = note.id,
+                text = "Check visa pages",
+                checked = false,
+                sortOrder = 2.0,
+                parentId = parentItem.id,
+                depth = 1,
+            )
 
-        val attachment = NoteAttachmentEntity(
-            id = 301L,
-            uuid = UUID.randomUUID().toString(),
-            noteId = note.id,
-            uri = "content://media/tickets.pdf",
-            displayName = "Tickets.pdf",
-            mimeType = "application/pdf",
-        )
+        val attachment =
+            NoteAttachmentEntity(
+                id = 301L,
+                uuid = UUID.randomUUID().toString(),
+                noteId = note.id,
+                uri = "content://media/tickets.pdf",
+                displayName = "Tickets.pdf",
+                mimeType = "application/pdf",
+            )
 
-        val noteWithItems = NoteWithItems(
-            note = note,
-            items = listOf(parentItem, childItem),
-            attachments = listOf(attachment),
-            shoulder = shoulder,
-        )
+        val noteWithItems =
+            NoteWithItems(
+                note = note,
+                items = listOf(parentItem, childItem),
+                attachments = listOf(attachment),
+                shoulder = shoulder,
+            )
 
         val dto = SyncDtoMapping.noteWithItemsToDto(noteWithItems)
 

@@ -1,16 +1,16 @@
 package haddad.three.notas.ui.history
 
 import androidx.compose.ui.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.ui.theme.buildColorScheme
 import haddad.three.notas.ui.theme.resolveSemanticPalette
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import kotlin.math.max
 import kotlin.math.min
 
@@ -24,7 +24,6 @@ import kotlin.math.min
  * - History sorting and record immutability during visual rendering
  */
 class HistoryVisualConsistencyTest {
-
     @Test
     fun historyColors_inLightMode_preserveOriginalSemantics() {
         AccentTheme.entries.forEach { accent ->
@@ -117,8 +116,7 @@ class HistoryVisualConsistencyTest {
     }
 
     private fun relativeLuminance(color: Color): Float {
-        fun channel(c: Float): Float =
-            if (c <= 0.04045f) c / 12.92f else Math.pow(((c + 0.055) / 1.055), 2.4).toFloat()
+        fun channel(c: Float): Float = if (c <= 0.04045f) c / 12.92f else Math.pow(((c + 0.055) / 1.055), 2.4).toFloat()
 
         val r = channel(color.red)
         val g = channel(color.green)
@@ -126,7 +124,10 @@ class HistoryVisualConsistencyTest {
         return 0.2126f * r + 0.7152f * g + 0.0722f * b
     }
 
-    private fun contrastRatio(fg: Color, bg: Color): Double {
+    private fun contrastRatio(
+        fg: Color,
+        bg: Color,
+    ): Double {
         val l1 = relativeLuminance(fg) + 0.05
         val l2 = relativeLuminance(bg) + 0.05
         return max(l1, l2) / min(l1, l2)

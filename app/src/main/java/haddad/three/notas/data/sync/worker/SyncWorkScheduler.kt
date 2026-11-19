@@ -35,17 +35,20 @@ object SyncWorkScheduler {
         val workManager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
         val networkType = if (requiresWifi) NetworkType.UNMETERED else NetworkType.CONNECTED
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(networkType)
-            .setRequiresBatteryNotLow(true)
-            .build()
+        val constraints =
+            Constraints
+                .Builder()
+                .setRequiredNetworkType(networkType)
+                .setRequiresBatteryNotLow(true)
+                .build()
 
         val interval = frequencyMinutes.coerceAtLeast(15L)
-        val request = PeriodicWorkRequestBuilder<SyncWorker>(interval, TimeUnit.MINUTES)
-            .setConstraints(constraints)
-            .addTag(WORK_TAG_SYNC)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
-            .build()
+        val request =
+            PeriodicWorkRequestBuilder<SyncWorker>(interval, TimeUnit.MINUTES)
+                .setConstraints(constraints)
+                .addTag(WORK_TAG_SYNC)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                .build()
 
         workManager.enqueueUniquePeriodicWork(
             PERIODIC_WORK_NAME,
@@ -72,14 +75,17 @@ object SyncWorkScheduler {
         val workManager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
         val networkType = if (requiresWifi) NetworkType.UNMETERED else NetworkType.CONNECTED
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(networkType)
-            .build()
+        val constraints =
+            Constraints
+                .Builder()
+                .setRequiredNetworkType(networkType)
+                .build()
 
-        val builder = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .addTag(WORK_TAG_SYNC)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+        val builder =
+            OneTimeWorkRequestBuilder<SyncWorker>()
+                .setConstraints(constraints)
+                .addTag(WORK_TAG_SYNC)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
 
         if (debounceSeconds > 0) {
             builder.setInitialDelay(debounceSeconds, TimeUnit.SECONDS)
@@ -104,7 +110,5 @@ object SyncWorkScheduler {
         workManager.cancelAllWorkByTag(WORK_TAG_SYNC)
     }
 
-    fun isGoogleDriveSyncSupported(): Boolean {
-        return BuildConfig.GOOGLE_DRIVE_SYNC_ENABLED
-    }
+    fun isGoogleDriveSyncSupported(): Boolean = BuildConfig.GOOGLE_DRIVE_SYNC_ENABLED
 }

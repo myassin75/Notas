@@ -147,10 +147,11 @@ private fun PortraitLayout(
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(if (isDark) ThemeColors.DarkBackground else ScreenBg)
-            .padding(top = topInset, bottom = bottomInset)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(if (isDark) ThemeColors.DarkBackground else ScreenBg)
+                .padding(top = topInset, bottom = bottomInset),
     ) {
         val screenW = maxWidth
         val screenH = maxHeight
@@ -165,19 +166,21 @@ private fun PortraitLayout(
 
             // Main Content Card
             Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalMargin),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalMargin),
                 shape = RoundedCornerShape(32.dp),
                 color = if (isDark) ThemeColors.DarkSurface else Color.White,
                 border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, ThemeColors.DarkOutline) else null,
                 shadowElevation = 0.dp,
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 24.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
@@ -230,21 +233,24 @@ private fun PortraitLayout(
             AnimatedVisibility(
                 visible = buttonVisible,
                 enter = blockEnter,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalMargin),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = horizontalMargin),
             ) {
                 RememberButton(
                     onClick = onLetsBegin,
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
                     contentPadding = PaddingValues(horizontal = 24.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -285,22 +291,25 @@ private fun LandscapeLayout(
     val isDark = LocalIsDark.current
 
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(if (isDark) ThemeColors.DarkBackground else ScreenBg)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(if (isDark) ThemeColors.DarkBackground else ScreenBg),
     ) {
         val screenH = maxHeight
 
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                modifier = Modifier
-                    .weight(1.1f)
-                    .fillMaxHeight(),
+                modifier =
+                    Modifier
+                        .weight(1.1f)
+                        .fillMaxHeight(),
                 shape = RoundedCornerShape(28.dp),
                 color = if (isDark) ThemeColors.DarkSurface else Color.White,
                 border = if (isDark) androidx.compose.foundation.BorderStroke(1.dp, ThemeColors.DarkOutline) else null,
@@ -337,10 +346,11 @@ private fun LandscapeLayout(
             }
 
             Column(
-                modifier = Modifier
-                    .weight(0.9f)
-                    .fillMaxHeight()
-                    .padding(horizontal = 28.dp),
+                modifier =
+                    Modifier
+                        .weight(0.9f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
@@ -363,14 +373,16 @@ private fun LandscapeLayout(
                     RememberButton(
                         onClick = onLetsBegin,
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
                         contentPadding = PaddingValues(horizontal = 24.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -412,43 +424,47 @@ private fun LogoComposition(logoSize: Dp) {
 
         // Circular background
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape)
-                .background(decorColor),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(decorColor),
         )
 
         // Upper-right circle accent
         Box(
-            modifier = Modifier
-                .size(dot1Size)
-                .align(Alignment.Center)
-                .offset(x = logoSize * 0.44f, y = -(logoSize * 0.36f))
-                .clip(CircleShape)
-                .background(decorColor),
+            modifier =
+                Modifier
+                    .size(dot1Size)
+                    .align(Alignment.Center)
+                    .offset(x = logoSize * 0.44f, y = -(logoSize * 0.36f))
+                    .clip(CircleShape)
+                    .background(decorColor),
         )
 
         // Lower-left circle accent
         Box(
-            modifier = Modifier
-                .size(dot2Size)
-                .align(Alignment.Center)
-                .offset(x = -(logoSize * 0.42f), y = logoSize * 0.36f)
-                .clip(CircleShape)
-                .background(decorColor),
+            modifier =
+                Modifier
+                    .size(dot2Size)
+                    .align(Alignment.Center)
+                    .offset(x = -(logoSize * 0.42f), y = logoSize * 0.36f)
+                    .clip(CircleShape)
+                    .background(decorColor),
         )
 
         // Grounding radial shadow
         Box(
-            modifier = Modifier
-                .size(logoSize * 0.75f, logoSize * 0.12f)
-                .align(Alignment.BottomCenter)
-                .offset(y = logoSize * 0.04f)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(Color.Black.copy(alpha = if (isDark) 0.15f else 0.04f), Color.Transparent),
+            modifier =
+                Modifier
+                    .size(logoSize * 0.75f, logoSize * 0.12f)
+                    .align(Alignment.BottomCenter)
+                    .offset(y = logoSize * 0.04f)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(Color.Black.copy(alpha = if (isDark) 0.15f else 0.04f), Color.Transparent),
+                        ),
                     ),
-                ),
         )
 
         // The SmartNotas Logo
@@ -456,9 +472,10 @@ private fun LogoComposition(logoSize: Dp) {
             painter = painterResource(id = if (isDark) R.drawable.ic_logo_white else R.drawable.darck_logo),
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(logoIconSize)
-                .clip(RoundedCornerShape(logoIconSize * 0.22f)),
+            modifier =
+                Modifier
+                    .size(logoIconSize)
+                    .clip(RoundedCornerShape(logoIconSize * 0.22f)),
         )
     }
 }

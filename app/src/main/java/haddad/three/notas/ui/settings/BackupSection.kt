@@ -23,9 +23,6 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.auth.AuthRepository
 import haddad.three.notas.data.auth.AuthState
@@ -41,6 +38,9 @@ import haddad.three.notas.ui.components.RememberTextButton
 import haddad.three.notas.ui.components.settings.GroupPosition
 import haddad.three.notas.ui.components.settings.GroupedListColumn
 import haddad.three.notas.ui.components.settings.GroupedListItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 /**
  * Cloud Backup & Private Attachment Storage section for Notas.
@@ -79,9 +79,10 @@ internal fun BackupSection(
             if (authUser == null) {
                 GroupedListItem(position = GroupPosition.ONLY) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -107,9 +108,10 @@ internal fun BackupSection(
             } else {
                 GroupedListItem(position = GroupPosition.FIRST) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -135,18 +137,20 @@ internal fun BackupSection(
 
                 GroupedListItem(position = GroupPosition.MIDDLE) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         when (cloudState.status) {
                             CloudBackupStatus.BACKUP_IN_PROGRESS -> {
                                 Text(
-                                    text = stringResource(
-                                        R.string.settings_cloud_backup_in_progress,
-                                        (cloudState.progressPercent * 100).toInt(),
-                                    ),
+                                    text =
+                                        stringResource(
+                                            R.string.settings_cloud_backup_in_progress,
+                                            (cloudState.progressPercent * 100).toInt(),
+                                        ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -167,10 +171,11 @@ internal fun BackupSection(
                             }
                             CloudBackupStatus.RESTORE_IN_PROGRESS -> {
                                 Text(
-                                    text = stringResource(
-                                        R.string.settings_cloud_restore_in_progress,
-                                        (cloudState.progressPercent * 100).toInt(),
-                                    ),
+                                    text =
+                                        stringResource(
+                                            R.string.settings_cloud_restore_in_progress,
+                                            (cloudState.progressPercent * 100).toInt(),
+                                        ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -180,15 +185,17 @@ internal fun BackupSection(
                                 )
                             }
                             CloudBackupStatus.BACKUP_FAILED,
-                            CloudBackupStatus.RESTORE_FAILED -> {
+                            CloudBackupStatus.RESTORE_FAILED,
+                            -> {
                                 Text(
-                                    text = stringResource(
-                                        if (cloudState.status == CloudBackupStatus.RESTORE_FAILED) {
-                                            R.string.settings_cloud_restore_failed
-                                        } else {
-                                            R.string.settings_cloud_backup_failed
-                                        },
-                                    ),
+                                    text =
+                                        stringResource(
+                                            if (cloudState.status == CloudBackupStatus.RESTORE_FAILED) {
+                                                R.string.settings_cloud_restore_failed
+                                            } else {
+                                                R.string.settings_cloud_backup_failed
+                                            },
+                                        ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.error,
                                 )
@@ -201,15 +208,17 @@ internal fun BackupSection(
                                 }
                             }
                             CloudBackupStatus.BACKUP_COMPLETED,
-                            CloudBackupStatus.RESTORE_COMPLETED -> {
+                            CloudBackupStatus.RESTORE_COMPLETED,
+                            -> {
                                 Text(
-                                    text = stringResource(
-                                        if (cloudState.status == CloudBackupStatus.RESTORE_COMPLETED) {
-                                            R.string.settings_cloud_restore_completed
-                                        } else {
-                                            R.string.settings_cloud_backup_completed
-                                        },
-                                    ),
+                                    text =
+                                        stringResource(
+                                            if (cloudState.status == CloudBackupStatus.RESTORE_COMPLETED) {
+                                                R.string.settings_cloud_restore_completed
+                                            } else {
+                                                R.string.settings_cloud_backup_completed
+                                            },
+                                        ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -257,9 +266,10 @@ internal fun BackupSection(
 
                 GroupedListItem(position = GroupPosition.LAST) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {

@@ -46,8 +46,7 @@ class MekManager(
     private val cachedMeks = ConcurrentHashMap<String, SecretKey>()
     private val secureRandom = SecureRandom()
 
-    fun resolveAccountId(explicitAccountId: String? = null): String =
-        explicitAccountId ?: accountIdProvider() ?: CryptoStorage.GUEST_ACCOUNT_ID
+    fun resolveAccountId(explicitAccountId: String? = null): String = explicitAccountId ?: accountIdProvider() ?: CryptoStorage.GUEST_ACCOUNT_ID
 
     /**
      * Retrieves the currently active Master Encryption Key (MEK) for the given account

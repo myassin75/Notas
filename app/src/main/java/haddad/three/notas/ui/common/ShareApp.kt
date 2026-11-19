@@ -17,14 +17,7 @@ fun rememberShareAppAction(): () -> Unit {
     val githubRepoForSourceLink = BuildConfig.GITHUB_REPO.trim()
     val playStoreListingUrl = BuildConfig.PLAY_STORE_URL
     val portfolioUrl = stringResource(R.string.settings_about_remember_website_url)
-    val shareUrl =
-        when {
-            BuildConfig.FLAVOR == "playstore" -> playStoreListingUrl
-            BuildConfig.FLAVOR == "github" ||
-                BuildConfig.FLAVOR == "offline" -> portfolioUrl
-            githubRepoForSourceLink.isNotEmpty() -> "https://github.com/$githubRepoForSourceLink/releases/latest"
-            else -> playStoreListingUrl
-        }
+    val shareUrl = portfolioUrl
     val shareText = stringResource(R.string.about_share_text, shareUrl)
     val shareChooserTitle = stringResource(R.string.main_share_chooser_title)
     return remember(context, shareText, shareChooserTitle) {

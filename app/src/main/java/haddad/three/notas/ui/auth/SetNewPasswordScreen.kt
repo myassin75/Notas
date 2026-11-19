@@ -68,32 +68,36 @@ fun SetNewPasswordScreen(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(palette.notasBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(palette.notasBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Top Navigation Bar
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(
                         onClick = onBackClick,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
                     ) {
                         RememberMaterialRoundedSymbol(
                             name = "arrow_back",
@@ -124,15 +128,17 @@ fun SetNewPasswordScreen(
                             border = androidx.compose.foundation.BorderStroke(1.dp, palette.stroke),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .size(56.dp)
-                                        .background(palette.error.copy(alpha = 0.12f), CircleShape),
+                                    modifier =
+                                        Modifier
+                                            .size(56.dp)
+                                            .background(palette.error.copy(alpha = 0.12f), CircleShape),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     RememberMaterialRoundedSymbol(
@@ -181,15 +187,17 @@ fun SetNewPasswordScreen(
                             border = androidx.compose.foundation.BorderStroke(1.dp, palette.stroke),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Box(
-                                    modifier = Modifier
-                                        .size(56.dp)
-                                        .background(palette.success.copy(alpha = 0.12f), CircleShape),
+                                    modifier =
+                                        Modifier
+                                            .size(56.dp)
+                                            .background(palette.success.copy(alpha = 0.12f), CircleShape),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     RememberMaterialRoundedSymbol(
@@ -262,10 +270,11 @@ fun SetNewPasswordScreen(
                             placeholder = "••••••••",
                             isError = state.newPasswordError != null,
                             errorMessage = state.newPasswordError,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Next,
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Next,
+                                ),
                             modifier = Modifier.fillMaxWidth(),
                         )
 
@@ -279,10 +288,11 @@ fun SetNewPasswordScreen(
                             placeholder = "••••••••",
                             isError = state.confirmPasswordError != null,
                             errorMessage = state.confirmPasswordError,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done,
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done,
+                                ),
                             modifier = Modifier.fillMaxWidth(),
                         )
 
@@ -290,9 +300,10 @@ fun SetNewPasswordScreen(
 
                         // Password Guidance Checklist
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             val hasMinLength = state.newPassword.length >= 8
@@ -323,9 +334,10 @@ fun SetNewPasswordScreen(
             // Bottom Navigation
             if (!state.isSuccess) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

@@ -33,7 +33,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object GoogleDriveModule {
-
     @Provides
     @Singleton
     fun provideGoogleDriveAuthDelegate(): GoogleDriveAuthDelegate = DefaultGoogleDriveAuthDelegate
@@ -62,10 +61,11 @@ object GoogleDriveModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
+    fun provideJson(): Json =
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
 
     @Provides
     @Singleton
@@ -75,13 +75,14 @@ object GoogleDriveModule {
         driveAuthDelegate: GoogleDriveAuthDelegate,
         drivePrefs: DriveAuthPreferences,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): GoogleDriveSyncTransport = GoogleDriveSyncTransport(
-        context = context,
-        driveApiClient = driveApiClient,
-        driveAuthDelegate = driveAuthDelegate,
-        drivePrefs = drivePrefs,
-        ioDispatcher = ioDispatcher,
-    )
+    ): GoogleDriveSyncTransport =
+        GoogleDriveSyncTransport(
+            context = context,
+            driveApiClient = driveApiClient,
+            driveAuthDelegate = driveAuthDelegate,
+            drivePrefs = drivePrefs,
+            ioDispatcher = ioDispatcher,
+        )
 
     @Provides
     @Singleton
@@ -89,11 +90,12 @@ object GoogleDriveModule {
         transport: GoogleDriveSyncTransport,
         watermarkDao: SyncWatermarkDao,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): JournalDiscoveryService = JournalDiscoveryService(
-        transport = transport,
-        watermarkDao = watermarkDao,
-        ioDispatcher = ioDispatcher,
-    )
+    ): JournalDiscoveryService =
+        JournalDiscoveryService(
+            transport = transport,
+            watermarkDao = watermarkDao,
+            ioDispatcher = ioDispatcher,
+        )
 
     @Provides
     @Singleton
@@ -105,15 +107,16 @@ object GoogleDriveModule {
         mekManager: MekManager,
         database: RememberDatabase,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): JournalDownloader = JournalDownloader(
-        context = context,
-        transport = transport,
-        inboxDao = inboxDao,
-        watermarkDao = watermarkDao,
-        mekManager = mekManager,
-        database = database,
-        ioDispatcher = ioDispatcher,
-    )
+    ): JournalDownloader =
+        JournalDownloader(
+            context = context,
+            transport = transport,
+            inboxDao = inboxDao,
+            watermarkDao = watermarkDao,
+            mekManager = mekManager,
+            database = database,
+            ioDispatcher = ioDispatcher,
+        )
 
     @Provides
     @Singleton
@@ -123,13 +126,14 @@ object GoogleDriveModule {
         transport: GoogleDriveSyncTransport,
         database: RememberDatabase,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): JournalUploader = JournalUploader(
-        journalDao = journalDao,
-        pendingChangeDao = pendingChangeDao,
-        transport = transport,
-        database = database,
-        ioDispatcher = ioDispatcher,
-    )
+    ): JournalUploader =
+        JournalUploader(
+            journalDao = journalDao,
+            pendingChangeDao = pendingChangeDao,
+            transport = transport,
+            database = database,
+            ioDispatcher = ioDispatcher,
+        )
 
     @Provides
     @Singleton
@@ -139,11 +143,12 @@ object GoogleDriveModule {
         driveApiClient: GoogleDriveApiClient,
         database: RememberDatabase,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): SnapshotTransportService = SnapshotTransportService(
-        context = context,
-        transport = transport,
-        driveApiClient = driveApiClient,
-        snapshotDao = database.syncSnapshotDao(),
-        ioDispatcher = ioDispatcher,
-    )
+    ): SnapshotTransportService =
+        SnapshotTransportService(
+            context = context,
+            transport = transport,
+            driveApiClient = driveApiClient,
+            snapshotDao = database.syncSnapshotDao(),
+            ioDispatcher = ioDispatcher,
+        )
 }

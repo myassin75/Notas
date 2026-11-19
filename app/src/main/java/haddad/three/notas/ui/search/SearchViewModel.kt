@@ -3,6 +3,13 @@ package haddad.three.notas.ui.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.SearchHistoryEntry
+import haddad.three.notas.data.SearchPreferences
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ShoulderRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,13 +21,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.SearchHistoryEntry
-import haddad.three.notas.data.SearchPreferences
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.data.ShoulderRepository
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -239,7 +239,8 @@ class SearchViewModel
                         return@filter false
                     }
 
-                    if (filters.taskStatusIndex != 0 && isTask(item)) {
+                    if (filters.taskStatusIndex != 0) {
+                        if (!isTask(item)) return@filter false
                         val isCompleted = note.completedAt != null || (item.items.isNotEmpty() && item.items.all { it.checked })
                         if (filters.taskStatusIndex == 1 && isCompleted) return@filter false
                         if (filters.taskStatusIndex == 2 && !isCompleted) return@filter false
@@ -290,17 +291,17 @@ class SearchViewModel
         }
 
         companion object {
-            fun isTask(item: NoteWithItems): Boolean = item.note.kind == NoteKind.LIST
+            fun isTask(item: NoteWithItems): Boolean = item.isTask
 
-            fun isEvent(item: NoteWithItems): Boolean = item.note.kind == NoteKind.NOTE && (item.note.reminderAt != null || item.note.reminders.isNotEmpty())
+            fun isEvent(item: NoteWithItems): Boolean = item.isEvent
 
-            fun isNote(item: NoteWithItems): Boolean = item.note.kind == NoteKind.NOTE && item.note.reminderAt == null && item.note.reminders.isEmpty()
+            fun isNote(item: NoteWithItems): Boolean = item.isNote
 
             fun getEntityTimestamp(item: NoteWithItems): Long? =
                 if (isEvent(item)) {
-                    item.note.reminderAt ?: item.note.reminders.minOfOrNull { it.reminderAt } ?: item.note.updatedAt
+                    item.note.reminderAt ?: item.note.reminders.minOfOrNull { it.reminderAt } ?: item.note.endAt ?: item.note.updatedAt
                 } else if (isTask(item)) {
-                    item.note.reminderAt ?: item.note.updatedAt
+                    item.note.reminderAt ?: item.note.reminders.minOfOrNull { it.reminderAt } ?: item.note.updatedAt
                 } else {
                     item.note.updatedAt
                 }

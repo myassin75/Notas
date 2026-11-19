@@ -51,17 +51,19 @@ fun PrimaryButton(
                 onClick()
             }
         },
-        modifier = modifier
-            .fillMaxWidth()
-            .height(NotasTokens.ButtonHeight),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(NotasTokens.ButtonHeight),
         enabled = enabled && !loading,
         shape = RoundedCornerShape(NotasTokens.ButtonRadius),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = palette.primaryAction,
-            contentColor = palette.primaryActionForeground,
-            disabledContainerColor = palette.primaryAction.copy(alpha = 0.38f),
-            disabledContentColor = palette.primaryActionForeground.copy(alpha = 0.60f),
-        ),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = palette.primaryAction,
+                contentColor = palette.primaryActionForeground,
+                disabledContainerColor = palette.primaryAction.copy(alpha = 0.38f),
+                disabledContentColor = palette.primaryActionForeground.copy(alpha = 0.60f),
+            ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
     ) {
         if (loading) {
@@ -112,18 +114,20 @@ fun SecondaryButton(
                 onClick()
             }
         },
-        modifier = modifier
-            .fillMaxWidth()
-            .height(NotasTokens.ButtonHeight),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(NotasTokens.ButtonHeight),
         enabled = enabled && !loading,
         shape = RoundedCornerShape(NotasTokens.ButtonRadius),
         border = BorderStroke(1.dp, palette.cardBorder),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = palette.cardSurface,
-            contentColor = palette.primaryText,
-            disabledContainerColor = palette.cardSurface.copy(alpha = 0.60f),
-            disabledContentColor = palette.primaryText.copy(alpha = 0.38f),
-        ),
+        colors =
+            ButtonDefaults.outlinedButtonColors(
+                containerColor = palette.cardSurface,
+                contentColor = palette.primaryText,
+                disabledContainerColor = palette.cardSurface.copy(alpha = 0.60f),
+                disabledContentColor = palette.primaryText.copy(alpha = 0.38f),
+            ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
     ) {
         if (loading) {
@@ -176,18 +180,20 @@ fun GoogleSignInButton(
                 onClick()
             }
         },
-        modifier = modifier
-            .fillMaxWidth()
-            .height(NotasTokens.ButtonHeight),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(NotasTokens.ButtonHeight),
         enabled = enabled && !loading,
         shape = RoundedCornerShape(NotasTokens.ButtonRadius),
         border = BorderStroke(1.dp, palette.cardBorder),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = palette.cardSurface,
-            contentColor = palette.primaryText,
-            disabledContainerColor = palette.cardSurface.copy(alpha = 0.60f),
-            disabledContentColor = palette.primaryText.copy(alpha = 0.38f),
-        ),
+        colors =
+            ButtonDefaults.outlinedButtonColors(
+                containerColor = palette.cardSurface,
+                contentColor = palette.primaryText,
+                disabledContainerColor = palette.cardSurface.copy(alpha = 0.60f),
+                disabledContentColor = palette.primaryText.copy(alpha = 0.38f),
+            ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
     ) {
         if (loading) {

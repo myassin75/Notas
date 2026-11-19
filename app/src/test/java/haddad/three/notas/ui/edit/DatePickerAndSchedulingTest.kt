@@ -1,13 +1,6 @@
 package haddad.three.notas.ui.edit
 
 import androidx.compose.ui.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.AccentTheme
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
@@ -16,6 +9,13 @@ import haddad.three.notas.data.getActiveReminders
 import haddad.three.notas.ui.theme.ThemeColors
 import haddad.three.notas.ui.theme.buildColorScheme
 import haddad.three.notas.ui.theme.resolveSemanticPalette
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -37,7 +37,6 @@ import java.time.temporal.ChronoUnit
  * - Theme-aware styling: light accents in dark mode, accessible Pure Black highlight, opaque input surfaces
  */
 class DatePickerAndSchedulingTest {
-
     // =========================================================================
     // 1. Task Scheduling Behavior
     // =========================================================================
@@ -147,75 +146,81 @@ class DatePickerAndSchedulingTest {
         val startDate = LocalDate.of(2026, 10, 21)
 
         // Same day: 1h 30m
-        val summary1 = formatDurationSummaryHelper(
-            startDate = startDate,
-            endDate = startDate,
-            startHour = 9,
-            startMinute = 0,
-            endHour = 10,
-            endMinute = 30,
-            isAllDay = false,
-        )
+        val summary1 =
+            formatDurationSummaryHelper(
+                startDate = startDate,
+                endDate = startDate,
+                startHour = 9,
+                startMinute = 0,
+                endHour = 10,
+                endMinute = 30,
+                isAllDay = false,
+            )
         assertEquals("1 hour 30 minutes · ends the same day", summary1)
 
         // Same day: 2 hours
-        val summary2 = formatDurationSummaryHelper(
-            startDate = startDate,
-            endDate = startDate,
-            startHour = 14,
-            startMinute = 0,
-            endHour = 16,
-            endMinute = 0,
-            isAllDay = false,
-        )
+        val summary2 =
+            formatDurationSummaryHelper(
+                startDate = startDate,
+                endDate = startDate,
+                startHour = 14,
+                startMinute = 0,
+                endHour = 16,
+                endMinute = 0,
+                isAllDay = false,
+            )
         assertEquals("2 hours · ends the same day", summary2)
 
         // 1 day later
-        val summaryTomorrow = formatDurationSummaryHelper(
-            startDate = startDate,
-            endDate = startDate.plusDays(1),
-            startHour = 10,
-            startMinute = 0,
-            endHour = 10,
-            endMinute = 0,
-            isAllDay = false,
-        )
+        val summaryTomorrow =
+            formatDurationSummaryHelper(
+                startDate = startDate,
+                endDate = startDate.plusDays(1),
+                startHour = 10,
+                startMinute = 0,
+                endHour = 10,
+                endMinute = 0,
+                isAllDay = false,
+            )
         assertEquals("1 day later · ends tomorrow", summaryTomorrow)
 
         // 2 days later
-        val summary2Days = formatDurationSummaryHelper(
-            startDate = startDate,
-            endDate = startDate.plusDays(2),
-            startHour = 10,
-            startMinute = 0,
-            endHour = 10,
-            endMinute = 0,
-            isAllDay = false,
-        )
+        val summary2Days =
+            formatDurationSummaryHelper(
+                startDate = startDate,
+                endDate = startDate.plusDays(2),
+                startHour = 10,
+                startMinute = 0,
+                endHour = 10,
+                endMinute = 0,
+                isAllDay = false,
+            )
         assertEquals("2 days later", summary2Days)
 
         // All-day single day
-        val allDaySingle = formatDurationSummaryHelper(
-            startDate = startDate,
-            endDate = startDate,
-            startHour = 0,
-            startMinute = 0,
-            endHour = 23,
-            endMinute = 59,
-            isAllDay = true,
-        )
+        val allDaySingle =
+            formatDurationSummaryHelper(
+                startDate = startDate,
+                endDate = startDate,
+                startHour = 0,
+                startMinute = 0,
+                endHour = 23,
+                endMinute = 59,
+                isAllDay = true,
+            )
         assertEquals("All day event · single day", allDaySingle)
 
         // All-day multi-day
-        val allDayMulti = formatDurationSummaryHelper(
-            startDate = startDate,
-            endDate = startDate.plusDays(1),
-            startHour = 0,
-            startMinute = 0,
-            endHour = 23,
-            endMinute = 59,
-            isAllDay = true,
-        )
+        val allDayMulti =
+            formatDurationSummaryHelper(
+                startDate = startDate,
+                endDate = startDate.plusDays(1),
+                startHour = 0,
+                startMinute = 0,
+                endHour = 23,
+                endMinute = 59,
+                isAllDay = true,
+            )
         assertEquals("All day event · 2 days", allDayMulti)
     }
 
@@ -235,19 +240,20 @@ class DatePickerAndSchedulingTest {
         assertEquals(true, capturedAllDay)
 
         // 2. Timed event without explicit all-day must NOT be inferred as all-day
-        val timedEvent = NoteEntity(
-            id = 100L,
-            kind = NoteKind.NOTE,
-            title = "Board Meeting",
-            body = "Discuss roadmap",
-            colorIndex = 1,
-            trashed = false,
-            createdAt = 1000L,
-            updatedAt = 1000L,
-            reminderAt = startUtcMillis,
-            endAt = startUtcMillis + 3600_000L,
-            isAllDay = false, // explicitly false
-        )
+        val timedEvent =
+            NoteEntity(
+                id = 100L,
+                kind = NoteKind.NOTE,
+                title = "Board Meeting",
+                body = "Discuss roadmap",
+                colorIndex = 1,
+                trashed = false,
+                createdAt = 1000L,
+                updatedAt = 1000L,
+                reminderAt = startUtcMillis,
+                endAt = startUtcMillis + 3600_000L,
+                isAllDay = false, // explicitly false
+            )
         assertFalse("Missing time must not infer all-day when isAllDay is false", timedEvent.isAllDay)
 
         // 3. Explicit all-day note
@@ -301,20 +307,21 @@ class DatePickerAndSchedulingTest {
 
     @Test
     fun undatedNote_doesNotEnterCalendar() {
-        val undatedNote = NoteEntity(
-            id = 1L,
-            kind = NoteKind.NOTE,
-            title = "Random Idea",
-            body = "Build something cool",
-            colorIndex = 0,
-            trashed = false,
-            createdAt = 1000L,
-            updatedAt = 1000L,
-            reminderAt = null,
-            endAt = null,
-            isAllDay = false,
-            reminders = emptyList(),
-        )
+        val undatedNote =
+            NoteEntity(
+                id = 1L,
+                kind = NoteKind.NOTE,
+                title = "Random Idea",
+                body = "Build something cool",
+                colorIndex = 0,
+                trashed = false,
+                createdAt = 1000L,
+                updatedAt = 1000L,
+                reminderAt = null,
+                endAt = null,
+                isAllDay = false,
+                reminders = emptyList(),
+            )
 
         // Calendar filtering criteria from CalendarViewModel:
         val shouldEnterCalendar =
@@ -331,55 +338,58 @@ class DatePickerAndSchedulingTest {
         val now = 1761000000000L
 
         // Scheduled task
-        val task = NoteEntity(
-            id = 2L,
-            kind = NoteKind.NOTE,
-            title = "Submit Taxes",
-            body = "",
-            colorIndex = 2,
-            trashed = false,
-            createdAt = now,
-            updatedAt = now,
-            reminderAt = now,
-            endAt = null,
-            isAllDay = false,
-        )
+        val task =
+            NoteEntity(
+                id = 2L,
+                kind = NoteKind.NOTE,
+                title = "Submit Taxes",
+                body = "",
+                colorIndex = 2,
+                trashed = false,
+                createdAt = now,
+                updatedAt = now,
+                reminderAt = now,
+                endAt = null,
+                isAllDay = false,
+            )
         assertTrue("Scheduled task enters calendar", task.reminderAt != null)
         assertNull("Task has no end date", task.endAt)
         assertFalse("Task is not all-day", task.isAllDay)
 
         // Timed event
-        val timedEvent = NoteEntity(
-            id = 3L,
-            kind = NoteKind.NOTE,
-            title = "Doctor Appointment",
-            body = "",
-            colorIndex = 3,
-            trashed = false,
-            createdAt = now,
-            updatedAt = now,
-            reminderAt = now,
-            endAt = now + 3600_000L,
-            isAllDay = false,
-        )
+        val timedEvent =
+            NoteEntity(
+                id = 3L,
+                kind = NoteKind.NOTE,
+                title = "Doctor Appointment",
+                body = "",
+                colorIndex = 3,
+                trashed = false,
+                createdAt = now,
+                updatedAt = now,
+                reminderAt = now,
+                endAt = now + 3600_000L,
+                isAllDay = false,
+            )
         assertNotNull("Timed event has start", timedEvent.reminderAt)
         assertNotNull("Timed event has end", timedEvent.endAt)
         assertFalse(timedEvent.isAllDay)
 
         // All-day event
-        val allDayEvent = NoteEntity(
-            id = 4L,
-            kind = NoteKind.NOTE,
-            title = "Company Holiday",
-            body = "",
-            colorIndex = 4,
-            trashed = false,
-            createdAt = now,
-            updatedAt = now,
-            reminderAt = now,
-            endAt = now + 86400_000L,
-            isAllDay = true,
-        )
+        val allDayEvent =
+            NoteEntity(
+                id = 4L,
+                kind = NoteKind.NOTE,
+                title = "Company Holiday",
+                body = "",
+                colorIndex = 4,
+                trashed = false,
+                createdAt = now,
+                updatedAt = now,
+                reminderAt = now,
+                endAt = now + 86400_000L,
+                isAllDay = true,
+            )
         assertTrue("All day event flag is preserved", allDayEvent.isAllDay)
     }
 
@@ -534,7 +544,10 @@ class DatePickerAndSchedulingTest {
         return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue)
     }
 
-    private fun contrastRatio(c1: Color, c2: Color): Double {
+    private fun contrastRatio(
+        c1: Color,
+        c2: Color,
+    ): Double {
         val l1 = relativeLuminance(c1)
         val l2 = relativeLuminance(c2)
         val lighter = maxOf(l1, l2)

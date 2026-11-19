@@ -1,5 +1,10 @@
 package haddad.three.notas.reminders
 
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.ReminderPreferencesState
+import haddad.three.notas.data.Visibility
+import haddad.three.notas.data.getActiveReminders
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,11 +19,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import haddad.three.notas.data.Importance
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.ReminderPreferencesState
-import haddad.three.notas.data.Visibility
-import haddad.three.notas.data.getActiveReminders
 
 /**
  * Owns automatic widget and reminder refreshes for committed note data and reminder settings.

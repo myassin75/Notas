@@ -91,17 +91,17 @@ fun SettingsRow(
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 52.dp)
-                .then(
-                    if (onClick != null) {
-                        Modifier.clickable(onClick = onClick)
-                    } else {
-                        Modifier
-                    },
-                )
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 52.dp)
+                    .then(
+                        if (onClick != null) {
+                            Modifier.clickable(onClick = onClick)
+                        } else {
+                            Modifier
+                        },
+                    ).padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {

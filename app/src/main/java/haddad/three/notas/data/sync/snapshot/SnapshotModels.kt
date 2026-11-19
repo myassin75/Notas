@@ -129,8 +129,19 @@ data class AttachmentPromotionFileEntry(
 )
 
 // Exceptions for Structured Error Handling
-class UnsupportedSnapshotVersionException(message: String) : IllegalArgumentException(message)
-class CorruptSnapshotException(message: String, cause: Throwable? = null) : SecurityException(message, cause)
-class IncompleteSnapshotException(message: String) : IllegalStateException(message)
-class AttachmentIntegrityException(message: String) : SecurityException(message)
+class UnsupportedSnapshotVersionException(
+    message: String,
+) : IllegalArgumentException(message)
 
+class CorruptSnapshotException(
+    message: String,
+    cause: Throwable? = null,
+) : SecurityException(message, cause)
+
+class IncompleteSnapshotException(
+    message: String,
+) : IllegalStateException(message)
+
+class AttachmentIntegrityException(
+    message: String,
+) : SecurityException(message)

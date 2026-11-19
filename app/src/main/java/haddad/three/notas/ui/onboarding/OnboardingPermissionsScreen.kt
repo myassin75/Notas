@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -350,12 +351,14 @@ fun OnboardingPermissionsScreen(
                                         .fillMaxSize()
                                         .padding(horizontal = 26.dp)
                                         .padding(top = 12.dp, bottom = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Column(
                                     modifier =
                                         Modifier
                                             .weight(1f)
                                             .fillMaxWidth()
+                                            .widthIn(max = 560.dp)
                                             .verticalScroll(rememberScrollState()),
                                 ) {
                                     Spacer(Modifier.statusBarsPadding())
@@ -448,6 +451,7 @@ fun OnboardingPermissionsScreen(
                                     Modifier
                                         .align(Alignment.BottomCenter)
                                         .fillMaxWidth()
+                                        .widthIn(max = 560.dp)
                                         .onGloballyPositioned { coordinates ->
                                             bottomActionsHeight = with(responsiveDensity) { coordinates.size.height.toDp() }
                                         }.navigationBarsPadding()

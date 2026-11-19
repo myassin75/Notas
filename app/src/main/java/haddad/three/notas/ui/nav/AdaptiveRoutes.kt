@@ -1,9 +1,9 @@
 package haddad.three.notas.ui.nav
 
-import androidx.activity.ComponentActivity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -26,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
@@ -76,8 +76,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.InteractionPrefs
 import haddad.three.notas.data.NoteKind
@@ -102,7 +100,6 @@ import haddad.three.notas.ui.home.HomeListItem
 import haddad.three.notas.ui.home.HomeRoute
 import haddad.three.notas.ui.home.HomeViewModel
 import haddad.three.notas.ui.main.NotesCreateFabMenu
-import haddad.three.notas.ui.settings.AboutSection
 import haddad.three.notas.ui.settings.DevOptionsRoute
 import haddad.three.notas.ui.settings.RememberUpdateViewModel
 import haddad.three.notas.ui.settings.SettingsRoute
@@ -111,10 +108,13 @@ import haddad.three.notas.ui.settings.settingsPaneSections
 import haddad.three.notas.ui.settings.settingsSectionKeyForHighlight
 import haddad.three.notas.ui.theme.RoundedPolygonShape
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 private const val NEW_NOTE_DETAIL_ID = -10L
 private const val NEW_LIST_DETAIL_ID = -11L
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun NotesTwoPaneRoute(
     paneScaffoldDirective: PaneScaffoldDirective,
@@ -155,7 +155,6 @@ fun NotesTwoPaneRoute(
     var activeDetailForceEdit by rememberSaveable { mutableStateOf(false) }
     var previousDetailIdBeforeNew by rememberSaveable { mutableStateOf<Long?>(null) }
     var pendingSavedNoteId by rememberSaveable { mutableStateOf<Long?>(null) }
-    var tagSheetOpen by rememberSaveable { mutableStateOf(false) }
     var createFabExpanded by rememberSaveable { mutableStateOf(false) }
     var selectableVisibleNoteIds by remember { mutableStateOf(emptySet<Long>()) }
     val visibleNotes =
@@ -291,12 +290,7 @@ fun NotesTwoPaneRoute(
                         onCreateNote = { showNewDetailPane(NoteKind.NOTE) },
                         onCreateList = { showNewDetailPane(NoteKind.LIST) },
                         activeNoteId = activeDetailId?.takeIf { it > 0L },
-                        pendingNewNoteKind =
-                            when (activeDetailId) {
-                                NEW_NOTE_DETAIL_ID -> NoteKind.NOTE
-                                NEW_LIST_DETAIL_ID -> NoteKind.LIST
-                                else -> null
-                            },
+                        pendingNewNoteKind = null,
                         showSelectionActionBar = false,
                         onSelectableVisibleIdsChanged = { noteIds ->
                             selectableVisibleNoteIds = noteIds
@@ -364,7 +358,7 @@ fun NotesTwoPaneRoute(
                                 visibleNotes.any { note -> note.note.id == selectedDetailId }
                         )
                     ) {
-                        AboutEmptyDetailPane(onOpenIntro = onOpenIntro)
+                        NoteDetailEmptyPane(onCreateNote = { showNewDetailPane(NoteKind.NOTE) })
                     } else {
                         NoteDetailPaneHost(
                             detailId = selectedDetailId,
@@ -412,6 +406,7 @@ fun NotesTwoPaneRoute(
     )
 }
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun SettingsTwoPaneRoute(
     paneScaffoldDirective: PaneScaffoldDirective,
@@ -420,9 +415,10 @@ fun SettingsTwoPaneRoute(
     onOpenDevOptions: () -> Unit,
     onOpenHistory: () -> Unit = {},
     onOpenGuestProfile: () -> Unit = {},
+    onOpenNoteInSinglePane: (NoteWithItems, Boolean) -> Unit = { _, _ -> },
     updateVm: RememberUpdateViewModel,
     onUpdateCheckStarted: () -> Unit,
-    onShareApp: () -> Unit,
+    onShareApp: () -> Unit = {},
     highlightSectionKey: String?,
     onHighlightHandled: () -> Unit,
 ) {
@@ -431,8 +427,6 @@ fun SettingsTwoPaneRoute(
             scaffoldDirective = paneScaffoldDirective,
         )
     val isMultiPane = navigator.scaffoldDirective.maxHorizontalPartitions > 1
-    val isLandscape = isLandscape()
-    val isSmallLandscape = isSmallLandscape()
 
     if (!isMultiPane) {
         SettingsRoute(
@@ -461,6 +455,7 @@ fun SettingsTwoPaneRoute(
     val devModeEnabled by devModePrefs.isEnabled.collectAsStateWithLifecycle(initialValue = false)
     val scope = rememberCoroutineScope()
     var selectedSectionKey by rememberSaveable { mutableStateOf(SettingsSectionKey.Appearance) }
+    var historySection by rememberSaveable { mutableStateOf(HistorySection.ARCHIVE) }
 
     fun showSection(sectionKey: SettingsSectionKey) {
         selectedSectionKey = sectionKey
@@ -494,49 +489,47 @@ fun SettingsTwoPaneRoute(
                         developerOptionsEnabled = devModeEnabled,
                         onSectionSelected = ::showSection,
                     )
-                    SimplePaneFab(
-                        symbolName = "share",
-                        description = stringResource(R.string.main_menu_share_app),
-                        enabled = true,
-                        iconSize = if (isSmallLandscape) 22.dp else 26.dp,
-                        onClick = onShareApp,
-                        modifier =
-                            Modifier
-                                .align(Alignment.BottomEnd)
-                                .navigationBarsPadding()
-                                .padding(
-                                    end = 20.dp,
-                                    bottom = if (isSmallLandscape) 10.dp else 20.dp,
-                                ),
-                    )
                 }
             }
         },
         detailPane = {
             AnimatedPane {
                 Box(Modifier.fillMaxSize()) {
-                    if (selectedSectionKey == SettingsSectionKey.DevOptions) {
-                        DevOptionsRoute(
-                            onBack = { showSection(SettingsSectionKey.About) },
-                            showNavigateBack = false,
-                        )
-                    } else {
-                        SettingsRoute(
-                            onOpenIntro = onOpenIntro,
-                            onOpenHelp = onOpenHelp,
-                            onOpenDevOptions = {
-                                showSection(SettingsSectionKey.DevOptions)
-                            },
-                            onOpenGuestProfile = onOpenGuestProfile,
-                            updateVm = updateVm,
-                            onUpdateCheckStarted = onUpdateCheckStarted,
-                            selectedSectionKey = selectedSectionKey,
-                            showTopActions = false,
-                            showSectionHeaders = false,
-                            showAboutHeaderTitle = false,
-                            highlightSectionKey = highlightSectionKey,
-                            onHighlightHandled = onHighlightHandled,
-                        )
+                    when (selectedSectionKey) {
+                        SettingsSectionKey.DevOptions -> {
+                            DevOptionsRoute(
+                                onBack = { showSection(SettingsSectionKey.About) },
+                                showNavigateBack = false,
+                            )
+                        }
+                        SettingsSectionKey.History -> {
+                            HistoryRoute(
+                                interactionPrefs = settingsDependencies.interactionPrefs(),
+                                section = historySection,
+                                onSectionChange = { historySection = it },
+                                onVisibleItemCountChange = {},
+                                onOpenNote = onOpenNoteInSinglePane,
+                                onBack = { showSection(SettingsSectionKey.Appearance) },
+                            )
+                        }
+                        else -> {
+                            SettingsRoute(
+                                onOpenIntro = onOpenIntro,
+                                onOpenHelp = onOpenHelp,
+                                onOpenDevOptions = {
+                                    showSection(SettingsSectionKey.DevOptions)
+                                },
+                                onOpenGuestProfile = onOpenGuestProfile,
+                                updateVm = updateVm,
+                                onUpdateCheckStarted = onUpdateCheckStarted,
+                                selectedSectionKey = selectedSectionKey,
+                                showTopActions = false,
+                                showSectionHeaders = false,
+                                showAboutHeaderTitle = false,
+                                highlightSectionKey = highlightSectionKey,
+                                onHighlightHandled = onHighlightHandled,
+                            )
+                        }
                     }
                 }
             }
@@ -546,6 +539,7 @@ fun SettingsTwoPaneRoute(
     )
 }
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun HistoryTwoPaneRoute(
     paneScaffoldDirective: PaneScaffoldDirective,
@@ -709,7 +703,7 @@ fun HistoryTwoPaneRoute(
                     // current section so bulk restore/delete can't leave a stale editor.
                     visibleNotes.none { note -> note.note.id == selectedDetailId }
                 ) {
-                    AboutEmptyDetailPane(onOpenIntro = onOpenIntro)
+                    NoteDetailEmptyPane(onCreateNote = null)
                 } else {
                     NoteDetailPaneHost(
                         detailId = selectedDetailId,
@@ -903,56 +897,90 @@ private fun NoteDetailPaneHost(
 }
 
 /**
- * Detail-pane filler when nothing is selected: the Settings About card, mirroring
- * FilePipe's two-pane filler. No explicit background so the shared app background
- * (gradient or black) shows through and both panes match.
+ * Detail-pane filler when nothing is selected: a clean, responsive empty state.
  */
 @Composable
-private fun AboutEmptyDetailPane(onOpenIntro: () -> Unit) {
-    val context = LocalContext.current
-    val settingsDependencies =
-        remember(context) {
-            EntryPointAccessors.fromApplication(
-                context.applicationContext,
-                SettingsDependenciesEntryPoint::class.java,
-            )
-        }
-    val devModePrefs = settingsDependencies.devModePrefs()
-    val appReviewLauncher = remember(settingsDependencies) { settingsDependencies.appReviewLauncher() }
-    val devModeEnabled by devModePrefs.isEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val scope = rememberCoroutineScope()
+private fun NoteDetailEmptyPane(
+    onCreateNote: (() -> Unit)? = null,
+) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(24.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            // Full-bleed scroll with the insets/margins inside, like the selection panes:
-            // short windows scroll edge-to-edge instead of clipping the card.
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 560.dp)
-                    .verticalScroll(rememberScrollState())
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.widthIn(max = 400.dp),
         ) {
-            AboutSection(
-                onOpenIntro = onOpenIntro,
-                showHeader = false,
-                devModeEnabled = devModeEnabled,
-                onDevModeActivated = {
-                    scope.launch { devModePrefs.setEnabled(true) }
-                },
-                onLaunchPlayReview = { onFlowFinished ->
-                    val hostActivity = context as? ComponentActivity
-                    if (hostActivity != null) {
-                        appReviewLauncher.tryLaunchInAppReview(hostActivity, onFlowFinished)
-                    } else {
-                        onFlowFinished()
-                    }
-                },
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                modifier = Modifier.size(72.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "description",
+                        size = 36.dp,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.detail_pane_no_note_selected_title),
+                style =
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+                textAlign = TextAlign.Center,
             )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.detail_pane_no_note_selected_subtitle),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                textAlign = TextAlign.Center,
+            )
+            if (onCreateNote != null) {
+                Spacer(Modifier.height(20.dp))
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onCreateNote() },
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = "add",
+                            size = 18.dp,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            weight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = stringResource(R.string.common_add),
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                ),
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -1079,10 +1107,8 @@ private fun SettingsSectionListPane(
             PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = 72.dp,
-                // 56dp FAB + its 20dp bottom margin + 24dp clearance: the last row must
-                // scroll above the share FAB instead of sitting underneath it.
-                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp,
+                top = 24.dp,
+                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp,
             ),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {

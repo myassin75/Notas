@@ -78,13 +78,23 @@ interface SyncConflictMetadataDao {
     suspend fun insertOrUpdate(metadata: SyncConflictMetadataEntity)
 
     @Query("SELECT * FROM sync_conflict_metadata WHERE entityType = :entityType AND entityId = :entityId AND fieldName = :fieldName LIMIT 1")
-    suspend fun getFieldMetadata(entityType: String, entityId: String, fieldName: String): SyncConflictMetadataEntity?
+    suspend fun getFieldMetadata(
+        entityType: String,
+        entityId: String,
+        fieldName: String,
+    ): SyncConflictMetadataEntity?
 
     @Query("SELECT * FROM sync_conflict_metadata WHERE entityType = :entityType AND entityId = :entityId")
-    suspend fun getAllFieldsForEntity(entityType: String, entityId: String): List<SyncConflictMetadataEntity>
+    suspend fun getAllFieldsForEntity(
+        entityType: String,
+        entityId: String,
+    ): List<SyncConflictMetadataEntity>
 
     @Query("DELETE FROM sync_conflict_metadata WHERE entityType = :entityType AND entityId = :entityId")
-    suspend fun deleteForEntity(entityType: String, entityId: String): Int
+    suspend fun deleteForEntity(
+        entityType: String,
+        entityId: String,
+    ): Int
 
     @Query("SELECT * FROM sync_conflict_metadata")
     suspend fun getAllMetadata(): List<SyncConflictMetadataEntity> = emptyList()
@@ -120,10 +130,16 @@ interface SyncTombstoneDao {
     suspend fun insertOrUpdate(tombstone: SyncTombstoneEntity)
 
     @Query("SELECT * FROM sync_tombstones WHERE entityType = :entityType AND entityId = :entityId LIMIT 1")
-    suspend fun getTombstone(entityType: String, entityId: String): SyncTombstoneEntity?
+    suspend fun getTombstone(
+        entityType: String,
+        entityId: String,
+    ): SyncTombstoneEntity?
 
     @Query("DELETE FROM sync_tombstones WHERE entityType = :entityType AND entityId = :entityId")
-    suspend fun deleteTombstone(entityType: String, entityId: String): Int
+    suspend fun deleteTombstone(
+        entityType: String,
+        entityId: String,
+    ): Int
 
     @Query("SELECT * FROM sync_tombstones ORDER BY deletedAt DESC")
     suspend fun getAllTombstones(): List<SyncTombstoneEntity>
@@ -172,7 +188,10 @@ interface SyncConflictRecordDao {
     suspend fun getByConflictId(conflictId: String): SyncConflictRecordEntity?
 
     @Query("SELECT * FROM sync_conflict_records WHERE entityType = :entityType AND entityId = :entityId ORDER BY detectedAt DESC")
-    suspend fun getConflictsForEntity(entityType: String, entityId: String): List<SyncConflictRecordEntity>
+    suspend fun getConflictsForEntity(
+        entityType: String,
+        entityId: String,
+    ): List<SyncConflictRecordEntity>
 
     @Query("SELECT * FROM sync_conflict_records WHERE resolved = 0 ORDER BY detectedAt DESC")
     suspend fun getUnresolvedConflicts(): List<SyncConflictRecordEntity>
@@ -213,4 +232,3 @@ interface SyncHlcStateDao {
     @Query("DELETE FROM sync_hlc_state")
     suspend fun clearAll()
 }
-

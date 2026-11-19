@@ -210,9 +210,18 @@ class UserPartitionedMekStorageTest {
     fun testMnemonicRecoveryScopedToTargetAccount() {
         val mnemonic =
             listOf(
-                "abandon", "abandon", "abandon", "abandon",
-                "abandon", "abandon", "abandon", "abandon",
-                "abandon", "abandon", "abandon", "about",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "abandon",
+                "about",
             )
 
         // Device 1: Alice sets up recovery
@@ -320,4 +329,3 @@ class UserPartitionedMekStorageTest {
         assertArrayEquals(guestMek.encoded, retrievedGuest!!.encoded)
     }
 }
-

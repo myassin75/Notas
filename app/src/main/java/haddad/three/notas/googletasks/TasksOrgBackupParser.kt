@@ -1,5 +1,9 @@
 package haddad.three.notas.googletasks
 
+import haddad.three.notas.data.MonthlyMode
+import haddad.three.notas.data.RecurrenceEndKind
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.RecurrenceUnit
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -8,10 +12,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
-import haddad.three.notas.data.MonthlyMode
-import haddad.three.notas.data.RecurrenceEndKind
-import haddad.three.notas.data.RecurrenceRule
-import haddad.three.notas.data.RecurrenceUnit
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset

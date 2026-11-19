@@ -7,12 +7,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import haddad.three.notas.ui.common.MarkdownStyler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.ui.common.MarkdownStyler
 
 /** Uses Compose's real mapping from displayed deletion ranges to the source document. */
 class MarkdownEditorBackspaceTest {

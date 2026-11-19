@@ -1,12 +1,6 @@
 package haddad.three.notas.ui.home
 
 import androidx.compose.ui.graphics.Color
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import haddad.three.notas.data.GroupBy
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.NoteKind
@@ -19,6 +13,12 @@ import haddad.three.notas.ui.components.readableBadgeColors
 import haddad.three.notas.ui.components.toNoteCardUiModel
 import haddad.three.notas.ui.theme.NoteColors
 import haddad.three.notas.ui.theme.resolveSemanticPalette
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 /**
  * Validates NUVORA Home Screen & Note Cards refinement acceptance criteria:
@@ -32,7 +32,6 @@ import haddad.three.notas.ui.theme.resolveSemanticPalette
  * - Light Mode preservation
  */
 class HomeCardAndThemeRefinementTest {
-
     @Test
     fun empty_home_state_has_empty_items_and_zero_active() {
         val emptyList = emptyList<NoteWithItems>()
@@ -192,8 +191,8 @@ class HomeCardAndThemeRefinementTest {
         id: Long,
         name: String,
         colorHex: String,
-    ): ShoulderEntity {
-        return ShoulderEntity(
+    ): ShoulderEntity =
+        ShoulderEntity(
             id = id,
             name = name,
             normalizedName = name.lowercase(),
@@ -201,14 +200,13 @@ class HomeCardAndThemeRefinementTest {
             createdAt = 1000L,
             updatedAt = 1000L,
         )
-    }
 
     private fun createNoteWithShoulder(
         id: Long,
         title: String,
         shoulder: ShoulderEntity,
-    ): NoteWithItems {
-        return NoteWithItems(
+    ): NoteWithItems =
+        NoteWithItems(
             note =
                 NoteEntity(
                     id = id,
@@ -224,5 +222,4 @@ class HomeCardAndThemeRefinementTest {
             items = emptyList(),
             shoulder = shoulder,
         )
-    }
 }

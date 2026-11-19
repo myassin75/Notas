@@ -6,14 +6,14 @@ import org.junit.Test
 import java.io.File
 
 class OfflineFlavorIsolationTest {
-
     @Test
     fun offlineMergedManifest_containsZeroInternetAndZeroGoogleFirebase() {
-        val candidates = listOf(
-            File("build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
-            File("../app/build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
-            File("app/build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
-        )
+        val candidates =
+            listOf(
+                File("build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
+                File("../app/build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
+                File("app/build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
+            )
         val manifest = candidates.firstOrNull { it.exists() }
         if (manifest == null) {
             // Manifest not generated yet in this specific run directory; verifyOfflineFlavorHygiene Gradle task enforces this.
@@ -43,4 +43,3 @@ class OfflineFlavorIsolationTest {
         )
     }
 }
-

@@ -43,7 +43,10 @@ interface CryptoStorage {
     fun hasKeys(accountId: String? = null): Boolean
 
     /** Copies or migrates key material from one account partition to another. */
-    fun copyKeys(sourceAccountId: String, targetAccountId: String)
+    fun copyKeys(
+        sourceAccountId: String,
+        targetAccountId: String,
+    )
 
     companion object {
         const val GUEST_ACCOUNT_ID = "guest"
@@ -60,13 +63,14 @@ class SharedPrefsCryptoStorage(
 ) : CryptoStorage {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    private fun resolveAccountId(accountId: String?): String =
-        accountId ?: accountIdProvider() ?: CryptoStorage.GUEST_ACCOUNT_ID
+    private fun resolveAccountId(accountId: String?): String = accountId ?: accountIdProvider() ?: CryptoStorage.GUEST_ACCOUNT_ID
 
-    private fun sanitizeAccount(accountId: String): String =
-        accountId.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+    private fun sanitizeAccount(accountId: String): String = accountId.replace(Regex("[^a-zA-Z0-9_-]"), "_")
 
-    private fun getKey(baseKey: String, accountId: String): String {
+    private fun getKey(
+        baseKey: String,
+        accountId: String,
+    ): String {
         val safeAcc = sanitizeAccount(accountId)
         return "${safeAcc}_$baseKey"
     }
@@ -153,7 +157,10 @@ class SharedPrefsCryptoStorage(
         return null
     }
 
-    override fun setRecoveryWrappedMek(bytes: ByteArray, accountId: String?) {
+    override fun setRecoveryWrappedMek(
+        bytes: ByteArray,
+        accountId: String?,
+    ) {
         val target = resolveAccountId(accountId)
         val b64 = Base64.getEncoder().encodeToString(bytes)
         prefs
@@ -175,7 +182,10 @@ class SharedPrefsCryptoStorage(
         return false
     }
 
-    override fun setRecoveryPhraseBackedUp(backedUp: Boolean, accountId: String?) {
+    override fun setRecoveryPhraseBackedUp(
+        backedUp: Boolean,
+        accountId: String?,
+    ) {
         val target = resolveAccountId(accountId)
         prefs
             .edit()
@@ -211,7 +221,10 @@ class SharedPrefsCryptoStorage(
         return (migratedTo == null || migratedTo == target) && prefs.contains(KEY_LOCAL_WRAPPED_MEK)
     }
 
-    override fun copyKeys(sourceAccountId: String, targetAccountId: String) {
+    override fun copyKeys(
+        sourceAccountId: String,
+        targetAccountId: String,
+    ) {
         val local = getLocalWrappedMek(sourceAccountId) ?: return
         val version = getActiveKeyId(sourceAccountId)
         setLocalWrappedMek(local, version, targetAccountId)
@@ -224,13 +237,12 @@ class SharedPrefsCryptoStorage(
         setRecoveryPhraseBackedUp(backedUp, targetAccountId)
     }
 
-    private fun decodeBase64(b64: String): ByteArray? {
-        return try {
+    private fun decodeBase64(b64: String): ByteArray? =
+        try {
             Base64.getDecoder().decode(b64)
         } catch (_: Exception) {
             null
         }
-    }
 
     companion object {
         private const val PREFS_NAME = "notas_crypto_prefs"
@@ -260,8 +272,7 @@ class InMemoryCryptoStorage(
     private var legacyData: AccountData? = null
     private var legacyMigratedTo: String? = null
 
-    private fun resolveAccountId(accountId: String?): String =
-        accountId ?: accountIdProvider() ?: CryptoStorage.GUEST_ACCOUNT_ID
+    private fun resolveAccountId(accountId: String?): String = accountId ?: accountIdProvider() ?: CryptoStorage.GUEST_ACCOUNT_ID
 
     /** Helper for unit testing legacy pre-F03 state */
     fun seedLegacyData(
@@ -270,12 +281,13 @@ class InMemoryCryptoStorage(
         recoveryWrappedMek: ByteArray? = null,
         recoveryBackedUp: Boolean = false,
     ) {
-        legacyData = AccountData(
-            localWrappedMek = localWrappedMek.clone(),
-            activeKeyId = activeKeyId,
-            recoveryWrappedMek = recoveryWrappedMek?.clone(),
-            recoveryBackedUp = recoveryBackedUp,
-        )
+        legacyData =
+            AccountData(
+                localWrappedMek = localWrappedMek.clone(),
+                activeKeyId = activeKeyId,
+                recoveryWrappedMek = recoveryWrappedMek?.clone(),
+                recoveryBackedUp = recoveryBackedUp,
+            )
         legacyMigratedTo = null
     }
 
@@ -289,12 +301,13 @@ class InMemoryCryptoStorage(
 
         val legacy = legacyData
         if (legacy?.localWrappedMek != null && (legacyMigratedTo == null || legacyMigratedTo == target)) {
-            val migrated = AccountData(
-                localWrappedMek = legacy.localWrappedMek?.clone(),
-                activeKeyId = legacy.activeKeyId,
-                recoveryWrappedMek = legacy.recoveryWrappedMek?.clone(),
-                recoveryBackedUp = legacy.recoveryBackedUp,
-            )
+            val migrated =
+                AccountData(
+                    localWrappedMek = legacy.localWrappedMek?.clone(),
+                    activeKeyId = legacy.activeKeyId,
+                    recoveryWrappedMek = legacy.recoveryWrappedMek?.clone(),
+                    recoveryBackedUp = legacy.recoveryBackedUp,
+                )
             partitions[target] = migrated
             legacyMigratedTo = target
             return migrated.localWrappedMek?.clone()
@@ -343,7 +356,10 @@ class InMemoryCryptoStorage(
     }
 
     @Synchronized
-    override fun setRecoveryWrappedMek(bytes: ByteArray, accountId: String?) {
+    override fun setRecoveryWrappedMek(
+        bytes: ByteArray,
+        accountId: String?,
+    ) {
         val target = resolveAccountId(accountId)
         val data = partitions.computeIfAbsent(target) { AccountData() }
         data.recoveryWrappedMek = bytes.clone()
@@ -364,7 +380,10 @@ class InMemoryCryptoStorage(
     }
 
     @Synchronized
-    override fun setRecoveryPhraseBackedUp(backedUp: Boolean, accountId: String?) {
+    override fun setRecoveryPhraseBackedUp(
+        backedUp: Boolean,
+        accountId: String?,
+    ) {
         val target = resolveAccountId(accountId)
         val data = partitions.computeIfAbsent(target) { AccountData() }
         data.recoveryBackedUp = backedUp
@@ -395,7 +414,10 @@ class InMemoryCryptoStorage(
     }
 
     @Synchronized
-    override fun copyKeys(sourceAccountId: String, targetAccountId: String) {
+    override fun copyKeys(
+        sourceAccountId: String,
+        targetAccountId: String,
+    ) {
         val source = partitions[sourceAccountId] ?: return
         val target = partitions.computeIfAbsent(targetAccountId) { AccountData() }
         target.localWrappedMek = source.localWrappedMek?.clone()

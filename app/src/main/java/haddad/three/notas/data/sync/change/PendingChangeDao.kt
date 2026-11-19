@@ -34,13 +34,19 @@ interface PendingChangeDao {
     suspend fun countPendingChanges(): Int
 
     @Query("SELECT * FROM pending_changes WHERE entityType = :entityType AND entityId = :entityId ORDER BY createdAt ASC")
-    suspend fun getChangesForEntity(entityType: String, entityId: String): List<PendingChangeEntity>
+    suspend fun getChangesForEntity(
+        entityType: String,
+        entityId: String,
+    ): List<PendingChangeEntity>
 
     @Query("SELECT * FROM pending_changes WHERE journalId = :journalId ORDER BY createdAt ASC")
     suspend fun getChangesForJournal(journalId: String): List<PendingChangeEntity>
 
     @Query("UPDATE pending_changes SET status = 'JOURNALED', journalId = :journalId WHERE changeId IN (:changeIds)")
-    suspend fun markChangesJournaled(changeIds: Collection<String>, journalId: String): Int
+    suspend fun markChangesJournaled(
+        changeIds: Collection<String>,
+        journalId: String,
+    ): Int
 
     @Query("UPDATE pending_changes SET status = 'SYNCED' WHERE journalId = :journalId")
     suspend fun markChangesSynced(journalId: String): Int
@@ -55,7 +61,10 @@ interface PendingChangeDao {
     suspend fun deleteByIds(changeIds: Collection<String>): Int
 
     @Query("DELETE FROM pending_changes WHERE entityType = :entityType AND entityId = :entityId")
-    suspend fun deleteChangesForEntity(entityType: String, entityId: String): Int
+    suspend fun deleteChangesForEntity(
+        entityType: String,
+        entityId: String,
+    ): Int
 
     @Query("DELETE FROM pending_changes WHERE status = 'SYNCED'")
     suspend fun deleteSynced(): Int
@@ -63,4 +72,3 @@ interface PendingChangeDao {
     @Query("DELETE FROM pending_changes")
     suspend fun clearAll()
 }
-

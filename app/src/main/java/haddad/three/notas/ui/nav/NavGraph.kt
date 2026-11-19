@@ -1,6 +1,5 @@
 package haddad.three.notas.ui.nav
 
-import haddad.three.notas.BuildConfig
 import android.net.Uri
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -48,15 +47,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import haddad.three.notas.BuildConfig
 import haddad.three.notas.data.InteractionPrefs
 import haddad.three.notas.data.NoteKind
 import haddad.three.notas.data.NoteRepository
@@ -64,6 +55,13 @@ import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.data.OnboardingPrefs
 import haddad.three.notas.di.LaunchAction
 import haddad.three.notas.googletasks.GoogleTasksImportRoute
+import haddad.three.notas.ui.auth.AuthViewModel
+import haddad.three.notas.ui.auth.ForgotPasswordScreen
+import haddad.three.notas.ui.auth.LoginScreen
+import haddad.three.notas.ui.auth.RegisterScreen
+import haddad.three.notas.ui.auth.SetNewPasswordScreen
+import haddad.three.notas.ui.auth.VerifyEmailScreen
+import haddad.three.notas.ui.auth.WelcomeScreen
 import haddad.three.notas.ui.common.LocalSystemPaneScaffoldDirective
 import haddad.three.notas.ui.common.LocalSystemWindowAdaptiveInfo
 import haddad.three.notas.ui.common.rememberNotificationsAllowed
@@ -81,13 +79,6 @@ import haddad.three.notas.ui.history.HistorySection
 import haddad.three.notas.ui.home.HomeRoute
 import haddad.three.notas.ui.main.MainTab
 import haddad.three.notas.ui.main.MainTabScaffold
-import haddad.three.notas.ui.auth.AuthViewModel
-import haddad.three.notas.ui.auth.ForgotPasswordScreen
-import haddad.three.notas.ui.auth.LoginScreen
-import haddad.three.notas.ui.auth.RegisterScreen
-import haddad.three.notas.ui.auth.SetNewPasswordScreen
-import haddad.three.notas.ui.auth.VerifyEmailScreen
-import haddad.three.notas.ui.auth.WelcomeScreen
 import haddad.three.notas.ui.onboarding.OnboardingPermissionsScreen
 import haddad.three.notas.ui.onboarding.OnboardingTitleScreen
 import haddad.three.notas.ui.profile.GuestProfileScreen
@@ -96,6 +87,15 @@ import haddad.three.notas.ui.settings.RememberUpdateViewModel
 import haddad.three.notas.ui.settings.SettingsRoute
 import haddad.three.notas.ui.theme.LocalReducedMotion
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 object Routes {
     const val WELCOME = "welcome"
@@ -157,14 +157,27 @@ object Routes {
      */
     fun help(focusSection: String = ""): String = "$HELP?$ARG_FOCUS_SECTION=$focusSection"
 
-    fun verifyEmail(email: String = "", actionCode: String = ""): String {
+    fun verifyEmail(
+        email: String = "",
+        actionCode: String = "",
+    ): String {
         val params = mutableListOf<String>()
         if (email.isNotEmpty()) {
-            val encoded = java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8.toString())
+            val encoded =
+                java.net.URLEncoder.encode(
+                    email,
+                    java.nio.charset.StandardCharsets.UTF_8
+                        .toString(),
+                )
             params.add("$ARG_EMAIL=$encoded")
         }
         if (actionCode.isNotEmpty()) {
-            val encoded = java.net.URLEncoder.encode(actionCode, java.nio.charset.StandardCharsets.UTF_8.toString())
+            val encoded =
+                java.net.URLEncoder.encode(
+                    actionCode,
+                    java.nio.charset.StandardCharsets.UTF_8
+                        .toString(),
+                )
             params.add("$ARG_ACTION_CODE=$encoded")
         }
         return if (params.isNotEmpty()) {
@@ -176,7 +189,12 @@ object Routes {
 
     fun setNewPassword(actionCode: String = ""): String =
         if (actionCode.isNotEmpty()) {
-            val encoded = java.net.URLEncoder.encode(actionCode, java.nio.charset.StandardCharsets.UTF_8.toString())
+            val encoded =
+                java.net.URLEncoder.encode(
+                    actionCode,
+                    java.nio.charset.StandardCharsets.UTF_8
+                        .toString(),
+                )
             "$SET_NEW_PASSWORD?$ARG_ACTION_CODE=$encoded"
         } else {
             SET_NEW_PASSWORD
@@ -523,7 +541,7 @@ fun RememberNavGraph(
     val lockedStartDestination =
         remember(introSeenAtLaunch, initialExternalLaunch) {
             when {
-                !introSeenAtLaunch -> if (BuildConfig.FLAVOR == "offline") Routes.ONBOARDING_TITLE else Routes.WELCOME
+                !introSeenAtLaunch -> Routes.ONBOARDING_TITLE
                 initialExternalLaunch -> Routes.EXTERNAL_LAUNCH
                 else -> Routes.HOME
             }
@@ -671,51 +689,19 @@ fun RememberNavGraph(
                 composable(
                     route = Routes.WELCOME,
                 ) {
-                    if (BuildConfig.FLAVOR == "offline") {
-                        OnboardingTitleScreen(
-                            onLetsBegin = {
-                                if (onboardingState?.hasSeenIntro != true) {
-                                    navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
-                                        popUpTo(Routes.WELCOME) { inclusive = true }
-                                    }
-                                } else {
-                                    navController.navigate(Routes.HOME) {
-                                        popUpTo(navController.graph.id) { inclusive = true }
-                                    }
+                    OnboardingTitleScreen(
+                        onLetsBegin = {
+                            if (onboardingState?.hasSeenIntro != true) {
+                                navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
+                                    popUpTo(Routes.WELCOME) { inclusive = true }
                                 }
-                            },
-                        )
-                    } else {
-                        val context = LocalContext.current
-                        val authVm: AuthViewModel = hiltViewModel()
-                        WelcomeScreen(
-                            viewModel = authVm,
-                            onCreateAccount = {
-                                authVm.clearErrors()
-                                navController.navigate(Routes.REGISTER)
-                            },
-                            onLogin = {
-                                authVm.clearErrors()
-                                navController.navigate(Routes.LOGIN)
-                            },
-                            onGoogleSignIn = {
-                                authVm.signInWithGoogle(context) {
-                                    if (onboardingState?.hasSeenIntro != true) {
-                                        navController.navigate(Routes.ONBOARDING_PERMISSIONS) {
-                                            popUpTo(Routes.WELCOME) { inclusive = true }
-                                        }
-                                    } else {
-                                        navController.navigate(Routes.HOME) {
-                                            popUpTo(navController.graph.id) { inclusive = true }
-                                        }
-                                    }
+                            } else {
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(navController.graph.id) { inclusive = true }
                                 }
-                            },
-                            onSkipForNow = {
-                                navController.navigate(Routes.ONBOARDING_PERMISSIONS)
-                            },
-                        )
-                    }
+                            }
+                        },
+                    )
                 }
 
                 composable(
@@ -779,19 +765,24 @@ fun RememberNavGraph(
 
                 composable(
                     route = "${Routes.VERIFY_EMAIL}?${Routes.ARG_EMAIL}={${Routes.ARG_EMAIL}}&${Routes.ARG_ACTION_CODE}={${Routes.ARG_ACTION_CODE}}",
-                    arguments = listOf(
-                        navArgument(Routes.ARG_EMAIL) {
-                            type = NavType.StringType
-                            defaultValue = ""
-                        },
-                        navArgument(Routes.ARG_ACTION_CODE) {
-                            type = NavType.StringType
-                            defaultValue = ""
-                        },
-                    ),
+                    arguments =
+                        listOf(
+                            navArgument(Routes.ARG_EMAIL) {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                            navArgument(Routes.ARG_ACTION_CODE) {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
                 ) { entry ->
                     val email = entry.arguments?.getString(Routes.ARG_EMAIL).orEmpty()
-                    val actionCode = entry.arguments?.getString(Routes.ARG_ACTION_CODE).orEmpty().ifBlank { null }
+                    val actionCode =
+                        entry.arguments
+                            ?.getString(Routes.ARG_ACTION_CODE)
+                            .orEmpty()
+                            .ifBlank { null }
                     val authVm: AuthViewModel = hiltViewModel()
                     VerifyEmailScreen(
                         email = email,
@@ -872,14 +863,19 @@ fun RememberNavGraph(
 
                 composable(
                     route = "${Routes.SET_NEW_PASSWORD}?${Routes.ARG_ACTION_CODE}={${Routes.ARG_ACTION_CODE}}",
-                    arguments = listOf(
-                        navArgument(Routes.ARG_ACTION_CODE) {
-                            type = NavType.StringType
-                            defaultValue = ""
-                        },
-                    ),
+                    arguments =
+                        listOf(
+                            navArgument(Routes.ARG_ACTION_CODE) {
+                                type = NavType.StringType
+                                defaultValue = ""
+                            },
+                        ),
                 ) { entry ->
-                    val actionCode = entry.arguments?.getString(Routes.ARG_ACTION_CODE).orEmpty().ifBlank { null }
+                    val actionCode =
+                        entry.arguments
+                            ?.getString(Routes.ARG_ACTION_CODE)
+                            .orEmpty()
+                            .ifBlank { null }
                     val authVm: AuthViewModel = hiltViewModel()
                     SetNewPasswordScreen(
                         actionCode = actionCode,
@@ -1106,11 +1102,12 @@ fun RememberNavGraph(
                         if (useDualPaneMode) {
                             SettingsTwoPaneRoute(
                                 paneScaffoldDirective = paneScaffoldDirective,
-                                onOpenIntro = { navController.navigate(if (BuildConfig.FLAVOR == "offline") Routes.ONBOARDING_TITLE else Routes.WELCOME) },
+                                onOpenIntro = { navController.navigate(Routes.ONBOARDING_TITLE) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
                                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                                 onOpenGuestProfile = { navController.navigate(Routes.GUEST_PROFILE) },
+                                onOpenNoteInSinglePane = { note, forceEdit -> navController.openEditRouteFor(note, forceEdit) },
                                 updateVm = updateVm,
                                 onUpdateCheckStarted = handleUpdateCheckStarted,
                                 onShareApp = shareApp,
@@ -1119,7 +1116,7 @@ fun RememberNavGraph(
                             )
                         } else {
                             SettingsRoute(
-                                onOpenIntro = { navController.navigate(if (BuildConfig.FLAVOR == "offline") Routes.ONBOARDING_TITLE else Routes.WELCOME) },
+                                onOpenIntro = { navController.navigate(Routes.ONBOARDING_TITLE) },
                                 onOpenHelp = { navController.navigate(Routes.help()) },
                                 onOpenDevOptions = { navController.navigate(Routes.DEV_OPTIONS) },
                                 onOpenHistory = { navController.navigate(Routes.HISTORY) },

@@ -95,26 +95,33 @@ data class AttachmentDownloadUrlResponseDto(
 )
 
 sealed interface CloudBackupResult<out T> {
-    data class Success<T>(val data: T) : CloudBackupResult<T>
+    data class Success<T>(
+        val data: T,
+    ) : CloudBackupResult<T>
+
     data class Error(
         val message: String,
         val code: String? = null,
         val statusCode: Int? = null,
         val cause: Throwable? = null,
     ) : CloudBackupResult<Nothing>
+
     data object Unauthorized : CloudBackupResult<Nothing>
+
     data object RateLimited : CloudBackupResult<Nothing>
+
     data object Offline : CloudBackupResult<Nothing>
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T> CloudBackupResult<*>.toErrorResult(): CloudBackupResult<T> = when (this) {
-    is CloudBackupResult.Error -> this
-    is CloudBackupResult.Unauthorized -> CloudBackupResult.Unauthorized
-    is CloudBackupResult.RateLimited -> CloudBackupResult.RateLimited
-    is CloudBackupResult.Offline -> CloudBackupResult.Offline
-    is CloudBackupResult.Success -> error("Cannot convert Success to Error")
-}
+fun <T> CloudBackupResult<*>.toErrorResult(): CloudBackupResult<T> =
+    when (this) {
+        is CloudBackupResult.Error -> this
+        is CloudBackupResult.Unauthorized -> CloudBackupResult.Unauthorized
+        is CloudBackupResult.RateLimited -> CloudBackupResult.RateLimited
+        is CloudBackupResult.Offline -> CloudBackupResult.Offline
+        is CloudBackupResult.Success -> error("Cannot convert Success to Error")
+    }
 
 enum class CloudBackupStatus {
     IDLE,
@@ -137,6 +144,7 @@ data class CloudBackupUiState(
 )
 
 val CloudBackupStatus.isLoading: Boolean
-    get() = this == CloudBackupStatus.BACKUP_IN_PROGRESS ||
-        this == CloudBackupStatus.VERIFYING_BACKUP ||
-        this == CloudBackupStatus.RESTORE_IN_PROGRESS
+    get() =
+        this == CloudBackupStatus.BACKUP_IN_PROGRESS ||
+            this == CloudBackupStatus.VERIFYING_BACKUP ||
+            this == CloudBackupStatus.RESTORE_IN_PROGRESS

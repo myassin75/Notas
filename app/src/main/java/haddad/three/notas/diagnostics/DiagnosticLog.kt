@@ -16,9 +16,6 @@ import android.os.storage.StorageManager
 import android.util.DisplayMetrics
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
 import haddad.three.notas.data.DefaultNotePrefs
@@ -34,6 +31,9 @@ import haddad.three.notas.ui.common.MIN_MULTI_PANE_WIDTH_DP
 import haddad.three.notas.widget.NotesWidgetReceiver
 import haddad.three.notas.widget.QuickCaptureWidgetReceiver
 import haddad.three.notas.widget.SelectedWidgetReceiver
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -111,7 +111,7 @@ object DiagnosticLog {
                     appendLine(context.getString(R.string.diagnostics_generated_format, Instant.now().toString()))
                     appendLine(context.getString(R.string.diagnostics_package_format, context.packageName))
                     appendLine(context.getString(R.string.diagnostics_version_format, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE))
-                    appendLine(context.getString(R.string.diagnostics_flavor_format, BuildConfig.FLAVOR))
+                    appendLine(context.getString(R.string.diagnostics_flavor_format, "Notas"))
                     appendLine(context.getString(R.string.diagnostics_build_type_format, BuildConfig.BUILD_TYPE))
                     appendLine(context.getString(R.string.diagnostics_device_format, Build.MANUFACTURER, Build.MODEL))
                     appendLine(context.getString(R.string.diagnostics_android_format, Build.VERSION.RELEASE, Build.VERSION.SDK_INT))
@@ -265,8 +265,6 @@ object DiagnosticLog {
                     ?: context.getString(R.string.common_none),
             ),
         )
-
-
 
         // Updates.
         appendLine(context.getString(R.string.diagnostics_update_check_schedule_format, snapshot.update.updateCheckSchedule.toString()))

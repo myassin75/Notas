@@ -256,12 +256,13 @@ fun NoteCard(
                 null
             }
         }
+    val defaultBorderColor = if (isDark) Color(0xFF2D2D30) else Color(0xFFE5E5EA)
     val defaultBorder =
         if (!selected && !activeInDetailPane) {
             Modifier.border(
                 BorderStroke(
                     1.dp,
-                    if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    defaultBorderColor,
                 ),
                 cardShape,
             )
@@ -278,13 +279,8 @@ fun NoteCard(
         } else {
             Modifier.appClickable(onClick = onClick)
         }
-    val baseContainerColor =
-        if (noteAccent != null) {
-            val tintAlpha = if (isDark) 0.08f else 0.06f
-            noteAccent.copy(alpha = tintAlpha).compositeOver(cardColors.containerColor)
-        } else {
-            cardColors.containerColor
-        }
+    val defaultCardBackground = if (isDark) Color(0xFF1F1F22) else Color(0xFFF2F2F4)
+    val baseContainerColor = defaultCardBackground
     val completedContainerColor =
         baseContainerColor
             .copy(alpha = completedCardAlpha)
@@ -340,32 +336,23 @@ fun NoteCard(
             // declares mergeDescendants and contentDescription includes "Starred".
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
-            val defaultShoulderColor = MaterialTheme.colorScheme.primary
-            val parsedShoulderColor =
-                remember(model.shoulderColorHex, defaultShoulderColor) {
-                    parseNoteColorHex(model.shoulderColorHex, defaultShoulderColor)
-                }
-            val stripeColor =
-                if (model.shoulderName != null) {
-                    parsedShoulderColor
-                } else {
-                    noteAccent
-                }
+            val defaultDecorativeLineColor = if (isDark) Color(0xFF3A3A3D) else Color(0xFFD1D1D6)
+            val stripeColor = noteAccent ?: defaultDecorativeLineColor
+            val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
+            val cardIconColor = noteAccent ?: defaultIconColor
             Box(
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                if (stripeColor != null) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .padding(start = 8.dp)
-                                .align(Alignment.CenterStart)
-                                .width(4.dp)
-                                .height(38.dp)
-                                .clip(CircleShape)
-                                .background(stripeColor),
-                    )
-                }
+                Box(
+                    modifier =
+                        Modifier
+                            .padding(start = 8.dp)
+                            .align(Alignment.CenterStart)
+                            .width(4.dp)
+                            .height(38.dp)
+                            .clip(CircleShape)
+                            .background(stripeColor),
+                )
                 Column(
                     modifier =
                         Modifier
@@ -386,20 +373,16 @@ fun NoteCard(
                                 RememberMaterialRoundedSymbol(
                                     name = headerIcon.name,
                                     size = 18.dp,
-                                    tint = cardContentColor,
+                                    tint = cardIconColor,
                                     weight = FontWeight.Medium,
                                     filled = headerIcon.filled,
-                                    modifier = Modifier.alpha(0.75f),
                                 )
                             is NoteIcon.Drawable ->
                                 Icon(
                                     painterResource(headerIcon.resId),
                                     contentDescription = null,
-                                    tint = cardContentColor,
-                                    modifier =
-                                        Modifier
-                                            .size(18.dp)
-                                            .alpha(0.75f),
+                                    tint = cardIconColor,
+                                    modifier = Modifier.size(18.dp),
                                 )
                             is NoteIcon.Emoji ->
                                 Text(
@@ -411,17 +394,15 @@ fun NoteCard(
                                 RememberMaterialRoundedSymbol(
                                     name = DEFAULT_LIST_HEADER_SYMBOL,
                                     size = 18.dp,
-                                    tint = cardContentColor,
+                                    tint = cardIconColor,
                                     weight = FontWeight.Medium,
-                                    modifier = Modifier.alpha(0.65f),
                                 )
                             NoteIcon.NotePlaceholder ->
                                 RememberMaterialRoundedSymbol(
                                     name = DEFAULT_NOTE_HEADER_SYMBOL,
                                     size = 18.dp,
-                                    tint = cardContentColor,
+                                    tint = cardIconColor,
                                     weight = FontWeight.Medium,
-                                    modifier = Modifier.alpha(0.65f),
                                 )
                         }
                         Spacer(Modifier.width(8.dp))
@@ -516,6 +497,7 @@ fun NoteCard(
                         model = model,
                         reminderNotificationsAllowed = reminderNotificationsAllowed,
                         contentColor = cardContentColor,
+                        iconColor = cardIconColor,
                         showPictureIndicator = !showHero,
                     )
                 }
@@ -560,11 +542,12 @@ private fun MetadataRow(
     model: NoteCardUiModel,
     reminderNotificationsAllowed: Boolean,
     contentColor: Color,
+    iconColor: Color,
     showPictureIndicator: Boolean,
 ) {
     val reminderAt = model.reminderAt
     val isOverdue = reminderAt != null && reminderAt < System.currentTimeMillis()
-    val reminderColor = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+    val reminderColor = if (isOverdue) MaterialTheme.colorScheme.error else iconColor
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -640,7 +623,7 @@ private fun MetadataRow(
                     style =
                         MaterialTheme.typography.labelSmall.copy(
                             fontSize = 13.sp,
-                            color = reminderColor,
+                            color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium,
                         ),
                 )

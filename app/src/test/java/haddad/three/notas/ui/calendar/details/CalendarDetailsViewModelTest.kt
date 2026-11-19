@@ -1,6 +1,20 @@
 package haddad.three.notas.ui.calendar.details
 
 import androidx.lifecycle.SavedStateHandle
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.RecurrenceUnit
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.ui.nav.Routes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -21,20 +35,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.ChecklistItemDao
-import haddad.three.notas.data.ChecklistItemEntity
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.NoteDao
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteReminder
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.RecurrenceRule
-import haddad.three.notas.data.RecurrenceUnit
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.ui.nav.Routes
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -59,8 +59,11 @@ class CalendarDetailsViewModelTest {
         val fakeDao =
             object : haddad.three.notas.data.BaseFakeNoteDao() {
                 override fun observe(id: Long): Flow<NoteWithItems?> = noteFlow
+
                 override suspend fun get(id: Long): NoteWithItems? = noteFlow.value
+
                 override suspend fun getByUuid(uuid: String): NoteWithItems? = noteFlow.value?.takeIf { it.note.uuid == uuid }
+
                 override suspend fun getNoteEntityByUuid(uuid: String): NoteEntity? = noteFlow.value?.note?.takeIf { it.uuid == uuid }
 
                 override suspend fun update(note: NoteEntity) {
@@ -91,6 +94,7 @@ class CalendarDetailsViewModelTest {
         kind: NoteKind = NoteKind.NOTE,
         colorIndex: Int = 1,
         reminderAt: Long? = null,
+        endAt: Long? = null,
         recurrence: RecurrenceRule? = null,
         isCompleted: Boolean = false,
         shoulder: ShoulderEntity? = null,
@@ -106,6 +110,7 @@ class CalendarDetailsViewModelTest {
                 createdAt = 1718438400000L, // June 15, 2024
                 updatedAt = 1718438400000L,
                 reminderAt = reminderAt,
+                endAt = endAt,
                 recurrence = recurrence,
                 completedAt = if (isCompleted) 1718438400000L else null,
                 shoulderId = shoulder?.id,
@@ -131,6 +136,7 @@ class CalendarDetailsViewModelTest {
                     title = "Tommy’s birthday (Jacob and Lisa)",
                     body = "8:00 AM – 10:00 AM\nPlan activities: Plan activities that guests can enjoy.",
                     reminderAt = targetMillis + (8 * 3600 * 1000), // 8:00 AM
+                    endAt = targetMillis + (10 * 3600 * 1000), // 10:00 AM
                     recurrence = RecurrenceRule(unit = RecurrenceUnit.YEAR),
                 )
             noteFlow.value = sampleNote

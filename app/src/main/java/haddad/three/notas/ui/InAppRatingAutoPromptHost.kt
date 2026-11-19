@@ -5,13 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.data.OnboardingState
 import haddad.three.notas.data.UpdatePreferencesState
 import haddad.three.notas.data.UpdatePrefs
 import haddad.three.notas.update.AppReviewLauncher
 import haddad.three.notas.update.InAppRatingAutoPrompt
+import kotlinx.coroutines.launch
 
 /**
  * Play flavor: when eligible, requests Google's in-app review flow without a custom pre-prompt.
@@ -24,7 +24,7 @@ fun InAppRatingAutoPromptHost(
     updatePrefs: UpdatePrefs,
     appReviewLauncher: AppReviewLauncher,
 ) {
-    if (BuildConfig.FLAVOR != "playstore") return
+    return
 
     val context = LocalContext.current
 

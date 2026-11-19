@@ -5,11 +5,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import haddad.three.notas.ui.common.MarkdownStyler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.ui.common.MarkdownStyler
 
 class MarkdownFormattingRegressionTest {
     private val styler =

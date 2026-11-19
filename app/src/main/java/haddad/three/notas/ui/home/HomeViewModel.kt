@@ -3,6 +3,16 @@ package haddad.three.notas.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import haddad.three.notas.data.NoteOptions
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteSwipeAction
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.NotesFilter
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.ViewOptions
+import haddad.three.notas.data.ViewOptionsPrefs
+import haddad.three.notas.data.pinned
+import haddad.three.notas.ui.common.BulkUndoableAction
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.FlowPreview
@@ -19,16 +29,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import haddad.three.notas.data.NoteOptions
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteSwipeAction
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.NotesFilter
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.data.ViewOptions
-import haddad.three.notas.data.ViewOptionsPrefs
-import haddad.three.notas.data.pinned
-import haddad.three.notas.ui.common.BulkUndoableAction
 import javax.inject.Inject
 
 sealed interface HomeEvent {

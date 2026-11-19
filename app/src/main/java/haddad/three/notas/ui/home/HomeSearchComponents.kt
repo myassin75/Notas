@@ -90,88 +90,88 @@ internal fun SearchableTopBarTitle(
     onCreateNote: () -> Unit = {},
 ) {
     Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        if (searchOpen) {
+            RememberInlineSearchField(
+                focusRequestKey = searchFocusRequestKey,
+                query = query,
+                onQueryChange = onQueryChange,
+                placeholderText = stringResource(R.string.home_search_placeholder),
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onToggleSearch() }
+                        .semantics { contentDescription = "Close search" },
+                contentAlignment = Alignment.Center,
             ) {
-                if (searchOpen) {
-                    RememberInlineSearchField(
-                        focusRequestKey = searchFocusRequestKey,
-                        query = query,
-                        onQueryChange = onQueryChange,
-                        placeholderText = stringResource(R.string.home_search_placeholder),
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .clickable { onToggleSearch() }
-                                .semantics { contentDescription = "Close search" },
-                        contentAlignment = Alignment.Center,
+                RememberMaterialRoundedSymbol(
+                    name = "close",
+                    size = 20.dp,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    weight = FontWeight.Normal,
+                    filled = false,
+                )
+            }
+        } else {
+            Text(
+                text = "Notas",
+                style =
+                    MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    ),
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                val semantic = MaterialTheme.semanticPalette
+
+                // + Add button
+                Surface(
+                    shape = CircleShape,
+                    color = semantic.primaryAction,
+                    modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .clickable { onCreateNote() }
+                            .semantics { contentDescription = "Add note" },
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         RememberMaterialRoundedSymbol(
-                            name = "close",
-                            size = 20.dp,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            weight = FontWeight.Normal,
+                            name = "add",
+                            size = 18.dp,
+                            tint = semantic.primaryActionForeground,
+                            weight = FontWeight.Bold,
                             filled = false,
                         )
-                    }
-                } else {
-                    Text(
-                        text = "Notas",
-                        style =
-                            MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 30.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            ),
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        val semantic = MaterialTheme.semanticPalette
-
-                        // + Add button
-                        Surface(
-                            shape = CircleShape,
-                            color = semantic.primaryAction,
-                            modifier =
-                                Modifier
-                                    .clip(CircleShape)
-                                    .clickable { onCreateNote() }
-                                    .semantics { contentDescription = "Add note" },
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "add",
-                                    size = 18.dp,
-                                    tint = semantic.primaryActionForeground,
-                                    weight = FontWeight.Bold,
-                                    filled = false,
-                                )
-                                Text(
-                                    text = "Add",
-                                    style =
-                                        MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 15.sp,
-                                            color = semantic.primaryActionForeground,
-                                        ),
-                                )
-                            }
-                        }
+                        Text(
+                            text = "Add",
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 15.sp,
+                                    color = semantic.primaryActionForeground,
+                                ),
+                        )
                     }
                 }
             }
+        }
+    }
 }
 
 internal enum class SectionBadgeStyle { ARCHIVE, TRASH }

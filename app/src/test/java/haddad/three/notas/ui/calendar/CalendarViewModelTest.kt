@@ -1,6 +1,20 @@
 package haddad.three.notas.ui.calendar
 
 import androidx.lifecycle.SavedStateHandle
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.ChecklistItemDao
+import haddad.three.notas.data.ChecklistItemEntity
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.NoteDao
+import haddad.three.notas.data.NoteEntity
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.RecurrenceRule
+import haddad.three.notas.data.RecurrenceUnit
+import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.getActiveReminders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -21,20 +35,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.ChecklistItemDao
-import haddad.three.notas.data.ChecklistItemEntity
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.NoteDao
-import haddad.three.notas.data.NoteEntity
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteReminder
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.RecurrenceRule
-import haddad.three.notas.data.RecurrenceUnit
-import haddad.three.notas.data.ShoulderEntity
-import haddad.three.notas.data.getActiveReminders
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -184,10 +184,11 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = epochMillis,
+                            endAt = epochMillis + 3600000L,
                             reminders =
                                 listOf(
-                                    NoteReminder(reminderAt = epochMillis),
-                                    NoteReminder(reminderAt = epochMillis2),
+                                    NoteReminder(reminderAt = epochMillis, endAt = epochMillis + 3600000L),
+                                    NoteReminder(reminderAt = epochMillis2, endAt = epochMillis2 + 3600000L),
                                 ),
                         ),
                     items = emptyList(),
@@ -498,6 +499,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = eventEpoch,
+                            endAt = eventEpoch + 1800000L,
                         ),
                     items = emptyList(),
                 )
@@ -617,6 +619,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = time1,
+                            endAt = time1 + 3600000L,
                         ),
                     items = emptyList(),
                 )
@@ -634,6 +637,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = time2,
+                            endAt = time2 + 3600000L,
                         ),
                     items = emptyList(),
                 )
@@ -679,6 +683,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = lateEpoch,
+                            endAt = lateEpoch + (2 * 3600 * 1000L),
                         ),
                     items = emptyList(),
                 )
@@ -750,7 +755,12 @@ class CalendarViewModelTest {
         runTest {
             val viewModel = createViewModel()
             val testDate = LocalDate.of(2026, 10, 4)
-            val createdMillis = testDate.atTime(14, 30).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val createdMillis =
+                testDate
+                    .atTime(14, 30)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val note =
                 NoteWithItems(
@@ -786,8 +796,18 @@ class CalendarViewModelTest {
         runTest {
             val viewModel = createViewModel()
             val reminderDate = LocalDate.of(2026, 10, 5)
-            val reminderMillis = reminderDate.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val createdMillis = reminderDate.minusDays(5).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val reminderMillis =
+                reminderDate
+                    .atTime(10, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            val createdMillis =
+                reminderDate
+                    .minusDays(5)
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val reminderNote =
                 NoteWithItems(
@@ -833,7 +853,12 @@ class CalendarViewModelTest {
         runTest {
             val viewModel = createViewModel()
             val taskDate = LocalDate.of(2026, 10, 8)
-            val taskMillis = taskDate.atTime(9, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val taskMillis =
+                taskDate
+                    .atTime(9, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val task =
                 NoteWithItems(
@@ -905,8 +930,18 @@ class CalendarViewModelTest {
         runTest {
             val viewModel = createViewModel()
             val eventDate = LocalDate.of(2026, 10, 15)
-            val startMillis = eventDate.atTime(14, 15).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val endMillis = eventDate.atTime(15, 45).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val startMillis =
+                eventDate
+                    .atTime(14, 15)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            val endMillis =
+                eventDate
+                    .atTime(15, 45)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val timedEvent =
                 NoteWithItems(
@@ -941,9 +976,27 @@ class CalendarViewModelTest {
     @Test
     fun editing_an_end_time_does_not_modify_note_body() =
         runTest {
-            val originalStart = LocalDate.of(2026, 10, 20).atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val originalEnd = LocalDate.of(2026, 10, 20).atTime(11, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            val newEnd = LocalDate.of(2026, 10, 20).atTime(12, 30).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val originalStart =
+                LocalDate
+                    .of(2026, 10, 20)
+                    .atTime(10, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            val originalEnd =
+                LocalDate
+                    .of(2026, 10, 20)
+                    .atTime(11, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+            val newEnd =
+                LocalDate
+                    .of(2026, 10, 20)
+                    .atTime(12, 30)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val originalEvent =
                 NoteEntity(
@@ -972,7 +1025,12 @@ class CalendarViewModelTest {
         runTest {
             val viewModel = createViewModel()
             val editDate = LocalDate.of(2026, 10, 22)
-            val editMillis = editDate.atTime(16, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val editMillis =
+                editDate
+                    .atTime(16, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val editedNote =
                 NoteWithItems(
@@ -1008,7 +1066,12 @@ class CalendarViewModelTest {
         runTest {
             val viewModel = createViewModel()
             val eventDate = LocalDate.of(2026, 10, 25)
-            val startMillis = eventDate.atTime(11, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val startMillis =
+                eventDate
+                    .atTime(11, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
 
             val event =
                 NoteWithItems(
@@ -1056,8 +1119,18 @@ class CalendarViewModelTest {
                             body = "Just a thought",
                             colorIndex = 0,
                             trashed = false,
-                            createdAt = LocalDate.of(2026, 10, 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                            updatedAt = LocalDate.of(2026, 10, 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                            createdAt =
+                                LocalDate
+                                    .of(2026, 10, 1)
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
+                            updatedAt =
+                                LocalDate
+                                    .of(2026, 10, 1)
+                                    .atStartOfDay(ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli(),
                             reminderAt = null,
                         ),
                     items = emptyList(),
@@ -1194,6 +1267,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = oct10Millis,
+                            endAt = oct10Millis + 3600000L,
                         ),
                     items = emptyList(),
                 )
@@ -1211,6 +1285,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = oct11Millis,
+                            endAt = oct11Millis + 3600000L,
                         ),
                     items = emptyList(),
                 )
@@ -1272,6 +1347,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = epochMillis,
+                            endAt = epochMillis + 3600000L,
                         ),
                     items = emptyList(),
                 )
@@ -1338,6 +1414,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = earlyEpoch,
+                            endAt = earlyEpoch + 1800000L,
                         ),
                     items = emptyList(),
                 )
@@ -1355,6 +1432,7 @@ class CalendarViewModelTest {
                             createdAt = 1000L,
                             updatedAt = 1000L,
                             reminderAt = lateEpoch,
+                            endAt = lateEpoch + 1800000L,
                         ),
                     items = emptyList(),
                 )
@@ -1398,6 +1476,7 @@ class CalendarViewModelTest {
             val fakeDao =
                 object : haddad.three.notas.data.BaseFakeNoteDao() {
                     override fun observeActive(ownerId: String?): Flow<List<NoteWithItems>> = errorFlow
+
                     override fun observeScheduled(ownerId: String?): Flow<List<NoteWithItems>> = errorFlow
                 }
 

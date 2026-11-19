@@ -5,6 +5,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import haddad.three.notas.data.Importance
+import haddad.three.notas.data.MonthlyMode
+import haddad.three.notas.data.NoteKind
+import haddad.three.notas.data.NoteReminder
+import haddad.three.notas.data.NoteRepository
+import haddad.three.notas.data.NoteWithItems
+import haddad.three.notas.data.RecurrenceUnit
+import haddad.three.notas.data.getActiveReminders
+import haddad.three.notas.di.DefaultDispatcher
+import haddad.three.notas.ui.theme.NoteColors
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,16 +26,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import haddad.three.notas.data.Importance
-import haddad.three.notas.data.MonthlyMode
-import haddad.three.notas.data.NoteKind
-import haddad.three.notas.data.NoteReminder
-import haddad.three.notas.data.NoteRepository
-import haddad.three.notas.data.NoteWithItems
-import haddad.three.notas.data.RecurrenceUnit
-import haddad.three.notas.data.getActiveReminders
-import haddad.three.notas.di.DefaultDispatcher
-import haddad.three.notas.ui.theme.NoteColors
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -47,6 +47,7 @@ private val Time12HourMinuteFormatter = DateTimeFormatter.ofPattern("h:mm", Loca
 private val Time12HourMinuteAmPmFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
 private val AmPmFormatter = DateTimeFormatter.ofPattern("a", Locale.getDefault())
 
+@Suppress("ktlint:standard:backing-property-naming")
 @HiltViewModel
 class CalendarViewModel
     @Inject
@@ -291,7 +292,7 @@ class CalendarViewModel
                                             Color(android.graphics.Color.parseColor(fullHex))
                                         }.getOrElse { CalendarDesignTokens.DotBlue }
                                     }
-                                    noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank() -> CalendarDesignTokens.DotGreen
+                                    noteWithItems.isTask -> CalendarDesignTokens.DotGreen
                                     noteWithItems.shoulder?.name?.contains("work", ignoreCase = true) == true -> CalendarDesignTokens.DotBlue
                                     else -> Color.Unspecified
                                 }
@@ -334,7 +335,7 @@ class CalendarViewModel
                     val standardNotes = notesOnDate.filter { !isBirthday(it) }
                     val dayEvents =
                         standardNotes.map { noteWithItems ->
-                            val isTaskItem = noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank()
+                            val isTaskItem = noteWithItems.isTask
                             mapToEventUiModel(noteWithItems, date, isTask = isTaskItem)
                         }
                     totalWeekEvents += dayEvents.size
@@ -353,7 +354,7 @@ class CalendarViewModel
                                             Color(android.graphics.Color.parseColor(fullHex))
                                         }.getOrElse { CalendarDesignTokens.DotBlue }
                                     }
-                                    noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank() -> CalendarDesignTokens.DotGreen
+                                    noteWithItems.isTask -> CalendarDesignTokens.DotGreen
                                     noteWithItems.shoulder?.name?.contains("work", ignoreCase = true) == true -> CalendarDesignTokens.DotBlue
                                     else -> Color.Unspecified
                                 }
@@ -408,7 +409,7 @@ class CalendarViewModel
 
             val (taskNotes, eventNotes) =
                 standardNotesOnDate.partition { noteWithItems ->
-                    noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank()
+                    noteWithItems.isTask
                 }
 
             val agendaEvents =
@@ -501,6 +502,14 @@ class CalendarViewModel
                     continue
                 }
 
+                val noteStartDate =
+                    noteWithItems.note.reminderAt?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                    }
+                if (reminderOnDate == null && noteStartDate != null && noteStartDate < selectedDate) {
+                    continue
+                }
+
                 val epochMillis = reminderOnDate?.reminderAt ?: noteWithItems.note.reminderAt ?: noteWithItems.note.endAt ?: continue
                 val reminderTime =
                     Instant
@@ -509,7 +518,7 @@ class CalendarViewModel
                         .toLocalTime()
 
                 val startMinute = reminderTime.hour * 60 + reminderTime.minute
-                val isTask = noteWithItems.note.kind == NoteKind.LIST || noteWithItems.note.checklistText.isNotBlank()
+                val isTask = noteWithItems.isTask
 
                 if (isTask) {
                     rawTimedItems.add(
@@ -559,7 +568,7 @@ class CalendarViewModel
                     .distinctBy { it.note.id }
 
             for (noteWithItems in yesterdayNotes) {
-                if (noteWithItems.note.kind == NoteKind.LIST) continue
+                if (noteWithItems.isTask) continue
                 if (noteWithItems.note.endAt != null) {
                     val endInstant = Instant.ofEpochMilli(noteWithItems.note.endAt).atZone(ZoneId.systemDefault())
                     val endDate = endInstant.toLocalDate()
@@ -880,8 +889,6 @@ class CalendarViewModel
                             Color.Unspecified to Color.Unspecified
                         }
                     }
-                    isList -> CalendarDesignTokens.CategoryGreenBg to CalendarDesignTokens.CategoryGreenIcon
-                    isWork -> CalendarDesignTokens.CategoryBlueBg to CalendarDesignTokens.CategoryBlueIcon
                     else -> Color.Unspecified to Color.Unspecified
                 }
 
@@ -947,7 +954,11 @@ class CalendarViewModel
             }
 
             if (isBirthday(note)) {
-                val primaryAt = note.note.reminderAt ?: note.note.getActiveReminders().firstOrNull()?.reminderAt
+                val primaryAt =
+                    note.note.reminderAt ?: note.note
+                        .getActiveReminders()
+                        .firstOrNull()
+                        ?.reminderAt
                 if (primaryAt != null) {
                     val bdayDate = Instant.ofEpochMilli(primaryAt).atZone(ZoneId.systemDefault()).toLocalDate()
                     if (bdayDate.month == date.month && bdayDate.dayOfMonth == date.dayOfMonth) return true
@@ -1036,10 +1047,11 @@ class CalendarViewModel
             date: LocalDate,
         ): String {
             if (note.note.isAllDay) return "All day"
-            val matchingReminder = note.note.getActiveReminders().firstOrNull { reminder ->
-                val rDate = Instant.ofEpochMilli(reminder.reminderAt).atZone(ZoneId.systemDefault()).toLocalDate()
-                rDate == date || isRecurringMatch(reminder, date)
-            }
+            val matchingReminder =
+                note.note.getActiveReminders().firstOrNull { reminder ->
+                    val rDate = Instant.ofEpochMilli(reminder.reminderAt).atZone(ZoneId.systemDefault()).toLocalDate()
+                    rDate == date || isRecurringMatch(reminder, date)
+                }
             val epoch = matchingReminder?.reminderAt ?: note.note.reminderAt ?: note.note.endAt
             return if (epoch != null && epoch > 0L) {
                 val dateTime = Instant.ofEpochMilli(epoch).atZone(ZoneId.systemDefault())
@@ -1067,7 +1079,11 @@ class CalendarViewModel
         }
 
         private fun formatBirthdaySubtitle(note: NoteWithItems): String {
-            val reminderAt = note.note.reminderAt ?: note.note.getActiveReminders().firstOrNull()?.reminderAt ?: return ""
+            val reminderAt =
+                note.note.reminderAt ?: note.note
+                    .getActiveReminders()
+                    .firstOrNull()
+                    ?.reminderAt ?: return ""
             val dateTime = Instant.ofEpochMilli(reminderAt).atZone(ZoneId.systemDefault())
             val datePart = dateTime.format(DateTimeFormatter.ofPattern("MMMM d, EEEE", Locale.getDefault()))
             val timePart = dateTime.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))

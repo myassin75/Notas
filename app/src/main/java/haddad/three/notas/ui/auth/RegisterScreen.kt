@@ -61,32 +61,36 @@ fun RegisterScreen(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(palette.notasBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(palette.notasBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Top Navigation Bar
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(
                         onClick = onBackClick,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .background(palette.cardSurface, shape = RoundedCornerShape(10.dp)),
                     ) {
                         RememberMaterialRoundedSymbol(
                             name = "arrow_back",
@@ -137,10 +141,11 @@ fun RegisterScreen(
                                 text = "Log in to your account →",
                                 style = NotasTypography.BodyMedium,
                                 color = palette.primaryAction,
-                                modifier = Modifier
-                                    .align(Alignment.End)
-                                    .clickable(onClick = onLoginClick)
-                                    .padding(vertical = 4.dp),
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.End)
+                                        .clickable(onClick = onLoginClick)
+                                        .padding(vertical = 4.dp),
                             )
                         }
                     }
@@ -154,9 +159,10 @@ fun RegisterScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
                     ) {
                         NotasTextField(
                             value = state.username,
@@ -175,10 +181,11 @@ fun RegisterScreen(
                             label = "Email",
                             placeholder = "alex.morgan@example.com",
                             errorMessage = state.emailError,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email,
-                                imeAction = ImeAction.Next,
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Email,
+                                    imeAction = ImeAction.Next,
+                                ),
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
@@ -190,13 +197,15 @@ fun RegisterScreen(
                             placeholder = "Create a password",
                             helperText = "Use at least 8 characters, including a letter and a number.",
                             errorMessage = state.passwordError,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done,
-                            ),
-                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                                onDone = { viewModel.validateAndSubmitRegistration(onRegisteredSuccess) },
-                            ),
+                            keyboardOptions =
+                                KeyboardOptions(
+                                    keyboardType = KeyboardType.Password,
+                                    imeAction = ImeAction.Done,
+                                ),
+                            keyboardActions =
+                                androidx.compose.foundation.text.KeyboardActions(
+                                    onDone = { viewModel.validateAndSubmitRegistration(onRegisteredSuccess) },
+                                ),
                         )
                     }
                 }
@@ -214,9 +223,10 @@ fun RegisterScreen(
 
                 // Alternative Divider with "or"
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     HorizontalDivider(
@@ -248,9 +258,10 @@ fun RegisterScreen(
 
             // Bottom Link
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 20.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 20.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -269,4 +280,3 @@ fun RegisterScreen(
         }
     }
 }
-

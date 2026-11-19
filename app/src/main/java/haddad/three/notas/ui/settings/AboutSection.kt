@@ -56,13 +56,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import kotlinx.coroutines.launch
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
 import haddad.three.notas.diagnostics.DiagnosticLog
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.common.isLandscape
 import haddad.three.notas.ui.common.isSmallLandscape
+import haddad.three.notas.ui.common.rememberShareAppAction
 import haddad.three.notas.ui.components.AboutAuthorPhoto
 import haddad.three.notas.ui.components.AppIconImage
 import haddad.three.notas.ui.components.RememberIconButton
@@ -70,9 +70,11 @@ import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
 import haddad.three.notas.ui.components.settings.GroupPosition
 import haddad.three.notas.ui.components.settings.GroupedListColumn
 import haddad.three.notas.ui.components.settings.GroupedListItem
+import haddad.three.notas.ui.feedback.appClickable
 import haddad.three.notas.ui.feedback.appCombinedClickable
 import haddad.three.notas.ui.theme.pillShape
 import haddad.three.notas.update.OBTAINX_PACKAGE_ID
+import kotlinx.coroutines.launch
 
 private data class AboutAppRoute(
     val packageId: String,
@@ -80,11 +82,7 @@ private data class AboutAppRoute(
     val playStoreUrl: String = "",
 ) {
     val copyUrl: String
-        get() =
-            when (BuildConfig.FLAVOR) {
-                "playstore" -> playStoreUrl.ifBlank { portfolioUrl }
-                else -> portfolioUrl
-            }
+        get() = portfolioUrl
 }
 
 /**
@@ -215,20 +213,11 @@ private fun AboutSettingsBlock(
     val githubRepoForSourceLink = BuildConfig.GITHUB_REPO.trim()
     val playStoreListingUrl = BuildConfig.PLAY_STORE_URL
     val profileUrl = stringResource(R.string.about_author_github_profile_url)
-    val useGithubLikeAboutLinks =
-        BuildConfig.FLAVOR == "github" ||
-            BuildConfig.FLAVOR == "offline"
-    val buildFlavorLabel =
-        when (BuildConfig.FLAVOR) {
-            "github" -> stringResource(R.string.build_flavor_github)
-            "offline" -> stringResource(R.string.build_flavor_offline)
-            "playstore" -> stringResource(R.string.build_flavor_playstore)
-            else -> BuildConfig.FLAVOR
-        }
+    val useGithubLikeAboutLinks = true
+    val buildFlavorLabel = "Notas"
     val buildTypeLabel =
         when (BuildConfig.BUILD_TYPE) {
             "debug" -> stringResource(R.string.build_type_debug)
-            "devRelease" -> stringResource(R.string.build_type_dev_release)
             "release" -> stringResource(R.string.build_type_release)
             else -> BuildConfig.BUILD_TYPE
         }
@@ -472,6 +461,45 @@ private fun AboutSettingsBlock(
                             )
                         }
                     }
+
+                    // Share Notas button
+                    val shareApp = rememberShareAppAction()
+                    Surface(
+                        shape = aboutPillShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        border = BorderStroke(1.dp, SettingsDesignTokens.DividerColor),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(aboutPillShape)
+                                .appClickable(onClick = shareApp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            RememberMaterialRoundedSymbol(
+                                name = "share",
+                                size = pillIconSize,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Spacer(Modifier.width(pillIconSpacer))
+                            Text(
+                                text = stringResource(R.string.main_menu_share_app),
+                                style =
+                                    pillTextStyle.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                    ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                softWrap = false,
+                            )
+                        }
+                    }
                 }
                 Spacer(Modifier.height(if (isSmallLandscape) 12.dp else 20.dp))
                 AboutOtherAppsAndLinks(
@@ -618,16 +646,7 @@ private fun openAboutAppRoute(
     context: Context,
     route: AboutAppRoute,
 ) {
-    when (BuildConfig.FLAVOR) {
-        "playstore" -> {
-            val targetUrl = route.playStoreUrl.ifBlank { route.portfolioUrl }
-            context.startActivity(aboutViewIntent(targetUrl))
-        }
-
-        else -> {
-            context.startActivity(aboutViewIntent(route.portfolioUrl))
-        }
-    }
+    context.startActivity(aboutViewIntent(route.portfolioUrl))
 }
 
 private fun openAboutUrl(

@@ -81,7 +81,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.graphics.shapes.Morph
-import kotlinx.coroutines.launch
 import haddad.three.notas.R
 import haddad.three.notas.data.NoteRepository
 import haddad.three.notas.notifications.appNotificationSettingsIntent
@@ -106,6 +105,7 @@ import haddad.three.notas.ui.nav.LocalSharedTransitionScope
 import haddad.three.notas.ui.theme.MorphPolygonShape
 import haddad.three.notas.ui.theme.RoundedPolygonShape
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 enum class MainTab(

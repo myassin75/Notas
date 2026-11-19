@@ -47,10 +47,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.delay
 import haddad.three.notas.R
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.theme.LocalIsDark
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Locale
@@ -351,7 +351,7 @@ fun TimelineEventBlock(
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(16.dp),
         color = effectiveBg,
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -367,7 +367,7 @@ fun TimelineEventBlock(
                         .fillMaxHeight()
                         .background(
                             effectiveAccent,
-                            shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp),
+                            shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
                         ),
             )
 
@@ -464,11 +464,10 @@ fun TimelineTaskMarker(
     val cardBg = CalendarDesignTokens.resolveCardBg(isDark)
 
     Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         color = cardBg,
         border = BorderStroke(1.dp, cardBorder),
-        modifier = modifier,
+        modifier = modifier.clip(RoundedCornerShape(14.dp)),
     ) {
         Row(
             modifier =
@@ -481,7 +480,7 @@ fun TimelineTaskMarker(
             Box(
                 modifier =
                     Modifier
-                        .size(24.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
                         .clickable(onClick = onToggleDone),
                 contentAlignment = Alignment.Center,
@@ -495,7 +494,12 @@ fun TimelineTaskMarker(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clickable(onClick = onClick),
+            ) {
                 Text(
                     text = item.title,
                     style =
@@ -566,13 +570,13 @@ private fun AllDayItemsSection(
                 }
 
             Surface(
-                onClick = { onItemClick(item.id) },
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = effectiveContainerBg,
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 3.dp),
+                        .padding(vertical = 3.dp)
+                        .clip(RoundedCornerShape(14.dp)),
             ) {
                 Row(
                     modifier =
@@ -581,38 +585,46 @@ private fun AllDayItemsSection(
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
+                    Row(
                         modifier =
                             Modifier
-                                .size(8.dp)
-                                .background(effectiveAccent, shape = CircleShape),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = item.title,
-                        style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.5.sp,
-                                color = textPrimary,
-                                textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
-                            ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
+                                .weight(1f)
+                                .clickable { onItemClick(item.id) },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(8.dp)
+                                    .background(effectiveAccent, shape = CircleShape),
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = item.title,
+                            style =
+                                MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.5.sp,
+                                    color = textPrimary,
+                                    textDecoration = if (item.isDone) TextDecoration.LineThrough else TextDecoration.None,
+                                ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     if (item.type == TimelineItemType.TASK) {
                         Box(
                             modifier =
                                 Modifier
-                                    .size(20.dp)
+                                    .size(32.dp)
                                     .clip(CircleShape)
                                     .clickable { onToggleDone(item.id, item.isDone) },
                             contentAlignment = Alignment.Center,
                         ) {
                             RememberMaterialRoundedSymbol(
                                 name = if (item.isDone) "check_box" else "check_box_outline_blank",
-                                size = 16.dp,
+                                size = 18.dp,
                                 tint = if (item.isDone) CalendarDesignTokens.DotGreen else textSecondary,
                             )
                         }

@@ -76,39 +76,29 @@ fun NoteIconAndColorCard(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
                     .clickable(enabled = enabled, onClick = onClick)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             val accent = NoteColors.at(colorIndex)
+            val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
             val resolvedColor =
                 if (NoteColors.isNone(colorIndex)) {
-                    MaterialTheme.colorScheme.primary
+                    defaultIconColor
                 } else if (isDark) {
                     accent.dark
                 } else {
                     accent.light
                 }
 
-            val boxBg =
-                if (NoteColors.isNone(colorIndex)) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)
-                }
-
             Box(
-                modifier =
-                    Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(boxBg),
+                modifier = Modifier.size(28.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 EventSmallIconRenderer(
                     iconKey = iconKey,
                     tint = resolvedColor,
-                    size = 20.dp,
+                    size = 24.dp,
                 )
             }
 
@@ -135,24 +125,10 @@ fun NoteIconAndColorCard(
                     Box(
                         modifier =
                             Modifier
-                                .size(11.dp)
+                                .size(10.dp)
                                 .clip(CircleShape)
                                 .background(resolvedColor),
                     )
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(18.dp)
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(resolvedColor.copy(alpha = if (isDark) 0.25f else 0.15f)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        EventSmallIconRenderer(
-                            iconKey = iconKey,
-                            tint = resolvedColor,
-                        )
-                    }
 
                     val colorDisplayName =
                         when {
@@ -204,9 +180,10 @@ fun IconAndColorSheet(
     val innerCardBg = if (isDark) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceVariant
 
     val currentAccent = NoteColors.at(currentColorIndex)
+    val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
     val currentColor =
         if (NoteColors.isNone(currentColorIndex)) {
-            MaterialTheme.colorScheme.primary
+            defaultIconColor
         } else if (isDark) {
             currentAccent.dark
         } else {
@@ -490,18 +467,18 @@ fun IconAndColorSheet(
 }
 
 fun extractSymbolName(iconKey: String?): String {
-    if (iconKey.isNullOrBlank()) return "calendar_month"
+    if (iconKey.isNullOrBlank()) return "description"
     return iconKey
         .removePrefix(ICON_SYMBOL_PREFIX)
         .removePrefix(ICON_SYMBOL_FILLED_PREFIX)
         .removePrefix(ICON_SYMBOL_OUTLINED_PREFIX)
         .removePrefix(ICON_EMOJI_PREFIX)
         .removePrefix(ICON_DRAWABLE_PREFIX)
-        .ifBlank { "calendar_month" }
+        .ifBlank { "description" }
 }
 
 fun ensureCatalogIconKey(key: String?): String {
-    if (key.isNullOrBlank()) return "${ICON_SYMBOL_PREFIX}calendar_month"
+    if (key.isNullOrBlank()) return "${ICON_SYMBOL_PREFIX}description"
     if (key.startsWith(ICON_SYMBOL_PREFIX) ||
         key.startsWith(ICON_SYMBOL_FILLED_PREFIX) ||
         key.startsWith(ICON_SYMBOL_OUTLINED_PREFIX) ||
@@ -514,7 +491,7 @@ fun ensureCatalogIconKey(key: String?): String {
 }
 
 fun getEventIconDisplayName(iconKey: String?): String {
-    if (iconKey.isNullOrBlank()) return "Calendar"
+    if (iconKey.isNullOrBlank()) return "Default"
     if (iconKey.startsWith(ICON_EMOJI_PREFIX)) {
         return iconEmojiPayload(iconKey) ?: "Emoji"
     }

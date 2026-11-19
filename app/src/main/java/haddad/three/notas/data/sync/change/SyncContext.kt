@@ -1,8 +1,8 @@
 package haddad.three.notas.data.sync.change
 
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
-import kotlinx.coroutines.withContext
 
 /**
  * Context controller that isolates local and remote operations.
@@ -14,6 +14,7 @@ object SyncContext {
 
     class RemoteSyncElement : CoroutineContext.Element {
         companion object Key : CoroutineContext.Key<RemoteSyncElement>
+
         override val key: CoroutineContext.Key<*> = Key
     }
 
@@ -36,4 +37,3 @@ object SyncContext {
 
     fun isSuppressedBlocking(): Boolean = threadLocalSuppressed.get() == true
 }
-

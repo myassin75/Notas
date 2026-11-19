@@ -18,8 +18,6 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import haddad.three.notas.MainActivity
 import haddad.three.notas.R
 import haddad.three.notas.data.ActionType
@@ -41,6 +39,8 @@ import haddad.three.notas.notifications.canPostNotifications
 import haddad.three.notas.notifications.postNotificationIfAllowed
 import haddad.three.notas.ui.common.HeroFraming
 import haddad.three.notas.ui.edit.iconEmojiPayload
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlin.math.max
@@ -159,7 +159,7 @@ class ReminderReceiver : BroadcastReceiver() {
             val builder =
                 NotificationCompat
                     .Builder(context, channelId)
-                    .setSmallIcon(R.drawable.ic_stat_remember)
+                    .setSmallIcon(R.drawable.ic_stat_notas)
                     .setContentTitle(notificationTitle(context, note))
                     .setPriority(priorityFor(note.importance))
                     .setCategory(notificationCategory(note.importance))
@@ -710,9 +710,9 @@ class ReminderReceiver : BroadcastReceiver() {
                 }
             return if (bitmap != null) {
                 bitmap.toNotificationIconCompatOrNull()
-                    ?: IconCompat.createWithResource(context, R.drawable.ic_stat_remember)
+                    ?: IconCompat.createWithResource(context, R.drawable.ic_stat_notas)
             } else {
-                IconCompat.createWithResource(context, R.drawable.ic_stat_remember)
+                IconCompat.createWithResource(context, R.drawable.ic_stat_notas)
             }
         }
 

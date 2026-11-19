@@ -31,7 +31,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.collections.immutable.toPersistentSet
 import haddad.three.notas.R
 import haddad.three.notas.data.FilterType
 import haddad.three.notas.data.GroupBy
@@ -44,6 +43,7 @@ import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.components.RememberCheckbox
 import haddad.three.notas.ui.components.RememberDropdownMenuItem
 import haddad.three.notas.ui.components.RememberInputChip
+import kotlinx.collections.immutable.toPersistentSet
 
 private val ActiveChipHeight = 32.dp
 
@@ -146,7 +146,9 @@ internal fun ActiveFilterChips(
             activeShoulders.forEach { shoulder ->
                 val selected = filter.shoulderId == shoulder.id
                 val shoulderColor = parseColorHex(shoulder.colorHex, MaterialTheme.colorScheme.primary)
-                val (badgeBg, badgeText) = haddad.three.notas.ui.components.readableBadgeColors(shoulderColor, isDark)
+                val (badgeBg, badgeText) =
+                    haddad.three.notas.ui.components
+                        .readableBadgeColors(shoulderColor, isDark)
                 val chipBg =
                     if (selected) {
                         badgeBg
@@ -222,8 +224,7 @@ internal fun ActiveFilterChips(
                         .clip(CircleShape)
                         .clickable {
                             onExpandedDropdownChange(if (expandedDropdown == ActiveFilterDropdown.SORT) null else ActiveFilterDropdown.SORT)
-                        }
-                        .semantics { contentDescription = "Filter settings" },
+                        }.semantics { contentDescription = "Filter settings" },
                 contentAlignment = Alignment.Center,
             ) {
                 RememberMaterialRoundedSymbol(

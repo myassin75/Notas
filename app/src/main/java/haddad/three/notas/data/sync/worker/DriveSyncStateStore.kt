@@ -25,7 +25,9 @@ class DriveSyncStateStore(
     private val dataStore: DataStore<Preferences>,
 ) {
     @Inject
-    constructor(@ApplicationContext context: Context) : this(context.driveSyncDataStore)
+    constructor(
+        @ApplicationContext context: Context,
+    ) : this(context.driveSyncDataStore)
 
     private val _syncState = MutableStateFlow<DriveSyncState>(DriveSyncState.Idle)
     val syncState: StateFlow<DriveSyncState> = _syncState.asStateFlow()
@@ -40,18 +42,19 @@ class DriveSyncStateStore(
         val RATE_LIMIT_EXPIRES_AT = longPreferencesKey("drive_rate_limit_expires_at")
     }
 
-    val preferencesState: Flow<DriveSyncPreferencesState> = dataStore.data.map { prefs ->
-        val rawCat = prefs[Keys.LAST_ERROR_CATEGORY]
-        val cat = rawCat?.let { runCatching { SyncErrorCategory.valueOf(it) }.getOrNull() }
-        DriveSyncPreferencesState(
-            isSyncEnabled = prefs[Keys.SYNC_ENABLED] ?: true,
-            syncFrequencyMinutes = (prefs[Keys.SYNC_FREQUENCY_MINUTES] ?: 15L).coerceAtLeast(15L),
-            syncRequiresWifi = prefs[Keys.SYNC_REQUIRES_WIFI] ?: false,
-            lastSyncEpochMillis = prefs[Keys.LAST_SYNC_EPOCH_MILLIS] ?: 0L,
-            lastErrorCategory = cat,
-            lastErrorMessage = prefs[Keys.LAST_ERROR_MESSAGE],
-        )
-    }
+    val preferencesState: Flow<DriveSyncPreferencesState> =
+        dataStore.data.map { prefs ->
+            val rawCat = prefs[Keys.LAST_ERROR_CATEGORY]
+            val cat = rawCat?.let { runCatching { SyncErrorCategory.valueOf(it) }.getOrNull() }
+            DriveSyncPreferencesState(
+                isSyncEnabled = prefs[Keys.SYNC_ENABLED] ?: true,
+                syncFrequencyMinutes = (prefs[Keys.SYNC_FREQUENCY_MINUTES] ?: 15L).coerceAtLeast(15L),
+                syncRequiresWifi = prefs[Keys.SYNC_REQUIRES_WIFI] ?: false,
+                lastSyncEpochMillis = prefs[Keys.LAST_SYNC_EPOCH_MILLIS] ?: 0L,
+                lastErrorCategory = cat,
+                lastErrorMessage = prefs[Keys.LAST_ERROR_MESSAGE],
+            )
+        }
 
     suspend fun getPreferences(): DriveSyncPreferencesState = preferencesState.first()
 
@@ -87,9 +90,7 @@ class DriveSyncStateStore(
         }
     }
 
-    suspend fun getRateLimitExpiresAt(): Long {
-        return dataStore.data.first()[Keys.RATE_LIMIT_EXPIRES_AT] ?: 0L
-    }
+    suspend fun getRateLimitExpiresAt(): Long = dataStore.data.first()[Keys.RATE_LIMIT_EXPIRES_AT] ?: 0L
 
     suspend fun clearRateLimit() {
         dataStore.edit { prefs ->
@@ -97,7 +98,10 @@ class DriveSyncStateStore(
         }
     }
 
-    suspend fun recordSyncFailed(category: SyncErrorCategory, message: String?) {
+    suspend fun recordSyncFailed(
+        category: SyncErrorCategory,
+        message: String?,
+    ) {
         dataStore.edit { prefs ->
             prefs[Keys.LAST_ERROR_CATEGORY] = category.name
             if (message != null) {
@@ -114,4 +118,3 @@ class DriveSyncStateStore(
         _syncState.value = DriveSyncState.Idle
     }
 }
-

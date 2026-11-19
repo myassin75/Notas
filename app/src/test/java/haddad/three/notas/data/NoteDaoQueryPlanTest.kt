@@ -5,7 +5,6 @@ import org.junit.Test
 import java.sql.DriverManager
 
 class NoteDaoQueryPlanTest {
-
     @Test
     fun queryPlan_observeActive_usesOwnerIdIndex() {
         val connection = DriverManager.getConnection("jdbc:sqlite::memory:")

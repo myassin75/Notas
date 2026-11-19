@@ -100,10 +100,22 @@ data class RemoteJournalsPage(
  * Result of uploading a journal to Google Drive.
  */
 sealed interface JournalUploadResult {
-    data class Success(val driveFileId: String, val alreadyExisted: Boolean = false) : JournalUploadResult
-    data class Failure(val message: String, val statusCode: Int? = null, val cause: Throwable? = null) : JournalUploadResult
+    data class Success(
+        val driveFileId: String,
+        val alreadyExisted: Boolean = false,
+    ) : JournalUploadResult
+
+    data class Failure(
+        val message: String,
+        val statusCode: Int? = null,
+        val cause: Throwable? = null,
+    ) : JournalUploadResult
+
     data object Unauthorized : JournalUploadResult
-    data class RateLimited(val retryAfterSeconds: Long? = null) : JournalUploadResult
+
+    data class RateLimited(
+        val retryAfterSeconds: Long? = null,
+    ) : JournalUploadResult
 }
 
 /**
@@ -121,11 +133,24 @@ data class JournalUploadBatchResult(
  * Result of downloading a remote journal from Google Drive.
  */
 sealed interface JournalDownloadResult {
-    data class Success(val inboxEntity: SyncInboxEntity) : JournalDownloadResult
-    data class SkippedAlreadyDownloaded(val journalId: String) : JournalDownloadResult
-    data class Failure(val message: String, val cause: Throwable? = null) : JournalDownloadResult
+    data class Success(
+        val inboxEntity: SyncInboxEntity,
+    ) : JournalDownloadResult
+
+    data class SkippedAlreadyDownloaded(
+        val journalId: String,
+    ) : JournalDownloadResult
+
+    data class Failure(
+        val message: String,
+        val cause: Throwable? = null,
+    ) : JournalDownloadResult
+
     data object Unauthorized : JournalDownloadResult
-    data class RateLimited(val retryAfterSeconds: Long? = null) : JournalDownloadResult
+
+    data class RateLimited(
+        val retryAfterSeconds: Long? = null,
+    ) : JournalDownloadResult
 }
 
 /**
@@ -144,9 +169,19 @@ data class JournalDownloadBatchResult(
  * Discovery result.
  */
 sealed interface DiscoveryResult {
-    data class Success(val discoveredJournalsByDevice: Map<String, List<RemoteJournalHeader>>) : DiscoveryResult
-    data class Failure(val message: String, val cause: Throwable? = null) : DiscoveryResult
-    data class RateLimited(val retryAfterSeconds: Long? = null) : DiscoveryResult
+    data class Success(
+        val discoveredJournalsByDevice: Map<String, List<RemoteJournalHeader>>,
+    ) : DiscoveryResult
+
+    data class Failure(
+        val message: String,
+        val cause: Throwable? = null,
+    ) : DiscoveryResult
+
+    data class RateLimited(
+        val retryAfterSeconds: Long? = null,
+    ) : DiscoveryResult
+
     data object Unauthorized : DiscoveryResult
 }
 
@@ -161,12 +196,37 @@ data class InboxReconciliationResult(
 )
 
 // Structured Exceptions for Integrity, Security & Schema Failures
-class ConflictingJournalException(message: String) : SecurityException(message)
-class InvalidEncryptedContainerException(message: String, cause: Throwable? = null) : SecurityException(message, cause)
-class InvalidMekException(message: String, cause: Throwable? = null) : SecurityException(message, cause)
-class UnsupportedJournalVersionException(message: String) : IllegalArgumentException(message)
-class MalformedJournalException(message: String) : IllegalArgumentException(message)
-class ContentHashMismatchException(message: String) : SecurityException(message)
-class MissingSequenceException(message: String) : IllegalStateException(message)
-class DriveAuthorizationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+class ConflictingJournalException(
+    message: String,
+) : SecurityException(message)
 
+class InvalidEncryptedContainerException(
+    message: String,
+    cause: Throwable? = null,
+) : SecurityException(message, cause)
+
+class InvalidMekException(
+    message: String,
+    cause: Throwable? = null,
+) : SecurityException(message, cause)
+
+class UnsupportedJournalVersionException(
+    message: String,
+) : IllegalArgumentException(message)
+
+class MalformedJournalException(
+    message: String,
+) : IllegalArgumentException(message)
+
+class ContentHashMismatchException(
+    message: String,
+) : SecurityException(message)
+
+class MissingSequenceException(
+    message: String,
+) : IllegalStateException(message)
+
+class DriveAuthorizationException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

@@ -43,7 +43,6 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
 class DriveArchiveAndRestoreTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -68,43 +67,47 @@ class DriveArchiveAndRestoreTest {
         val backupId = UUID.randomUUID().toString()
         val createdAt = System.currentTimeMillis()
 
-        val sampleCategories = listOf(
-            ShoulderEntity(id = 1, uuid = UUID.randomUUID().toString(), name = "Work", normalizedName = "work", createdAt = createdAt, updatedAt = createdAt),
-            ShoulderEntity(id = 2, uuid = UUID.randomUUID().toString(), name = "Personal", normalizedName = "personal", createdAt = createdAt, updatedAt = createdAt),
-        )
+        val sampleCategories =
+            listOf(
+                ShoulderEntity(id = 1, uuid = UUID.randomUUID().toString(), name = "Work", normalizedName = "work", createdAt = createdAt, updatedAt = createdAt),
+                ShoulderEntity(id = 2, uuid = UUID.randomUUID().toString(), name = "Personal", normalizedName = "personal", createdAt = createdAt, updatedAt = createdAt),
+            )
 
         val sampleNotes = mutableListOf<NoteWithItems>()
         for (i in 1..notesCount) {
-            val note = NoteEntity(
-                id = i.toLong(),
-                uuid = "note_uuid_$i",
-                title = "Note Title $i",
-                body = "Note Body $i with secret content",
-                kind = NoteKind.NOTE,
-                colorIndex = 0,
-                trashed = false,
-                createdAt = createdAt,
-                updatedAt = createdAt + i,
-            )
+            val note =
+                NoteEntity(
+                    id = i.toLong(),
+                    uuid = "note_uuid_$i",
+                    title = "Note Title $i",
+                    body = "Note Body $i with secret content",
+                    kind = NoteKind.NOTE,
+                    colorIndex = 0,
+                    trashed = false,
+                    createdAt = createdAt,
+                    updatedAt = createdAt + i,
+                )
             sampleNotes.add(NoteWithItems(note = note, items = emptyList(), attachments = emptyList()))
         }
 
         for (i in 1..tasksCount) {
-            val taskNote = NoteEntity(
-                id = (100 + i).toLong(),
-                uuid = "task_uuid_$i",
-                title = "Checklist $i",
-                body = "",
-                kind = NoteKind.LIST,
-                colorIndex = 0,
-                trashed = false,
-                createdAt = createdAt,
-                updatedAt = createdAt + i,
-            )
-            val items = listOf(
-                ChecklistItemEntity(id = (1000 + i).toLong(), noteId = taskNote.id, uuid = "item_${i}_1", text = "Subtask A", checked = false, sortOrder = 0.0),
-                ChecklistItemEntity(id = (2000 + i).toLong(), noteId = taskNote.id, uuid = "item_${i}_2", text = "Subtask B", checked = true, sortOrder = 1.0),
-            )
+            val taskNote =
+                NoteEntity(
+                    id = (100 + i).toLong(),
+                    uuid = "task_uuid_$i",
+                    title = "Checklist $i",
+                    body = "",
+                    kind = NoteKind.LIST,
+                    colorIndex = 0,
+                    trashed = false,
+                    createdAt = createdAt,
+                    updatedAt = createdAt + i,
+                )
+            val items =
+                listOf(
+                    ChecklistItemEntity(id = (1000 + i).toLong(), noteId = taskNote.id, uuid = "item_${i}_1", text = "Subtask A", checked = false, sortOrder = 0.0),
+                    ChecklistItemEntity(id = (2000 + i).toLong(), noteId = taskNote.id, uuid = "item_${i}_2", text = "Subtask B", checked = true, sortOrder = 1.0),
+                )
             sampleNotes.add(NoteWithItems(note = taskNote, items = items, attachments = emptyList()))
         }
 
@@ -113,33 +116,41 @@ class DriveArchiveAndRestoreTest {
             val size = if (includeLargeAttachment && i == 1) 2 * 1024 * 1024 else 1024 // 2MB or 1KB
             val bytes = ByteArray(size)
             SecureRandom().nextBytes(bytes)
-            val att = NoteAttachmentEntity(
-                id = i.toLong(),
-                noteId = 1L,
-                uuid = "att_uuid_$i",
-                displayName = "attachment_$i.jpg",
-                mimeType = "image/jpeg",
-                uri = "file:///dummy/path/attachment_$i.jpg",
-            )
+            val att =
+                NoteAttachmentEntity(
+                    id = i.toLong(),
+                    noteId = 1L,
+                    uuid = "att_uuid_$i",
+                    displayName = "attachment_$i.jpg",
+                    mimeType = "image/jpeg",
+                    uri = "file:///dummy/path/attachment_$i.jpg",
+                )
             sampleAttachments.add(att to bytes)
         }
 
         FileOutputStream(targetZip).use { fos ->
             ZipOutputStream(fos).use { zip ->
                 // notes.json
-                val notesJson = JSONObject().apply {
-                    put("version", schemaVersion)
-                    put("exportedAt", createdAt)
-                    put("categories", JSONArray().apply { sampleCategories.forEach { put(encodeShoulderForBackup(it)) } })
-                    put("notes", JSONArray().apply { sampleNotes.forEach { put(encodeNoteForBackup(it)) } })
-                }
+                val notesJson =
+                    JSONObject().apply {
+                        put("version", schemaVersion)
+                        put("exportedAt", createdAt)
+                        put("categories", JSONArray().apply { sampleCategories.forEach { put(encodeShoulderForBackup(it)) } })
+                        put("notes", JSONArray().apply { sampleNotes.forEach { put(encodeNoteForBackup(it)) } })
+                    }
                 zip.putNextEntry(ZipEntry(BackupIo.ENTRY_NOTES))
-                OutputStreamWriter(zip, Charsets.UTF_8).apply { write(notesJson.toString(2)); flush() }
+                OutputStreamWriter(zip, Charsets.UTF_8).apply {
+                    write(notesJson.toString(2))
+                    flush()
+                }
                 zip.closeEntry()
 
                 // settings.json
                 zip.putNextEntry(ZipEntry(BackupIo.ENTRY_SETTINGS))
-                OutputStreamWriter(zip, Charsets.UTF_8).apply { write("""{"theme":"DARK"}"""); flush() }
+                OutputStreamWriter(zip, Charsets.UTF_8).apply {
+                    write("""{"theme":"DARK"}""")
+                    flush()
+                }
                 zip.closeEntry()
 
                 // attachments/
@@ -150,18 +161,22 @@ class DriveArchiveAndRestoreTest {
                 }
 
                 // manifest.json
-                val manifest = DriveBackupManifest(
-                    backupId = backupId,
-                    createdAtEpochMillis = createdAt,
-                    schemaVersion = schemaVersion,
-                    notesCount = notesCount,
-                    tasksCount = tasksCount,
-                    categoriesCount = sampleCategories.size,
-                    attachmentsCount = sampleAttachments.size,
-                    sourceDevice = "Test Device",
-                )
+                val manifest =
+                    DriveBackupManifest(
+                        backupId = backupId,
+                        createdAtEpochMillis = createdAt,
+                        schemaVersion = schemaVersion,
+                        notesCount = notesCount,
+                        tasksCount = tasksCount,
+                        categoriesCount = sampleCategories.size,
+                        attachmentsCount = sampleAttachments.size,
+                        sourceDevice = "Test Device",
+                    )
                 zip.putNextEntry(ZipEntry(BackupIo.ENTRY_MANIFEST))
-                OutputStreamWriter(zip, Charsets.UTF_8).apply { write(json.encodeToString(manifest)); flush() }
+                OutputStreamWriter(zip, Charsets.UTF_8).apply {
+                    write(json.encodeToString(manifest))
+                    flush()
+                }
                 zip.closeEntry()
             }
         }

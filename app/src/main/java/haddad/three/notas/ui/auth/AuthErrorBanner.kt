@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,8 +19,6 @@ import androidx.compose.ui.unit.dp
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.theme.LocalSemanticPalette
 import haddad.three.notas.ui.theme.NotasTypography
-
-import androidx.compose.material3.IconButton
 
 /**
  * Modern, clean, and elegant error banner for Auth screens.
@@ -36,9 +35,10 @@ fun AuthErrorBanner(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = palette.error.copy(alpha = 0.08f),
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = palette.error.copy(alpha = 0.08f),
+            ),
         border = BorderStroke(1.dp, palette.error.copy(alpha = 0.22f)),
     ) {
         Row(

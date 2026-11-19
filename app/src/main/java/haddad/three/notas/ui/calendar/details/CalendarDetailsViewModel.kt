@@ -5,12 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import haddad.three.notas.data.ActionType
 import haddad.three.notas.data.ChecklistItemEntity
 import haddad.three.notas.data.MonthlyMode
@@ -24,6 +18,12 @@ import haddad.three.notas.ui.components.parseColorHexOrNull
 import haddad.three.notas.ui.event.EditEventViewModel
 import haddad.three.notas.ui.nav.Routes
 import haddad.three.notas.ui.theme.NoteColors
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -111,7 +111,14 @@ class CalendarDetailsViewModel
             targetDateMillis: Long?,
         ): CalendarDetailsUiState {
             val note = noteWithItems.note
-            val isTask = requestedAsTask || note.kind == NoteKind.LIST || note.checklistText.isNotBlank()
+            val isTask =
+                if (note.isEvent) {
+                    false
+                } else if (note.isTask) {
+                    true
+                } else {
+                    requestedAsTask
+                }
             val isBirthday = isBirthdayItem(noteWithItems)
 
             val locale = Locale.getDefault()

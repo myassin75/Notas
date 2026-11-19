@@ -313,7 +313,7 @@ internal fun NoteReminder.toDraft(defaultRecurrence: RecurrenceRule? = null): Re
         nthOrdinal = (rule?.monthlyMode as? MonthlyMode.ByNthWeekday)?.ordinal ?: (((cal.get(Calendar.DAY_OF_MONTH) - 1) / 7) + 1),
         nthWeekday = (rule?.monthlyMode as? MonthlyMode.ByNthWeekday)?.weekday ?: cal.get(Calendar.DAY_OF_WEEK),
         endKind = rule?.endKind ?: RecurrenceEndKind.NEVER,
-        endDate = rule?.endDate,
+        endDate = endAt ?: rule?.endDate,
         endCountText = (rule?.endCount ?: DEFAULT_END_COUNT).toString(),
         originalReminderAt = originalReminderAt,
         snoozedUntil = if (originalReminderAt != null) reminderAt else null,
@@ -394,12 +394,14 @@ internal fun ReminderDraft.toReminder(nowMillis: Long = System.currentTimeMillis
             reminderAt = fireAt,
             recurrence = rule,
             originalReminderAt = null,
+            endAt = endDate,
         )
     } else {
         NoteReminder(
             reminderAt = snoozedUntil ?: fireAt,
             recurrence = rule,
             originalReminderAt = originalReminderAt,
+            endAt = endDate,
         )
     }
 }

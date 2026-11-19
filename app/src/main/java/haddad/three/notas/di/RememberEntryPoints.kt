@@ -40,8 +40,6 @@ interface SettingsDependenciesEntryPoint {
 
     fun defaultNotePrefs(): DefaultNotePrefs
 
-
-
     fun cloudBackupManager(): haddad.three.notas.data.backup.CloudBackupManager
 
     fun googleDriveBackupProvider(): haddad.three.notas.data.drive.backup.GoogleDriveBackupProvider
@@ -85,6 +83,8 @@ interface NotesWidgetEntryPoint {
     fun notesWidgetUpdater(): NotesWidgetUpdater
 
     fun viewOptionsPrefs(): ViewOptionsPrefs
+
+    fun themePrefs(): haddad.three.notas.data.ThemePrefs
 }
 
 @EntryPoint

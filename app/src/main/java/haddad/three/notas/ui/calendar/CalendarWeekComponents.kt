@@ -254,7 +254,7 @@ fun WeekAgendaCard(
                         }
 
                     Surface(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(22.dp),
                         color = highlightBg,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -403,7 +403,7 @@ private fun WeekEventItemCard(
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
+        shape = CalendarDesignTokens.ItemCardShape,
         color = itemBg,
         border = border,
         modifier = modifier.fillMaxWidth(),

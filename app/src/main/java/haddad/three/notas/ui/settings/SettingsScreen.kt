@@ -98,10 +98,6 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.R
 import haddad.three.notas.data.DefaultNotePreferencesState
@@ -119,6 +115,9 @@ import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.common.isLandscape
 import haddad.three.notas.ui.components.RememberFilledTonalIconButton
 import haddad.three.notas.ui.components.RememberTextButton
+import haddad.three.notas.ui.components.SettingsRow
+import haddad.three.notas.ui.components.SettingsRowCard
+import haddad.three.notas.ui.components.UserAvatar
 import haddad.three.notas.ui.components.rememberResponsiveActionButtonSize
 import haddad.three.notas.ui.components.rememberResponsiveActionIconSize
 import haddad.three.notas.ui.components.settings.GroupPosition
@@ -126,25 +125,24 @@ import haddad.three.notas.ui.components.settings.GroupedListColumn
 import haddad.three.notas.ui.components.settings.GroupedListItem
 import haddad.three.notas.ui.edit.DEFAULT_NOTE_HEADER_SYMBOL
 import haddad.three.notas.ui.feedback.appClickable
-import haddad.three.notas.ui.components.SettingsRow
-import haddad.three.notas.ui.components.SettingsRowCard
-import haddad.three.notas.ui.components.UserAvatar
 import haddad.three.notas.ui.modifiers.PillBottomBarHeight
 import haddad.three.notas.ui.modifiers.PillBottomScrimExtra
-import haddad.three.notas.ui.theme.LocalSemanticPalette
 import haddad.three.notas.ui.modifiers.applyToScrollableList
 import haddad.three.notas.ui.modifiers.rememberContentOverflowScrollEnabled
 import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
 import haddad.three.notas.ui.nav.DEV_OPTIONS_SHARED_BOUNDS_KEY
 import haddad.three.notas.ui.nav.LocalNavAnimatedVisibilityScope
 import haddad.three.notas.ui.nav.LocalSharedTransitionScope
-import haddad.three.notas.ui.theme.LocalNotesUiState
+import haddad.three.notas.ui.theme.LocalSemanticPalette
 import haddad.three.notas.ui.theme.LocalThemeState
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 import haddad.three.notas.update.PlayInAppUpdateBannerUiState
 import haddad.three.notas.update.RememberUpdateInfo
 import haddad.three.notas.update.RememberUpdateState
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val SETTINGS_SECTION_EXPAND_SETTLE_DELAY_MS = 900L
 
@@ -164,10 +162,7 @@ enum class SettingsSectionKey(
     val legacyRouteKeys: List<String> = emptyList(),
 ) {
     History("history", "history", R.string.main_tab_history),
-    Appearance("appearance", "palette", R.string.settings_section_appearance),
-
-    // Remember-only. FilePipe has no note cards, so this section is not part of the shared settings list.
-    NotesUi("notes_ui", DEFAULT_NOTE_HEADER_SYMBOL, R.string.settings_section_notes_ui),
+    Appearance("appearance", "palette", R.string.settings_section_appearance, legacyRouteKeys = listOf("notes_ui")),
     Defaults("defaults", "tune", R.string.settings_defaults_section),
     Notifications("notifications", "notifications", R.string.settings_notifications_section),
 
@@ -198,7 +193,7 @@ val settingsPaneSections: List<SettingsSectionKey>
         SettingsSectionKey.entries.filter { sectionKey ->
             sectionKey != SettingsSectionKey.DevOptions &&
                 (sectionKey != SettingsSectionKey.Updates || showsUpdatesSection(singleList = false)) &&
-                (sectionKey != SettingsSectionKey.Backup || BuildConfig.FLAVOR != "offline")
+                sectionKey != SettingsSectionKey.Backup
         }
 
 /**
@@ -299,7 +294,6 @@ fun SettingsRoute(
         initialValue = LockPrefs.State(),
     )
     val themeState = LocalThemeState.current
-    val notesUiState = LocalNotesUiState.current
     val interactionState by interactionPrefs.state.collectAsStateWithLifecycle(
         initialValue = InteractionState(),
     )
@@ -375,7 +369,6 @@ fun SettingsRoute(
     LaunchedEffect(globalUpdateInfo) {
         updateVm.adoptGlobalUpdateIfNone(globalUpdateInfo)
     }
-
 
     var notificationsGranted by rememberSaveable {
         mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
@@ -593,7 +586,7 @@ fun SettingsRoute(
                 updateCheckFailed = updateCheckFailed,
                 downloadProgress = downloadProgress,
                 changelogState = updateSheetChangelog,
-                showGithubExtraUi = BuildConfig.FLAVOR == "github",
+                showGithubExtraUi = false,
                 usePlayInAppUpdates = BuildConfig.USE_PLAY_IN_APP_UPDATES,
                 onDownloadClick = downloadUpdate,
                 onSkipVersionClick = { updateInfo?.let { availableUpdate -> updateVm.skipVersion(availableUpdate) } },
@@ -737,27 +730,36 @@ fun SettingsRoute(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     userScrollEnabled = settingsScrollEnabled,
                 ) {
-                    if (selectedSectionKey == null && BuildConfig.FLAVOR != "offline") {
+                    if (false) {
                         item(key = "guest_profile_card") {
                             val palette = LocalSemanticPalette.current
                             val user = currentAuthUser
-                            val title = if (user != null) {
-                                user.displayName?.takeIf { it.isNotBlank() } ?: user.email
-                            } else {
-                                "Guest User"
-                            }
-                            val subtitle = if (user != null) {
-                                if (user.displayName.isNullOrBlank()) "Signed in" else user.email
-                            } else {
-                                "Sign in to sync & back up your notes"
-                            }
-                            val initials = if (user != null) {
-                                user.displayName?.split(" ")?.mapNotNull { it.firstOrNull()?.toString() }?.take(2)?.joinToString("")?.uppercase()?.ifBlank { null }
-                                    ?: user.email.firstOrNull()?.uppercase()
-                                    ?: "U"
-                            } else {
-                                "G"
-                            }
+                            val title =
+                                if (user != null) {
+                                    user.displayName?.takeIf { it.isNotBlank() } ?: user.email
+                                } else {
+                                    "Guest User"
+                                }
+                            val subtitle =
+                                if (user != null) {
+                                    if (user.displayName.isNullOrBlank()) "Signed in" else user.email
+                                } else {
+                                    "Sign in to sync & back up your notes"
+                                }
+                            val initials =
+                                if (user != null) {
+                                    user.displayName
+                                        ?.split(" ")
+                                        ?.mapNotNull { it.firstOrNull()?.toString() }
+                                        ?.take(2)
+                                        ?.joinToString("")
+                                        ?.uppercase()
+                                        ?.ifBlank { null }
+                                        ?: user.email.firstOrNull()?.uppercase()
+                                        ?: "U"
+                                } else {
+                                    "G"
+                                }
 
                             SettingsRowCard {
                                 SettingsRow(
@@ -970,7 +972,7 @@ fun SettingsRoute(
                         }
                     }
 
-                    if (includeSettingsSection(SettingsSectionKey.Backup) && BuildConfig.FLAVOR != "offline") {
+                    if (false) {
                         item(key = "backup") {
                             SettingsExpandableSection(
                                 sectionKey = SettingsSectionKey.Backup.routeKey,
@@ -989,6 +991,31 @@ fun SettingsRoute(
                                     authRepository = authRepository,
                                     snackbarHostState = snackbarHostState,
                                     scope = scope,
+                                )
+                            }
+                        }
+                    }
+
+                    if (includeSettingsSection(SettingsSectionKey.Updates) && showsUpdatesSection(singleList)) {
+                        item(key = "updates") {
+                            SettingsExpandableSection(
+                                sectionKey = SettingsSectionKey.Updates.routeKey,
+                                materialSymbolName = SettingsSectionKey.Updates.iconName,
+                                title = stringResource(SettingsSectionKey.Updates.titleRes),
+                                collapsedSectionKeys = visibleCollapsedSectionKeys,
+                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
+                                showHeader = showSectionHeaders,
+                                highlightedSectionKey = activeSectionHighlightKey,
+                            ) {
+                                UpdatesSection(
+                                    availableUpdate = updateInfo ?: globalUpdateInfo,
+                                    isCheckingUpdate = isCheckingUpdate,
+                                    updatePrefs = updatePrefs,
+                                    updateState = updateState,
+                                    onCheckUpdatesClick = {
+                                        onUpdateCheckStarted()
+                                        updateVm.openSheetAndCheck()
+                                    },
                                 )
                             }
                         }
@@ -1028,8 +1055,6 @@ fun SettingsRoute(
                 }
             }
         }
-
-
     }
 }
 
@@ -1120,7 +1145,6 @@ private fun notificationsAppSettingsIntent(context: Context): Intent =
     Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
         putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
     }
-
 
 /**
  * Index of a section's item within the settings list, derived from declaration order and the

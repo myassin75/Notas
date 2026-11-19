@@ -32,45 +32,47 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class DriveZipSecurityTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
     private lateinit var archiveManager: DriveBackupArchiveManager
     private val json = Json { ignoreUnknownKeys = true }
 
-    private inline fun <reified T> dummyDao(): T {
-        return Proxy.newProxyInstance(
+    private inline fun <reified T> dummyDao(): T =
+        Proxy.newProxyInstance(
             T::class.java.classLoader,
             arrayOf(T::class.java),
         ) { _, _, _ -> null } as T
-    }
 
     @Before
     fun setUp() {
         val fakeFilesDir = tempFolder.newFolder("files")
         val fakeCacheDir = tempFolder.newFolder("cache")
-        val fakeContext = object : ContextWrapper(null) {
-            override fun getApplicationContext(): Context = this
-            override fun getFilesDir(): File = fakeFilesDir
-            override fun getCacheDir(): File = fakeCacheDir
-        }
+        val fakeContext =
+            object : ContextWrapper(null) {
+                override fun getApplicationContext(): Context = this
 
-        archiveManager = DriveBackupArchiveManager(
-            noteDao = dummyDao<NoteDao>(),
-            shoulderDao = dummyDao<ShoulderDao>(),
-            itemDao = dummyDao<ChecklistItemDao>(),
-            themePrefs = ThemePrefs(fakeContext),
-            notesUiPrefs = NotesUiPrefs(fakeContext),
-            viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
-            lockPrefs = LockPrefs(fakeContext),
-            interactionPrefs = InteractionPrefs(fakeContext),
-            quickCapturePrefs = QuickCapturePrefs(fakeContext),
-            reminderPrefs = ReminderPrefs(fakeContext),
-            defaultNotePrefs = DefaultNotePrefs(fakeContext),
-            updatePrefs = UpdatePrefs(fakeContext),
-            json = json,
-        )
+                override fun getFilesDir(): File = fakeFilesDir
+
+                override fun getCacheDir(): File = fakeCacheDir
+            }
+
+        archiveManager =
+            DriveBackupArchiveManager(
+                noteDao = dummyDao<NoteDao>(),
+                shoulderDao = dummyDao<ShoulderDao>(),
+                itemDao = dummyDao<ChecklistItemDao>(),
+                themePrefs = ThemePrefs(fakeContext),
+                notesUiPrefs = NotesUiPrefs(fakeContext),
+                viewOptionsPrefs = ViewOptionsPrefs(fakeContext),
+                lockPrefs = LockPrefs(fakeContext),
+                interactionPrefs = InteractionPrefs(fakeContext),
+                quickCapturePrefs = QuickCapturePrefs(fakeContext),
+                reminderPrefs = ReminderPrefs(fakeContext),
+                defaultNotePrefs = DefaultNotePrefs(fakeContext),
+                updatePrefs = UpdatePrefs(fakeContext),
+                json = json,
+            )
     }
 
     private fun createZipWithEntries(
@@ -101,9 +103,10 @@ class DriveZipSecurityTest {
                 ),
             )
 
-            val ex = assertThrows(SecurityException::class.java) {
-                runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
-            }
+            val ex =
+                assertThrows(SecurityException::class.java) {
+                    runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
+                }
             assertTrue(ex.message!!.contains("path traversal", ignoreCase = true))
         }
     }
@@ -120,9 +123,10 @@ class DriveZipSecurityTest {
                 ),
             )
 
-            val ex = assertThrows(SecurityException::class.java) {
-                runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
-            }
+            val ex =
+                assertThrows(SecurityException::class.java) {
+                    runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
+                }
             assertTrue(ex.message!!.contains("path traversal", ignoreCase = true))
         }
     }
@@ -138,17 +142,29 @@ class DriveZipSecurityTest {
                 writeRawStoredZipEntry(fos, BackupIo.ENTRY_MANIFEST, payload2)
             }
 
-            val ex = assertThrows(SecurityException::class.java) {
-                runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
-            }
+            val ex =
+                assertThrows(SecurityException::class.java) {
+                    runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
+                }
             assertTrue(ex.message!!.contains("Duplicate archive entry", ignoreCase = true))
         }
     }
 
-    private fun writeRawStoredZipEntry(out: java.io.OutputStream, name: String, data: ByteArray) {
-        val crc = java.util.zip.CRC32().apply { update(data) }.value
+    private fun writeRawStoredZipEntry(
+        out: java.io.OutputStream,
+        name: String,
+        data: ByteArray,
+    ) {
+        val crc =
+            java.util.zip
+                .CRC32()
+                .apply { update(data) }
+                .value
         val nameBytes = name.toByteArray(Charsets.UTF_8)
-        val bb = java.nio.ByteBuffer.allocate(30).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        val bb =
+            java.nio.ByteBuffer
+                .allocate(30)
+                .order(java.nio.ByteOrder.LITTLE_ENDIAN)
         bb.putInt(0x04034b50)
         bb.putShort(20)
         bb.putShort(0)
@@ -182,9 +198,10 @@ class DriveZipSecurityTest {
                 }
             }
 
-            val ex = assertThrows(SecurityException::class.java) {
-                runBlocking { archiveManager.extractArchiveContents(zipBomb) }
-            }
+            val ex =
+                assertThrows(SecurityException::class.java) {
+                    runBlocking { archiveManager.extractArchiveContents(zipBomb) }
+                }
             assertTrue(ex.message!!.contains("exceeds maximum", ignoreCase = true))
         }
     }
@@ -215,9 +232,10 @@ class DriveZipSecurityTest {
                 ),
             )
 
-            val ex = assertThrows(SecurityException::class.java) {
-                runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
-            }
+            val ex =
+                assertThrows(SecurityException::class.java) {
+                    runBlocking { archiveManager.extractArchiveContents(maliciousZip) }
+                }
             assertTrue(ex.message!!.contains("Unexpected file entry", ignoreCase = true))
         }
     }
@@ -226,15 +244,16 @@ class DriveZipSecurityTest {
     fun testPeekManifestValidatesSchemaVersion() {
         runBlocking {
             val futureSchemaZip = tempFolder.newFile("future_schema.zip")
-            val futureManifest = DriveBackupManifest(
-                backupId = "future_123",
-                createdAtEpochMillis = System.currentTimeMillis(),
-                schemaVersion = 9999, // Future schema version
-                notesCount = 10,
-                tasksCount = 0,
-                categoriesCount = 0,
-                attachmentsCount = 0,
-            )
+            val futureManifest =
+                DriveBackupManifest(
+                    backupId = "future_123",
+                    createdAtEpochMillis = System.currentTimeMillis(),
+                    schemaVersion = 9999, // Future schema version
+                    notesCount = 10,
+                    tasksCount = 0,
+                    categoriesCount = 0,
+                    attachmentsCount = 0,
+                )
             createZipWithEntries(
                 futureSchemaZip,
                 listOf(

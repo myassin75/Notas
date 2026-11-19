@@ -1,5 +1,9 @@
 package haddad.three.notas.data
 
+import haddad.three.notas.ui.edit.MonthlyKind
+import haddad.three.notas.ui.edit.ReminderDraft
+import haddad.three.notas.ui.edit.toDraft
+import haddad.three.notas.ui.edit.toReminder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -8,10 +12,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.ui.edit.MonthlyKind
-import haddad.three.notas.ui.edit.ReminderDraft
-import haddad.three.notas.ui.edit.toDraft
-import haddad.three.notas.ui.edit.toReminder
 import java.util.Calendar
 
 class NoteRepositoryRecurrenceTest {
@@ -565,6 +565,7 @@ class NoteRepositoryRecurrenceTest {
         init {
             notes[initialNote.id] = initialNote
         }
+
         val stored: NoteWithItems
             get() = NoteWithItems(notes.values.first(), emptyList())
     }

@@ -1,5 +1,12 @@
 package haddad.three.notas.data.backup
 
+import haddad.three.notas.data.AttachmentDao
+import haddad.three.notas.data.NoteAttachmentEntity
+import haddad.three.notas.data.auth.AuthRepository
+import haddad.three.notas.data.auth.AuthResult
+import haddad.three.notas.data.auth.AuthState
+import haddad.three.notas.data.auth.AuthUser
+import haddad.three.notas.data.auth.BackendProfile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -12,18 +19,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import haddad.three.notas.data.AttachmentDao
-import haddad.three.notas.data.NoteAttachmentEntity
-import haddad.three.notas.data.auth.AuthRepository
-import haddad.three.notas.data.auth.AuthResult
-import haddad.three.notas.data.auth.AuthState
-import haddad.three.notas.data.auth.AuthUser
-import haddad.three.notas.data.auth.BackendProfile
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AttachmentStorageManagerTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -36,21 +35,42 @@ class AttachmentStorageManagerTest {
         override val authState: Flow<AuthState> = emptyFlow()
         override val currentUser: AuthUser? get() = user
 
-        override suspend fun registerWithEmailAndPassword(email: String, password: String, username: String?): AuthResult<AuthUser> =
-            user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
-        override suspend fun loginWithEmailAndPassword(email: String, password: String): AuthResult<AuthUser> =
-            user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
-        override suspend fun signInWithGoogle(context: android.content.Context): AuthResult<AuthUser> =
-            user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
+        override suspend fun registerWithEmailAndPassword(
+            email: String,
+            password: String,
+            username: String?,
+        ): AuthResult<AuthUser> = user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
+
+        override suspend fun loginWithEmailAndPassword(
+            email: String,
+            password: String,
+        ): AuthResult<AuthUser> = user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
+
+        override suspend fun signInWithGoogle(context: android.content.Context): AuthResult<AuthUser> = user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
+
         override suspend fun sendEmailVerification(): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun reloadUser(): AuthResult<AuthUser> = user?.let { AuthResult.Success(it) } ?: AuthResult.Error("No user")
+
         override suspend fun sendPasswordResetEmail(email: String): AuthResult<Unit> = AuthResult.Success(Unit)
-        override suspend fun confirmPasswordReset(actionCode: String, newPassword: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
+        override suspend fun confirmPasswordReset(
+            actionCode: String,
+            newPassword: String,
+        ): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun verifyPasswordResetCode(actionCode: String): AuthResult<String> = AuthResult.Success("test@example.com")
+
         override suspend fun applyActionCode(actionCode: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun updatePassword(newPassword: String): AuthResult<Unit> = AuthResult.Success(Unit)
+
         override suspend fun syncBackendProfile(): AuthResult<BackendProfile> = AuthResult.Error("Not implemented")
-        override suspend fun signOut() { user = null }
+
+        override suspend fun signOut() {
+            user = null
+        }
+
         override suspend fun getIdToken(forceRefresh: Boolean): String? = token
     }
 
@@ -110,8 +130,8 @@ class AttachmentStorageManagerTest {
         override suspend fun getAttachmentDownloadUrl(
             idToken: String,
             attachmentId: String,
-        ): CloudBackupResult<AttachmentDownloadUrlResponseDto> {
-            return CloudBackupResult.Success(
+        ): CloudBackupResult<AttachmentDownloadUrlResponseDto> =
+            CloudBackupResult.Success(
                 AttachmentDownloadUrlResponseDto(
                     attachmentId = attachmentId,
                     downloadUrl = "https://s3.example.com/download-att-$attachmentId",
@@ -120,7 +140,6 @@ class AttachmentStorageManagerTest {
                     displayName = "photo.jpg",
                 ),
             )
-        }
 
         override suspend fun downloadFileFromPresignedUrl(
             presignedUrl: String,
@@ -131,7 +150,10 @@ class AttachmentStorageManagerTest {
             return CloudBackupResult.Success(Unit)
         }
 
-        override suspend fun deleteAttachment(idToken: String, attachmentId: String): CloudBackupResult<Unit> {
+        override suspend fun deleteAttachment(
+            idToken: String,
+            attachmentId: String,
+        ): CloudBackupResult<Unit> {
             deletedAttachmentId = attachmentId
             return CloudBackupResult.Success(Unit)
         }
@@ -144,90 +166,100 @@ class AttachmentStorageManagerTest {
 
     @Before
     fun setUp() {
-        authRepository = FakeAuthRepository(
-            user = AuthUser(uid = "user_alice", email = "alice@example.com", isEmailVerified = true),
-        )
+        authRepository =
+            FakeAuthRepository(
+                user = AuthUser(uid = "user_alice", email = "alice@example.com", isEmailVerified = true),
+            )
         attachmentDao = FakeAttachmentDao()
         backupApiClient = MockBackupApiClient()
 
-        attachmentStorageManager = AttachmentStorageManager(
-            authRepository = authRepository,
-            backupApiClient = backupApiClient,
-            attachmentDao = attachmentDao,
-            ioDispatcher = testDispatcher,
-        )
+        attachmentStorageManager =
+            AttachmentStorageManager(
+                authRepository = authRepository,
+                backupApiClient = backupApiClient,
+                attachmentDao = attachmentDao,
+                ioDispatcher = testDispatcher,
+            )
     }
 
     @Test
-    fun uploadAttachmentFile_requestsPresignedUrlAndStreamsToS3() = runTest(testDispatcher) {
-        val testFile = File(tempFolder.root, "sample.jpg").apply {
-            writeBytes(ByteArray(256) { 0x11 })
+    fun uploadAttachmentFile_requestsPresignedUrlAndStreamsToS3() =
+        runTest(testDispatcher) {
+            val testFile =
+                File(tempFolder.root, "sample.jpg").apply {
+                    writeBytes(ByteArray(256) { 0x11 })
+                }
+            val attachment =
+                NoteAttachmentEntity(
+                    id = 1L,
+                    uuid = "att-uuid-1",
+                    noteId = 10L,
+                    ownerId = "user_alice",
+                    uri = testFile.toURI().toString(),
+                    displayName = "sample.jpg",
+                    mimeType = "image/jpeg",
+                )
+
+            val result = attachmentStorageManager.uploadAttachmentFile(attachment, testFile)
+            assertTrue(result is CloudBackupResult.Success)
+
+            // Verifies presigned URL was requested with correct metadata
+            assertEquals("att-uuid-1", backupApiClient.requestedUploadDto?.attachmentId)
+            assertEquals("sample.jpg", backupApiClient.requestedUploadDto?.displayName)
+            assertEquals("image/jpeg", backupApiClient.requestedUploadDto?.mimeType)
+
+            // Verifies file was streamed to S3
+            assertNotNull(backupApiClient.uploadedS3File)
+            assertEquals(256L, backupApiClient.uploadedS3File?.length())
+
+            // Verifies confirmation was called
+            assertEquals("att-uuid-1", backupApiClient.verifiedAttachmentId)
         }
-        val attachment = NoteAttachmentEntity(
-            id = 1L,
-            uuid = "att-uuid-1",
-            noteId = 10L,
-            ownerId = "user_alice",
-            uri = testFile.toURI().toString(),
-            displayName = "sample.jpg",
-            mimeType = "image/jpeg",
-        )
-
-        val result = attachmentStorageManager.uploadAttachmentFile(attachment, testFile)
-        assertTrue(result is CloudBackupResult.Success)
-
-        // Verifies presigned URL was requested with correct metadata
-        assertEquals("att-uuid-1", backupApiClient.requestedUploadDto?.attachmentId)
-        assertEquals("sample.jpg", backupApiClient.requestedUploadDto?.displayName)
-        assertEquals("image/jpeg", backupApiClient.requestedUploadDto?.mimeType)
-
-        // Verifies file was streamed to S3
-        assertNotNull(backupApiClient.uploadedS3File)
-        assertEquals(256L, backupApiClient.uploadedS3File?.length())
-
-        // Verifies confirmation was called
-        assertEquals("att-uuid-1", backupApiClient.verifiedAttachmentId)
-    }
 
     @Test
-    fun uploadAttachmentFile_preservesLocalFileOnFailure() = runTest(testDispatcher) {
-        val testFile = File(tempFolder.root, "important_doc.pdf").apply {
-            writeBytes("Important content".toByteArray())
+    fun uploadAttachmentFile_preservesLocalFileOnFailure() =
+        runTest(testDispatcher) {
+            val testFile =
+                File(tempFolder.root, "important_doc.pdf").apply {
+                    writeBytes("Important content".toByteArray())
+                }
+            val attachment =
+                NoteAttachmentEntity(
+                    id = 2L,
+                    uuid = "att-uuid-2",
+                    noteId = 20L,
+                    ownerId = "user_alice",
+                    uri = testFile.toURI().toString(),
+                    displayName = "important_doc.pdf",
+                    mimeType = "application/pdf",
+                )
+
+            backupApiClient.simulateS3UploadFailure = true
+
+            val result = attachmentStorageManager.uploadAttachmentFile(attachment, testFile)
+            assertTrue(result is CloudBackupResult.Error)
+
+            // Local file MUST remain intact
+            assertTrue("Local attachment file must be preserved upon upload failure", testFile.exists())
+            assertEquals("Important content", testFile.readText())
         }
-        val attachment = NoteAttachmentEntity(
-            id = 2L,
-            uuid = "att-uuid-2",
-            noteId = 20L,
-            ownerId = "user_alice",
-            uri = testFile.toURI().toString(),
-            displayName = "important_doc.pdf",
-            mimeType = "application/pdf",
-        )
-
-        backupApiClient.simulateS3UploadFailure = true
-
-        val result = attachmentStorageManager.uploadAttachmentFile(attachment, testFile)
-        assertTrue(result is CloudBackupResult.Error)
-
-        // Local file MUST remain intact
-        assertTrue("Local attachment file must be preserved upon upload failure", testFile.exists())
-        assertEquals("Important content", testFile.readText())
-    }
 
     @Test
-    fun downloadAttachmentFile_streamsFromPresignedUrl() = runTest(testDispatcher) {
-        val destinationFile = File(tempFolder.root, "downloaded.jpg")
+    fun downloadAttachmentFile_streamsFromPresignedUrl() =
+        runTest(testDispatcher) {
+            val destinationFile = File(tempFolder.root, "downloaded.jpg")
 
-        val result = attachmentStorageManager.downloadAttachmentFile("att-uuid-3", destinationFile)
-        assertTrue(result is CloudBackupResult.Success)
-        assertTrue(destinationFile.exists())
-        assertEquals("downloaded-content", destinationFile.readText())
-    }
+            val result = attachmentStorageManager.downloadAttachmentFile("att-uuid-3", destinationFile)
+            assertTrue(result is CloudBackupResult.Success)
+            assertTrue(destinationFile.exists())
+            assertEquals("downloaded-content", destinationFile.readText())
+        }
 
     @Test
-    fun deleteRemoteAttachment_callsBackendDeleteEndpoint() = runTest(testDispatcher) {
-        val result = attachmentStorageManager.deleteRemoteAttachment("att-uuid-4")
-        assertTrue(result is CloudBackupResult.Success)
-        assertEquals("att-uuid-4", backupApiClient.deletedAttachmentId)
-    }
+    fun deleteRemoteAttachment_callsBackendDeleteEndpoint() =
+        runTest(testDispatcher) {
+            val result = attachmentStorageManager.deleteRemoteAttachment("att-uuid-4")
+            assertTrue(result is CloudBackupResult.Success)
+            assertEquals("att-uuid-4", backupApiClient.deletedAttachmentId)
+        }
 }

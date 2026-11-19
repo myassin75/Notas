@@ -55,17 +55,19 @@ fun WelcomeScreen(
     val loginState = viewModel?.loginState?.collectAsStateWithLifecycle()?.value
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(palette.notasBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(palette.notasBackground)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -75,18 +77,20 @@ fun WelcomeScreen(
             ) {
                 // Top Brand Card (360x290 in Figma)
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
                     shape = RoundedCornerShape(NotasTokens.CardRadiusLarge),
                     colors = CardDefaults.cardColors(containerColor = palette.cardSurface),
                     border = androidx.compose.foundation.BorderStroke(1.dp, palette.cardBorder),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp, horizontal = 24.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 40.dp, horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
@@ -150,9 +154,10 @@ fun WelcomeScreen(
 
                     // Alternative divider with "or"
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         HorizontalDivider(

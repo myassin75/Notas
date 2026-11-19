@@ -54,10 +54,21 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-private val MonthNamesEn = arrayOf(
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-)
+private val MonthNamesEn =
+    arrayOf(
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    )
 
 private val WeekdayNarrowLabelsEn = listOf("M", "T", "W", "T", "F", "S", "S")
 
@@ -67,7 +78,8 @@ private fun getLocalizedMonthName(month: YearMonth): String {
         MonthNamesEn[month.monthValue - 1]
     } else {
         val formatter = DateTimeFormatter.ofPattern("MMMM", locale)
-        month.format(formatter)
+        month
+            .format(formatter)
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     }
 }
@@ -106,7 +118,7 @@ fun YearNavigationHeader(
                         fadeIn(animationSpec = tween(130))
                 ).togetherWith(
                     slideOutHorizontally(animationSpec = tween(110, easing = FastOutSlowInEasing)) { width -> -direction * width / 3 } +
-                        fadeOut(animationSpec = tween(110))
+                        fadeOut(animationSpec = tween(110)),
                 )
             },
             label = "YearTitleAnimation",
@@ -327,12 +339,14 @@ fun YearMonthCard(
             null
         }
 
-    val monthName = remember(month.monthValue) {
-        getLocalizedMonthName(month)
-    }
-    val monthNumberString = remember(month.monthValue) {
-        String.format(Locale.US, "%02d", month.monthValue)
-    }
+    val monthName =
+        remember(month.monthValue) {
+            getLocalizedMonthName(month)
+        }
+    val monthNumberString =
+        remember(month.monthValue) {
+            String.format(Locale.US, "%02d", month.monthValue)
+        }
 
     Surface(
         shape = RoundedCornerShape(18.dp),
@@ -558,7 +572,7 @@ private fun YearMonthDateGrid(
                                                         Modifier.border(1.dp, Color.White, CircleShape)
                                                     } else {
                                                         Modifier
-                                                    }
+                                                    },
                                                 ),
                                         contentAlignment = Alignment.Center,
                                     ) {
@@ -673,9 +687,10 @@ fun YearTodayFloatingBar(
                 },
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {

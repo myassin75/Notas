@@ -1,10 +1,10 @@
 package haddad.three.notas.ui.edit
 
+import haddad.three.notas.domain.checklist.EditableItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.domain.checklist.EditableItem
 
 class ChecklistRenderingVisibilityTest {
     private val parentId = 1L

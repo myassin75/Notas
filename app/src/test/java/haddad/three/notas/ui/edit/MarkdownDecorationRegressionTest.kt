@@ -10,10 +10,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import haddad.three.notas.ui.common.MarkdownStyler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import haddad.three.notas.ui.common.MarkdownStyler
 
 class MarkdownDecorationRegressionTest {
     private val styler =
