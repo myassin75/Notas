@@ -144,6 +144,17 @@ class SearchViewModel
             }
         }
 
+        fun toggleDone(noteId: Long) {
+            viewModelScope.launch {
+                val item = noteRepository.get(noteId) ?: return@launch
+                if (item.note.completedAt != null) {
+                    noteRepository.markIncomplete(noteId)
+                } else {
+                    noteRepository.markCompleted(noteId)
+                }
+            }
+        }
+
         private fun performSearch(
             newQuery: String,
             debounceMs: Long,

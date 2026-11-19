@@ -88,6 +88,7 @@ import haddad.three.notas.di.DevOptionsDependenciesEntryPoint
 import haddad.three.notas.diagnostics.DiagnosticLog
 import haddad.three.notas.reminders.ReminderReceiver
 import haddad.three.notas.reminders.ReminderScheduler
+import haddad.three.notas.reminders.canScheduleExactAlarmsCompat
 import haddad.three.notas.trash.RememberTrashSweepWork
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.components.RememberConfirmDialog
@@ -1376,10 +1377,7 @@ private fun permissionsAndStorageRows(
         context.getString(R.string.dev_options_info_notifications_enabled) to
             NotificationManagerCompat.from(context).areNotificationsEnabled().toString(),
         context.getString(R.string.dev_options_info_exact_alarms) to
-            (
-                runCatching { alarmManager.canScheduleExactAlarms() }.getOrNull()?.toString()
-                    ?: context.getString(R.string.dev_options_value_unknown)
-            ),
+            alarmManager.canScheduleExactAlarmsCompat().toString(),
         context.getString(R.string.dev_options_info_battery_optimization) to
             if (powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
                 context.getString(R.string.dev_options_value_ignored)
@@ -1429,8 +1427,13 @@ private fun notifSettingsIntent(context: Context): Intent =
     }
 
 private fun alarmsAndRemindersIntent(context: Context): Intent =
-    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:${context.packageName}".toUri())
-        .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, "package:${context.packageName}".toUri())
+            .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+    } else {
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri())
+            .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+    }
 
 private fun batteryIntent(): Intent =
     Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)

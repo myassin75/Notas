@@ -46,6 +46,7 @@ fun SwipeableRememberNoteCard(
     onRevealStarted: ((Long) -> Unit)? = null,
     onRevealClosed: ((Long) -> Unit)? = null,
     reminderNotificationsAllowed: Boolean = true,
+    onToggleDone: ((Long) -> Unit)? = null,
 ) {
     SwipeableRememberNoteCard(
         note = note,
@@ -62,6 +63,7 @@ fun SwipeableRememberNoteCard(
         onRevealStarted = onRevealStarted,
         onRevealClosed = onRevealClosed,
         reminderNotificationsAllowed = reminderNotificationsAllowed,
+        onToggleDone = onToggleDone,
     )
 }
 
@@ -81,6 +83,7 @@ fun SwipeableRememberNoteCard(
     onRevealStarted: ((Long) -> Unit)? = null,
     onRevealClosed: ((Long) -> Unit)? = null,
     reminderNotificationsAllowed: Boolean = true,
+    onToggleDone: ((Long) -> Unit)? = null,
 ) {
     val swipeStart = interaction.swipeStartToEnd
     val swipeEnd = interaction.swipeEndToStart
@@ -140,6 +143,7 @@ fun SwipeableRememberNoteCard(
                 activeInDetailPane = activeInDetailPane,
                 onLongClick = onLongClick,
                 reminderNotificationsAllowed = reminderNotificationsAllowed,
+                onToggleDone = onToggleDone,
             )
         }
         return
@@ -225,6 +229,7 @@ fun SwipeableRememberNoteCard(
             activeInDetailPane = activeInDetailPane,
             onLongClick = onLongClick,
             reminderNotificationsAllowed = reminderNotificationsAllowed,
+            onToggleDone = onToggleDone,
         )
     }
 }

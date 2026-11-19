@@ -39,9 +39,18 @@ import haddad.three.notas.data.drive.model.DriveBackupUiState
 import haddad.three.notas.data.drive.model.DriveFileDto
 import haddad.three.notas.data.drive.model.DriveResult
 import haddad.three.notas.data.drive.model.RestoreMode
+import haddad.three.notas.data.drive.model.RestorePreview
 import haddad.three.notas.data.drive.model.RestoreSummary
 import haddad.three.notas.data.drive.model.toErrorResult
+import haddad.three.notas.data.sync.change.PendingChangeDao
 import haddad.three.notas.data.sync.change.SyncContext
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataDao
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataEntity
+import haddad.three.notas.data.sync.conflict.SyncConflictRecordDao
+import haddad.three.notas.data.sync.hlc.Hlc
+import haddad.three.notas.data.sync.hlc.HlcClock
+import haddad.three.notas.data.sync.worker.DriveSyncState
+import haddad.three.notas.data.sync.worker.DriveSyncStateStore
 import haddad.three.notas.di.IoDispatcher
 import haddad.three.notas.reminders.ReminderScheduler
 import kotlinx.coroutines.CoroutineDispatcher
@@ -97,6 +106,11 @@ class GoogleDriveBackupProvider
         private val database: RememberDatabase?,
         private val scheduler: ReminderScheduler?,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+        private val hlcClock: HlcClock? = null,
+        private val pendingChangeDao: PendingChangeDao? = null,
+        private val conflictMetadataDao: SyncConflictMetadataDao? = null,
+        private val conflictRecordDao: SyncConflictRecordDao? = null,
+        private val driveSyncStateStore: DriveSyncStateStore? = null,
     ) {
         private val _uiState = MutableStateFlow(DriveBackupUiState())
         val uiState: StateFlow<DriveBackupUiState> = _uiState.asStateFlow()
@@ -190,9 +204,11 @@ class GoogleDriveBackupProvider
                                         put("backupId", backupId)
                                         put("createdAt", timestamp.toString())
                                         put("schemaVersion", manifest.schemaVersion.toString())
+                                        put("appVersion", manifest.appVersion)
                                         put("keyId", keyId.toString())
                                         put("notesCount", manifest.notesCount.toString())
                                         put("tasksCount", manifest.tasksCount.toString())
+                                        put("eventsCount", manifest.eventsCount.toString())
                                         put("categoriesCount", manifest.categoriesCount.toString())
                                         put("attachmentsCount", manifest.attachmentsCount.toString())
                                         put("sourceDevice", manifest.sourceDevice)
@@ -307,11 +323,30 @@ class GoogleDriveBackupProvider
         }
 
         /**
+         * Returns a pre-restore preview of backup metadata and compatibility checks.
+         */
+        fun getRestorePreview(item: DriveBackupItem): RestorePreview {
+            val warnings = mutableListOf<String>()
+            val isCompatible = item.schemaVersion <= BackupIo.SCHEMA_VERSION
+            if (!isCompatible) {
+                warnings.add("Backup schema version (${item.schemaVersion}) is newer than current app supported version (${BackupIo.SCHEMA_VERSION}). Please update Notas before restoring.")
+            }
+            return RestorePreview(
+                backupItem = item,
+                isCompatible = isCompatible,
+                warningMessages = warnings,
+            )
+        }
+
+        /**
          * Safely downloads, verifies, decrypts, and applies a selected Google Drive backup.
+         * If the Master Encryption Key (MEK) is not present locally (e.g. New Device / fresh install),
+         * fetches the zero-knowledge recovery envelope and requires the 12-word recovery phrase.
          */
         suspend fun restoreBackup(
             fileId: String,
             mode: RestoreMode = RestoreMode.REPLACE,
+            recoveryPhrase: String? = null,
             onProgress: ((Float) -> Unit)? = null,
         ): DriveResult<RestoreSummary> =
             withContext(ioDispatcher) {
@@ -328,6 +363,68 @@ class GoogleDriveBackupProvider
                 val accessToken =
                     obtainAccessToken()
                         ?: return@withContext DriveResult.Unauthorized
+
+                // Verify or Recover Master Encryption Key (MEK)
+                var mek = mekManager.getActiveMasterKey()
+                if (mek == null) {
+                    val envelopeResult = envelopeManager.fetchRecoveryEnvelopeFromDrive(accessToken)
+                    if (envelopeResult !is DriveResult.Success || envelopeResult.data == null) {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                status = DriveBackupStatus.RESTORE_FAILED,
+                                errorMessage = "Master Encryption Key is not initialized on this device and no recovery envelope was found on Google Drive.",
+                            )
+                        return@withContext DriveResult.Error(
+                            "Master Encryption Key is not initialized on this device and no recovery envelope was found on Google Drive.",
+                        )
+                    }
+
+                    val envelope = envelopeResult.data
+                    if (recoveryPhrase.isNullOrBlank()) {
+                        val backupItem =
+                            _uiState.value.backups.firstOrNull { it.fileId == fileId }
+                                ?: DriveBackupItem(
+                                    fileId = fileId,
+                                    backupId = fileId,
+                                    fileName = "backup",
+                                    sizeBytes = 0L,
+                                    createdAtEpochMillis = System.currentTimeMillis(),
+                                    schemaVersion = BackupIo.SCHEMA_VERSION,
+                                    keyId = envelope.keyId,
+                                    notesCount = 0,
+                                    tasksCount = 0,
+                                    eventsCount = 0,
+                                    categoriesCount = 0,
+                                    attachmentsCount = 0,
+                                    sourceDevice = "",
+                                    plainSha256 = "",
+                                )
+                        _uiState.value =
+                            _uiState.value.copy(
+                                status = DriveBackupStatus.IDLE,
+                                statusMessage = "12-word recovery phrase required to decrypt backup.",
+                            )
+                        return@withContext DriveResult.NeedsRecoveryPhrase(backupItem, envelope)
+                    }
+
+                    try {
+                        val words = recoveryPhrase.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+                        if (words.size != 12) {
+                            return@withContext DriveResult.Error("Recovery phrase must contain exactly 12 words.")
+                        }
+                        mek = envelopeManager.recoverMekOnNewDevice(words, "", envelope)
+                    } catch (e: Exception) {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                status = DriveBackupStatus.RESTORE_FAILED,
+                                errorMessage = "Invalid recovery phrase: ${e.message}",
+                            )
+                        return@withContext DriveResult.Error(
+                            "Invalid recovery phrase. Please check your 12 words and try again: ${e.message}",
+                            cause = e,
+                        )
+                    }
+                }
 
                 val stagingEncryptedFile = File(context.cacheDir, "drive_restore_enc_$fileId.bin")
                 val stagingPlainZip = File(context.cacheDir, "drive_restore_plain_$fileId.zip")
@@ -369,10 +466,6 @@ class GoogleDriveBackupProvider
                             status = DriveBackupStatus.DECRYPTING,
                             statusMessage = "Decrypting archive with client-side MEK...",
                         )
-
-                    val mek =
-                        mekManager.getActiveMasterKey()
-                            ?: return@withContext DriveResult.Error("Master Encryption Key is not initialized on this device.")
 
                     archiveManager.decryptArchiveToFile(
                         encryptedContainerFile = stagingEncryptedFile,
@@ -572,6 +665,55 @@ class GoogleDriveBackupProvider
                             attachmentsBackupDir.deleteRecursively()
                         }
 
+                        // 11. Incremental Sync Reconciliation
+                        try {
+                            var maxRestoredTime = manifest.createdAtEpochMillis
+                            for (i in 0 until notesArray.length()) {
+                                val t = notesArray.getJSONObject(i).optLong("updatedAt", 0L)
+                                if (t > maxRestoredTime) maxRestoredTime = t
+                            }
+
+                            hlcClock?.mergeRemote(
+                                Hlc(
+                                    physicalTime = maxRestoredTime + 1000L,
+                                    logicalCounter = 0,
+                                    deviceId = "restore_${manifest.backupId}",
+                                ),
+                            )
+
+                            if (mode == RestoreMode.REPLACE) {
+                                pendingChangeDao?.clearAll()
+                                conflictRecordDao?.clearAll()
+                            }
+
+                            if (conflictMetadataDao != null) {
+                                for (i in 0 until notesArray.length()) {
+                                    val noteObj = notesArray.getJSONObject(i)
+                                    val noteUuid = noteObj.optString("uuid")
+                                    val updatedAt = noteObj.optLong("updatedAt", manifest.createdAtEpochMillis)
+                                    if (noteUuid.isNotBlank()) {
+                                        val hlcStr = "$updatedAt:0:restore"
+                                        val fields = listOf("title", "content", "categoryUuid", "isPinned", "isArchived", "kind")
+                                        for (field in fields) {
+                                            conflictMetadataDao.insertOrUpdate(
+                                                SyncConflictMetadataEntity(
+                                                    entityType = "note",
+                                                    entityId = noteUuid,
+                                                    fieldName = field,
+                                                    hlcTimestamp = hlcStr,
+                                                    updatedAt = updatedAt,
+                                                ),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            driveSyncStateStore?.updateSyncState(DriveSyncState.Idle)
+                        } catch (reconcileException: Exception) {
+                            // Non-fatal logging for sync reconciliation
+                        }
+
                         _uiState.value =
                             _uiState.value.copy(
                                 status = DriveBackupStatus.RESTORE_COMPLETED,
@@ -647,6 +789,7 @@ class GoogleDriveBackupProvider
                 val state = drivePrefs.getState()
                 driveAuthDelegate.disconnect(context, state.connectedEmail)
                 drivePrefs.setDisconnected()
+                haddad.three.notas.data.sync.worker.SyncWorkScheduler.cancel(context)
                 _uiState.value =
                     _uiState.value.copy(
                         isConnected = false,
@@ -682,11 +825,13 @@ class GoogleDriveBackupProvider
                 keyId = appProperties?.get("keyId")?.toIntOrNull() ?: CryptoConstants.DEFAULT_KEY_ID,
                 notesCount = appProperties?.get("notesCount")?.toIntOrNull() ?: 0,
                 tasksCount = appProperties?.get("tasksCount")?.toIntOrNull() ?: 0,
+                eventsCount = appProperties?.get("eventsCount")?.toIntOrNull() ?: 0,
                 categoriesCount = appProperties?.get("categoriesCount")?.toIntOrNull() ?: 0,
                 attachmentsCount = appProperties?.get("attachmentsCount")?.toIntOrNull() ?: 0,
                 sourceDevice = appProperties?.get("sourceDevice").orEmpty(),
                 plainSha256 = appProperties?.get("plainSha256").orEmpty(),
                 isEncrypted = true,
+                appVersion = appProperties?.get("appVersion") ?: "1.0.0",
             )
 
         private fun DriveFileDto.toBackupItemOrNull(): DriveBackupItem? {
@@ -702,11 +847,13 @@ class GoogleDriveBackupProvider
                 keyId = props["keyId"]?.toIntOrNull() ?: CryptoConstants.DEFAULT_KEY_ID,
                 notesCount = props["notesCount"]?.toIntOrNull() ?: 0,
                 tasksCount = props["tasksCount"]?.toIntOrNull() ?: 0,
+                eventsCount = props["eventsCount"]?.toIntOrNull() ?: 0,
                 categoriesCount = props["categoriesCount"]?.toIntOrNull() ?: 0,
                 attachmentsCount = props["attachmentsCount"]?.toIntOrNull() ?: 0,
                 sourceDevice = props["sourceDevice"].orEmpty(),
                 plainSha256 = props["plainSha256"].orEmpty(),
                 isEncrypted = true,
+                appVersion = props["appVersion"] ?: "1.0.0",
             )
         }
 

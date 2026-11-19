@@ -600,4 +600,101 @@ class CalendarAcceptanceTest {
                     .title,
             )
         }
+
+    /**
+     * Requirement 9: Populated Agenda stability with multiple events and tasks.
+     * Verifies that multiple events and checklist tasks on the same day populate cleanly
+     * into selectedDayEvents and selectedDayTasks without data errors or state corruption.
+     */
+    @Test
+    fun test_9_populated_agenda_multiple_events_and_tasks_stability() =
+        runTest {
+            val testDate = LocalDate.of(2026, 11, 20)
+            val baseTime = testDate.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val event1 = NoteWithItems(
+                note = NoteEntity(
+                    id = 201L,
+                    kind = NoteKind.NOTE,
+                    title = "Morning Standup",
+                    body = "Discuss agenda fix",
+                    colorIndex = 1,
+                    trashed = false,
+                    createdAt = baseTime,
+                    updatedAt = baseTime,
+                    reminderAt = baseTime,
+                    endAt = baseTime + 1800000L,
+                ),
+                items = emptyList(),
+            )
+
+            val event2 = NoteWithItems(
+                note = NoteEntity(
+                    id = 202L,
+                    kind = NoteKind.NOTE,
+                    title = "All Day Release",
+                    body = "Notas v3.8.0 release",
+                    colorIndex = 2,
+                    trashed = false,
+                    createdAt = baseTime,
+                    updatedAt = baseTime,
+                    reminderAt = baseTime,
+                    endAt = baseTime + 7200000L,
+                    isAllDay = true,
+                ),
+                items = emptyList(),
+            )
+
+            val task1 = NoteWithItems(
+                note = NoteEntity(
+                    id = 203L,
+                    kind = NoteKind.LIST,
+                    title = "Release Checklist",
+                    body = "",
+                    colorIndex = 3,
+                    trashed = false,
+                    createdAt = baseTime,
+                    updatedAt = baseTime,
+                    reminderAt = baseTime + 3600000L,
+                ),
+                items = listOf(
+                    ChecklistItemEntity(id = 1L, noteId = 203L, text = "Verify icons", checked = true, sortOrder = 0.0),
+                    ChecklistItemEntity(id = 2L, noteId = 203L, text = "Test Agenda", checked = false, sortOrder = 1.0),
+                ),
+            )
+
+            scheduledNotesFlow.value = listOf(event1, event2, task1)
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onDateSelected(testDate)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(testDate, state.selectedDate)
+            assertEquals(2, state.selectedDayEvents.size)
+            assertEquals(1, state.selectedDayTasks.size)
+
+            val titles = state.selectedDayEvents.map { it.title }.toSet()
+            assertTrue(titles.contains("Morning Standup"))
+            assertTrue(titles.contains("All Day Release"))
+            assertEquals("Release Checklist", state.selectedDayTasks[0].title)
+
+            // Switch to an empty date
+            val emptyDate = testDate.plusDays(1)
+            viewModel.onDateSelected(emptyDate)
+            advanceUntilIdle()
+
+            assertEquals(emptyDate, viewModel.uiState.value.selectedDate)
+            assertTrue(viewModel.uiState.value.selectedDayEvents.isEmpty())
+            assertTrue(viewModel.uiState.value.selectedDayTasks.isEmpty())
+
+            // Switch back to populated date
+            viewModel.onDateSelected(testDate)
+            advanceUntilIdle()
+
+            assertEquals(2, viewModel.uiState.value.selectedDayEvents.size)
+            assertEquals(1, viewModel.uiState.value.selectedDayTasks.size)
+        }
 }

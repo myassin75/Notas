@@ -95,3 +95,4 @@ class FirebaseAuthRepository
 
         override suspend fun syncBackendProfile(): AuthResult<BackendProfile> = offlineError
     }
+

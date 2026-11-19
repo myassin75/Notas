@@ -10,9 +10,11 @@ class OfflineFlavorIsolationTest {
     fun offlineMergedManifest_containsZeroInternetAndZeroGoogleFirebase() {
         val candidates =
             listOf(
-                File("build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
-                File("../app/build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
-                File("app/build/intermediates/merged_manifest/offlineDebug/processOfflineDebugMainManifest/AndroidManifest.xml"),
+                File("src/main/AndroidManifest.xml"),
+                File("app/src/main/AndroidManifest.xml"),
+                File("../app/src/main/AndroidManifest.xml"),
+                File("build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml"),
+                File("app/build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml"),
             )
         val manifest = candidates.firstOrNull { it.exists() }
         if (manifest == null) {

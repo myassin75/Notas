@@ -24,20 +24,20 @@ object CalendarDesignTokens {
     val DynamicOnPrimary: Color @Composable get() = MaterialTheme.colorScheme.onPrimary
 
     // Background & Card Surfaces
-    val ScreenBgLight = Color(0xFFF8F7FA)
+    val ScreenBgLight = Color(0xFFF0F1F5)
     val ScreenBgDark = Color(0xFF181818)
-    val CardBgLight = Color(0xFFF2F2F4)
-    val CardBgDark = Color(0xFF1F1F22)
+    val CardBgLight = Color(0xFFFFFFFF)
+    val CardBgDark = Color(0xFF2B2B2B)
     val CardBorderLight = Color(0xFFE5E5EA)
-    val CardBorderDark = Color(0xFF2D2D30)
+    val CardBorderDark = Color(0xFF3A3A3A)
 
     // Typography Colors
     val TextPrimaryLight = Color(0xFF1E1B26)
-    val TextPrimaryDark = Color(0xFFF2F1F8)
+    val TextPrimaryDark = Color(0xFFF5F5F5)
     val TextSecondaryLight = Color(0xFF7A7786)
-    val TextSecondaryDark = Color(0xFFB4B3C5)
+    val TextSecondaryDark = Color(0xFFA3A3A3)
     val TextMutedLight = Color(0xFF8E8A98)
-    val TextMutedDark = Color(0xFF6B6A78)
+    val TextMutedDark = Color(0xFFA3A3A3)
     val OutOfMonthTextLight = Color(0xFFCBC8D4)
     val OutOfMonthTextDark = Color(0xFF555462)
 

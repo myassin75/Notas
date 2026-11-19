@@ -261,7 +261,6 @@ fun NoteEntity.withSyncedPrimaryReminder(): NoteEntity {
 @Fts4(
     contentEntity = NoteEntity::class,
     tokenizer = "unicode61",
-    tokenizerArgs = ["remove_diacritics=2"],
 )
 data class NoteFtsEntity(
     val title: String,

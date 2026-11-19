@@ -130,6 +130,7 @@ import haddad.three.notas.data.RecurrenceEndKind
 import haddad.three.notas.data.RecurrenceRule
 import haddad.three.notas.data.RecurrenceUnit
 import haddad.three.notas.domain.formatTimeOfDay
+import haddad.three.notas.reminders.canScheduleExactAlarmsCompat
 import haddad.three.notas.reminders.computeReminderDurationPresets
 import haddad.three.notas.reminders.computeSnoozePresets
 import haddad.three.notas.ui.common.AppBottomSheet
@@ -530,7 +531,7 @@ fun ReminderPickerSheet(
 
     val context = LocalContext.current
     val am = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-    var canScheduleExact by remember { mutableStateOf(am.canScheduleExactAlarms()) }
+    var canScheduleExact by remember { mutableStateOf(am.canScheduleExactAlarmsCompat()) }
     var notificationsGranted by remember {
         mutableStateOf(NotificationManagerCompat.from(context).areNotificationsEnabled())
     }
@@ -546,7 +547,7 @@ fun ReminderPickerSheet(
         val observer =
             LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    canScheduleExact = am.canScheduleExactAlarms()
+                    canScheduleExact = am.canScheduleExactAlarmsCompat()
                     notificationsGranted = NotificationManagerCompat.from(context).areNotificationsEnabled()
                 }
             }
@@ -972,8 +973,14 @@ fun ReminderPickerSheet(
                         .appClickable {
                             @SuppressLint("InlinedApi")
                             val intent =
-                                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                    data = "package:${context.packageName}".toUri()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                        data = "package:${context.packageName}".toUri()
+                                    }
+                                } else {
+                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = "package:${context.packageName}".toUri()
+                                    }
                                 }
                             context.startActivity(intent)
                         }.padding(16.dp),

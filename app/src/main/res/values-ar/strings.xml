@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cloud & Sync (Arabic) -->
+    <string name="settings_cloud_sync_section">المزامنة السحابية</string>
+    <string name="cloud_sync_title">مزامنة Google Drive</string>
+    <string name="cloud_sync_subtitle">مزامنة مشفرة وشاملة من طرف إلى طرف</string>
+    <string name="cloud_sync_account_title">حساب Google Drive</string>
+    <string name="cloud_sync_connected_as">متصل بحساب %1$s</string>
+    <string name="cloud_sync_not_connected">غير متصل</string>
+    <string name="cloud_sync_connect_button">ربط Google Drive</string>
+    <string name="cloud_sync_disconnect_button">قطع اتصال الحساب</string>
+    <string name="cloud_sync_disconnect_dialog_title">هل تريد قطع الاتصال بـ Google Drive؟</string>
+    <string name="cloud_sync_disconnect_dialog_message">ستتوقف المزامنة السحابية. ستبقى جميع ملاحظاتك ومهامك بأمان على هذا الجهاز. سيتم الاحتفاظ بالتغييرات المعلقة ومزامنتها عند إعادة الاتصال. لن يتم حذف الملفات الموجودة على Google Drive.</string>
+    <string name="cloud_sync_disconnect_confirm">قطع الاتصال</string>
+    <string name="cloud_sync_status_title">حالة المزامنة</string>
+    <string name="cloud_sync_state_idle">محدث</string>
+    <string name="cloud_sync_state_queued">في قائمة الانتظار...</string>
+    <string name="cloud_sync_state_running">جارٍ المزامنة...</string>
+    <string name="cloud_sync_state_uploading">جارٍ رفع التغييرات...</string>
+    <string name="cloud_sync_state_downloading">جارٍ البحث عن تحديثات...</string>
+    <string name="cloud_sync_state_applying">جارٍ تطبيق التغييرات البعيدة...</string>
+    <string name="cloud_sync_state_waiting_network">في انتظار الاتصال بالشبكة...</string>
+    <string name="cloud_sync_state_waiting_auth">مطلوب تصريح الدخول</string>
+    <string name="cloud_sync_state_retrying">إعادة المحاولة (%1$d من %2$d)...</string>
+    <string name="cloud_sync_state_conflicts">%1$d تعارضات بحاجة إلى معالجة</string>
+    <string name="cloud_sync_state_failed">فشلت المزامنة</string>
+    <string name="cloud_sync_state_completed">اكتملت المزامنة بنجاح</string>
+    <string name="cloud_sync_last_sync">آخر مزامنة: %1$s</string>
+    <string name="cloud_sync_never">أبداً</string>
+    <string name="cloud_sync_pending_changes">تغييرات محلية معلقة: %1$d</string>
+    <string name="cloud_sync_sync_now">مزامنة الآن</string>
+    <string name="cloud_sync_auto_sync_title">المزامنة التلقائية</string>
+    <string name="cloud_sync_auto_sync_subtitle">المزامنة تلقائياً في الخلفية وعند تعديل البيانات</string>
+    <string name="cloud_sync_network_policy_title">تفضيلات الشبكة</string>
+    <string name="cloud_sync_network_any">أي شبكة (Wi-Fi أو بيانات الجوال)</string>
+    <string name="cloud_sync_network_wifi_only">Wi-Fi فقط</string>
+    <string name="cloud_sync_frequency_title">تكرار المزامنة</string>
+    <string name="cloud_sync_freq_15m">كل 15 دقيقة</string>
+    <string name="cloud_sync_freq_30m">كل 30 دقيقة</string>
+    <string name="cloud_sync_freq_1h">كل ساعة (افتراضي)</string>
+    <string name="cloud_sync_freq_6h">كل 6 ساعات</string>
+    <string name="cloud_sync_freq_12h">كل 12 ساعة</string>
+    <string name="cloud_sync_freq_24h">كل 24 ساعة</string>
+    <string name="cloud_sync_conflicts_title">إدارة التعارضات</string>
+    <string name="cloud_sync_conflicts_subtitle">%1$d تعارض بحاجة إلى معالجة</string>
+    <string name="cloud_sync_no_conflicts">لا توجد تعارضات</string>
+    <string name="cloud_sync_history_title">سجل المزامنة والتشخيص</string>
+    <string name="cloud_sync_no_history">لا يوجد سجل مزامنة حتى الآن</string>
+    <string name="cloud_sync_clear_history">مسح السجل</string>
+    <string name="cloud_sync_keep_local">الاحتفاظ بالنسخة المحلية</string>
+    <string name="cloud_sync_keep_remote">الاحتفاظ بالنسخة البعيدة</string>
+    <string name="cloud_sync_keep_both">الاحتفاظ بكلتيهما</string>
+    <string name="cloud_sync_merge">دمج التغييرات</string>
+    <string name="cloud_sync_restore_deleted">استعادة العنصر</string>
+    <string name="cloud_sync_privacy_note">يحفظ Notas سجلات المزامنة في مجلد appDataFolder الخاص والمخفي في Google Drive. جميع البيانات مشفرة محلياً بواسطة AES-256-GCM (NOTAS_E1). لا يمكن لـ Google أو أي طرف ثالث قراءة محتوى ملاحظاتك.</string>
+    <string name="cloud_sync_offline_flavor_notice">المزامنة السحابية غير مفعلة في النسخة غير المتصلة من Notas.</string>
+    <string name="cloud_sync_reauth_button">تسجيل الدخول مجدداً</string>
+
+    <!-- Cloud Backup & Restore -->
+    <string name="cloud_backup_section_title">النسخ الاحتياطي المشفر على Google Drive</string>
+    <string name="cloud_backup_section_subtitle">نسخة احتياطية كاملة مشفرة على جهازك (AES-256-GCM) في appDataFolder</string>
+    <string name="cloud_backup_backup_now">إنشاء نسخة احتياطية الآن</string>
+    <string name="cloud_backup_auto_backup_title">نسخ احتياطي سحابي يومي</string>
+    <string name="cloud_backup_auto_backup_subtitle">إنشاء نسخة احتياطية مشفرة بالكامل تلقائياً كل يوم</string>
+    <string name="cloud_backup_no_backups">لا توجد نسخ احتياطية على Google Drive</string>
+    <string name="cloud_backup_restore_button">استعادة</string>
+    <string name="cloud_backup_delete_button">حذف</string>
+    <string name="cloud_backup_preview_title">معاينة استعادة النسخة الاحتياطية</string>
+    <string name="cloud_backup_preview_source">المصدر: %1$s (v%2$s)</string>
+    <string name="cloud_backup_preview_items">الملاحظات: %1$d • القوائم: %2$d • الأحداث: %3$d • التصنيفات: %4$d • المرفقات: %5$d</string>
+    <string name="cloud_backup_preview_size">الحجم: %1$s</string>
+    <string name="cloud_backup_mode_replace">استبدال كافة البيانات</string>
+    <string name="cloud_backup_mode_replace_desc">استبدال الملاحظات الحالية بالنسخة الاحتياطية. سيتم أخذ لقطة أمان محلية تلقائياً قبل الاستبدال.</string>
+    <string name="cloud_backup_mode_merge">دمج مع البيانات الحالية</string>
+    <string name="cloud_backup_mode_merge_desc">الاحتفاظ بالملاحظات الحالية واستيراد الناقصة والاحتفاظ بالأحدث عند التعارض.</string>
+    <string name="cloud_backup_recovery_title">مطلوب عبارة الاسترداد المكونة من 12 كلمة</string>
+    <string name="cloud_backup_recovery_desc">هذه النسخة الاحتياطية مشفرة تشفيراً تاماً بتقنية AES-256-GCM. أدخل عبارة الاسترداد الخاصة بك لاستعادة مفتاح التشفير.</string>
+    <string name="cloud_backup_recovery_input_hint">word1 word2 ... word12</string>
+    <string name="cloud_backup_recovery_confirm">استعادة وفك التشفير</string>
+</resources>
+

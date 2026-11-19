@@ -26,6 +26,8 @@ import haddad.three.notas.data.ViewOptionsPrefs
 import haddad.three.notas.data.sync.change.DefaultLocalChangeRecorder
 import haddad.three.notas.data.sync.change.LocalChangeRecorder
 import haddad.three.notas.data.sync.change.PendingChangeDao
+import haddad.three.notas.data.sync.conflict.ConflictResolutionManager
+import haddad.three.notas.data.sync.conflict.ConflictResolver
 import haddad.three.notas.data.sync.conflict.FieldConflictResolver
 import haddad.three.notas.data.sync.conflict.SyncAppliedOperationDao
 import haddad.three.notas.data.sync.conflict.SyncConflictMetadataDao
@@ -331,6 +333,14 @@ object RememberModule {
 
     @Provides
     @Singleton
+    fun provideSyncHistoryRecordDao(database: RememberDatabase): haddad.three.notas.data.sync.history.SyncHistoryRecordDao = database.syncHistoryDao()
+
+    @Provides
+    @Singleton
+    fun provideSyncWorkScheduler(): haddad.three.notas.data.sync.worker.SyncWorkScheduler = haddad.three.notas.data.sync.worker.SyncWorkScheduler
+
+    @Provides
+    @Singleton
     fun provideHlcStorage(hlcStateDao: SyncHlcStateDao): HlcStorage = RoomHlcStorage(hlcStateDao)
 
     @Provides
@@ -348,6 +358,8 @@ object RememberModule {
     @Singleton
     fun provideFieldConflictResolver(
         database: RememberDatabase,
+        mekManager: MekManager,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
     ): FieldConflictResolver =
         FieldConflictResolver(
             noteDao = database.noteDao(),
@@ -357,6 +369,46 @@ object RememberModule {
             conflictMetadataDao = database.syncConflictMetadataDao(),
             tombstoneDao = database.syncTombstoneDao(),
             conflictRecordDao = database.syncConflictRecordDao(),
+            mekManager = mekManager,
+            localDeviceIdProvider = { runBlocking { syncStateStore.getOrCreateDeviceId() } },
+        )
+
+    @Provides
+    @Singleton
+    fun provideConflictResolutionManager(
+        database: RememberDatabase,
+        localChangeRecorder: LocalChangeRecorder,
+        hlcClock: HlcClock,
+        mekManager: MekManager,
+    ): ConflictResolutionManager =
+        ConflictResolutionManager(
+            database = database,
+            noteDao = database.noteDao(),
+            conflictRecordDao = database.syncConflictRecordDao(),
+            conflictMetadataDao = database.syncConflictMetadataDao(),
+            tombstoneDao = database.syncTombstoneDao(),
+            localChangeRecorder = localChangeRecorder,
+            hlcClock = hlcClock,
+            mekManager = mekManager,
+        )
+
+    @Provides
+    @Singleton
+    fun provideConflictResolver(
+        database: RememberDatabase,
+        fieldConflictResolver: FieldConflictResolver,
+        resolutionManager: ConflictResolutionManager,
+        syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+    ): ConflictResolver =
+        ConflictResolver(
+            fieldConflictResolver = fieldConflictResolver,
+            resolutionManager = resolutionManager,
+            conflictRecordDao = database.syncConflictRecordDao(),
+            conflictMetadataDao = database.syncConflictMetadataDao(),
+            tombstoneDao = database.syncTombstoneDao(),
+            syncWatermarkDao = database.syncWatermarkDao(),
+            appliedOperationDao = database.syncAppliedOperationDao(),
+            localDeviceIdProvider = { runBlocking { syncStateStore.getOrCreateDeviceId() } },
         )
 
     @Provides
@@ -380,12 +432,26 @@ object RememberModule {
     @Provides
     @Singleton
     fun provideLocalChangeRecorder(
+        @ApplicationContext context: Context,
         pendingChangeDao: PendingChangeDao,
         syncStateStore: haddad.three.notas.data.sync.SyncStateStore,
+        hlcClock: HlcClock,
+        database: RememberDatabase,
     ): LocalChangeRecorder =
         DefaultLocalChangeRecorder(
             pendingChangeDao = pendingChangeDao,
             deviceIdProvider = { syncStateStore.getOrCreateDeviceId() },
+            hlcClock = hlcClock,
+            conflictMetadataDao = database.syncConflictMetadataDao(),
+            onMutationRecorded = { origin ->
+                if (origin == haddad.three.notas.data.sync.change.OperationOrigin.LOCAL && haddad.three.notas.BuildConfig.GOOGLE_DRIVE_SYNC_ENABLED) {
+                    haddad.three.notas.data.sync.worker.SyncWorkScheduler.scheduleImmediateSync(
+                        context = context,
+                        debounceSeconds = 15L,
+                        replaceExisting = true,
+                    )
+                }
+            },
         )
 
     @Provides

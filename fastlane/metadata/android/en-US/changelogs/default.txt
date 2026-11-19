@@ -1,1 +1,6 @@
-See changelog at https://github.com/bikram-agarwal/Notas/blob/main/docs/CHANGELOG.md
+• Complete Calendar Suite: Month, Week, Day Timeline with live clock indicator, and Year overview.
+• Smart Classification: Automatic organization into Notes, Tasks, and Events based on dates.
+• Refined Design System: Unified neutral gray cards by default, custom shoulders, and 28dp rounded corners.
+• Interactive Checkboxes: Toggle task completion directly from Calendar Agenda and Day timeline.
+• Google Drive Cloud Sync: Multi-device sync with automated conflict resolution.
+• Performance optimizations and smooth 60+ FPS navigation.

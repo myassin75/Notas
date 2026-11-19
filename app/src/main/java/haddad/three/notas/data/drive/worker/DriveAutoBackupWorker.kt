@@ -64,6 +64,7 @@ class DriveAutoBackupWorker
                     }
                     is DriveResult.RateLimited -> Result.retry()
                     is DriveResult.Offline -> Result.retry()
+                    is DriveResult.CursorExpired -> Result.retry()
                     is DriveResult.Unauthorized -> {
                         DiagnosticLog.record(applicationContext, "Drive auto-backup failed: unauthorized token")
                         Result.failure()

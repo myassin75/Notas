@@ -134,6 +134,29 @@ internal fun SearchableTopBarTitle(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                if (showLayoutToggle && layoutToggleEnabled) {
+                    val isMosaic = noteLayoutMode == NoteLayoutMode.MOSAIC
+                    val iconName = if (isMosaic) "view_agenda" else "dashboard"
+                    val contentDesc = if (isMosaic) "Switch to list view" else "Switch to grid view"
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .clickable { onToggleLayout() }
+                                .semantics { contentDescription = contentDesc },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        RememberMaterialRoundedSymbol(
+                            name = iconName,
+                            size = 22.dp,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            weight = FontWeight.Medium,
+                            filled = false,
+                        )
+                    }
+                }
+
                 val semantic = MaterialTheme.semanticPalette
 
                 // + Add button

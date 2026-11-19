@@ -87,6 +87,7 @@ class DriveBackupArchiveManager
 
                 val notesCount = userNotes.count { it.note.kind == NoteKind.NOTE }
                 val tasksCount = userNotes.count { it.note.kind == NoteKind.LIST }
+                val eventsCount = userNotes.count { it.note.reminderAt != null || it.note.endAt != null || it.note.isAllDay }
                 val categoriesCount = userCategories.size
                 val allAttachments = userNotes.flatMap { it.attachments }
 
@@ -141,8 +142,10 @@ class DriveBackupArchiveManager
                                 backupId = backupId,
                                 createdAtEpochMillis = createdAt,
                                 schemaVersion = BackupIo.SCHEMA_VERSION,
+                                appVersion = "1.0.0",
                                 notesCount = notesCount,
                                 tasksCount = tasksCount,
+                                eventsCount = eventsCount,
                                 categoriesCount = categoriesCount,
                                 attachmentsCount = allAttachments.size,
                                 ownerId = ownerId,
@@ -160,8 +163,10 @@ class DriveBackupArchiveManager
                     backupId = backupId,
                     createdAtEpochMillis = createdAt,
                     schemaVersion = BackupIo.SCHEMA_VERSION,
+                    appVersion = "1.0.0",
                     notesCount = notesCount,
                     tasksCount = tasksCount,
+                    eventsCount = eventsCount,
                     categoriesCount = categoriesCount,
                     attachmentsCount = allAttachments.size,
                     ownerId = ownerId,

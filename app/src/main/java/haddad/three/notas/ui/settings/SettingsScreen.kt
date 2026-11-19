@@ -6,6 +6,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlarmManager
+import haddad.three.notas.reminders.canScheduleExactAlarmsCompat
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -171,6 +172,7 @@ enum class SettingsSectionKey(
     Haptics("haptics", "vibration", R.string.settings_haptics_section),
     Swipe("swipe", "swipe_left", R.string.settings_swipe_section, legacyRouteKeys = listOf("swipe_actions")),
     Security("security", "security", R.string.settings_section_security),
+    CloudSync("cloud_sync", "cloud_sync", R.string.settings_cloud_sync_section, legacyRouteKeys = listOf("sync", "drive_sync")),
     Backup("backup", "save", R.string.settings_backup_section),
     Updates("updates", "system_update", R.string.settings_updates_section),
     About("about", "info", R.string.settings_section_about),
@@ -193,6 +195,7 @@ val settingsPaneSections: List<SettingsSectionKey>
         SettingsSectionKey.entries.filter { sectionKey ->
             sectionKey != SettingsSectionKey.DevOptions &&
                 (sectionKey != SettingsSectionKey.Updates || showsUpdatesSection(singleList = false)) &&
+                (sectionKey != SettingsSectionKey.CloudSync || BuildConfig.GOOGLE_DRIVE_SYNC_ENABLED) &&
                 sectionKey != SettingsSectionKey.Backup
         }
 
@@ -441,7 +444,7 @@ fun SettingsRoute(
     val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as PowerManager }
     val permissionLinked = remember { isPermissionLinked() }
     var canScheduleExactAlarms by remember {
-        mutableStateOf(alarmManager.canScheduleExactAlarms())
+        mutableStateOf(alarmManager.canScheduleExactAlarmsCompat())
     }
     var isIgnoringBatteryOptimizations by remember {
         mutableStateOf(powerManager.isIgnoringBatteryOptimizations(context.packageName))
@@ -461,7 +464,7 @@ fun SettingsRoute(
             androidx.lifecycle.LifecycleEventObserver { _, event ->
                 if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                     notificationsGranted = NotificationManagerCompat.from(context).areNotificationsEnabled()
-                    canScheduleExactAlarms = alarmManager.canScheduleExactAlarms()
+                    canScheduleExactAlarms = alarmManager.canScheduleExactAlarmsCompat()
                     isIgnoringBatteryOptimizations = powerManager.isIgnoringBatteryOptimizations(context.packageName)
                 }
             }
@@ -704,11 +707,11 @@ fun SettingsRoute(
         val topPadding = if (showTopActions) 12.dp else (statusBarInset + 8.dp)
         val bottomPadding = pillInset + 24.dp
         val listContentPadding =
-            remember(topPadding, bottomPadding) {
+            remember(topPadding, bottomPadding, paneHosted) {
                 PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = topPadding,
+                    start = if (paneHosted) 20.dp else 16.dp,
+                    end = if (paneHosted) 28.dp else 16.dp,
+                    top = if (paneHosted) 28.dp else topPadding,
                     bottom = bottomPadding,
                 )
             }
@@ -967,6 +970,24 @@ fun SettingsRoute(
                                     deviceCredentialAvailable = deviceCredentialAvailable,
                                     snackbarHostState = snackbarHostState,
                                     scope = scope,
+                                )
+                            }
+                        }
+                    }
+
+                    if (BuildConfig.GOOGLE_DRIVE_SYNC_ENABLED && includeSettingsSection(SettingsSectionKey.CloudSync)) {
+                        item(key = "cloud_sync") {
+                            SettingsExpandableSection(
+                                sectionKey = SettingsSectionKey.CloudSync.routeKey,
+                                materialSymbolName = SettingsSectionKey.CloudSync.iconName,
+                                title = stringResource(SettingsSectionKey.CloudSync.titleRes),
+                                collapsedSectionKeys = visibleCollapsedSectionKeys,
+                                onCollapsedSectionKeysChange = ::updateCollapsedSettingsSectionKeys,
+                                showHeader = showSectionHeaders,
+                                highlightedSectionKey = activeSectionHighlightKey,
+                            ) {
+                                haddad.three.notas.ui.settings.sync.CloudSyncSection(
+                                    snackbarHostState = snackbarHostState,
                                 )
                             }
                         }

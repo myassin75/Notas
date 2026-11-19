@@ -194,6 +194,7 @@ class SnapshotTransportService
                     is DriveResult.RateLimited -> SnapshotUploadResult.RateLimited(uploadResult.retryAfterSeconds)
                     is DriveResult.Error -> SnapshotUploadResult.Failure(uploadResult.message, uploadResult.cause)
                     is DriveResult.Offline -> SnapshotUploadResult.Failure("Network offline during snapshot upload")
+                    is DriveResult.CursorExpired -> SnapshotUploadResult.Failure("Changes cursor expired during snapshot upload")
                 }
             }
 
@@ -230,6 +231,7 @@ class SnapshotTransportService
                             is DriveResult.Unauthorized -> return@executeWithAuthAndRetry DriveResult.Unauthorized
                             is DriveResult.RateLimited -> return@executeWithAuthAndRetry listResult
                             is DriveResult.Offline -> return@executeWithAuthAndRetry DriveResult.Offline
+                            is DriveResult.CursorExpired -> return@executeWithAuthAndRetry DriveResult.CursorExpired
                             is DriveResult.Error -> return@executeWithAuthAndRetry listResult
                         }
                     }
@@ -300,6 +302,7 @@ class SnapshotTransportService
                         is DriveResult.Unauthorized -> return@withContext DriveResult.Unauthorized
                         is DriveResult.RateLimited -> return@withContext pageResult
                         is DriveResult.Offline -> return@withContext DriveResult.Offline
+                        is DriveResult.CursorExpired -> return@withContext pageResult
                         is DriveResult.Error -> return@withContext pageResult
                     }
                 }
@@ -328,6 +331,7 @@ class SnapshotTransportService
                     is DriveResult.RateLimited -> SnapshotDownloadResult.RateLimited(downloadRes.retryAfterSeconds)
                     is DriveResult.Error -> SnapshotDownloadResult.Failure(downloadRes.message, downloadRes.cause)
                     is DriveResult.Offline -> SnapshotDownloadResult.Failure("Network offline during snapshot download")
+                    is DriveResult.CursorExpired -> SnapshotDownloadResult.Failure("Changes cursor expired during snapshot download")
                 }
             }
     }

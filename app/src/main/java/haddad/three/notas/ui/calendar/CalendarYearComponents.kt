@@ -97,8 +97,8 @@ fun YearNavigationHeader(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
-    val prevBtnBg = if (isDark) Color(0xFF282830) else Color(0xFFE5E5EB)
-    val prevBtnBorder = BorderStroke(1.dp, if (isDark) Color(0xFF383842) else Color(0xFFDCDCE4))
+    val prevBtnBg = if (isDark) Color(0xFF242424) else Color(0xFFE5E5EB)
+    val prevBtnBorder = BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else Color(0xFFDCDCE4))
 
     Row(
         modifier =
@@ -327,14 +327,14 @@ fun YearMonthCard(
 
     val cardBg =
         if (isSelectedMonth) {
-            if (isDark) Color(0xFF242428) else Color(0xFFEDEDF2)
+            if (isDark) Color(0xFF242424) else Color(0xFFEDEDF2)
         } else {
             Color.Transparent
         }
 
     val cardBorder =
         if (isSelectedMonth) {
-            BorderStroke(1.dp, if (isDark) Color(0xFF383842) else Color(0xFFDCDCE4))
+            BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else Color(0xFFDCDCE4))
         } else {
             null
         }
@@ -491,7 +491,7 @@ private fun YearMonthDateGrid(
 ) {
     val isDark = LocalIsDark.current
     val textPrimary =
-        if (isDark) Color(0xFFE2E2E8) else Color(0xFF2C2C32)
+        if (isDark) Color(0xFFF5F5F5) else Color(0xFF2C2C32)
     val weekendColor = CalendarDesignTokens.resolveWeekendColor(isDark)
 
     // Compute calendar cells (always fixed to 6 weeks x 7 columns = 42 cells)
@@ -661,8 +661,8 @@ fun YearTodayFloatingBar(
     val isDark = LocalIsDark.current
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
 
-    val barBg = if (isDark) Color(0xFF222228) else Color(0xFFEDEDF2)
-    val barBorder = BorderStroke(1.dp, if (isDark) Color(0xFF383842) else Color(0xFFDCDCE4))
+    val barBg = if (isDark) Color(0xFF242424) else Color(0xFFEDEDF2)
+    val barBorder = BorderStroke(1.dp, if (isDark) Color(0xFF3A3A3A) else Color(0xFFDCDCE4))
 
     val todayFormatted =
         remember(today) {
@@ -734,7 +734,7 @@ fun YearTodayFloatingBar(
             RememberMaterialRoundedSymbol(
                 name = "arrow_forward",
                 size = 18.dp,
-                tint = if (isDark) Color(0xFFC4C4CE) else Color(0xFF555562),
+                tint = if (isDark) Color(0xFFA3A3A3) else Color(0xFF555562),
                 weight = FontWeight.SemiBold,
             )
         }

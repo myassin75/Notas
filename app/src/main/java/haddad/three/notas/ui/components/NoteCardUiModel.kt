@@ -37,6 +37,7 @@ data class NoteCardUiModel(
     val shoulderName: String? = null,
     val shoulderColorHex: String? = null,
     val colorIndex: Int = 0,
+    val isActionableTask: Boolean = false,
 )
 
 @Immutable
@@ -83,5 +84,6 @@ fun NoteWithItems.toNoteCardUiModel(
         shoulderName = shoulder?.name,
         shoulderColorHex = shoulder?.colorHex,
         colorIndex = note.colorIndex,
+        isActionableTask = note.isTask || note.kind == NoteKind.LIST,
     )
 }

@@ -7,6 +7,7 @@ import haddad.three.notas.data.drive.auth.DriveAuthConstants
 import haddad.three.notas.data.drive.auth.DriveAuthPreferences
 import haddad.three.notas.data.drive.auth.GoogleDriveAuthDelegate
 import haddad.three.notas.data.drive.auth.GoogleDriveAuthorizationResult
+import haddad.three.notas.data.drive.model.DriveChangeListResponse
 import haddad.three.notas.data.drive.model.DriveFileDto
 import haddad.three.notas.data.drive.model.DriveResult
 import kotlinx.coroutines.CoroutineDispatcher
@@ -120,6 +121,7 @@ class GoogleDriveSyncTransport
                             return@withContext result
                         }
                         is DriveResult.Offline -> return@withContext DriveResult.Offline
+                        is DriveResult.CursorExpired -> return@withContext DriveResult.CursorExpired
                     }
                 }
                 DriveResult.Error("Transport operation exhausted maximum retry attempts ($maxAttempts)")
@@ -163,6 +165,7 @@ class GoogleDriveSyncTransport
                             is DriveResult.Unauthorized -> return@executeWithAuthAndRetry DriveResult.Unauthorized
                             is DriveResult.RateLimited -> return@executeWithAuthAndRetry listResult
                             is DriveResult.Offline -> return@executeWithAuthAndRetry DriveResult.Offline
+                            is DriveResult.CursorExpired -> return@executeWithAuthAndRetry DriveResult.CursorExpired
                             is DriveResult.Error -> return@executeWithAuthAndRetry listResult
                         }
                     }
@@ -305,6 +308,7 @@ class GoogleDriveSyncTransport
                         JournalUploadResult.Failure(uploadResult.message, uploadResult.statusCode, uploadResult.cause)
                     }
                     is DriveResult.Offline -> JournalUploadResult.Failure("Device is offline")
+                    is DriveResult.CursorExpired -> JournalUploadResult.Failure("Changes cursor expired during upload")
                 }
             }
 
@@ -371,6 +375,7 @@ class GoogleDriveSyncTransport
                         is DriveResult.Unauthorized -> DriveResult.Unauthorized
                         is DriveResult.RateLimited -> result
                         is DriveResult.Offline -> DriveResult.Offline
+                        is DriveResult.CursorExpired -> DriveResult.CursorExpired
                         is DriveResult.Error -> result
                     }
                 }
@@ -425,6 +430,72 @@ class GoogleDriveSyncTransport
             withContext(ioDispatcher) {
                 executeWithAuthAndRetry { token ->
                     driveApiClient.getFileMetadata(token, driveFileId)
+                }
+            }
+
+        /**
+         * Retrieves the initial page token for the Google Drive Changes API on `appDataFolder`.
+         */
+        suspend fun getChangesStartPageToken(): DriveResult<String> =
+            withContext(ioDispatcher) {
+                val res =
+                    executeWithAuthAndRetry { token ->
+                        driveApiClient.getChangesStartPageToken(token, spaces = "appDataFolder")
+                    }
+                when (res) {
+                    is DriveResult.Success -> DriveResult.Success(res.data.startPageToken)
+                    is DriveResult.Unauthorized -> DriveResult.Unauthorized
+                    is DriveResult.RateLimited -> res
+                    is DriveResult.Offline -> DriveResult.Offline
+                    is DriveResult.CursorExpired -> DriveResult.CursorExpired
+                    is DriveResult.Error -> res
+                }
+            }
+
+        /**
+         * Fetches a batch of changes from Google Drive Changes API using [pageToken].
+         */
+        suspend fun fetchChanges(
+            pageToken: String,
+            pageSize: Int = 100,
+        ): DriveResult<DriveChangeListResponse> =
+            withContext(ioDispatcher) {
+                executeWithAuthAndRetry { token ->
+                    driveApiClient.listChanges(
+                        accessToken = token,
+                        pageToken = pageToken,
+                        spaces = "appDataFolder",
+                        pageSize = pageSize,
+                    )
+                }
+            }
+
+        /**
+         * Updates the byte content of an existing file in Google Drive `appDataFolder`.
+         */
+        suspend fun updateFileContent(
+            driveFileId: String,
+            content: ByteArray,
+            mimeType: String = MIME_TYPE_OCTET,
+        ): DriveResult<DriveFileDto> =
+            withContext(ioDispatcher) {
+                executeWithAuthAndRetry { token ->
+                    driveApiClient.updateFileContent(
+                        accessToken = token,
+                        fileId = driveFileId,
+                        fileData = content,
+                        mimeType = mimeType,
+                    )
+                }
+            }
+
+        /**
+         * Downloads file content directly to memory as a byte array.
+         */
+        suspend fun downloadFileBytes(driveFileId: String): DriveResult<ByteArray> =
+            withContext(ioDispatcher) {
+                executeWithAuthAndRetry { token ->
+                    driveApiClient.downloadFileBytes(token, driveFileId)
                 }
             }
 

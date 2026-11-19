@@ -5,8 +5,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import haddad.three.notas.BuildConfig
 import haddad.three.notas.crypto.MekManager
 import haddad.three.notas.data.drive.auth.DriveAuthPreferences
+import haddad.three.notas.data.drive.auth.GoogleDriveAuthDelegate
+import haddad.three.notas.data.drive.auth.GoogleDriveAuthorizationResult
 import haddad.three.notas.data.sync.SyncStateStore
 import haddad.three.notas.data.sync.change.PendingChangeDao
+import haddad.three.notas.data.sync.conflict.SyncConflictRecordDao
 import haddad.three.notas.data.sync.ingestion.RemoteJournalIngestionEngine
 import haddad.three.notas.data.sync.journal.JournalCreationResult
 import haddad.three.notas.data.sync.journal.SyncJournalDao
@@ -54,6 +57,9 @@ class DriveSyncCoordinator
         private val journalDao: SyncJournalDao,
         private val pendingChangeDao: PendingChangeDao,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+        private val authDelegate: GoogleDriveAuthDelegate? = null,
+        private val conflictRecordDao: SyncConflictRecordDao? = null,
+        private val syncHistoryDao: haddad.three.notas.data.sync.history.SyncHistoryRecordDao? = null,
     ) {
         private val syncMutex = Mutex()
 
@@ -68,6 +74,53 @@ class DriveSyncCoordinator
             throwable: Throwable? = null,
         ) {
             runCatching { DiagnosticLog.record(context, message, throwable) }
+        }
+
+        private fun classifyError(message: String, cause: Throwable? = null): SyncErrorCategory {
+            val msg = message.lowercase()
+            return when {
+                msg.contains("unauthorized") || msg.contains("auth expired") || msg.contains("invalid_token") -> SyncErrorCategory.AUTHENTICATION
+                msg.contains("permission") || msg.contains("forbidden") || msg.contains("access denied") -> SyncErrorCategory.PERMISSION_DENIED
+                msg.contains("quota") || msg.contains("usagelimits") || msg.contains("user_rate_limit") -> SyncErrorCategory.QUOTA_EXCEEDED
+                msg.contains("rate limit") || msg.contains("too many requests") -> SyncErrorCategory.RATE_LIMITED
+                msg.contains("offline") || msg.contains("network") || cause is IOException -> SyncErrorCategory.NETWORK
+                msg.contains("integrity") || msg.contains("corrupt") || msg.contains("checksum") -> SyncErrorCategory.INTEGRITY
+                msg.contains("mek") || msg.contains("master key") -> SyncErrorCategory.MEK_UNAVAILABLE
+                msg.contains("account") -> SyncErrorCategory.ACCOUNT_MISMATCH
+                else -> SyncErrorCategory.SERVER_ERROR
+            }
+        }
+
+        private suspend fun attemptSilentAuthRecovery(): Boolean {
+            val delegate = authDelegate ?: return false
+            return try {
+                log("Attempting silent authorization refresh via GoogleDriveAuthDelegate")
+                val result = delegate.authorize(context, forceAccountSelection = false)
+                if (result is GoogleDriveAuthorizationResult.Success) {
+                    log("Silent authorization refresh succeeded for ${result.accountEmail}")
+                    drivePrefs.setConnected(result.accountEmail, result.accountId)
+                    true
+                } else {
+                    log("Silent authorization refresh failed: $result")
+                    false
+                }
+            } catch (e: Exception) {
+                log("Silent authorization recovery error", e)
+                false
+            }
+        }
+
+        suspend fun getBackgroundSyncStatus(): BackgroundSyncStatusInfo {
+            val prefs = driveSyncStateStore.getPreferences()
+            val pendingCount = pendingChangeDao.countPendingChanges()
+            return BackgroundSyncStatusInfo(
+                isEnabled = prefs.isSyncEnabled,
+                lastSuccessfulSyncMillis = prefs.lastSyncEpochMillis,
+                pendingOperationsCount = pendingCount,
+                lastErrorCategory = prefs.lastErrorCategory,
+                lastErrorMessage = prefs.lastErrorMessage,
+                currentState = driveSyncStateStore.syncState.value,
+            )
         }
 
         suspend fun executeSync(runAttempt: Int = 0): SyncExecutionResult =
@@ -154,15 +207,29 @@ class DriveSyncCoordinator
                         return@withLock SyncExecutionResult.Fatal(SyncErrorCategory.ACCOUNT_MISMATCH, "Account changed during sync")
                     }
 
+                    val syncStartTime = System.currentTimeMillis()
+                    var downloadedCount = 0
+                    var uploadedCount = 0
+                    var appliedOpsCount = 0
+
                     try {
                         driveSyncStateStore.updateSyncState(DriveSyncState.Running)
                         log("Drive sync started (attempt $runAttempt) for device $localDeviceId")
 
                         // 1. Discover remote journals
+                        driveSyncStateStore.updateSyncState(DriveSyncState.Downloading)
                         val discoveryResult = discoveryService.discoverRemoteJournals(localDeviceId)
                         when (discoveryResult) {
                             is DiscoveryResult.Unauthorized -> {
                                 log("Drive sync: discovery returned unauthorized")
+                                val recovered = attemptSilentAuthRecovery()
+                                if (recovered && runAttempt < MAX_RETRIES) {
+                                    return@withLock SyncExecutionResult.Retry(
+                                        SyncErrorCategory.AUTHENTICATION,
+                                        "Token refreshed, retry scheduled",
+                                        retryAfterSeconds = 5L,
+                                    )
+                                }
                                 driveSyncStateStore.updateSyncState(DriveSyncState.AuthenticationRequired("Drive auth expired"))
                                 driveSyncStateStore.recordSyncFailed(SyncErrorCategory.AUTHENTICATION, "Unauthorized")
                                 return@withLock SyncExecutionResult.Fatal(SyncErrorCategory.AUTHENTICATION, "Drive auth expired")
@@ -189,22 +256,21 @@ class DriveSyncCoordinator
                                 }
                             }
                             is DiscoveryResult.Failure -> {
-                                val isRateLimit = discoveryResult.message.contains("rate limit", ignoreCase = true)
-                                val isNetwork =
-                                    discoveryResult.message.contains("offline", ignoreCase = true) ||
-                                        discoveryResult.message.contains("network", ignoreCase = true) ||
-                                        discoveryResult.cause is IOException
+                                val category = classifyError(discoveryResult.message, discoveryResult.cause)
+                                log("Drive sync: discovery failed ($category): ${discoveryResult.message}")
 
-                                val category =
-                                    if (isRateLimit) {
-                                        SyncErrorCategory.RATE_LIMITED
-                                    } else if (isNetwork) {
-                                        SyncErrorCategory.NETWORK
-                                    } else {
-                                        SyncErrorCategory.SERVER_ERROR
-                                    }
+                                if (category == SyncErrorCategory.PERMISSION_DENIED) {
+                                    driveSyncStateStore.updateSyncState(DriveSyncState.AuthenticationRequired("Permission denied: check Google Drive access"))
+                                    driveSyncStateStore.recordSyncFailed(category, discoveryResult.message)
+                                    return@withLock SyncExecutionResult.Fatal(category, discoveryResult.message)
+                                }
 
-                                log("Drive sync: discovery failed: ${discoveryResult.message}")
+                                if (category == SyncErrorCategory.QUOTA_EXCEEDED) {
+                                    driveSyncStateStore.updateSyncState(DriveSyncState.Failed(category, discoveryResult.message))
+                                    driveSyncStateStore.recordSyncFailed(category, discoveryResult.message)
+                                    return@withLock SyncExecutionResult.Fatal(category, discoveryResult.message)
+                                }
+
                                 if (runAttempt < MAX_RETRIES) {
                                     val nextState =
                                         if (category == SyncErrorCategory.NETWORK) {
@@ -223,6 +289,7 @@ class DriveSyncCoordinator
                             }
                             is DiscoveryResult.Success -> {
                                 val remoteHeaders = discoveryResult.discoveredJournalsByDevice.values.flatten()
+                                downloadedCount = remoteHeaders.size
                                 if (remoteHeaders.isNotEmpty()) {
                                     log("Drive sync: downloading ${remoteHeaders.size} remote journals")
                                     val downloadBatch = downloader.downloadAndValidateJournals(remoteHeaders)
@@ -230,6 +297,14 @@ class DriveSyncCoordinator
                                         log("Drive sync: download batch completed with ${downloadBatch.failed} failures: ${downloadBatch.errors}")
                                         val unauthorized = downloadBatch.errors.any { it.contains("unauthorized", ignoreCase = true) }
                                         if (unauthorized) {
+                                            val recovered = attemptSilentAuthRecovery()
+                                            if (recovered && runAttempt < MAX_RETRIES) {
+                                                return@withLock SyncExecutionResult.Retry(
+                                                    SyncErrorCategory.AUTHENTICATION,
+                                                    "Token refreshed, retry scheduled",
+                                                    retryAfterSeconds = 5L,
+                                                )
+                                            }
                                             driveSyncStateStore.updateSyncState(DriveSyncState.AuthenticationRequired("Drive auth expired during download"))
                                             driveSyncStateStore.recordSyncFailed(SyncErrorCategory.AUTHENTICATION, "Unauthorized")
                                             return@withLock SyncExecutionResult.Fatal(SyncErrorCategory.AUTHENTICATION, "Unauthorized during download")
@@ -256,18 +331,21 @@ class DriveSyncCoordinator
                                             }
                                         }
 
-                                        val isRateLimit = downloadBatch.errors.any { it.contains("rate limit", ignoreCase = true) }
-                                        val isNetwork = downloadBatch.errors.any { it.contains("offline", ignoreCase = true) || it.contains("network", ignoreCase = true) }
-                                        val category =
-                                            if (isRateLimit) {
-                                                SyncErrorCategory.RATE_LIMITED
-                                            } else if (isNetwork) {
-                                                SyncErrorCategory.NETWORK
-                                            } else {
-                                                SyncErrorCategory.SERVER_ERROR
-                                            }
-
                                         val firstErr = downloadBatch.errors.firstOrNull() ?: "Download failed"
+                                        val category = classifyError(firstErr)
+
+                                        if (category == SyncErrorCategory.PERMISSION_DENIED) {
+                                            driveSyncStateStore.updateSyncState(DriveSyncState.AuthenticationRequired("Permission denied: check Google Drive access"))
+                                            driveSyncStateStore.recordSyncFailed(category, firstErr)
+                                            return@withLock SyncExecutionResult.Fatal(category, firstErr)
+                                        }
+
+                                        if (category == SyncErrorCategory.QUOTA_EXCEEDED) {
+                                            driveSyncStateStore.updateSyncState(DriveSyncState.Failed(category, firstErr))
+                                            driveSyncStateStore.recordSyncFailed(category, firstErr)
+                                            return@withLock SyncExecutionResult.Fatal(category, firstErr)
+                                        }
+
                                         if (runAttempt < MAX_RETRIES) {
                                             val nextState =
                                                 if (category == SyncErrorCategory.NETWORK) {
@@ -297,9 +375,16 @@ class DriveSyncCoordinator
                         }
 
                         // Ingest validated remote journals into database
+                        driveSyncStateStore.updateSyncState(DriveSyncState.Applying)
                         log("Drive sync: ingesting remote journals into database")
                         val ingestionSummary = ingestionEngine.ingestAll()
+                        appliedOpsCount = ingestionSummary.appliedOperationsCount
                         log("Drive sync: ingestion finished: applied=${ingestionSummary.appliedOperationsCount}, skipped=${ingestionSummary.skippedOperationsCount}, failedJournals=${ingestionSummary.failedJournalsCount}")
+
+                        val conflictsCount = conflictRecordDao?.getUnresolvedConflicts()?.size ?: 0
+                        if (conflictsCount > 0) {
+                            driveSyncStateStore.updateSyncState(DriveSyncState.ConflictsDetected(conflictsCount))
+                        }
 
                         // 3. Package local pending changes into encrypted journals
                         log("Drive sync: packaging local pending changes")
@@ -336,12 +421,22 @@ class DriveSyncCoordinator
                         }
 
                         // Upload ready journals to Google Drive
+                        driveSyncStateStore.updateSyncState(DriveSyncState.Uploading)
                         log("Drive sync: uploading ready journals")
                         val uploadBatch = uploader.uploadReadyJournals(localDeviceId)
+                        uploadedCount += uploadBatch.successfulJournals
                         if (uploadBatch.failedJournals > 0) {
                             log("Drive sync: upload batch failed (${uploadBatch.failedJournals} failed): ${uploadBatch.errors}")
                             val unauthorized = uploadBatch.errors.any { it.contains("unauthorized", ignoreCase = true) }
                             if (unauthorized) {
+                                val recovered = attemptSilentAuthRecovery()
+                                if (recovered && runAttempt < MAX_RETRIES) {
+                                    return@withLock SyncExecutionResult.Retry(
+                                        SyncErrorCategory.AUTHENTICATION,
+                                        "Token refreshed, retry scheduled",
+                                        retryAfterSeconds = 5L,
+                                    )
+                                }
                                 driveSyncStateStore.updateSyncState(DriveSyncState.AuthenticationRequired("Drive auth expired during upload"))
                                 driveSyncStateStore.recordSyncFailed(SyncErrorCategory.AUTHENTICATION, "Unauthorized")
                                 return@withLock SyncExecutionResult.Fatal(SyncErrorCategory.AUTHENTICATION, "Unauthorized during upload")
@@ -368,18 +463,21 @@ class DriveSyncCoordinator
                                 }
                             }
 
-                            val isRateLimit = uploadBatch.errors.any { it.contains("rate limit", ignoreCase = true) }
-                            val isNetwork = uploadBatch.errors.any { it.contains("offline", ignoreCase = true) || it.contains("network", ignoreCase = true) }
-                            val category =
-                                if (isRateLimit) {
-                                    SyncErrorCategory.RATE_LIMITED
-                                } else if (isNetwork) {
-                                    SyncErrorCategory.NETWORK
-                                } else {
-                                    SyncErrorCategory.SERVER_ERROR
-                                }
-
                             val firstErr = uploadBatch.errors.firstOrNull() ?: "Upload failed"
+                            val category = classifyError(firstErr)
+
+                            if (category == SyncErrorCategory.PERMISSION_DENIED) {
+                                driveSyncStateStore.updateSyncState(DriveSyncState.AuthenticationRequired("Permission denied: check Google Drive access"))
+                                driveSyncStateStore.recordSyncFailed(category, firstErr)
+                                return@withLock SyncExecutionResult.Fatal(category, firstErr)
+                            }
+
+                            if (category == SyncErrorCategory.QUOTA_EXCEEDED) {
+                                driveSyncStateStore.updateSyncState(DriveSyncState.Failed(category, firstErr))
+                                driveSyncStateStore.recordSyncFailed(category, firstErr)
+                                return@withLock SyncExecutionResult.Fatal(category, firstErr)
+                            }
+
                             if (runAttempt < MAX_RETRIES) {
                                 val nextState =
                                     if (category == SyncErrorCategory.NETWORK) {
@@ -414,6 +512,7 @@ class DriveSyncCoordinator
                                     break
                                 }
                                 val drainUpload = uploader.uploadReadyJournals(localDeviceId)
+                                uploadedCount += drainUpload.successfulJournals
                                 if (drainUpload.failedJournals > 0) {
                                     log("Drive sync: drain upload encountered errors: ${drainUpload.errors}")
                                     break
@@ -425,8 +524,26 @@ class DriveSyncCoordinator
 
                         // 6. Completion
                         val completionTime = System.currentTimeMillis()
+                        val duration = (completionTime - syncStartTime).coerceAtLeast(0L)
                         driveSyncStateStore.recordSyncCompleted(completionTime)
-                        driveSyncStateStore.updateSyncState(DriveSyncState.Completed(completionTime))
+                        val unresolvedConflicts = conflictRecordDao?.getUnresolvedConflicts()?.size ?: 0
+                        if (unresolvedConflicts > 0) {
+                            driveSyncStateStore.updateSyncState(DriveSyncState.ConflictsDetected(unresolvedConflicts))
+                        } else {
+                            driveSyncStateStore.updateSyncState(DriveSyncState.Completed(completionTime))
+                        }
+                        syncHistoryDao?.insert(
+                            haddad.three.notas.data.sync.history.SyncHistoryRecordEntity(
+                                timestampEpochMillis = completionTime,
+                                durationMillis = duration,
+                                status = if (unresolvedConflicts > 0) "PARTIAL" else "SUCCESS",
+                                uploadedBatches = uploadedCount,
+                                downloadedBatches = downloadedCount,
+                                appliedOperations = appliedOpsCount,
+                                conflictsDetected = unresolvedConflicts,
+                                triggeredBy = if (runAttempt > 0) "RETRY" else "SCHEDULED",
+                            ),
+                        )
                         log("Drive sync: finished successfully at $completionTime")
                         SyncExecutionResult.Success(completionTime)
                     } catch (ce: CancellationException) {
@@ -434,8 +551,7 @@ class DriveSyncCoordinator
                         throw ce
                     } catch (e: Exception) {
                         log("Drive sync crashed: ${e.message}", e)
-                        val isNetwork = e is IOException
-                        val category = if (isNetwork) SyncErrorCategory.NETWORK else SyncErrorCategory.UNKNOWN
+                        val category = classifyError(e.message ?: "Unexpected error", e)
                         val errMsg = e.message ?: "Unexpected error"
                         if (runAttempt < MAX_RETRIES) {
                             val nextState =
@@ -450,6 +566,21 @@ class DriveSyncCoordinator
                         } else {
                             driveSyncStateStore.updateSyncState(DriveSyncState.Failed(category, errMsg))
                             driveSyncStateStore.recordSyncFailed(category, errMsg)
+                            val duration = (System.currentTimeMillis() - syncStartTime).coerceAtLeast(0L)
+                            syncHistoryDao?.insert(
+                                haddad.three.notas.data.sync.history.SyncHistoryRecordEntity(
+                                    timestampEpochMillis = System.currentTimeMillis(),
+                                    durationMillis = duration,
+                                    status = "FAILED",
+                                    uploadedBatches = uploadedCount,
+                                    downloadedBatches = downloadedCount,
+                                    appliedOperations = appliedOpsCount,
+                                    conflictsDetected = conflictRecordDao?.getUnresolvedConflicts()?.size ?: 0,
+                                    errorCategory = category.name,
+                                    errorMessage = errMsg,
+                                    triggeredBy = if (runAttempt > 0) "RETRY" else "SCHEDULED",
+                                ),
+                            )
                             SyncExecutionResult.Fatal(category, errMsg)
                         }
                     }

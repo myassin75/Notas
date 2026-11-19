@@ -28,3 +28,4 @@ object DefaultGoogleTasksAuthDelegate : GoogleTasksAuthDelegate {
         token: String,
     ) = Unit
 }
+

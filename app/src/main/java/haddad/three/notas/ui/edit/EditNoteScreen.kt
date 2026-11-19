@@ -517,7 +517,7 @@ fun EditNoteScreen(
                 isEditMode = isEditMode,
                 markdownDisplayMode = markdownDisplayMode,
                 existing = hasPersistedEditorRow,
-                autoFocusBodyOnEdit = hasPersistedEditorRow && !suppressBodyAutoFocusOnEdit,
+                autoFocusBodyOnEdit = existing && hasPersistedEditorRow && !suppressBodyAutoFocusOnEdit,
                 shelfState = shelfState,
                 pictureViewerOpen = pictureViewer != null,
                 onOpenIconColor = { iconColorSheetOpen = true },

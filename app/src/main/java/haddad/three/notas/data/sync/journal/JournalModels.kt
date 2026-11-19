@@ -27,6 +27,7 @@ data class JournalOperationDto(
     val hlcTimestamp: String? = null,
     val hlcCounter: Int? = null,
     val hlcNodeId: String? = null,
+    val dependencies: Map<String, Long> = emptyMap(),
 )
 
 /**
@@ -45,6 +46,7 @@ data class SyncJournalDto(
     val hlcTimestamp: String? = null,
     val hlcCounter: Int? = null,
     val hlcNodeId: String? = null,
+    val dependencies: Map<String, Long> = emptyMap(),
 ) {
     companion object {
         const val CURRENT_FORMAT_VERSION = 1

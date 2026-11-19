@@ -33,6 +33,9 @@ interface PendingChangeDao {
     @Query("SELECT COUNT(*) FROM pending_changes WHERE status = 'PENDING'")
     suspend fun countPendingChanges(): Int
 
+    @Query("SELECT COUNT(*) FROM pending_changes WHERE status = 'PENDING'")
+    fun countPendingChangesFlow(): Flow<Int> = kotlinx.coroutines.flow.flowOf(0)
+
     @Query("SELECT * FROM pending_changes WHERE entityType = :entityType AND entityId = :entityId ORDER BY createdAt ASC")
     suspend fun getChangesForEntity(
         entityType: String,

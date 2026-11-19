@@ -1,5 +1,7 @@
 package haddad.three.notas.data.sync.conflict
 
+import haddad.three.notas.crypto.EncryptedContainer
+import haddad.three.notas.crypto.MekManager
 import haddad.three.notas.data.AttachmentDao
 import haddad.three.notas.data.ChecklistItemDao
 import haddad.three.notas.data.ChecklistItemEntity
@@ -22,8 +24,10 @@ import haddad.three.notas.data.sync.change.PreferenceChangePayload
 import haddad.three.notas.data.sync.hlc.Hlc
 import haddad.three.notas.data.sync.journal.JournalOperationDto
 import haddad.three.notas.data.sync.journal.SyncJournalDto
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
+import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -55,12 +59,16 @@ class FieldConflictResolver
         private val conflictMetadataDao: SyncConflictMetadataDao,
         private val tombstoneDao: SyncTombstoneDao,
         private val conflictRecordDao: SyncConflictRecordDao,
+        private val mekManager: MekManager? = null,
+        private val localDeviceIdProvider: (() -> String)? = null,
     ) {
         private val json =
             Json {
                 ignoreUnknownKeys = true
                 isLenient = true
             }
+
+        private val baseValues = java.util.concurrent.ConcurrentHashMap<String, String>()
 
         suspend fun resolveAndApply(
             operation: JournalOperationDto,
@@ -88,18 +96,30 @@ class FieldConflictResolver
                 }
 
             when (entityType) {
-                EntityType.NOTE -> handleNote(operation, operationType, operationHlc)
-                EntityType.CATEGORY -> handleCategory(operation, operationType, operationHlc)
-                EntityType.CHECKLIST_ITEM -> handleChecklistItem(operation, operationType, operationHlc)
-                EntityType.ATTACHMENT_METADATA -> handleAttachment(operation, operationType, operationHlc)
+                EntityType.NOTE -> handleNote(operation, operationType, operationHlc, journal)
+                EntityType.CATEGORY -> handleCategory(operation, operationType, operationHlc, journal)
+                EntityType.CHECKLIST_ITEM -> handleChecklistItem(operation, operationType, operationHlc, journal)
+                EntityType.ATTACHMENT_METADATA -> handleAttachment(operation, operationType, operationHlc, journal)
                 EntityType.USER_PREFERENCE -> handlePreference(operation, operationType, operationHlc)
             }
+        }
+
+        private fun isSequential(
+            localHlc: Hlc,
+            opHlc: Hlc,
+            journal: SyncJournalDto,
+        ): Boolean {
+            if (localHlc.deviceId == opHlc.deviceId) return true
+            val ack = journal.dependencies[localHlc.deviceId]
+            if (ack != null && ack > 0L) return true
+            return false
         }
 
         private suspend fun handleNote(
             op: JournalOperationDto,
             opType: OperationType,
             opHlc: Hlc,
+            journal: SyncJournalDto,
         ) {
             when (opType) {
                 OperationType.UPSERT -> {
@@ -118,6 +138,19 @@ class FieldConflictResolver
                         if (opHlc <= tombstoneHlc) {
                             // Stale update: note was deleted at or after this update's logical timestamp
                             return
+                        }
+                        if (tombstone.deviceId != opHlc.deviceId) {
+                            // Concurrent Delete vs Update detected!
+                            recordConflict(
+                                entityType = EntityType.NOTE.name,
+                                entityId = payload.uuid,
+                                fieldName = "DELETE_VS_UPDATE",
+                                winningValue = payloadStr,
+                                losingValue = "DELETED_BY:${tombstone.deviceId}:${tombstone.hlcTimestamp}",
+                                winningHlc = opHlc,
+                                losingHlc = tombstoneHlc,
+                                encryptPayload = true,
+                            )
                         }
                         // Newer update clears tombstone
                         tombstoneDao.deleteTombstone(EntityType.NOTE.name, payload.uuid)
@@ -171,7 +204,7 @@ class FieldConflictResolver
                             )
                         noteDao.insert(newNote)
 
-                        // Record initial field metadata
+                        // Record initial field metadata & base values
                         val now = System.currentTimeMillis()
                         val hlcStr = opHlc.toString()
                         val fields = listOf("title", "body", "colorIndex", "trashed", "archived", "pinnedAt", "completedAt", "categoryUuid", "reminderAt")
@@ -180,6 +213,8 @@ class FieldConflictResolver
                                 SyncConflictMetadataEntity(EntityType.NOTE.name, payload.uuid, f, hlcStr, now),
                             )
                         }
+                        baseValues["${EntityType.NOTE.name}:${payload.uuid}:title"] = payload.title
+                        baseValues["${EntityType.NOTE.name}:${payload.uuid}:body"] = payload.body
                     } else {
                         // Field-level merging
                         val now = System.currentTimeMillis()
@@ -187,23 +222,39 @@ class FieldConflictResolver
                         // Title
                         val titleMeta = conflictMetadataDao.getFieldMetadata(EntityType.NOTE.name, existing.uuid, "title")
                         val titleHlc = titleMeta?.let { Hlc.parse(it.hlcTimestamp) } ?: Hlc(existing.updatedAt, 0, "local")
+                        val titleKey = "${EntityType.NOTE.name}:${existing.uuid}:title"
+                        val baseTitle = baseValues[titleKey]
                         val targetTitle: String
-                        if (opHlc > titleHlc) {
-                            if (existing.title != payload.title) {
-                                recordConflict(
-                                    entityType = EntityType.NOTE.name,
-                                    entityId = existing.uuid,
-                                    fieldName = "title",
-                                    winningValue = payload.title,
-                                    losingValue = existing.title,
-                                    winningHlc = opHlc,
-                                    losingHlc = titleHlc,
-                                )
+                        if (existing.title == payload.title) {
+                            targetTitle = existing.title
+                            baseValues[titleKey] = existing.title
+                            if (opHlc > titleHlc) {
+                                conflictMetadataDao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, existing.uuid, "title", opHlc.toString(), now))
                             }
-                            targetTitle = payload.title
-                            conflictMetadataDao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, existing.uuid, "title", opHlc.toString(), now))
+                        } else if (opHlc > titleHlc) {
+                            if (baseTitle != null && payload.title == baseTitle) {
+                                // Remote did NOT edit title; it simply sent unchanged ancestor title. Keep local edit without conflict!
+                                targetTitle = existing.title
+                            } else {
+                                if (!isSequential(titleHlc, opHlc, journal)) {
+                                    recordConflict(
+                                        entityType = EntityType.NOTE.name,
+                                        entityId = existing.uuid,
+                                        fieldName = "title",
+                                        winningValue = payload.title,
+                                        losingValue = existing.title,
+                                        winningHlc = opHlc,
+                                        losingHlc = titleHlc,
+                                    )
+                                }
+                                targetTitle = payload.title
+                                if (isSequential(titleHlc, opHlc, journal)) {
+                                    baseValues[titleKey] = payload.title
+                                }
+                                conflictMetadataDao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, existing.uuid, "title", opHlc.toString(), now))
+                            }
                         } else if (opHlc < titleHlc) {
-                            if (existing.title != payload.title) {
+                            if (!isSequential(titleHlc, opHlc, journal)) {
                                 recordConflict(
                                     entityType = EntityType.NOTE.name,
                                     entityId = existing.uuid,
@@ -222,23 +273,39 @@ class FieldConflictResolver
                         // Body (Content)
                         val bodyMeta = conflictMetadataDao.getFieldMetadata(EntityType.NOTE.name, existing.uuid, "body")
                         val bodyHlc = bodyMeta?.let { Hlc.parse(it.hlcTimestamp) } ?: Hlc(existing.updatedAt, 0, "local")
+                        val bodyKey = "${EntityType.NOTE.name}:${existing.uuid}:body"
+                        val baseBody = baseValues[bodyKey]
                         val targetBody: String
-                        if (opHlc > bodyHlc) {
-                            if (existing.body != payload.body) {
-                                recordConflict(
-                                    entityType = EntityType.NOTE.name,
-                                    entityId = existing.uuid,
-                                    fieldName = "body",
-                                    winningValue = payload.body,
-                                    losingValue = existing.body,
-                                    winningHlc = opHlc,
-                                    losingHlc = bodyHlc,
-                                )
+                        if (existing.body == payload.body) {
+                            targetBody = existing.body
+                            baseValues[bodyKey] = existing.body
+                            if (opHlc > bodyHlc) {
+                                conflictMetadataDao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, existing.uuid, "body", opHlc.toString(), now))
                             }
-                            targetBody = payload.body
-                            conflictMetadataDao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, existing.uuid, "body", opHlc.toString(), now))
+                        } else if (opHlc > bodyHlc) {
+                            if (baseBody != null && payload.body == baseBody) {
+                                targetBody = existing.body
+                            } else {
+                                if (!isSequential(bodyHlc, opHlc, journal)) {
+                                    recordConflict(
+                                        entityType = EntityType.NOTE.name,
+                                        entityId = existing.uuid,
+                                        fieldName = "body",
+                                        winningValue = payload.body,
+                                        losingValue = existing.body,
+                                        winningHlc = opHlc,
+                                        losingHlc = bodyHlc,
+                                        encryptPayload = true,
+                                    )
+                                }
+                                targetBody = payload.body
+                                if (isSequential(bodyHlc, opHlc, journal)) {
+                                    baseValues[bodyKey] = payload.body
+                                }
+                                conflictMetadataDao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, existing.uuid, "body", opHlc.toString(), now))
+                            }
                         } else if (opHlc < bodyHlc) {
-                            if (existing.body != payload.body) {
+                            if (!isSequential(bodyHlc, opHlc, journal)) {
                                 recordConflict(
                                     entityType = EntityType.NOTE.name,
                                     entityId = existing.uuid,
@@ -247,6 +314,7 @@ class FieldConflictResolver
                                     losingValue = payload.body,
                                     winningHlc = bodyHlc,
                                     losingHlc = opHlc,
+                                    encryptPayload = true,
                                 )
                             }
                             targetBody = existing.body
@@ -357,7 +425,20 @@ class FieldConflictResolver
                     val fields = conflictMetadataDao.getAllFieldsForEntity(EntityType.NOTE.name, op.entityId)
                     val maxFieldHlc = fields.mapNotNull { runCatching { Hlc.parse(it.hlcTimestamp) }.getOrNull() }.maxOrNull()
                     if (maxFieldHlc != null && maxFieldHlc > opHlc) {
-                        // Entity was updated after this delete
+                        // Concurrent update vs delete: local was updated after/concurrent with this delete
+                        val existing = noteDao.getNoteEntityByUuid(op.entityId)
+                        if (existing != null) {
+                            recordConflict(
+                                entityType = EntityType.NOTE.name,
+                                entityId = op.entityId,
+                                fieldName = "DELETE_VS_UPDATE",
+                                winningValue = json.encodeToString(existing.toChangePayload()),
+                                losingValue = "DELETED_BY:${opHlc.deviceId}:${opHlc}",
+                                winningHlc = maxFieldHlc,
+                                losingHlc = opHlc,
+                                encryptPayload = true,
+                            )
+                        }
                         return
                     }
 
@@ -390,6 +471,7 @@ class FieldConflictResolver
             op: JournalOperationDto,
             opType: OperationType,
             opHlc: Hlc,
+            journal: SyncJournalDto,
         ) {
             when (opType) {
                 OperationType.UPSERT -> {
@@ -495,6 +577,7 @@ class FieldConflictResolver
             op: JournalOperationDto,
             opType: OperationType,
             opHlc: Hlc,
+            journal: SyncJournalDto,
         ) {
             when (opType) {
                 OperationType.UPSERT -> {
@@ -621,6 +704,7 @@ class FieldConflictResolver
             op: JournalOperationDto,
             opType: OperationType,
             opHlc: Hlc,
+            journal: SyncJournalDto,
         ) {
             when (opType) {
                 OperationType.UPSERT -> {
@@ -719,12 +803,44 @@ class FieldConflictResolver
                     throw InvalidOperationPayloadException("Failed to parse PreferenceChangePayload", e)
                 }
 
+            // Exclude device-specific preferences
+            val deviceSpecificKeys =
+                setOf(
+                    "device_biometrics",
+                    "device_biometric_enabled",
+                    "device_notification_permission",
+                    "device_local_path",
+                    "device_cache_dir",
+                    "dev_mode_options",
+                )
+            if (deviceSpecificKeys.contains(payload.key)) return
+
             val meta = conflictMetadataDao.getFieldMetadata(EntityType.USER_PREFERENCE.name, payload.key, "settings")
             val metaHlc = meta?.let { Hlc.parse(it.hlcTimestamp) } ?: Hlc(0L, 0, "local")
             if (opHlc > metaHlc) {
                 conflictMetadataDao.insertOrUpdate(
                     SyncConflictMetadataEntity(EntityType.USER_PREFERENCE.name, payload.key, "settings", opHlc.toString(), System.currentTimeMillis()),
                 )
+            }
+        }
+
+        private fun encryptConflictPayload(
+            raw: String?,
+            conflictId: String,
+        ): String? {
+            if (raw == null) return null
+            val mek = mekManager?.getActiveMasterKey() ?: return raw
+            return try {
+                val aad = "NOTAS_E1:conflict:$conflictId".toByteArray(Charsets.UTF_8)
+                val encrypted =
+                    EncryptedContainer.encrypt(
+                        plaintext = raw.toByteArray(Charsets.UTF_8),
+                        key = mek,
+                        aad = aad,
+                    )
+                "NOTAS_E1:" + Base64.getEncoder().encodeToString(encrypted)
+            } catch (_: Exception) {
+                raw
             }
         }
 
@@ -763,6 +879,7 @@ class FieldConflictResolver
             losingValue: String?,
             winningHlc: Hlc,
             losingHlc: Hlc,
+            encryptPayload: Boolean = false,
         ) {
             val conflictId =
                 computeConflictId(
@@ -774,14 +891,17 @@ class FieldConflictResolver
                     winningValue = winningValue,
                     losingValue = losingValue,
                 )
+            val storedWinning = if (encryptPayload) encryptConflictPayload(winningValue, conflictId) else winningValue
+            val storedLosing = if (encryptPayload) encryptConflictPayload(losingValue, conflictId) else losingValue
+
             val record =
                 SyncConflictRecordEntity(
                     conflictId = conflictId,
                     entityType = entityType,
                     entityId = entityId,
                     fieldName = fieldName,
-                    winningValue = winningValue,
-                    losingValue = losingValue,
+                    winningValue = storedWinning,
+                    losingValue = storedLosing,
                     winningHlc = winningHlc.toString(),
                     losingHlc = losingHlc.toString(),
                     winningDeviceId = winningHlc.deviceId,
@@ -792,3 +912,30 @@ class FieldConflictResolver
             conflictRecordDao.insert(record)
         }
     }
+
+private fun NoteEntity.toChangePayload(categoryUuid: String? = null): NoteChangePayload =
+    NoteChangePayload(
+        uuid = uuid,
+        ownerId = ownerId,
+        kind = kind.name,
+        title = title,
+        body = body,
+        colorIndex = colorIndex,
+        trashed = trashed,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        reminderAt = reminderAt,
+        endAt = endAt,
+        isAllDay = isAllDay,
+        importance = importance.name,
+        visibility = visibility.name,
+        pictureUri = pictureUri,
+        pictureHeroFraming = pictureHeroFraming,
+        locked = locked,
+        iconKey = iconKey,
+        categoryUuid = categoryUuid,
+        archived = archived,
+        trashedAt = trashedAt,
+        completedAt = completedAt,
+        pinnedAt = pinnedAt,
+    )

@@ -133,14 +133,6 @@ fun CalendarDayCell(
     val dayShape = CalendarDesignTokens.SelectedDayShape
     val cellBackgroundModifier =
         when {
-            isSelected && isToday ->
-                Modifier
-                    .background(lightAccent, shape = dayShape)
-                    .border(
-                        1.5.dp,
-                        if (isDark) onLightAccent.copy(alpha = 0.35f) else MaterialTheme.colorScheme.primaryContainer,
-                        shape = dayShape,
-                    )
             isSelected -> Modifier.background(lightAccent, shape = dayShape)
             isToday ->
                 Modifier.border(
@@ -213,14 +205,14 @@ fun CalendarDayCell(
                     ) {
                         day.dots.take(4).forEach { dot ->
                             val resolvedDotColor =
-                                if (dot.color != Color.Unspecified && dot.color != CalendarDesignTokens.DotPurple) {
+                                if (dot.color != Color.Unspecified) {
                                     dot.color
                                 } else {
                                     primaryAccent
                                 }
                             val dotColor =
                                 when {
-                                    isSelected -> if (isDark) onLightAccent else resolvedDotColor
+                                    isSelected -> onLightAccent
                                     isOutOfMonth -> resolvedDotColor.copy(alpha = 0.35f)
                                     else -> resolvedDotColor
                                 }

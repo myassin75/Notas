@@ -20,16 +20,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,12 +51,15 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import haddad.three.notas.R
+import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
 import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.LocalReducedMotion
 import java.time.LocalDate
@@ -149,6 +157,8 @@ fun CalendarRoute(
 
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val isWideScreen = maxWidth >= 720.dp
+            val containerMaxHeight = maxHeight
+            val shouldScrollOuter = !(isWideScreen && uiState.viewMode == CalendarViewMode.MONTH && containerMaxHeight >= 500.dp)
             val scrollState = key(uiState.viewMode) { rememberScrollState() }
 
             // Scrollable calendar content
@@ -156,7 +166,7 @@ fun CalendarRoute(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .verticalScroll(scrollState),
+                        .then(if (shouldScrollOuter) Modifier.verticalScroll(scrollState) else Modifier),
             ) {
                 AnimatedContent(
                     targetState = uiState.viewMode,
@@ -203,13 +213,7 @@ fun CalendarRoute(
                                         stringResource(R.string.calendar_date_agenda, dayAgendaDatePrefix)
                                     }
 
-                                val totalDayItems = uiState.dayTimelineItems.size + uiState.dayAllDayItems.size
-                                val dayAgendaSubtitle =
-                                    when {
-                                        totalDayItems == 1 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_event_count_single)
-                                        totalDayItems > 1 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_events_count, totalDayItems)
-                                        else -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_no_events_or_tasks)
-                                    }
+                                val dayAgendaSubtitle = dayAgendaDatePrefix
 
                                 AgendaSectionHeader(
                                     title = dayAgendaTitle,
@@ -340,12 +344,7 @@ fun CalendarRoute(
                                 Spacer(modifier = Modifier.height(20.dp))
 
                                 // 3. "This week's agenda" section header
-                                val weekAgendaSubtitle =
-                                    if (uiState.weekTotalEventsCount == 1) {
-                                        "${uiState.weekRangeTitle} • " + stringResource(R.string.calendar_event_count_single)
-                                    } else {
-                                        "${uiState.weekRangeTitle} • " + stringResource(R.string.calendar_events_count, uiState.weekTotalEventsCount)
-                                    }
+                                val weekAgendaSubtitle = uiState.weekRangeTitle
 
                                 AgendaSectionHeader(
                                     title = stringResource(R.string.calendar_weeks_agenda),
@@ -416,6 +415,7 @@ fun CalendarRoute(
 
                         CalendarViewMode.MONTH -> {
                             // ==================== MONTH VIEW ====================
+                            val shouldFillHeight = isWideScreen && containerMaxHeight >= 500.dp
                             val monthCard: @Composable (Modifier) -> Unit = { cardModifier ->
                                 Surface(
                                     shape = CalendarDesignTokens.CardShape,
@@ -427,7 +427,8 @@ fun CalendarRoute(
                                         modifier =
                                             Modifier
                                                 .fillMaxWidth()
-                                                .padding(vertical = 12.dp, horizontal = 4.dp),
+                                                .then(if (shouldFillHeight) Modifier.fillMaxHeight() else Modifier)
+                                                .padding(vertical = 14.dp, horizontal = 4.dp),
                                     ) {
                                         val isMonthViewOnToday =
                                             uiState.displayedMonth == YearMonth.from(uiState.today) && uiState.selectedDate == uiState.today
@@ -449,22 +450,84 @@ fun CalendarRoute(
 
                                         // Calendar days grid
                                         val rows = uiState.monthDays.chunked(7)
-                                        rows.forEach { weekDays ->
-                                            Row(
-                                                modifier =
-                                                    Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 2.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                            ) {
-                                                weekDays.forEach { dayModel ->
-                                                    CalendarDayCell(
-                                                        day = dayModel,
-                                                        onClick = handleDateSelection,
-                                                        modifier = Modifier.weight(1f),
-                                                    )
+                                        Column(
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .then(if (shouldFillHeight) Modifier.weight(1f) else Modifier),
+                                            verticalArrangement = if (shouldFillHeight) Arrangement.SpaceEvenly else Arrangement.spacedBy(2.dp),
+                                        ) {
+                                            rows.forEach { weekDays ->
+                                                Row(
+                                                    modifier =
+                                                        Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(vertical = 1.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                ) {
+                                                    weekDays.forEach { dayModel ->
+                                                        CalendarDayCell(
+                                                            day = dayModel,
+                                                            onClick = handleDateSelection,
+                                                            modifier = Modifier.weight(1f),
+                                                        )
+                                                    }
                                                 }
                                             }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        HorizontalDivider(
+                                            color = cardBorder,
+                                            modifier = Modifier.padding(horizontal = 10.dp),
+                                        )
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        // Footer row matching redesign: • Today · 3 events, 3 tasks (or Today · Friday, November 13)
+                                        val eventCount = uiState.selectedDayEvents.size
+                                        val isToday = uiState.selectedDate == uiState.today
+
+                                        val footerPrefix =
+                                            if (isToday) {
+                                                stringResource(R.string.calendar_today)
+                                            } else {
+                                                remember(uiState.selectedDate) {
+                                                    val formatter = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault())
+                                                    uiState.selectedDate.format(formatter)
+                                                }
+                                            }
+
+                                        val fullDate =
+                                            remember(uiState.selectedDate) {
+                                                val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
+                                                uiState.selectedDate.format(formatter)
+                                            }
+                                        val footerText = "$footerPrefix · $fullDate"
+
+                                        Row(
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 14.dp, vertical = 2.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .size(6.dp)
+                                                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                                            )
+                                            Text(
+                                                text = footerText,
+                                                style =
+                                                    MaterialTheme.typography.bodySmall.copy(
+                                                        fontSize = 12.5.sp,
+                                                        color = CalendarDesignTokens.resolveTextSecondary(isDark),
+                                                    ),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
                                         }
                                     }
                                 }
@@ -473,7 +536,7 @@ fun CalendarRoute(
                             val monthAgendaSection: @Composable (Modifier) -> Unit = { sectionModifier ->
                                 val errorMessage = uiState.errorMessage
                                 val isLoaded = !uiState.isLoading && errorMessage == null
-                                val isAgendaEmpty = isLoaded && uiState.selectedDayEvents.isEmpty() && uiState.selectedDayTasks.isEmpty()
+                                val isAgendaEmpty = isLoaded && uiState.selectedDayEvents.isEmpty() && uiState.selectedDayTasks.isEmpty() && uiState.selectedDayBirthdays.isEmpty()
                                 val isTodaySelected = uiState.selectedDate == uiState.today
 
                                 val emptyStateDateSubtitle =
@@ -482,123 +545,246 @@ fun CalendarRoute(
                                         uiState.selectedDate.format(formatter)
                                     }
 
-                                Column(modifier = sectionModifier) {
-                                    if (isAgendaEmpty) {
-                                        // When agenda is empty: Display "Your agenda" heading and formatted date subtitle,
-                                        // and hide the header New event button to enforce exactly one button inside the empty state card.
-                                        AgendaSectionHeader(
-                                            title = stringResource(R.string.calendar_your_agenda),
-                                            subtitle = emptyStateDateSubtitle,
-                                            showNewEventButton = false,
+                                val agendaTitle =
+                                    when {
+                                        isAgendaEmpty -> stringResource(R.string.calendar_your_agenda)
+                                        isTodaySelected -> stringResource(R.string.calendar_todays_agenda)
+                                        else -> stringResource(R.string.calendar_date_agenda, dayAgendaDatePrefix)
+                                    }
+
+                                val agendaSubtitle =
+                                    if (isAgendaEmpty) emptyStateDateSubtitle else dayAgendaDatePrefix
+
+                                Surface(
+                                    shape = CalendarDesignTokens.CardShape,
+                                    color = cardBg,
+                                    border = BorderStroke(1.dp, cardBorder),
+                                    modifier = sectionModifier,
+                                ) {
+                                    Column(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .then(if (shouldFillHeight) Modifier.fillMaxHeight() else Modifier)
+                                                .padding(vertical = 16.dp, horizontal = 16.dp),
+                                    ) {
+                                        // Header inside Agenda Card
+                                        Text(
+                                            text = agendaTitle,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            style =
+                                                MaterialTheme.typography.titleMedium.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 20.sp,
+                                                    color = CalendarDesignTokens.resolveTextPrimary(isDark),
+                                                ),
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = agendaSubtitle,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            style =
+                                                MaterialTheme.typography.bodySmall.copy(
+                                                    fontSize = 12.5.sp,
+                                                    color = CalendarDesignTokens.resolveTextSecondary(isDark),
+                                                ),
                                         )
 
-                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        HorizontalDivider(color = cardBorder)
+                                        Spacer(modifier = Modifier.height(12.dp))
 
-                                        CalendarEmptyState(
-                                            selectedDate = uiState.selectedDate,
-                                            onCreateEventClick = { onCreateEvent(uiState.selectedDate) },
-                                        )
-                                    } else if (uiState.isLoading) {
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(32.dp),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            CircularProgressIndicator(
-                                                color = MaterialTheme.colorScheme.primary,
-                                            )
-                                        }
-                                    } else if (errorMessage != null) {
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(24.dp),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
+                                        if (uiState.isLoading) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .then(if (shouldFillHeight) Modifier.weight(1f) else Modifier.padding(32.dp)),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                )
+                                            }
+                                        } else if (errorMessage != null) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .then(if (shouldFillHeight) Modifier.weight(1f) else Modifier.padding(24.dp)),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Text(
+                                                    text = errorMessage,
+                                                    style =
+                                                        MaterialTheme.typography.bodyMedium.copy(
+                                                            color = CalendarDesignTokens.resolveTextSecondary(isDark),
+                                                        ),
+                                                )
+                                            }
+                                        } else if (isAgendaEmpty) {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .then(if (shouldFillHeight) Modifier.weight(1f) else Modifier.padding(vertical = 16.dp)),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    verticalArrangement = Arrangement.Center,
+                                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                                ) {
+                                                    CalendarEmptyIllustration(selectedDate = uiState.selectedDate)
+                                                    Spacer(modifier = Modifier.height(18.dp))
+                                                    Text(
+                                                        text = stringResource(R.string.calendar_empty_room_title),
+                                                        style =
+                                                            MaterialTheme.typography.titleLarge.copy(
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 22.sp,
+                                                                color = CalendarDesignTokens.resolveTextPrimary(isDark),
+                                                                textAlign = TextAlign.Center,
+                                                            ),
+                                                    )
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Text(
+                                                        text = stringResource(R.string.calendar_empty_no_events_desc) + "\n" +
+                                                            stringResource(R.string.calendar_empty_enjoy_space_desc),
+                                                        style =
+                                                            MaterialTheme.typography.bodyMedium.copy(
+                                                                fontSize = 13.5.sp,
+                                                                color = CalendarDesignTokens.resolveTextSecondary(isDark),
+                                                                textAlign = TextAlign.Center,
+                                                                lineHeight = 20.sp,
+                                                            ),
+                                                    )
+                                                    Spacer(modifier = Modifier.height(20.dp))
+                                                    Surface(
+                                                        onClick = { onCreateEvent(uiState.selectedDate) },
+                                                        shape = CircleShape,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        modifier =
+                                                            Modifier
+                                                                .height(44.dp)
+                                                                .defaultMinSize(minWidth = 140.dp),
+                                                    ) {
+                                                        Row(
+                                                            modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                        ) {
+                                                            RememberMaterialRoundedSymbol(
+                                                                name = "add",
+                                                                size = 18.dp,
+                                                                tint = MaterialTheme.colorScheme.onPrimary,
+                                                            )
+                                                            Text(
+                                                                text = stringResource(R.string.calendar_new_event),
+                                                                style =
+                                                                    MaterialTheme.typography.labelLarge.copy(
+                                                                        fontWeight = FontWeight.SemiBold,
+                                                                        fontSize = 14.sp,
+                                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                                    ),
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // Bottom footer matching Month Card footer level
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            HorizontalDivider(color = cardBorder)
+                                            Spacer(modifier = Modifier.height(10.dp))
                                             Text(
-                                                text = errorMessage,
+                                                text = stringResource(R.string.calendar_empty_footer),
                                                 style =
-                                                    MaterialTheme.typography.bodyMedium.copy(
+                                                    MaterialTheme.typography.bodySmall.copy(
+                                                        fontSize = 12.5.sp,
                                                         color = CalendarDesignTokens.resolveTextSecondary(isDark),
                                                     ),
+                                                modifier = Modifier.padding(horizontal = 6.dp),
                                             )
-                                        }
-                                    } else {
-                                        val agendaTitle =
-                                            if (isTodaySelected) {
-                                                stringResource(R.string.calendar_todays_agenda)
-                                            } else {
-                                                stringResource(R.string.calendar_date_agenda, dayAgendaDatePrefix)
-                                            }
-
-                                        val eventCount = uiState.selectedDayEvents.size
-                                        val taskCount = uiState.selectedDayTasks.size
-                                        val totalItems = eventCount + taskCount
-                                        val agendaSubtitle =
-                                            when {
-                                                totalItems == 0 -> "$dayAgendaDatePrefix · " + stringResource(R.string.calendar_no_events_or_tasks)
-                                                eventCount > 0 && taskCount > 0 -> {
-                                                    val evText = if (eventCount == 1) stringResource(R.string.calendar_event_count_single) else stringResource(R.string.calendar_events_count, eventCount)
-                                                    val taskText = if (taskCount == 1) stringResource(R.string.calendar_task_count_single) else stringResource(R.string.calendar_tasks_count, taskCount)
-                                                    "$dayAgendaDatePrefix · $evText, $taskText"
+                                        } else {
+                                            // Populated state with internal scroll for events and tasks when height is bounded (split-screen / tablet)
+                                            val agendaScrollModifier =
+                                                if (shouldFillHeight) {
+                                                    Modifier
+                                                        .weight(1f)
+                                                        .verticalScroll(rememberScrollState())
+                                                } else {
+                                                    Modifier
                                                 }
-                                                eventCount > 0 -> {
-                                                    val evText = if (eventCount == 1) stringResource(R.string.calendar_event_count_single) else stringResource(R.string.calendar_events_count, eventCount)
-                                                    "$dayAgendaDatePrefix · $evText"
-                                                }
-                                                else -> {
-                                                    val taskText = if (taskCount == 1) stringResource(R.string.calendar_task_count_single) else stringResource(R.string.calendar_tasks_count, taskCount)
-                                                    "$dayAgendaDatePrefix · $taskText"
-                                                }
-                                            }
-
-                                        AgendaSectionHeader(
-                                            title = agendaTitle,
-                                            subtitle = agendaSubtitle,
-                                            showNewEventButton = true,
-                                            onNewEventClick = { onCreateEvent(uiState.selectedDate) },
-                                        )
-
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        if (uiState.selectedDayEvents.isNotEmpty()) {
-                                            AgendaCategoryHeader(
-                                                title = stringResource(R.string.calendar_events),
-                                                iconName = "calendar_month",
-                                                count = uiState.selectedDayEvents.size,
-                                                iconTint = MaterialTheme.colorScheme.primary,
-                                            )
-                                            uiState.selectedDayEvents.forEach { event ->
-                                                key(event.id) {
-                                                    AgendaEventCard(
-                                                        event = event,
-                                                        onClick = { onOpenItemDetails(event.id, false) },
+                                            Column(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .then(agendaScrollModifier),
+                                            ) {
+                                                if (uiState.selectedDayEvents.isNotEmpty()) {
+                                                    AgendaCategoryHeader(
+                                                        title = stringResource(R.string.calendar_events),
+                                                        count = 0,
                                                     )
+                                                    Spacer(modifier = Modifier.height(6.dp))
+                                                    uiState.selectedDayEvents.forEach { event ->
+                                                        key(event.id) {
+                                                            AgendaEventCard(
+                                                                event = event,
+                                                                onClick = { onOpenItemDetails(event.id, false) },
+                                                                showOutsideTimeColumn = false,
+                                                            )
+                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                        }
 
-                                        if (uiState.selectedDayTasks.isNotEmpty()) {
-                                            if (uiState.selectedDayEvents.isNotEmpty()) {
-                                                Spacer(modifier = Modifier.height(10.dp))
-                                            }
-                                            AgendaCategoryHeader(
-                                                title = stringResource(R.string.calendar_tasks),
-                                                iconName = "task_alt",
-                                                count = uiState.selectedDayTasks.size,
-                                                iconTint = CalendarDesignTokens.CategoryGreenIcon,
-                                                badgeBgColor = if (isDark) Color(0xFF1B3828) else CalendarDesignTokens.CategoryGreenBg,
-                                                badgeTextColor = if (isDark) Color(0xFF81C784) else CalendarDesignTokens.CategoryGreenIcon,
-                                            )
-                                            uiState.selectedDayTasks.forEach { task ->
-                                                key(task.id) {
-                                                    AgendaEventCard(
-                                                        event = task,
-                                                        onClick = { onOpenItemDetails(task.id, true) },
-                                                        onToggleDone = viewModel::toggleEventDone,
+                                                if (uiState.selectedDayTasks.isNotEmpty()) {
+                                                    if (uiState.selectedDayEvents.isNotEmpty()) {
+                                                        Spacer(modifier = Modifier.height(10.dp))
+                                                    }
+                                                    AgendaCategoryHeader(
+                                                        title = stringResource(R.string.calendar_tasks),
+                                                        count = 0,
                                                     )
+                                                    Spacer(modifier = Modifier.height(6.dp))
+                                                    uiState.selectedDayTasks.forEach { task ->
+                                                        key(task.id) {
+                                                            AgendaEventCard(
+                                                                event = task,
+                                                                onClick = { onOpenItemDetails(task.id, true) },
+                                                                onToggleDone = viewModel::toggleEventDone,
+                                                                showOutsideTimeColumn = false,
+                                                            )
+                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                        }
+                                                    }
+                                                }
+
+                                                if (uiState.selectedDayBirthdays.isNotEmpty()) {
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    AgendaCategoryHeader(
+                                                        title = stringResource(R.string.calendar_birthdays),
+                                                        iconName = "cake",
+                                                        count = 0,
+                                                        iconTint = CalendarDesignTokens.BirthdayIconTint,
+                                                        badgeBgColor = if (isDark) Color(0xFF3E1C28) else CalendarDesignTokens.BirthdayBoxBg,
+                                                        badgeTextColor = if (isDark) Color(0xFFF48FB1) else CalendarDesignTokens.BirthdayIconTint,
+                                                    )
+                                                    Spacer(modifier = Modifier.height(6.dp))
+                                                    uiState.selectedDayBirthdays.forEach { birthday ->
+                                                        key(birthday.id) {
+                                                            BirthdayCard(
+                                                                birthday = birthday,
+                                                                onClick = { onOpenItemDetails(birthday.id, false) },
+                                                                horizontalPadding = 0.dp,
+                                                            )
+                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -611,15 +797,34 @@ fun CalendarRoute(
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
+                                            .then(if (shouldFillHeight) Modifier.fillMaxHeight().padding(bottom = 16.dp) else Modifier)
                                             .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
                                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                                     verticalAlignment = Alignment.Top,
                                 ) {
-                                    Box(modifier = Modifier.weight(1.1f)) {
-                                        monthCard(Modifier.fillMaxWidth())
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .weight(1.1f)
+                                                .then(if (shouldFillHeight) Modifier.fillMaxHeight() else Modifier),
+                                    ) {
+                                        monthCard(
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .then(if (shouldFillHeight) Modifier.fillMaxHeight() else Modifier),
+                                        )
                                     }
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        monthAgendaSection(Modifier.fillMaxWidth())
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .weight(1f)
+                                                .then(if (shouldFillHeight) Modifier.fillMaxHeight() else Modifier),
+                                    ) {
+                                        monthAgendaSection(
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .then(if (shouldFillHeight) Modifier.fillMaxHeight() else Modifier),
+                                        )
                                     }
                                 }
                             } else {
@@ -629,21 +834,26 @@ fun CalendarRoute(
                                             .fillMaxWidth()
                                             .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
                                     )
-                                    Spacer(modifier = Modifier.height(20.dp))
-                                    monthAgendaSection(Modifier.fillMaxWidth())
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    monthAgendaSection(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
+                                    )
                                 }
                             }
                         }
                     }
                 }
 
-                // Common: Birthdays Section (for Day, Week, and Month views)
-                if (uiState.viewMode != CalendarViewMode.YEAR && uiState.selectedDayBirthdays.isNotEmpty()) {
+                // Common: Birthdays Section (only for Day and Week views, since Month view displays it inside the Agenda card)
+                if (uiState.viewMode != CalendarViewMode.YEAR && uiState.viewMode != CalendarViewMode.MONTH && uiState.selectedDayBirthdays.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(14.dp))
                     AgendaCategoryHeader(
                         title = stringResource(R.string.calendar_birthdays),
                         iconName = "cake",
-                        count = uiState.selectedDayBirthdays.size,
+                        count = 0,
+                        modifier = Modifier.padding(horizontal = CalendarDesignTokens.ScreenHorizontalPadding),
                         iconTint = CalendarDesignTokens.BirthdayIconTint,
                         badgeBgColor = if (isDark) Color(0xFF3E1C28) else CalendarDesignTokens.BirthdayBoxBg,
                         badgeTextColor = if (isDark) Color(0xFFF48FB1) else CalendarDesignTokens.BirthdayIconTint,

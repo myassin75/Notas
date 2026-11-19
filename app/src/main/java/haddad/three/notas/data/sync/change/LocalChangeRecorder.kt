@@ -4,6 +4,10 @@ import haddad.three.notas.data.ChecklistItemEntity
 import haddad.three.notas.data.NoteAttachmentEntity
 import haddad.three.notas.data.NoteEntity
 import haddad.three.notas.data.ShoulderEntity
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataDao
+import haddad.three.notas.data.sync.conflict.SyncConflictMetadataEntity
+import haddad.three.notas.data.sync.hlc.Hlc
+import haddad.three.notas.data.sync.hlc.HlcClock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -78,12 +82,24 @@ class DefaultLocalChangeRecorder
         private val pendingChangeDao: PendingChangeDao,
         private val deviceIdProvider: suspend () -> String,
         private val clock: () -> Long = System::currentTimeMillis,
+        private val hlcClock: HlcClock? = null,
+        private val conflictMetadataDao: SyncConflictMetadataDao? = null,
+        private val onMutationRecorded: ((origin: OperationOrigin) -> Unit)? = null,
     ) : LocalChangeRecorder {
         private val json =
             Json {
                 encodeDefaults = true
                 ignoreUnknownKeys = true
             }
+
+        private fun notifyMutation(origin: OperationOrigin) {
+            if (origin == OperationOrigin.LOCAL) {
+                onMutationRecorded?.invoke(origin)
+            }
+        }
+
+        private suspend fun nextHlc(): Hlc =
+            hlcClock?.generateNext() ?: Hlc(clock(), 0, deviceIdProvider())
 
         override suspend fun recordNoteUpsert(
             note: NoteEntity,
@@ -119,6 +135,7 @@ class DefaultLocalChangeRecorder
                     pinnedAt = note.pinnedAt,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -130,10 +147,24 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+
+            conflictMetadataDao?.let { dao ->
+                val now = clock()
+                val hlcStr = hlc.toString()
+                val fields = listOf("title", "body", "colorIndex", "trashed", "archived", "pinnedAt", "completedAt", "categoryUuid", "reminderAt")
+                for (f in fields) {
+                    dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.NOTE.name, note.uuid, f, hlcStr, now))
+                }
+            }
+
+            notifyMutation(origin)
             return changeId
         }
 
@@ -150,6 +181,7 @@ class DefaultLocalChangeRecorder
                     deletedAt = deletedAt,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -161,10 +193,14 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+            notifyMutation(origin)
             return changeId
         }
 
@@ -185,6 +221,7 @@ class DefaultLocalChangeRecorder
                     updatedAt = shoulder.updatedAt,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -196,10 +233,22 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+
+            conflictMetadataDao?.let { dao ->
+                val now = clock()
+                val hlcStr = hlc.toString()
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.CATEGORY.name, shoulder.uuid, "name", hlcStr, now))
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.CATEGORY.name, shoulder.uuid, "colorHex", hlcStr, now))
+            }
+
+            notifyMutation(origin)
             return changeId
         }
 
@@ -216,6 +265,7 @@ class DefaultLocalChangeRecorder
                     deletedAt = deletedAt,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -227,10 +277,14 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+            notifyMutation(origin)
             return changeId
         }
 
@@ -255,6 +309,7 @@ class DefaultLocalChangeRecorder
                     details = item.details,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -266,10 +321,23 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+
+            conflictMetadataDao?.let { dao ->
+                val now = clock()
+                val hlcStr = hlc.toString()
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.CHECKLIST_ITEM.name, item.uuid, "text", hlcStr, now))
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.CHECKLIST_ITEM.name, item.uuid, "checked", hlcStr, now))
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.CHECKLIST_ITEM.name, item.uuid, "sortOrder", hlcStr, now))
+            }
+
+            notifyMutation(origin)
             return changeId
         }
 
@@ -288,6 +356,7 @@ class DefaultLocalChangeRecorder
                     parentUuid = noteUuid,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -299,10 +368,14 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+            notifyMutation(origin)
             return changeId
         }
 
@@ -323,6 +396,7 @@ class DefaultLocalChangeRecorder
                     mimeType = attachment.mimeType,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -334,10 +408,19 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+
+            conflictMetadataDao?.let { dao ->
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.ATTACHMENT_METADATA.name, attachment.uuid, "metadata", hlc.toString(), clock()))
+            }
+
+            notifyMutation(origin)
             return changeId
         }
 
@@ -356,6 +439,7 @@ class DefaultLocalChangeRecorder
                     parentUuid = noteUuid,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -367,10 +451,14 @@ class DefaultLocalChangeRecorder
                     createdAt = clock(),
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+            notifyMutation(origin)
             return changeId
         }
 
@@ -389,6 +477,7 @@ class DefaultLocalChangeRecorder
                     updatedAt = now,
                 )
 
+            val hlc = nextHlc()
             val changeId = UUID.randomUUID().toString()
             val entity =
                 PendingChangeEntity(
@@ -400,10 +489,19 @@ class DefaultLocalChangeRecorder
                     createdAt = now,
                     schemaVersion = 1,
                     payload = json.encodeToString(payload),
+                    hlcTimestamp = hlc.toString(),
+                    hlcCounter = hlc.logicalCounter,
+                    hlcNodeId = hlc.deviceId,
                     status = PendingChangeStatus.PENDING.name,
                 )
 
             pendingChangeDao.insert(entity)
+
+            conflictMetadataDao?.let { dao ->
+                dao.insertOrUpdate(SyncConflictMetadataEntity(EntityType.USER_PREFERENCE.name, key, "settings", hlc.toString(), now))
+            }
+
+            notifyMutation(origin)
             return changeId
         }
 

@@ -188,6 +188,44 @@ class EditNoteIntegrityTest {
             assertEquals(3, reopenedVm.colorIndex.value)
         }
 
+    @Test
+    fun single_editing_session_persists_once_and_preserves_id_across_title_and_body_edits() =
+        runTest {
+            val savedStateHandle = SavedStateHandle()
+            val vm = EditNoteViewModel(repository = store.repository(), savedStateHandle = savedStateHandle)
+            advanceUntilIdle()
+
+            // 1. Initial draft state
+            assertNull(vm.currentNoteId.value)
+            assertFalse(vm.hasPersistedRow.value)
+
+            // 2. User types title
+            vm.setTitle("My Architecture Note")
+            val initialSave = vm.saveIfNeeded("Untitled")
+            advanceUntilIdle()
+            assertNotNull(initialSave)
+
+            val persistentId = vm.currentNoteId.value
+            assertNotNull(persistentId)
+            assertTrue(vm.hasPersistedRow.value)
+            assertEquals(1, store.notes.size)
+            assertEquals("My Architecture Note", store.notes[persistentId]?.title)
+            assertEquals("", store.notes[persistentId]?.body)
+
+            // 3. User moves from title to body and continues typing
+            vm.setBody("Detailed body paragraph 1\nDetailed body paragraph 2")
+            val secondSave = vm.saveIfNeeded("Untitled")
+            advanceUntilIdle()
+            assertNotNull(secondSave)
+
+            // 4. Stable editing session: Same ID, exactly 1 note in database, updated content
+            assertEquals(persistentId, vm.currentNoteId.value)
+            assertTrue(vm.hasPersistedRow.value)
+            assertEquals(1, store.notes.size)
+            assertEquals("My Architecture Note", store.notes[persistentId]?.title)
+            assertEquals("Detailed body paragraph 1\nDetailed body paragraph 2", store.notes[persistentId]?.body)
+        }
+
     private class FakeShoulderDao(
         val shoulders: MutableList<ShoulderEntity>,
     ) : ShoulderDao {

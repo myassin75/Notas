@@ -170,6 +170,7 @@ class JournalDownloader
                         is DriveResult.Unauthorized -> return@withContext JournalDownloadResult.Unauthorized
                         is DriveResult.RateLimited -> return@withContext JournalDownloadResult.RateLimited(downloadResult.retryAfterSeconds)
                         is DriveResult.Offline -> return@withContext JournalDownloadResult.Failure("Network offline")
+                        is DriveResult.CursorExpired -> return@withContext JournalDownloadResult.Failure("Changes cursor expired")
                         is DriveResult.Error -> return@withContext JournalDownloadResult.Failure(downloadResult.message, downloadResult.cause)
                         is DriveResult.Success -> { /* Continue with validation */ }
                     }

@@ -39,11 +39,22 @@ data class DriveBackupItem(
     val keyId: Int,
     val notesCount: Int,
     val tasksCount: Int,
+    val eventsCount: Int = 0,
     val categoriesCount: Int,
     val attachmentsCount: Int,
     val sourceDevice: String,
     val plainSha256: String,
     val isEncrypted: Boolean = true,
+    val appVersion: String = "1.0.0",
+)
+
+/**
+ * Preview summary of a backup prior to executing a restore operation.
+ */
+data class RestorePreview(
+    val backupItem: DriveBackupItem,
+    val isCompatible: Boolean = true,
+    val warningMessages: List<String> = emptyList(),
 )
 
 /**
@@ -76,6 +87,7 @@ data class DriveBackupManifest(
     val appVersion: String = "1.0.0",
     val notesCount: Int,
     val tasksCount: Int,
+    val eventsCount: Int = 0,
     val categoriesCount: Int,
     val attachmentsCount: Int,
     val ownerId: String? = null,
@@ -119,12 +131,24 @@ sealed interface DriveResult<out T> {
         val data: T,
     ) : DriveResult<T>
 
-    data class Error(
+    open class Error(
         val message: String,
         val code: String? = null,
         val statusCode: Int? = null,
         val cause: Throwable? = null,
     ) : DriveResult<Nothing>
+
+    class NeedsRecoveryPhrase(
+        val backupItem: DriveBackupItem,
+        val envelope: DriveRecoveryEnvelopeDto,
+    ) : Error(
+        message = "Recovery phrase required to restore backup",
+        code = CODE_RECOVERY_PHRASE_REQUIRED,
+    ) {
+        companion object {
+            const val CODE_RECOVERY_PHRASE_REQUIRED = "NEEDS_RECOVERY_PHRASE"
+        }
+    }
 
     data object Unauthorized : DriveResult<Nothing>
 
@@ -141,6 +165,8 @@ sealed interface DriveResult<out T> {
     }
 
     data object Offline : DriveResult<Nothing>
+
+    data object CursorExpired : DriveResult<Nothing>
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -150,8 +176,59 @@ fun <T> DriveResult<*>.toErrorResult(): DriveResult<T> =
         is DriveResult.Unauthorized -> DriveResult.Unauthorized
         is DriveResult.RateLimited -> this
         is DriveResult.Offline -> DriveResult.Offline
+        is DriveResult.CursorExpired -> DriveResult.CursorExpired
         is DriveResult.Success -> error("Cannot convert Success to Error")
     }
+
+/**
+ * Changes API response containing the starting page token.
+ */
+@Serializable
+data class DriveStartPageTokenResponse(
+    val startPageToken: String,
+)
+
+/**
+ * An individual change event from the Google Drive Changes API.
+ */
+@Serializable
+data class DriveChangeDto(
+    val fileId: String,
+    val removed: Boolean = false,
+    val file: DriveFileDto? = null,
+)
+
+/**
+ * Paginated response from the Google Drive Changes API.
+ */
+@Serializable
+data class DriveChangeListResponse(
+    val nextPageToken: String? = null,
+    val newStartPageToken: String? = null,
+    val changes: List<DriveChangeDto> = emptyList(),
+)
+
+/**
+ * Top-level encrypted manifest stored in appDataFolder as `manifest.enc`.
+ * Coordinates storage schema version, snapshots, and device sequence coverage.
+ */
+@Serializable
+data class DriveManifestDto(
+    val schemaVersion: Int = 13,
+    val encryptionFormat: String = "NOTAS_E1",
+    val protocolVersion: Int = 1,
+    val lastSnapshotId: String? = null,
+    val lastSnapshotEpochMillis: Long = 0L,
+    val participatingDevices: Map<String, Long> = emptyMap(),
+    val updatedAtEpochMillis: Long = System.currentTimeMillis(),
+    val recoveryEnvelopePresent: Boolean = false,
+) {
+    companion object {
+        const val FILE_NAME = "manifest.enc"
+        const val FORMAT_VERSION = "NOTAS_MANIFEST_V1"
+        const val TYPE_MANIFEST = "manifest"
+    }
+}
 
 /**
  * UI State for Google Drive backup operations.

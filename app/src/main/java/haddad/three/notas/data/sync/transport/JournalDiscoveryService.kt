@@ -60,6 +60,7 @@ class JournalDiscoveryService
                         is DriveResult.Unauthorized -> return@withContext DiscoveryResult.Unauthorized
                         is DriveResult.RateLimited -> return@withContext DiscoveryResult.RateLimited(pageResult.retryAfterSeconds)
                         is DriveResult.Offline -> return@withContext DiscoveryResult.Failure("Network offline during discovery")
+                        is DriveResult.CursorExpired -> return@withContext DiscoveryResult.Failure("Changes cursor expired during discovery")
                         is DriveResult.Error -> return@withContext DiscoveryResult.Failure(pageResult.message, pageResult.cause)
                     }
                 }

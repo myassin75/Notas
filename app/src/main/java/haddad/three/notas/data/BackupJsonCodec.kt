@@ -25,6 +25,7 @@ internal fun encodeNoteForBackup(n: NoteWithItems): JSONObject {
         note.completedAt?.let { put("completedAt", it) }
         note.pinnedAt?.let { put("pinnedAt", it) }
         put("createdAt", note.createdAt)
+        put("updatedAt", note.updatedAt)
         note.reminderAt?.let { put("reminderAt", it) }
         note.endAt?.let { put("endAt", it) }
         put("isAllDay", note.isAllDay)

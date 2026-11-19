@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cloud & Sync (French) -->
+    <string name="settings_cloud_sync_section">Cloud et Synchronisation</string>
+    <string name="cloud_sync_title">Synchronisation Google Drive</string>
+    <string name="cloud_sync_subtitle">Synchronisation continue chiffrée de bout en bout</string>
+    <string name="cloud_sync_account_title">Compte Google Drive</string>
+    <string name="cloud_sync_connected_as">Connecté en tant que %1$s</string>
+    <string name="cloud_sync_not_connected">Non connecté</string>
+    <string name="cloud_sync_connect_button">Connecter Google Drive</string>
+    <string name="cloud_sync_disconnect_button">Déconnecter le compte</string>
+    <string name="cloud_sync_disconnect_dialog_title">Déconnecter Google Drive ?</string>
+    <string name="cloud_sync_disconnect_dialog_message">La synchronisation cloud s\'arrêtera. Toutes vos notes et tâches locales restent en sécurité sur cet appareil. Les modifications en attente seront conservées et synchronisées lors de votre reconnexion. Les fichiers distants dans Google Drive ne seront pas supprimés.</string>
+    <string name="cloud_sync_disconnect_confirm">Déconnecter</string>
+    <string name="cloud_sync_status_title">État de la synchronisation</string>
+    <string name="cloud_sync_state_idle">À jour</string>
+    <string name="cloud_sync_state_queued">En attente...</string>
+    <string name="cloud_sync_state_running">Synchronisation en cours...</string>
+    <string name="cloud_sync_state_uploading">Téléversement des modifications...</string>
+    <string name="cloud_sync_state_downloading">Recherche de mises à jour...</string>
+    <string name="cloud_sync_state_applying">Application des modifications distantes...</string>
+    <string name="cloud_sync_state_waiting_network">En attente du réseau...</string>
+    <string name="cloud_sync_state_waiting_auth">Autorisation requise</string>
+    <string name="cloud_sync_state_retrying">Nouvelle tentative (%1$d sur %2$d)...</string>
+    <string name="cloud_sync_state_conflicts">%1$d conflits non résolus</string>
+    <string name="cloud_sync_state_failed">Échec de la synchronisation</string>
+    <string name="cloud_sync_state_completed">Synchronisation terminée avec succès</string>
+    <string name="cloud_sync_last_sync">Dernière synchronisation : %1$s</string>
+    <string name="cloud_sync_never">Jamais</string>
+    <string name="cloud_sync_pending_changes">Modifications locales en attente : %1$d</string>
+    <string name="cloud_sync_sync_now">Synchroniser maintenant</string>
+    <string name="cloud_sync_auto_sync_title">Synchronisation automatique</string>
+    <string name="cloud_sync_auto_sync_subtitle">Synchroniser automatiquement en arrière-plan et lors des modifications</string>
+    <string name="cloud_sync_network_policy_title">Préférence réseau</string>
+    <string name="cloud_sync_network_any">Tout réseau (Wi-Fi ou cellulaire)</string>
+    <string name="cloud_sync_network_wifi_only">Wi-Fi uniquement</string>
+    <string name="cloud_sync_frequency_title">Fréquence de synchronisation</string>
+    <string name="cloud_sync_freq_15m">Toutes les 15 minutes</string>
+    <string name="cloud_sync_freq_30m">Toutes les 30 minutes</string>
+    <string name="cloud_sync_freq_1h">Toutes les heures (Par défaut)</string>
+    <string name="cloud_sync_freq_6h">Toutes les 6 heures</string>
+    <string name="cloud_sync_freq_12h">Toutes les 12 heures</string>
+    <string name="cloud_sync_freq_24h">Toutes les 24 heures</string>
+    <string name="cloud_sync_conflicts_title">Gestion des conflits</string>
+    <string name="cloud_sync_conflicts_subtitle">%1$d conflits non résolus</string>
+    <string name="cloud_sync_no_conflicts">Aucun conflit détecté</string>
+    <string name="cloud_sync_history_title">Historique et diagnostics</string>
+    <string name="cloud_sync_no_history">Aucun historique de synchronisation pour le moment</string>
+    <string name="cloud_sync_clear_history">Effacer l\'historique</string>
+    <string name="cloud_sync_keep_local">Garder la version locale</string>
+    <string name="cloud_sync_keep_remote">Garder la version distante</string>
+    <string name="cloud_sync_keep_both">Garder les deux</string>
+    <string name="cloud_sync_merge">Fusionner les modifications</string>
+    <string name="cloud_sync_restore_deleted">Restaurer l\'élément</string>
+    <string name="cloud_sync_privacy_note">Notas stocke les journaux de synchronisation dans votre dossier privé appDataFolder sur Google Drive. Tous les fichiers sont chiffrés côté client avec AES-256-GCM (NOTAS_E1). Google et les tiers ne peuvent pas lire vos notes.</string>
+    <string name="cloud_sync_offline_flavor_notice">La synchronisation cloud est désactivée dans la version hors-ligne de Notas.</string>
+    <string name="cloud_sync_reauth_button">Se reconnecter</string>
+
+    <!-- Cloud Backup & Restore -->
+    <string name="cloud_backup_section_title">Sauvegardes chiffrées Google Drive</string>
+    <string name="cloud_backup_section_subtitle">Sauvegarde complète chiffrée côté client (AES-256-GCM) dans appDataFolder</string>
+    <string name="cloud_backup_backup_now">Sauvegarder maintenant</string>
+    <string name="cloud_backup_auto_backup_title">Sauvegarde cloud quotidienne</string>
+    <string name="cloud_backup_auto_backup_subtitle">Crée automatiquement une sauvegarde complète chiffrée chaque jour</string>
+    <string name="cloud_backup_no_backups">Aucune sauvegarde Google Drive trouvée</string>
+    <string name="cloud_backup_restore_button">Restaurer</string>
+    <string name="cloud_backup_delete_button">Supprimer</string>
+    <string name="cloud_backup_preview_title">Aperçu de la restauration</string>
+    <string name="cloud_backup_preview_source">Source : %1$s (v%2$s)</string>
+    <string name="cloud_backup_preview_items">Notes : %1$d • Tâches : %2$d • Événements : %3$d • Catégories : %4$d • Pièces jointes : %5$d</string>
+    <string name="cloud_backup_preview_size">Taille : %1$s</string>
+    <string name="cloud_backup_mode_replace">Remplacer toutes les données</string>
+    <string name="cloud_backup_mode_replace_desc">Écrase les notes actuelles avec la sauvegarde. Un instantané local de sécurité est créé automatiquement.</string>
+    <string name="cloud_backup_mode_merge">Fusionner avec les données existantes</string>
+    <string name="cloud_backup_mode_merge_desc">Préserve les notes existantes, importe les données manquantes et garde les plus récentes en cas de conflit.</string>
+    <string name="cloud_backup_recovery_title">Phrase de récupération de 12 mots requise</string>
+    <string name="cloud_backup_recovery_desc">Cette sauvegarde est chiffrée de bout en bout avec AES-256-GCM. Entrez votre phrase de récupération de 12 mots pour restaurer l\'accès au chiffrement.</string>
+    <string name="cloud_backup_recovery_input_hint">mot1 mot2 ... mot12</string>
+    <string name="cloud_backup_recovery_confirm">Restaurer et déchiffrer</string>
+</resources>
+

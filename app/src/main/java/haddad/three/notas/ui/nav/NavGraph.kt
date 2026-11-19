@@ -137,6 +137,7 @@ object Routes {
     const val GOOGLE_TASKS_IMPORT = "googleTasksImport"
     const val HELP = "help"
     const val DEV_OPTIONS = "devOptions"
+    const val CLOUD_SYNC = "cloudSync"
     const val ARG_ID = "id"
     const val ARG_TYPE = "type"
     const val ARG_PREFILL = "prefill"
@@ -1365,6 +1366,14 @@ fun RememberNavGraph(
                     ) {
                         DevOptionsRoute(onBack = { navController.popBackStack() })
                     }
+                }
+
+                composable(
+                    route = Routes.CLOUD_SYNC,
+                ) {
+                    haddad.three.notas.ui.settings.sync.CloudSyncScreen(
+                        onBack = { navController.popBackStack() },
+                    )
                 }
 
                 composable(

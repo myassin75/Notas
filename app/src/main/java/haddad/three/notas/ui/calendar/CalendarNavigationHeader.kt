@@ -65,46 +65,14 @@ fun CalendarNavigationHeader(
     val textPrimary = CalendarDesignTokens.resolveTextPrimary(isDark)
     val textSecondary = CalendarDesignTokens.resolveTextSecondary(isDark)
 
-    val annotatedTitle =
-        remember(title, textPrimary, textSecondary) {
+    val (primaryTitle, secondaryTitle) =
+        remember(title, subtitle) {
             val trimmed = title.trim()
             val parts = trimmed.split(" ")
-            if (parts.size >= 2 && parts.last().all { it.isDigit() }) {
-                val mainText = parts.dropLast(1).joinToString(" ")
-                val yearText = parts.last()
-                buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary,
-                            fontSize = 20.sp,
-                        ),
-                    ) {
-                        append(mainText)
-                        append("  ")
-                    }
-                    withStyle(
-                        SpanStyle(
-                            fontWeight = FontWeight.Normal,
-                            color = textSecondary,
-                            fontSize = 18.sp,
-                        ),
-                    ) {
-                        append(yearText)
-                    }
-                }
+            if (subtitle.isNullOrBlank() && parts.size >= 2 && parts.last().all { it.isDigit() }) {
+                parts.dropLast(1).joinToString(" ") to parts.last()
             } else {
-                buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary,
-                            fontSize = 20.sp,
-                        ),
-                    ) {
-                        append(trimmed)
-                    }
-                }
+                trimmed to subtitle
             }
         }
 
@@ -116,34 +84,41 @@ fun CalendarNavigationHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // Left: Month and Year (e.g., "November  2026")
+        // Left: Month and Year (e.g., "November" over "2026")
         AnimatedContent(
-            targetState = annotatedTitle to subtitle,
+            targetState = primaryTitle to secondaryTitle,
             transitionSpec = {
                 fadeIn(animationSpec = tween(180, easing = FastOutSlowInEasing)) togetherWith
                     fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing))
             },
             label = "CalendarHeaderTitleAnimation",
             modifier = Modifier.weight(1f, fill = false),
-        ) { (currentAnnotatedTitle, currentSubtitle) ->
+        ) { (currentPrimaryTitle, currentSecondaryTitle) ->
             Column(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(end = 8.dp),
             ) {
                 Text(
-                    text = currentAnnotatedTitle,
+                    text = currentPrimaryTitle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium,
+                    style =
+                        MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                            color = textPrimary,
+                        ),
                 )
-                if (!currentSubtitle.isNullOrBlank()) {
+                if (!currentSecondaryTitle.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = currentSubtitle,
+                        text = currentSecondaryTitle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.sp,
+                            MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
                                 color = textSecondary,
                             ),
                     )
@@ -154,7 +129,7 @@ fun CalendarNavigationHeader(
         // Right: Navigation Controls Cluster: [Today]  <  >
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             AnimatedVisibility(
                 visible = showTodayButton,
@@ -165,26 +140,17 @@ fun CalendarNavigationHeader(
                     fadeOut(animationSpec = tween(140, easing = FastOutSlowInEasing)) +
                         shrinkHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing)),
             ) {
-                val todayBg =
-                    if (isDark) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-                    } else {
-                        Color(0xFFF1E6F5)
-                    }
-                val todayText =
-                    if (isDark) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color(0xFF7E398A)
-                    }
+                val todayBg = Color.Transparent
+                val todayText = MaterialTheme.colorScheme.primary
+
                 Surface(
                     onClick = onToday,
                     shape = CircleShape,
                     color = todayBg,
                     modifier =
                         Modifier
-                            .height(30.dp)
-                            .defaultMinSize(minWidth = 54.dp),
+                            .height(32.dp)
+                            .defaultMinSize(minWidth = 56.dp),
                 ) {
                     Box(
                         modifier = Modifier.padding(horizontal = 14.dp),
@@ -204,39 +170,40 @@ fun CalendarNavigationHeader(
                 }
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(2.dp))
 
-            // Previous Button (<) with clean icon and proper touch target
-            Box(
-                modifier =
-                    Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onPrevious),
-                contentAlignment = Alignment.Center,
+            // Previous Button (<) with subtle circular background
+            val navButtonBg = if (isDark) Color(0xFF242424) else Color(0xFFF2F2F5)
+            Surface(
+                onClick = onPrevious,
+                shape = CircleShape,
+                color = navButtonBg,
+                modifier = Modifier.size(36.dp),
             ) {
-                RememberMaterialRoundedSymbol(
-                    name = "chevron_right",
-                    modifier = Modifier.graphicsLayer { scaleX = -1f },
-                    size = 22.dp,
-                    tint = textPrimary,
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        modifier = Modifier.graphicsLayer { scaleX = -1f },
+                        size = 20.dp,
+                        tint = textPrimary,
+                    )
+                }
             }
 
-            // Next Button (>) with clean icon and proper touch target
-            Box(
-                modifier =
-                    Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onNext),
-                contentAlignment = Alignment.Center,
+            // Next Button (>) with subtle circular background
+            Surface(
+                onClick = onNext,
+                shape = CircleShape,
+                color = navButtonBg,
+                modifier = Modifier.size(36.dp),
             ) {
-                RememberMaterialRoundedSymbol(
-                    name = "chevron_right",
-                    size = 22.dp,
-                    tint = textPrimary,
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    RememberMaterialRoundedSymbol(
+                        name = "chevron_right",
+                        size = 20.dp,
+                        tint = textPrimary,
+                    )
+                }
             }
         }
     }

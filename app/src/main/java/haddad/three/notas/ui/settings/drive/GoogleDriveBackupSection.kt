@@ -19,6 +19,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -100,6 +101,8 @@ fun GoogleDriveBackupSection(
     var backupToRestore by remember { mutableStateOf<DriveBackupItem?>(null) }
     var backupToDelete by remember { mutableStateOf<DriveBackupItem?>(null) }
     var selectedRestoreMode by remember { mutableStateOf(RestoreMode.REPLACE) }
+    var recoveryPhraseDialogBackup by remember { mutableStateOf<DriveBackupItem?>(null) }
+    var recoveryPhraseText by remember { mutableStateOf("") }
 
     // Consent prompt launcher for Google Identity Services
     val consentLauncher =
@@ -372,7 +375,7 @@ fun GoogleDriveBackupSection(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         "Backup Date: ${formatEpochMillis(backup.createdAtEpochMillis)}\n" +
-                            "Notes: ${backup.notesCount} | Tasks: ${backup.tasksCount}\n" +
+                            "Notes: ${backup.notesCount} | Tasks: ${backup.tasksCount} | Events: ${backup.eventsCount}\n" +
                             "Size: ${formatBytes(backup.sizeBytes)}",
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -407,10 +410,18 @@ fun GoogleDriveBackupSection(
                         if (toRestore != null) {
                             scope.launch {
                                 val result = driveBackupProvider?.restoreBackup(toRestore.fileId, mode)
-                                if (result is DriveResult.Success) {
-                                    snackbarHostState.showSnackbar("Successfully restored ${result.data.restoredNotesCount} notes!")
-                                } else if (result is DriveResult.Error) {
-                                    snackbarHostState.showSnackbar("Restore failed: ${result.message}")
+                                when (result) {
+                                    is DriveResult.Success -> {
+                                        snackbarHostState.showSnackbar("Successfully restored ${result.data.restoredNotesCount} notes!")
+                                    }
+                                    is DriveResult.NeedsRecoveryPhrase -> {
+                                        recoveryPhraseDialogBackup = result.backupItem
+                                        recoveryPhraseText = ""
+                                    }
+                                    is DriveResult.Error -> {
+                                        snackbarHostState.showSnackbar("Restore failed: ${result.message}")
+                                    }
+                                    else -> Unit
                                 }
                             }
                         }
@@ -458,6 +469,63 @@ fun GoogleDriveBackupSection(
             },
             dismissButton = {
                 RememberTextButton(onClick = { backupToDelete = null }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    // Recovery Phrase Dialog for New Device
+    recoveryPhraseDialogBackup?.let { backup ->
+        val words = recoveryPhraseText.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        val isValidWordCount = words.size == 12
+
+        AlertDialog(
+            onDismissRequest = { recoveryPhraseDialogBackup = null },
+            title = { Text(stringResource(R.string.cloud_backup_recovery_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.cloud_backup_recovery_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    OutlinedTextField(
+                        value = recoveryPhraseText,
+                        onValueChange = { recoveryPhraseText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(R.string.cloud_backup_recovery_input_hint)) },
+                        supportingText = {
+                            Text(
+                                text = "${words.size} / 12 words",
+                                color = if (isValidWordCount) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                }
+            },
+            confirmButton = {
+                RememberButton(
+                    onClick = {
+                        val toRestore = backup
+                        val phrase = recoveryPhraseText.trim()
+                        val mode = selectedRestoreMode
+                        recoveryPhraseDialogBackup = null
+                        scope.launch {
+                            val result = driveBackupProvider?.restoreBackup(toRestore.fileId, mode, recoveryPhrase = phrase)
+                            if (result is DriveResult.Success) {
+                                snackbarHostState.showSnackbar("Successfully restored ${result.data.restoredNotesCount} notes!")
+                            } else if (result is DriveResult.Error) {
+                                snackbarHostState.showSnackbar("Restore failed: ${result.message}")
+                            }
+                        }
+                    },
+                    enabled = isValidWordCount,
+                ) {
+                    Text(stringResource(R.string.cloud_backup_recovery_confirm))
+                }
+            },
+            dismissButton = {
+                RememberTextButton(onClick = { recoveryPhraseDialogBackup = null }) {
                     Text("Cancel")
                 }
             },

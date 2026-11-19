@@ -16,10 +16,10 @@ plugins {
 val rememberApplicationId = "haddad.three.notas"
 val rememberCompileSdk = 37
 val rememberCompileSdkMinor = 2
-val rememberMinSdk = 31
+val rememberMinSdk = 29
 val rememberTargetSdk = 37
-val versionCode = 11001
-val versionName = "1"
+val versionCode = 20000
+val versionName = "2.0.0"
 
 kotlin {
     jvmToolchain(
@@ -160,7 +160,7 @@ extensions.configure<ApplicationExtension>("android") {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            signingConfigs.findByName("release")?.let { signingConfig = it }
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
             }
@@ -344,6 +344,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation("org.json:json:20240303")
     testImplementation("org.xerial:sqlite-jdbc:3.47.1.0")
+    testImplementation("androidx.work:work-testing:2.12.0")
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
@@ -452,6 +453,7 @@ abstract class VerifyOfflineApkTask : DefaultTask() {
 val verifyOfflineApk = tasks.register<VerifyOfflineApkTask>("verifyOfflineApk") {
     description = "Unzips offline APK and verifies that classes.dex contains no Firebase or Google references"
     group = "verification"
+    mustRunAfter("packageOfflineDebug", "assembleOfflineDebug")
     apkDirectory.set(layout.buildDirectory.dir("outputs/apk/offline"))
 }
 

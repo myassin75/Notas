@@ -171,13 +171,13 @@ fun MainTabScaffold(
         }
 
     val unselectedNavColor =
-        if (isDark) Color(0xFFA6A4B4) else Color(0xFF757482)
+        if (isDark) Color(0xFFA3A3A3) else Color(0xFF757482)
 
     val navDividerColor =
-        if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+        if (isDark) Color(0xFF3A3A3A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
 
     Scaffold(
-        containerColor = if (isDark) Color.Transparent else MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (chromeVisible) {
                 Column {

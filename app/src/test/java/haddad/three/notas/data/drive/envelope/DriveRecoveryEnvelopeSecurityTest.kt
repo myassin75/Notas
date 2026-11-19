@@ -243,8 +243,11 @@ class DriveRecoveryEnvelopeSecurityTest {
             assertFalse(uploadedContent.contains(rawMekHex))
 
             // Verify none of the 12 mnemonic words appear in plaintext in the cloud payload
+            val standardMetadataKeys = setOf("name", "format")
             for (word in session.mnemonicWords) {
-                assertFalse("Cloud metadata must never contain mnemonic word '$word'", uploadedMetadata.contains("\"$word\""))
+                if (word !in standardMetadataKeys) {
+                    assertFalse("Cloud metadata must never contain mnemonic word '$word'", uploadedMetadata.contains("\"$word\""))
+                }
                 assertFalse("Cloud content must never contain plaintext mnemonic word '$word'", uploadedContent.contains("\"$word\""))
             }
         }

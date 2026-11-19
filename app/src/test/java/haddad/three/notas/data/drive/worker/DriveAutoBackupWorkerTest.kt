@@ -125,7 +125,7 @@ class DriveAutoBackupWorkerTest {
         ): ListenableWorker.Result =
             when (res) {
                 is DriveResult.Success -> ListenableWorker.Result.success()
-                is DriveResult.RateLimited, is DriveResult.Offline -> ListenableWorker.Result.retry()
+                is DriveResult.RateLimited, is DriveResult.Offline, is DriveResult.CursorExpired -> ListenableWorker.Result.retry()
                 is DriveResult.Unauthorized -> ListenableWorker.Result.failure()
                 is DriveResult.Error -> if (attempt < 3) ListenableWorker.Result.retry() else ListenableWorker.Result.failure()
             }

@@ -1,9 +1,12 @@
 package haddad.three.notas.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -95,6 +98,7 @@ fun NoteCard(
     selected: Boolean = false,
     activeInDetailPane: Boolean = false,
     reminderNotificationsAllowed: Boolean = true,
+    onToggleDone: ((Long) -> Unit)? = null,
 ) {
     NoteCard(
         model = remember(note) { note.toNoteCardUiModel() },
@@ -104,6 +108,7 @@ fun NoteCard(
         selected = selected,
         activeInDetailPane = activeInDetailPane,
         reminderNotificationsAllowed = reminderNotificationsAllowed,
+        onToggleDone = onToggleDone,
     )
 }
 
@@ -117,6 +122,7 @@ fun NoteCard(
     selected: Boolean = false,
     activeInDetailPane: Boolean = false,
     reminderNotificationsAllowed: Boolean = true,
+    onToggleDone: ((Long) -> Unit)? = null,
 ) {
     val cardColors = elevatedCardColors()
     val heroEnabled = LocalHeroOnCards.current
@@ -218,19 +224,15 @@ fun NoteCard(
      */
     val doneBadgeProgress = completedProgress * (1f - selectionProgress)
 
-    // Done-state saturation reduction is applied as a RenderEffect on the card layer.
+    // Done-state saturation reduction is applied as a RenderEffect on the card layer (API 31+).
     // The dim alpha itself is kept inside the opaque Surface (see content below), so
     // swipe action backgrounds cannot bleed through completed cards while dragging.
     val completedRenderEffect =
         remember(completedSaturation) {
-            if (completedSaturation >= 0.999f) {
+            if (completedSaturation >= 0.999f || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                 null
             } else {
-                val matrix = ColorMatrix().apply { setToSaturation(completedSaturation) }
-                val androidFilter = ColorFilter.colorMatrix(matrix).asAndroidColorFilter()
-                android.graphics.RenderEffect
-                    .createColorFilterEffect(androidFilter)
-                    .asComposeRenderEffect()
+                NoteCardRenderEffectHelper.createSaturationEffect(completedSaturation)
             }
         }
 
@@ -241,13 +243,14 @@ fun NoteCard(
         } else {
             Modifier
         }
+    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
+    val activePaneBorderColor = if (isDark) Color(0xFF3A3A3A) else Color(0xFFCBC8D6)
     val activePaneBorder =
         if (activeInDetailPane && !selected) {
-            Modifier.border(BorderStroke(1.5.dp, MaterialTheme.colorScheme.secondary), cardShape)
+            Modifier.border(BorderStroke(1.5.dp, activePaneBorderColor), cardShape)
         } else {
             Modifier
         }
-    val isDark = haddad.three.notas.ui.theme.LocalIsDark.current
     val noteAccent =
         remember(model.colorIndex, isDark) {
             if (!NoteColors.isNone(model.colorIndex)) {
@@ -256,7 +259,7 @@ fun NoteCard(
                 null
             }
         }
-    val defaultBorderColor = if (isDark) Color(0xFF2D2D30) else Color(0xFFE5E5EA)
+    val defaultBorderColor = if (isDark) Color(0xFF3A3A3A) else Color(0xFFE5E5EA)
     val defaultBorder =
         if (!selected && !activeInDetailPane) {
             Modifier.border(
@@ -279,7 +282,7 @@ fun NoteCard(
         } else {
             Modifier.appClickable(onClick = onClick)
         }
-    val defaultCardBackground = if (isDark) Color(0xFF1F1F22) else Color(0xFFF2F2F4)
+    val defaultCardBackground = if (isDark) Color(0xFF2B2B2B) else Color(0xFFFFFFFF)
     val baseContainerColor = defaultCardBackground
     val completedContainerColor =
         baseContainerColor
@@ -298,7 +301,7 @@ fun NoteCard(
                 .then(activePaneBorder)
                 .then(selectionBorder)
                 .then(clickableModifier)
-                .semantics(mergeDescendants = true) {
+                .semantics(mergeDescendants = !(model.isActionableTask && onToggleDone != null)) {
                     contentDescription = noteCardAnnouncement
                 },
         shape = cardShape,
@@ -336,9 +339,9 @@ fun NoteCard(
             // declares mergeDescendants and contentDescription includes "Starred".
             // matchParentSize keeps the 96dp glyph out of the card's height: otherwise
             // a compact card (title and metadata only) grows to fit the watermark.
-            val defaultDecorativeLineColor = if (isDark) Color(0xFF3A3A3D) else Color(0xFFD1D1D6)
+            val defaultDecorativeLineColor = if (isDark) Color(0xFF3A3A3A) else Color(0xFFD1D1D6)
             val stripeColor = noteAccent ?: defaultDecorativeLineColor
-            val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
+            val defaultIconColor = if (isDark) Color(0xFFA3A3A3) else Color(0xFF8E8E93)
             val cardIconColor = noteAccent ?: defaultIconColor
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -425,7 +428,42 @@ fun NoteCard(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        if (doneBadgeProgress > 0f) {
+                        if (model.isActionableTask && onToggleDone != null) {
+                            val checkTint = noteAccent ?: MaterialTheme.colorScheme.primary
+                            val checkBg = if (model.completed) checkTint else Color.Transparent
+                            val checkBorder = if (model.completed) checkTint else checkTint.copy(alpha = 0.5f)
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .clickable(
+                                            onClick = { onToggleDone(model.id) },
+                                        ).semantics {
+                                            contentDescription = if (model.completed) "Mark incomplete" else "Mark complete"
+                                        },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(22.dp)
+                                            .clip(CircleShape)
+                                            .background(checkBg)
+                                            .border(1.5.dp, checkBorder, CircleShape),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (model.completed) {
+                                        RememberMaterialRoundedSymbol(
+                                            name = "check",
+                                            size = 14.dp,
+                                            tint = MaterialTheme.colorScheme.surface,
+                                            weight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                            }
+                        } else if (doneBadgeProgress > 0f) {
                             Spacer(Modifier.width(6.dp))
                             // Cookie4Sided -> Sunny morph mirrors the selection badge's
                             // visual language (small polygon + check) but uses a distinct
@@ -547,7 +585,7 @@ private fun MetadataRow(
 ) {
     val reminderAt = model.reminderAt
     val isOverdue = reminderAt != null && reminderAt < System.currentTimeMillis()
-    val reminderColor = if (isOverdue) MaterialTheme.colorScheme.error else iconColor
+    val reminderColor = if (isOverdue) MaterialTheme.colorScheme.primary else iconColor
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -754,5 +792,16 @@ private fun BoxScope.HeroBackground(
                     .matchParentSize()
                     .background(Brush.verticalGradient(colors = listOf(scrimTop, scrimBottom))),
         )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
+private object NoteCardRenderEffectHelper {
+    fun createSaturationEffect(saturation: Float): androidx.compose.ui.graphics.RenderEffect {
+        val matrix = ColorMatrix().apply { setToSaturation(saturation) }
+        val androidFilter = ColorFilter.colorMatrix(matrix).asAndroidColorFilter()
+        return android.graphics.RenderEffect
+            .createColorFilterEffect(androidFilter)
+            .asComposeRenderEffect()
     }
 }

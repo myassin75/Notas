@@ -1,131 +1,156 @@
-# Remember Help Guide
+# Notas Help Guide
 
 ## Getting started
 
-### Notes vs. lists
+### Notes, Tasks, and Events
 
-- Use a **note** when you want free-form text — details, instructions, links, or longer context.
-- Use a **list** when the work is made of steps you can check off.
+Notas classifies your entries into three clear categories:
+- **Notes**: Free-form writing, checklists, and rich markdown text with no scheduled dates.
+- **Tasks**: Actionable to-dos with a scheduled date or reminder time, but without an end date.
+- **Events**: Time-bounded entries that have an explicit end date or start-to-end time range.
 
-### Creating notes and lists
+The classification is automatic: add a start date or reminder to turn a note into a Task; add an end date to turn it into an Event.
 
-- Tap the create button on the Notes tab and choose **Note**, **Checklist**, or **Import**.
-- Use launcher shortcuts for quick note or list creation.
-- Add a home-screen widget for one-tap creation from the launcher.
-- Turn on **Quick capture notification** in Settings for a persistent shortcut that is always one swipe away.
+### Creating and organizing entries
+
+- Tap the **+ Add** button on the Home screen to create a new note or checklist.
+- Set an optional start date or reminder to schedule it as a **Task**.
+- Set an optional end date to schedule it as an **Event**.
+- Use launcher shortcuts, the persistent Quick capture notification, or Home screen widgets for rapid capture from anywhere on your phone.
 
 ### Marking something done
 
-Marking a note or list done moves it out of your active work into the done area.
-- For a one-time reminder, marking done clears the reminder notification.
-- For a recurring reminder, marking done advances the item to the next scheduled occurrence. If no future occurrence exists, the item moves to done like a one-time reminder.
+Marking a note or task done moves it out of your active workspace into the bottom **Done** section.
+- For one-time tasks and reminders, marking done clears the reminder notification.
+- For recurring schedules, marking done automatically rolls the reminder forward to the next scheduled occurrence. If no future occurrence exists, the item completes and enters Done.
+- You can toggle task completion directly using the circular checkboxes on the Home screen, Calendar Agenda, or Day Timeline.
 
 ---
 
-## Notes and lists
+## Calendar and Views
+
+### Calendar views: Month, Week, Day, and Year
+
+Notas includes a complete, dedicated Calendar suite accessible from the bottom navigation bar:
+- **Month view**: A full-month calendar grid. Selected dates show their agenda below the grid. Tap the **Today** capsule button to instantly return to today. Use `<` and `>` to navigate between months.
+- **Week view**: A focused 7-day horizontal horizon highlighting the active day and displaying all weekly tasks and events in sequential order.
+- **Day view**: A detailed 24-hour vertical timeline showing scheduled entries. A live purple indicator line shows the exact current time in real-time.
+- **Year view**: A 12-month bird's-eye overview with weekend highlights and a quick return bar to jump straight back to Today.
+
+### Calendar tasks and checkboxes
+
+- Any entry with a scheduled date or reminder automatically appears in the Calendar on that day.
+- Completed tasks display a checked badge; tap the circular checkbox directly to toggle completion without opening item details.
+- Tap the **+ New event** button from Week or Day view to quickly schedule an entry for the selected date.
+
+---
+
+## Notes and checklists
 
 ### What you can set on a note or list
 
-Each note and list supports: an icon, tags, reminder, notification action, importance level, visibility setting, picture, and attachments. Pictures appear as cover images on cards and in reminder notifications. Attachments stay connected to the note they belong to.
+Each note and list supports: an icon with optional custom color, a shoulder tag, reminder schedule, notification action, importance level, visibility setting, cover picture, and file attachments. Pictures appear as card headers and in notification previews. Attachments remain securely linked with their parent note.
 
 ### Note formatting
 
-Notes support Markdown-style writing: headings, bold, italic, underline, strikethrough, lists, quotes, code blocks, links, and dividers. Reminder notifications use a plain-text version of the note so they stay readable.
+Notes support full Markdown writing: headings, bold, italic, underline, strikethrough, bulleted and numbered lists, blockquotes, code blocks, hyperlinks, and horizontal dividers. Reminder notifications use a clean plain-text version so alerts stay readable.
 
 ### Checklists
 
-Lists contain checkable items you can reorder, and supports one level of nesting. Indent an item under a parent to group related subtasks. Checking a parent item checks its children. If every child under a parent becomes checked, the parent checks itself too. Completed items can be separated from active ones.
+Checklists contain checkable items that can be reordered and structured with one level of nesting:
+- Indent an item under a parent item to group related subtasks.
+- Checking a parent item automatically checks all of its nested children.
+- If every child item is checked off, the parent completes itself automatically.
 
 ---
 
-## Organization
+## Organization and Design
+
+### Card design and colors
+
+Notas uses a unified design system crafted for visual clarity and ease on the eyes:
+- **Unified neutral gray cards**: All cards across Home, Calendar, and Search use a unified neutral gray background by default.
+- **Shoulders**: The left vertical indicator stripe retains its unique user-chosen shoulder color, giving you instant visual recognition.
+- **Icon customization**: Icons use neutral gray by default, but if you choose a custom icon color, your personalized color is proudly displayed.
+- **Card shape**: Cards feature smooth 28dp rounded corners for a modern, tactile feel.
 
 ### Shoulders, pins, archive, and trash
 
-- **Shoulders** group related notes and lists for quick filtering.
-- **Star** marks important items so they surface easily.
-- **Pin** keeps an item at the very top of the Notes tab.
+- **Shoulders** group related notes, tasks, and events with quick filter chips along the top of the screen.
+- **Star** marks favorites so they surface easily.
+- **Pin** keeps essential items at the very top of your Home list.
 - **Archive** removes items from the active list without deleting them.
-- **Trash** is for items you intend to remove.
+- **Trash** holds items you plan to remove before final deletion.
 
 ### Pinning
 
-Pinned notes and lists collect in a **Pinned** section at the very top of the Notes tab. The section stays there no matter how you sort or group the list — pinning is about placement, and starring is about marking a favorite, so the two are separate and can be used together.
-- Pin or unpin from the note's bottom bar, by swiping a card right (Pin is the first reveal action by default), or by selecting several notes and using **Pin** in the selection bar.
-- Searching or filtering can hide a pinned item, because those narrow down what the list contains. Changing the sort or grouping never will.
-- Marking a pinned item done moves it to the **Done** section at the bottom, like anything else. It stays pinned, so it returns to the top if you mark it not done again.
-- Duplicating a pinned item does not pin the copy.
+Pinned items collect in a dedicated **Pinned** section at the top of the Home screen:
+- Pinning is an ordering priority that holds items at the top regardless of the active sort or grouping.
+- Pin or unpin from the note bottom bar, by swiping right on a card, or via multi-select actions.
+- Completed pinned items move to the bottom Done section, and restore their pinned status if unmarked.
 
 ### Search
 
-Search checks titles, note bodies, tags, and checklist items. It also finds matches in archived and trashed notes.
+Instant full-text search powered by SQLite FTS4:
+- Checks titles, body text, tags, checklist items, and notification action details.
+- Use quick category filter chips (**All**, **Notes**, **Tasks**, **Events**) to narrow down results instantly.
+- Searches both active notes and archived or trashed items.
 
 ### Finding archived or trashed notes
 
-Archived and trashed notes are hidden from the main Notes tab intentionally. Open the **History tab** to review them. Search is also useful when looking for something specific you archived or trashed.
+Archived and trashed items are safely tucked away from your daily view:
+- Open **Settings → History** to review, unarchive, restore, or empty trash.
+- Full-text search also finds matches in archive and trash.
 
 ---
 
-## Reminders
+## Reminders and Alerts
 
 ### How reminders work
 
-Add a reminder date and time to any note or list. When the time arrives, Remember posts a notification. Tapping it opens the note directly.
-
-The reminder sheet quick chips follow **Preset type** in Settings -> Notifications.
-- **Timing** offers named times: Soon, Later today, This evening etc.
-- **Duration** offers lengths of time: 30 mins, 6 hours, 12 hours, 7 days etc.
-
-Reminder notifications can include the title, note content or list items, a picture, snooze, mark done, and one custom action button.
+Add a reminder date and time to any note or list. When the time arrives, Notas delivers a notification. Tapping opens the item directly.
+- The reminder sheet offers quick natural presets: **Soon**, **Late tonight**, **Tomorrow morning**, or specific custom dates and times.
+- Settings let you switch preset styles between **Timing** (named times) and **Duration** (30 mins, 6 hours, 24 hours).
+- Reminder notifications feature the title, body preview, snooze actions, a **Done** button, and your custom notification action.
 
 ### Importance: Low, Normal, High, and Critical
 
-Importance controls how loud a reminder is when it fires - not when it fires.
-- **Low** is silent, with no status bar icon or vibration.
-- **Normal** uses the standard sound and vibration.
-- **High** pops up as a heads-up alert and is treated as an alarm. Use it when a reminder needs to be immediately noticeable.
-- **Critical** re-alerts every 15 minutes until snoozed, marked done, or lowered in importance. Overdue items ring together. Swiping the notification away will not stop repeats. Opening the notification shade quiets an active alert early.
-  - Alarm Mode (30 sec, 1 min, etc.): Acts as a full system alarm using your alarm volume and tone. It overrides silent/vibrate modes and passes through Do Not Disturb (if DND allows alarms).
-  - Chime Mode (Single chime): Plays your High-importance notification sound once per 15-minute alert cycle. It respects silent mode and DND limits.
-  - Configuration: Switch modes or change alarm duration in Settings → Notifications → Critical reminder type. To customize the alarm sound itself, edit the Reminders (Critical) channel in Android System Settings.
+Importance controls how loudly and persistently a reminder alerts:
+- **Low**: Silent notification in your shade with no sound or vibration.
+- **Normal**: Standard sound and vibration alert.
+- **High**: Heads-up popup alert treated with high priority.
+- **Critical**: Re-alerts every 15 minutes until snoozed or marked done. Rings like a full alarm with your alarm volume and tone even when the phone is on silent or vibrate. Overrides Do Not Disturb when alarms are permitted.
 
 ### Recurring reminders
 
-Recurring reminders can repeat daily, weekly, monthly, or yearly. You can end the recurrence on a date or after a set number of occurrences.
-
-When you mark a recurring reminder done, Remember advances it to the next scheduled occurrence. If there is no future occurrence, the item moves to done.
-
+Recurring reminders can repeat daily, weekly, monthly, or yearly:
+- Set an optional end date or limit by number of occurrences.
+- Marking a recurring reminder done advances it to the next scheduled occurrence automatically.
 
 ### Restore notifications
 
-**Restore notifications** is a Settings option for persistent reminders, saving them from being accidentally swiped away. When enabled, a dismissed reminder notification will come back immediately if the note or list is still not marked done.
+**Restore notifications** prevents accidental dismissal. When enabled, a dismissed reminder notification reappears immediately if the note or task is still not marked done.
 
 ### Reminder summary
 
-The **reminder summary notification** is a quiet, persistent overview of overdue and upcoming reminders. It makes no sound and works as a status panel you can glance at without opening Remember.
+The **reminder summary notification** provides a quiet, persistent overview of overdue and upcoming reminders in your notification shade.
 
 ### Notification permission and reliability
 
-Android requires notification permission before Remember can post reminder alerts, snooze actions, and quick capture. The Notifications section in Settings shows the permissions available on your device. Some devices expose a separate background or battery reliability option — granting it makes reminders less likely to be delayed by battery optimization. The exact options vary by Android version and manufacturer.
+Android requires notification and exact alarm permissions for timely delivery. Ensure background activity and alarm permissions are granted so reminders alert reliably without battery optimization delays.
 
 ### Snooze
 
-Snooze moves a reminder to a later time without opening the app. The snooze sheet follows **Preset type** in Settings -> Notifications.
-- **Timing** offers named times: soon, later today, this evening, tomorrow, next week.
-- **Duration** replaces those with a duration: 1-60 minutes, 1-24 hours, or 1-30 days. Choose the number and unit, then tap **Snooze**.
-**Pick a specific time** stays available in both modes, with a date and time picker.
+Snooze postpones a reminder directly from the notification or within the app:
+- **Timing mode**: Soon, Later today, Tomorrow morning, Next week.
+- **Duration mode**: Snooze by minutes, hours, or days.
+- **Pick a specific time**: Custom date and time picker is always available.
 
 ### Troubleshooting reminders
 
-**Not getting reminders:**
-- Check that Android notifications are allowed for Remember.
-- Confirm the note or list still has a reminder set.
-- Check whether the item was marked done, archived, or moved to trash.
-
-**Reminder appeared late:**
-- Android can delay apps due to battery saver or sleep restrictions.
-- Go to Settings -> Notifications and enable the reliability options shown on your device.
-- If your device shows a background or battery exception for Remember, allow it.
+- **Not getting reminders**: Confirm Android notification and alarm permissions are allowed for Notas, and verify the note has an active reminder set.
+- **Delayed reminders**: Disable battery optimization restrictions for Notas in Android System Settings.
+- **Dismissed alerts missing**: Turn on **Restore notifications** in Settings to keep uncompleted reminders sticky.
 
 ---
 
@@ -133,19 +158,18 @@ Snooze moves a reminder to a later time without opening the app. The snooze shee
 
 ### How they work
 
-Notification actions are buttons you can attach to a reminder notification. They let you act on the reminder directly — a reminder to call someone can show a call button right in the notification, so you can place the call from right there.
-
-You can add one custom action per note. Reminder notifications always include **Snooze** and **Mark as done** regardless.
-
-Available actions: call, message, email, directions, open a link, open an app, open a shortcut, copy to clipboard, share content.
-
-Some actions hand off to another app — calls may open the phone app, directions may open a maps app, links may open a browser. That is expected behavior. If the target app is missing or the action data is invalid, the action will not run.
+Notification actions are one-tap buttons attached directly to reminder notifications:
+- **Call**, **Message**, or **Email** a contact directly.
+- **Get directions** to an address in your navigation app.
+- **Open a link**, app, or system shortcut.
+- **Copy text** to clipboard or **Share** content.
+Notifications always include **Snooze** and **Mark done** alongside your chosen action.
 
 ### Troubleshooting notification actions
 
-- Confirm the action data is valid: phone number, email address, URL, address, app, shortcut, or text.
-- Check that the required app is installed for call, directions, email, and link actions.
-- Secret visibility can prevent note content from being used in action data — check the note's visibility setting.
+- Confirm action data is formatted correctly (valid phone number, email address, URL, or address).
+- Ensure the required application is installed on your device (dialer, browser, maps, email client).
+- Secret visibility protects private notes by suppressing sensitive data from notifications.
 
 ---
 
@@ -153,49 +177,49 @@ Some actions hand off to another app — calls may open the phone app, direction
 
 ### Available widgets
 
-- **Agenda widget** — shows overdue and upcoming reminders.
-- **Selected notes widget** - showing notes and lists you choose: all, starred, pinned, or selected tag.
-- **Quick capture widget** — buttons to create a new note or list directly from the home screen.
+- **Agenda widget**: Displays upcoming tasks and events for the next 7 days.
+- **Selected notes widget**: Displays notes from all, starred, pinned, or specific shoulder tags.
+- **Quick capture widget**: One-tap buttons to start a new note or checklist directly from your home screen.
 
 ### Quick capture notification
 
-The **quick capture notification** is a persistent shortcut for creating a new note without opening the app. Turn it on in Settings. It is useful when you often need to capture something while doing something else.
+The **quick capture notification** is a persistent shortcut in your notification shade for creating a new note without leaving your current app.
 
 ### Troubleshooting widgets
 
-- Secret notes do not show up in widgets.
-- Private notes' content is always hidden in the widget.
-- Widgets show active items only — archived and trashed items do not appear.
-- The agenda widget shows reminder items due now or within next 7 days, not every note.
+- Secret notes are hidden from widgets for privacy.
+- Private notes hide their body preview text.
+- Widgets only display active notes (archived and trashed items do not appear).
 
 ---
 
-## Import, backup, and restore
+## Cloud Sync, Backup, and Restore
+
+### Setting up Google Drive sync
+
+The GitHub build of Notas supports seamless cloud synchronization via Google Drive:
+- Connect your Google account in Settings to sync your notes, tasks, events, and shoulders across devices.
+- Uses Hybrid Logical Clocks (HLC) and end-to-end cryptographic verification to keep data consistent.
+
+### Multi-device sync and conflict resolution
+
+Notas uses automated field-level conflict resolution. If concurrent edits happen on different devices while offline, changes merge deterministically without overwriting unrelated fields.
 
 ### Importing from Google Tasks or Tasks.org
 
-Remember can import tasks from Google Tasks or a Tasks.org backup. Tap the `+` -> Import, and then:
-- **Connect Google** to sign into your account and select tasks to import. OR
-- **Manual import**, to pick a JSON file. No sign-in required. Use either:
-  - Google Takeout: open Google Takeout for Tasks, create an export, download and extract the archive, then choose the `Tasks.json` file.
-  - Tasks.org: in Tasks.org, open Settings, then Backup, create a backup, then choose the saved json file.
-The import is read-only — Remember never edits Google Tasks or Tasks.org. Imported tasks can become individual notes, grouped notes, or checklist-style lists depending on the import mode you choose.
-
-**If import fails:** check your internet connection for Connect Google, or try switching accounts if sign-in fails. For manual import, choose the `Tasks.json` file from the extracted Takeout archive, or a Tasks.org `user….json` backup — Remember does not accept a generic JSON file.
+Bring your tasks into Notas with read-only safety:
+- **Connect Google**: Sign in to import tasks directly.
+- **Manual import**: Pick a `Tasks.json` from Google Takeout or a Tasks.org backup file. No account sign-in required.
 
 ### What a backup includes
 
-Backups include notes, lists, checklist items, tags, reminder details, visibility, importance, icons, actions, archive/trash/done state, attachment metadata, and app settings.
-
-Enable **Include media in backup** to embed pictures and attachment files in the backup. This makes the file larger but means images and attachments will restore correctly on another device.
+Backups include all notes, tasks, events, checklists, shoulders, tags, reminder schedules, visibility, importance, icons, actions, and app preferences.
+- Turn on **Include media in backup** to embed pictures and attachments inside the backup archive.
 
 ### Import vs. restore
 
-**Import backup** adds the backup's notes to your existing collection. If the same notes already exist, importing again creates duplicates. Use import when you want to merge data.
-
-**Restore backup** replaces all current app data with the backup. It is destructive — current notes and lists are wiped before the backup loads. Use restore when you want to replace your data, not add to it.
-
-**If media is missing after restore:** the backup may not have included media files. If media was stored only as file links, those links may not resolve on a different device. Create future backups with **Include media in backup** enabled.
+- **Import backup**: Adds backup items into your current collection. Use this when merging data.
+- **Restore backup**: Replaces all current app data with the contents of the backup. Use this when moving to a new device.
 
 ---
 
@@ -203,78 +227,43 @@ Enable **Include media in backup** to embed pictures and attachment files in the
 
 ### Where notes are stored
 
-Remember stores notes on your device in a local database. The database is not encrypted — data is stored in plaintext. Android's app sandboxing prevents other apps from accessing it, but the data itself is not encrypted at rest.
-
-Remember supports Android Auto Backup. Your notes, lists, tags, and settings are automatically backed up to your Google account and restored when you reinstall the app on a new device. Attachments and pictures are not included in Auto Backup — use the in-app backup with **Include media in backup** enabled if you need those to transfer as well.
+Notas is an offline-first app. Your data is stored locally on your device in a structured SQLite database protected by Android's application sandbox and cryptographic key partitioning.
 
 ### Visibility: Normal, Private, and Secret
 
-Visibility controls what appears in notifications and widgets — it is not a sharing or encryption setting.
-- **Normal** allows the title and note content to appear in notifications and widgets.
-- **Private** hides notification body content and widget preview text.
-- **Secret** hides both the note title and body from notification and keeps the item out of widgets entirely.
+Visibility controls how notes appear in notifications and widgets:
+- **Normal**: Full title and content visible.
+- **Private**: Title visible, content preview hidden in notifications and widgets.
+- **Secret**: Completely hidden from notifications, widgets, and lock screen previews.
 
 ### App lock
 
-App lock requires your device lock — or biometrics, if your device supports it — to open Remember. It prevents casual access to the app but does not encrypt the underlying data.
+App lock secures Notas behind your device biometric authentication (fingerprint, face unlock) or device lock PIN/pattern:
+- Prompts for authentication whenever opening or returning to Notas.
+- Protects your personal thoughts and tasks from unauthorized access.
 
 ---
 
-## Customization
+## Customization and Appearance
 
 ### Appearance
 
-**Theme mode**
-System, Light, Dark, or Black. Black uses a true black background rather than dark grey — sharper on OLED screens. It also disables gradient and enhanced shading, since those effects are designed for non-black backgrounds.
-
-**Color source**
-- **Material You** — pulls colors from your wallpaper on Android 12 and above, and updates automatically when the wallpaper changes.
-- **Presets** — eight hand-tuned schemes: Forest, Ember, Grove, Honey, Ocean, Iris, Dusk, and Berry.
-- **Custom color** — enter any hex value. You can save multiple custom colors and switch between them.
-
-**Palette style**
-Controls how Material 3 expands your seed color into a full palette. The same seed can feel very different across styles. Options: Tonal Spot (default), Vibrant, Expressive, Rainbow, Fruit Salad, Neutral, Monochrome, Fidelity, Content. Palette style applies to presets and custom colors; Material You manages its own palette.
-
-**Visual effects**
-- **Gradient background** — blends your primary color into the background for tinted depth rather than a flat surface. Disabled in Black mode.
-- **UI scale** - makes the whole interface smaller or larger (75% to 125%). Text, icons, and spacing change together.
-- **Enhanced shading** — makes cards darker in dark mode, lighter in light mode. Disabled in Black mode.
-- **Blur bars** — frosted glass effect on the top and bottom bars, so content scrolls behind them.
-
-### Notes UI
-
-- **Adaptive note themes** — tints the note page with color taken from its cover image.
-- **Cover image on cards** — shows a note's picture as a soft background on the note card, not just inside the note.
-- **Note content on cards** — shows the note body or list items on the note card.
+- **Appearance mode**: System default, Light, or Dark.
+- **Pure black OLED theme**: In Dark mode, enable true black surfaces for battery savings and high contrast on OLED screens.
+- **Accent colors**: Curated palettes including Amethyst, Maroon, Royal Blue, Forest Green, Dark Brown, and Ocean Teal.
+- **Adaptive styling**: Seamless light and dark mode transitions with accessible contrast ratios.
 
 ### Defaults
 
-**Defaults** in Settings sets how new notes and lists start, so you don't have to change the same options every time:
-- **Default visibility** and **Default importance** apply to every new note and list.
-- **Default reminder time** is the time of day used for new reminders.
-- **Default recurrence** is the repeat rule preselected when you turn on repeat for a reminder.
-
-Changing a default does not change notes and lists you already have.
+Configure starting defaults in Settings so new entries match your workflow:
+- Default visibility (Normal, Private, Secret).
+- Default importance (Low, Normal, High, Critical).
+- Default reminder time of day.
+- Start of week (Monday, Sunday, Saturday).
 
 ### Swipe actions
 
-**Reveal mode** (default) — swiping a note reveals a row of action buttons rather than immediately doing something. Each direction (right swipe and left swipe) has three slots, giving you six configurable actions in total. You can long-press and drag actions to swap their positions between slots. Default layout: right swipe shows Pin, Star, Duplicate; left swipe shows Mark done, Archive, Trash.
-
-Reveal mode holds six of the seven available actions, and its editor rearranges the six that are there rather than swapping in a different one. Edit is the action left out of the default layout — it is one tap away inside the note anyway. To use Edit on swipe, choose **Direct mode**, where every action is selectable.
-
-**Direct mode** — swiping immediately executes a single action with no intermediate step. One action per direction. Useful if you have a single operation you want to do as fast as possible. Defaults: swipe right pins, swipe left moves to trash — the same as each direction's first reveal action.
-
-Available actions for either mode: Pin, Star, Duplicate, Mark done, Archive, Trash, Edit.
-
-Haptic feedback at swipe thresholds can be turned on or off independently of the mode.
-
-## Offline flavor
-
-### What's different in the Offline flavor
-
-The Offline flavor is a separate build of Remember with no internet permission at all. It's available from GitHub Releases as `remember-v<version>-offline.apk`. Compared with the other versions:
-- **No internet permission.** Remember can't connect to internet.
-- **No update checks.** Remember can't look for new versions itself. Use **Track updates via ObtainX** on the Settings page (under Updates on tablets), or install a newer offline APK from GitHub Releases by hand.
-- **No changelog after an update.** The other versions show what's new the first time you open them after updating.
-- **No Connect Google.** Import tasks from a Google Takeout or Tasks.org file instead.
-- **Installs alongside the other versions** as a separate app, with its own notes and settings. To move your notes over, make a backup in one and restore it in the other, then grant permissions such as notifications again.
+Configure swipe gestures on Home screen cards:
+- **Reveal mode** (default): Swipe left or right to reveal action buttons (Pin, Star, Duplicate, Done, Archive, Trash).
+- **Direct mode**: Swipe immediately triggers the first action.
+- Configurable haptic feedback.

@@ -1,3 +1,35 @@
+## v2.0.0 — Notas Major Redesign & Full Calendar Suite
+
+### ✨ New Features
+- **Full Calendar Suite**: Dedicated Calendar with 4 distinct view modes:
+  - **Month view**: Full month grid with quick day selection, previous/next navigation, and a quick **Today** jump.
+  - **Week view**: 7-day horizontal planning strip highlighting the active day and ordering weekly agenda items sequentially.
+  - **Day view**: 24-hour vertical timeline with a real-time live indicator line showing current time.
+  - **Year view**: 12-month bird's-eye overview with weekend accents and a floating Today return pill.
+- **Smart Date Classification**: Entries automatically classify based on dates:
+  - **Events**: Time-bounded entries with an end date or duration.
+  - **Tasks**: Actionable entries with a scheduled date or reminder time and no end date.
+  - **Notes**: Free-form text and checklists with no dates.
+- **Unified Neutral Gray Card Design**:
+  - All cards across Home, Calendar, and Search adopt a clean neutral gray appearance by default.
+  - Shoulder indicators retain their chosen vibrant colors along the left card edge.
+  - Per-item custom icon color selection supported, with neutral gray default.
+  - Harmonized 28dp smooth rounded corners.
+- **Interactive Checkboxes in Calendar**:
+  - Check off tasks directly from Calendar Agenda and Timeline without opening details.
+- **Google Drive Cloud Sync**:
+  - Multi-device sync using Hybrid Logical Clocks (HLC) and automated field-level conflict resolution.
+- **Category Search**:
+  - Filter search results by category: **All**, **Notes**, **Tasks**, and **Events**.
+
+### 🛠 Improved Features
+- Completely redesigned Help screen and in-depth guide covering all new features and workflows.
+- Dynamic scrolling header protection preventing note text from overlapping the top bar.
+- Refined typography and contrast across Light, Dark, and OLED Black modes.
+- Codebase optimization: eliminated deprecated APIs, minimized recompositions, and streamlined test execution.
+
+---
+
 ## v1.10.0 Critical reminders, Hide content on cards
 
 ### ✨ New Features

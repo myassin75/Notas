@@ -8,7 +8,15 @@ sealed interface DriveSyncState {
 
     data object Scheduled : DriveSyncState
 
+    data object Queued : DriveSyncState
+
     data object Running : DriveSyncState
+
+    data object Downloading : DriveSyncState
+
+    data object Applying : DriveSyncState
+
+    data object Uploading : DriveSyncState
 
     data object WaitingForNetwork : DriveSyncState
 
@@ -20,6 +28,14 @@ sealed interface DriveSyncState {
 
     data class AuthenticationRequired(
         val message: String? = null,
+    ) : DriveSyncState
+
+    data class WaitingForAuthorization(
+        val message: String? = null,
+    ) : DriveSyncState
+
+    data class ConflictsDetected(
+        val count: Int,
     ) : DriveSyncState
 
     data class Completed(
@@ -40,6 +56,8 @@ enum class SyncErrorCategory {
     NETWORK,
     RATE_LIMITED,
     AUTHENTICATION,
+    PERMISSION_DENIED,
+    QUOTA_EXCEEDED,
     ACCOUNT_MISMATCH,
     MEK_UNAVAILABLE,
     INTEGRITY,
@@ -81,4 +99,16 @@ data class DriveSyncPreferencesState(
     val lastSyncEpochMillis: Long = 0L,
     val lastErrorCategory: SyncErrorCategory? = null,
     val lastErrorMessage: String? = null,
+)
+
+/**
+ * Diagnostic and user-facing status snapshot for background synchronization.
+ */
+data class BackgroundSyncStatusInfo(
+    val isEnabled: Boolean,
+    val lastSuccessfulSyncMillis: Long,
+    val pendingOperationsCount: Int,
+    val lastErrorCategory: SyncErrorCategory?,
+    val lastErrorMessage: String?,
+    val currentState: DriveSyncState,
 )

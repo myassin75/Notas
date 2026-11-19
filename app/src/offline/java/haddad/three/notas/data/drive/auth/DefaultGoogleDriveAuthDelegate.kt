@@ -5,7 +5,7 @@ import android.content.Intent
 
 object DefaultGoogleDriveAuthDelegate : GoogleDriveAuthDelegate {
     private val unavailable =
-        UnsupportedOperationException("Google Drive backup is not available in the offline build")
+        UnsupportedOperationException("Google Drive sync is not available in the offline build")
 
     override suspend fun authorize(
         context: Context,
@@ -28,3 +28,4 @@ object DefaultGoogleDriveAuthDelegate : GoogleDriveAuthDelegate {
         token: String,
     ) = Unit
 }
+

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 13,
-    "identityHash": "4fd97afe955eb6c82927c5fa207948d2",
+    "identityHash": "afc00e6aa3676ce5e4df8f960de12a43",
     "entities": [
       {
         "tableName": "notes",
@@ -444,7 +444,7 @@
       },
       {
         "tableName": "notes_fts",
-        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`title` TEXT NOT NULL, `body` TEXT NOT NULL, `checklistText` TEXT NOT NULL, `attachmentText` TEXT NOT NULL, `actionsText` TEXT NOT NULL, tokenize=unicode61 `remove_diacritics=2`, content=`notes`)",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`title` TEXT NOT NULL, `body` TEXT NOT NULL, `checklistText` TEXT NOT NULL, `attachmentText` TEXT NOT NULL, `actionsText` TEXT NOT NULL, tokenize=unicode61, content=`notes`)",
         "fields": [
           {
             "fieldPath": "title",
@@ -484,9 +484,7 @@
         "ftsVersion": "FTS4",
         "ftsOptions": {
           "tokenizer": "unicode61",
-          "tokenizerArgs": [
-            "remove_diacritics=2"
-          ],
+          "tokenizerArgs": [],
           "contentTable": "notes",
           "languageIdColumnName": "",
           "matchInfo": "FTS4",
@@ -1507,7 +1505,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4fd97afe955eb6c82927c5fa207948d2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'afc00e6aa3676ce5e4df8f960de12a43')"
     ]
   }
 }

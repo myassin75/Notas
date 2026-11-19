@@ -1,8 +1,10 @@
 package haddad.three.notas.data.drive.api
 
+import haddad.three.notas.data.drive.model.DriveChangeListResponse
 import haddad.three.notas.data.drive.model.DriveFileDto
 import haddad.three.notas.data.drive.model.DriveFileListResponse
 import haddad.three.notas.data.drive.model.DriveResult
+import haddad.three.notas.data.drive.model.DriveStartPageTokenResponse
 import haddad.three.notas.data.drive.model.toErrorResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,7 +24,7 @@ import java.net.URLEncoder
  * Connects directly to Drive v3 endpoints using HttpURLConnection and OAuth Bearer tokens.
  * Restricted strictly to `appDataFolder` operations.
  */
-class GoogleDriveApiClient(
+open class GoogleDriveApiClient(
     private val json: Json = Json { ignoreUnknownKeys = true },
     private val httpFactory: (String) -> HttpURLConnection = { url ->
         (URL(url).openConnection() as HttpURLConnection).apply {
@@ -34,7 +36,7 @@ class GoogleDriveApiClient(
     /**
      * Lists files contained in the private application data folder.
      */
-    suspend fun listFiles(
+    open suspend fun listFiles(
         accessToken: String,
         spaces: String = "appDataFolder",
         pageSize: Int = 50,
@@ -69,6 +71,10 @@ class GoogleDriveApiClient(
                         DriveResult.Success(response)
                     }
                     HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
                     429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
                     else -> {
                         val errorBody =
@@ -85,7 +91,7 @@ class GoogleDriveApiClient(
     /**
      * Uploads file data using multipart/related upload for files up to 5 MB.
      */
-    suspend fun uploadMultipart(
+    open suspend fun uploadMultipart(
         accessToken: String,
         metadataJson: String,
         fileData: ByteArray,
@@ -127,6 +133,10 @@ class GoogleDriveApiClient(
                         DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
                     }
                     HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
                     429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
                     else -> {
                         val errorBody =
@@ -144,7 +154,7 @@ class GoogleDriveApiClient(
      * Streams an encrypted backup archive to Google Drive using a resumable upload session.
      * Prevents memory exhaustion on large backups with multiple attachments and handles interrupted connections.
      */
-    suspend fun uploadStreamResumable(
+    open suspend fun uploadStreamResumable(
         accessToken: String,
         metadataJson: String,
         file: File,
@@ -228,6 +238,10 @@ class GoogleDriveApiClient(
                             DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
                         }
                         HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                        HttpURLConnection.HTTP_FORBIDDEN -> {
+                            val err = uploadConn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                            DriveResult.Error("Drive stream upload forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                        }
                         429 -> DriveResult.RateLimited(uploadConn.getHeaderField("Retry-After")?.toLongOrNull())
                         else -> {
                             val err =
@@ -247,7 +261,7 @@ class GoogleDriveApiClient(
     /**
      * Downloads file payload directly to a staging target file with progress tracking.
      */
-    suspend fun downloadFile(
+    open suspend fun downloadFile(
         accessToken: String,
         fileId: String,
         targetFile: File,
@@ -285,6 +299,10 @@ class GoogleDriveApiClient(
                         DriveResult.Success(Unit)
                     }
                     HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
                     429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
                     else -> {
                         val err =
@@ -301,7 +319,7 @@ class GoogleDriveApiClient(
     /**
      * Deletes a file from Google Drive.
      */
-    suspend fun deleteFile(
+    open suspend fun deleteFile(
         accessToken: String,
         fileId: String,
     ): DriveResult<Unit> =
@@ -317,6 +335,10 @@ class GoogleDriveApiClient(
                 when (code) {
                     HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_OK -> DriveResult.Success(Unit)
                     HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
                     429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
                     else -> {
                         val err =
@@ -333,7 +355,7 @@ class GoogleDriveApiClient(
     /**
      * Retrieves file metadata including properties and appProperties.
      */
-    suspend fun getFileMetadata(
+    open suspend fun getFileMetadata(
         accessToken: String,
         fileId: String,
     ): DriveResult<DriveFileDto> =
@@ -353,6 +375,10 @@ class GoogleDriveApiClient(
                         DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
                     }
                     HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        val errorBody = conn.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
                     429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
                     else -> {
                         val err =
@@ -361,6 +387,187 @@ class GoogleDriveApiClient(
                                 ?.use { it.readText() }
                                 .orEmpty()
                         DriveResult.Error("Drive getMetadata failed ($code): $err", statusCode = code)
+                    }
+                }
+            }
+        }
+
+    /**
+     * Updates content of an existing Drive file using PATCH media upload.
+     */
+    open suspend fun updateFileContent(
+        accessToken: String,
+        fileId: String,
+        fileData: ByteArray,
+        mimeType: String = "application/octet-stream",
+    ): DriveResult<DriveFileDto> =
+        withContext(Dispatchers.IO) {
+            val urlString = "$DRIVE_UPLOAD_BASE_URL/files/${urlEncode(fileId)}?uploadType=media"
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("X-HTTP-Method-Override", "PATCH")
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
+                conn.setRequestProperty("Content-Type", mimeType)
+                conn.setRequestProperty("Content-Length", fileData.size.toString())
+                conn.doOutput = true
+
+                conn.outputStream.use { os ->
+                    os.write(fileData)
+                    os.flush()
+                }
+
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        DriveResult.Success(json.decodeFromString(DriveFileDto.serializer(), body))
+                    }
+                    HttpURLConnection.HTTP_NOT_FOUND -> {
+                        DriveResult.Error("File not found: $fileId", code = "NOT_FOUND", statusCode = 404)
+                    }
+                    HttpURLConnection.HTTP_CONFLICT -> {
+                        DriveResult.Error("Conflict updating file: $fileId", code = "CONFLICT", statusCode = 409)
+                    }
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive updateFileContent failed ($code): $err", statusCode = code)
+                    }
+                }
+            }
+        }
+
+    /**
+     * Downloads file content directly to a byte array in memory.
+     * Suitable for small metadata or manifest files.
+     */
+    open suspend fun downloadFileBytes(
+        accessToken: String,
+        fileId: String,
+    ): DriveResult<ByteArray> =
+        withContext(Dispatchers.IO) {
+            val urlString = "$DRIVE_BASE_URL/files/${urlEncode(fileId)}?alt=media"
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
+
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val bytes = conn.inputStream.use { it.readBytes() }
+                        DriveResult.Success(bytes)
+                    }
+                    HttpURLConnection.HTTP_NOT_FOUND -> {
+                        DriveResult.Error("File not found: $fileId", code = "NOT_FOUND", statusCode = 404)
+                    }
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive download failed ($code): $err", statusCode = code)
+                    }
+                }
+            }
+        }
+
+    /**
+     * Retrieves the starting page token for tracking changes using the Google Drive Changes API.
+     */
+    open suspend fun getChangesStartPageToken(
+        accessToken: String,
+        spaces: String = "appDataFolder",
+    ): DriveResult<DriveStartPageTokenResponse> =
+        withContext(Dispatchers.IO) {
+            val urlString = "$DRIVE_BASE_URL/changes/startPageToken?spaces=${urlEncode(spaces)}"
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
+
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        DriveResult.Success(json.decodeFromString(DriveStartPageTokenResponse.serializer(), body))
+                    }
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        DriveResult.Error("Drive getChangesStartPageToken failed ($code): $err", statusCode = code)
+                    }
+                }
+            }
+        }
+
+    /**
+     * Lists change events occurring in the appDataFolder space using the Changes API.
+     * Detects cursor expiration (HTTP 410 or startPageTokenExpired) and returns [DriveResult.CursorExpired].
+     */
+    open suspend fun listChanges(
+        accessToken: String,
+        pageToken: String,
+        spaces: String = "appDataFolder",
+        pageSize: Int = 100,
+    ): DriveResult<DriveChangeListResponse> =
+        withContext(Dispatchers.IO) {
+            val fields = urlEncode("nextPageToken,newStartPageToken,changes(fileId,removed,file(id,name,mimeType,size,createdTime,modifiedTime,properties,appProperties))")
+            val urlString = "$DRIVE_BASE_URL/changes?pageToken=${urlEncode(pageToken)}&spaces=${urlEncode(spaces)}&pageSize=$pageSize&fields=$fields"
+            executeWithRetry {
+                val conn = httpFactory(urlString)
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("Authorization", "Bearer $accessToken")
+
+                val code = conn.responseCode
+                when (code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        val body = conn.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        DriveResult.Success(json.decodeFromString(DriveChangeListResponse.serializer(), body))
+                    }
+                    410 -> DriveResult.CursorExpired
+                    HttpURLConnection.HTTP_UNAUTHORIZED -> DriveResult.Unauthorized
+                    HttpURLConnection.HTTP_FORBIDDEN -> {
+                        DriveResult.Error("Drive access forbidden: check permissions or quota", code = "FORBIDDEN", statusCode = 403)
+                    }
+                    429 -> DriveResult.RateLimited(conn.getHeaderField("Retry-After")?.toLongOrNull())
+                    else -> {
+                        val err =
+                            conn.errorStream
+                                ?.bufferedReader(Charsets.UTF_8)
+                                ?.use { it.readText() }
+                                .orEmpty()
+                        if (err.contains("startPageTokenExpired", ignoreCase = true) ||
+                            err.contains("changePageTokenExpired", ignoreCase = true) ||
+                            err.contains("tokenExpired", ignoreCase = true)
+                        ) {
+                            DriveResult.CursorExpired
+                        } else {
+                            DriveResult.Error("Drive listChanges failed ($code): $err", statusCode = code)
+                        }
                     }
                 }
             }

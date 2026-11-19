@@ -41,6 +41,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -63,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -82,6 +84,7 @@ import haddad.three.notas.data.NoteWithItems
 import haddad.three.notas.data.SearchHistoryEntry
 import haddad.three.notas.data.ShoulderEntity
 import haddad.three.notas.ui.common.RememberMaterialRoundedSymbol
+import haddad.three.notas.ui.components.NoteCard
 import haddad.three.notas.ui.components.parseNoteColorHex
 import haddad.three.notas.ui.components.readableBadgeColors
 import haddad.three.notas.ui.settings.SettingsDesignTokens
@@ -114,6 +117,7 @@ fun SearchRoute(
         onRemoveRecentSearch = viewModel::removeRecentSearch,
         onClearRecentSearches = viewModel::clearRecentSearches,
         onOpenNote = onOpenNote,
+        onToggleDone = viewModel::toggleDone,
         onApplyFilters = viewModel::applyFilters,
     )
 }
@@ -131,6 +135,7 @@ fun SearchScreen(
     onRemoveRecentSearch: (String) -> Unit,
     onClearRecentSearches: () -> Unit,
     onOpenNote: (NoteWithItems) -> Unit,
+    onToggleDone: ((Long) -> Unit)? = null,
     onApplyFilters: (SearchFilters) -> Unit,
 ) {
     var showFilters by remember { mutableStateOf(false) }
@@ -874,10 +879,10 @@ fun SearchScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(uiState.searchResults, key = { it.note.id }) { result ->
-                                SearchResultCard(
-                                    result = result,
-                                    searchQuery = uiState.query,
+                                NoteCard(
+                                    note = result,
                                     onClick = { onOpenNote(result) },
+                                    onToggleDone = onToggleDone,
                                 )
                             }
                             item {
@@ -1574,293 +1579,13 @@ fun SearchResultCard(
     result: NoteWithItems,
     searchQuery: String,
     onClick: () -> Unit,
+    onToggleDone: ((Long) -> Unit)? = null,
 ) {
-    val isEvent = SearchViewModel.isEvent(result)
-    val isTask = SearchViewModel.isTask(result)
-
-    val iconName =
-        when {
-            isEvent -> "event"
-            isTask -> "checklist"
-            else -> "description"
-        }
-
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val highlightColor = MaterialTheme.colorScheme.primary
-    val isDark = LocalIsDark.current
-    val highlightBg = MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.25f else 0.15f)
-    val onSurface = MaterialTheme.colorScheme.onSurface
-    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-
-    val noteAccent =
-        remember(result.note.colorIndex, isDark) {
-            if (!NoteColors.isNone(result.note.colorIndex)) {
-                if (isDark) NoteColors.at(result.note.colorIndex).dark else NoteColors.at(result.note.colorIndex).light
-            } else {
-                null
-            }
-        }
-    val defaultIconColor = if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
-    val iconColor = noteAccent ?: defaultIconColor
-    val cardBg = if (isDark) Color(0xFF1F1F22) else Color(0xFFF2F2F4)
-    val cardBorder = BorderStroke(1.dp, if (isDark) Color(0xFF2D2D30) else Color(0xFFE5E5EA))
-
-    Surface(
-        shape = RoundedCornerShape(28.dp),
-        color = cardBg,
-        border = cardBorder,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            val iconBoxBg = if (isDark) Color(0xFF2C2C30) else Color(0xFFE5E5EA)
-            Box(
-                modifier =
-                    Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(iconBoxBg),
-                contentAlignment = Alignment.Center,
-            ) {
-                RememberMaterialRoundedSymbol(
-                    name = iconName,
-                    size = 22.dp,
-                    tint = iconColor,
-                )
-            }
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                // Title with Match Highlight
-                val titleText =
-                    result.note.title.ifBlank {
-                        if (result.note.kind == NoteKind.NOTE) {
-                            stringResource(R.string.edit_note_title_new)
-                        } else {
-                            stringResource(R.string.edit_list_title_new)
-                        }
-                    }
-                Text(
-                    text = buildHighlightedString(titleText, searchQuery, highlightColor, highlightBg),
-                    style =
-                        MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = onSurface,
-                        ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Entity-specific Snippet
-                if (isEvent) {
-                    val eventTimestamp = SearchViewModel.getEntityTimestamp(result)
-                    if (eventTimestamp != null) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            RememberMaterialRoundedSymbol(
-                                name = "schedule",
-                                size = 14.dp,
-                                tint = primaryColor,
-                            )
-                            Text(
-                                text = formatEventDateTime(eventTimestamp),
-                                style =
-                                    MaterialTheme.typography.bodyMedium.copy(
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = primaryColor,
-                                    ),
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                    if (result.note.body.isNotBlank()) {
-                        val bodySnippet = buildSnippetAroundMatch(result.note.body, searchQuery)
-                        Text(
-                            text = buildHighlightedString(bodySnippet, searchQuery, highlightColor, highlightBg),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            style =
-                                MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    color = onSurfaceVariant,
-                                ),
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
-                } else if (isTask) {
-                    if (result.items.isNotEmpty()) {
-                        val matchingItems = result.items.filter { it.text.contains(searchQuery, ignoreCase = true) }
-                        val displayItems = if (matchingItems.isNotEmpty()) matchingItems.take(3) else result.items.take(3)
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            displayItems.forEach { item ->
-                                val checkPrefix = if (item.checked) "☑ " else "☐ "
-                                val itemAnnotated = buildHighlightedString(item.text, searchQuery, highlightColor, highlightBg)
-                                Text(
-                                    text =
-                                        buildAnnotatedString {
-                                            append(checkPrefix)
-                                            append(itemAnnotated)
-                                        },
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style =
-                                        MaterialTheme.typography.bodyMedium.copy(
-                                            fontSize = 13.sp,
-                                            color = if (item.checked) onSurfaceVariant.copy(alpha = 0.6f) else onSurface,
-                                        ),
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                    } else if (result.note.body.isNotBlank()) {
-                        val bodySnippet = buildSnippetAroundMatch(result.note.body, searchQuery)
-                        Text(
-                            text = buildHighlightedString(bodySnippet, searchQuery, highlightColor, highlightBg),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            style =
-                                MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    color = onSurfaceVariant,
-                                ),
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
-                } else {
-                    if (result.note.body.isNotBlank()) {
-                        val bodySnippet = buildSnippetAroundMatch(result.note.body, searchQuery)
-                        Text(
-                            text = buildHighlightedString(bodySnippet, searchQuery, highlightColor, highlightBg),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            style =
-                                MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 13.sp,
-                                    color = onSurfaceVariant,
-                                ),
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
-                }
-
-                // Metadata Row (Type + Date + Shoulder badge + Archive badge)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    val dateText =
-                        remember(result.note.updatedAt, result.note.reminderAt) {
-                            when {
-                                isEvent -> {
-                                    val t = SearchViewModel.getEntityTimestamp(result)
-                                    if (t != null) "Event · " + formatSimpleDate(t) else "Event"
-                                }
-                                isTask -> {
-                                    if (result.note.reminderAt != null) {
-                                        "Task · Due " + formatSimpleDate(result.note.reminderAt)
-                                    } else {
-                                        "Task · Updated " + formatSimpleDate(result.note.updatedAt)
-                                    }
-                                }
-                                else -> "Note · Updated " + formatSimpleDate(result.note.updatedAt)
-                            }
-                        }
-
-                    Text(
-                        text = dateText,
-                        style =
-                            MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.sp,
-                                color = onSurfaceVariant,
-                            ),
-                    )
-
-                    // Shoulder chip with actual stored category color and high contrast
-                    if (result.shoulder != null) {
-                        val fallbackPrimary = MaterialTheme.colorScheme.primary
-                        val shoulderColor =
-                            remember(result.shoulder.colorHex, fallbackPrimary) {
-                                parseNoteColorHex(result.shoulder.colorHex, fallbackPrimary)
-                            }
-                        val (badgeBg, badgeFg) =
-                            remember(shoulderColor, isDark) {
-                                readableBadgeColors(shoulderColor, isDark)
-                            }
-                        Surface(
-                            shape = CircleShape,
-                            color = badgeBg,
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                RememberMaterialRoundedSymbol(
-                                    name = "local_offer",
-                                    size = 11.dp,
-                                    tint = badgeFg,
-                                    weight = FontWeight.Bold,
-                                    filled = false,
-                                )
-                                Text(
-                                    text = result.shoulder.name,
-                                    style =
-                                        MaterialTheme.typography.labelSmall.copy(
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = badgeFg,
-                                        ),
-                                )
-                            }
-                        }
-                    }
-
-                    // Archive badge
-                    if (result.note.archived) {
-                        val archiveBg =
-                            if (isDark) {
-                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
-                            } else {
-                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.60f)
-                            }
-                        val archiveFg =
-                            if (isDark) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onErrorContainer
-                            }
-                        Surface(
-                            shape = CircleShape,
-                            color = archiveBg,
-                            border = if (isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)) else null,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.edit_archived_notice_title),
-                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
-                                style =
-                                    MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = archiveFg,
-                                    ),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
+    NoteCard(
+        note = result,
+        onClick = onClick,
+        onToggleDone = onToggleDone,
+    )
 }
 
 fun buildHighlightedString(

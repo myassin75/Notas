@@ -1,6 +1,10 @@
 package haddad.three.notas.ui.nav
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -106,8 +110,10 @@ import haddad.three.notas.ui.settings.SettingsRoute
 import haddad.three.notas.ui.settings.SettingsSectionKey
 import haddad.three.notas.ui.settings.settingsPaneSections
 import haddad.three.notas.ui.settings.settingsSectionKeyForHighlight
+import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.RoundedPolygonShape
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -155,6 +161,7 @@ fun NotesTwoPaneRoute(
     var activeDetailForceEdit by rememberSaveable { mutableStateOf(false) }
     var previousDetailIdBeforeNew by rememberSaveable { mutableStateOf<Long?>(null) }
     var pendingSavedNoteId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var editingSessionKey by rememberSaveable { mutableStateOf(0L) }
     var createFabExpanded by rememberSaveable { mutableStateOf(false) }
     var selectableVisibleNoteIds by remember { mutableStateOf(emptySet<Long>()) }
     val visibleNotes =
@@ -177,6 +184,7 @@ fun NotesTwoPaneRoute(
         note: NoteWithItems,
         forceEdit: Boolean = false,
     ) {
+        editingSessionKey++
         activeDetailId = note.note.id
         activeDetailKind = note.note.kind
         activeDetailForceEdit = forceEdit
@@ -188,6 +196,7 @@ fun NotesTwoPaneRoute(
     }
 
     fun showNewDetailPane(kind: NoteKind) {
+        editingSessionKey++
         previousDetailIdBeforeNew = activeDetailId
         activeDetailKind = kind
         activeDetailForceEdit = false
@@ -215,7 +224,6 @@ fun NotesTwoPaneRoute(
         val fallbackId =
             when {
                 previousDetailIdBeforeNew != null && previousDetailIdBeforeNew in visibleIds -> previousDetailIdBeforeNew
-                visibleNotes.isNotEmpty() -> visibleNotes.first().note.id
                 else -> null
             }
         val fallbackNote = visibleNotes.firstOrNull { note -> note.note.id == fallbackId }
@@ -247,7 +255,7 @@ fun NotesTwoPaneRoute(
                 currentDetailId == NEW_NOTE_DETAIL_ID || currentDetailId == NEW_LIST_DETAIL_ID -> null
                 currentDetailId != null && currentDetailId == pendingSavedNoteId -> null
                 currentDetailId != null -> visibleNotes.firstOrNull { note -> note.note.id == currentDetailId }
-                else -> visibleNotes.firstOrNull()
+                else -> null
             }
         if (targetNote != null && targetNote.note.id != currentDetailId) {
             activeDetailId = targetNote.note.id
@@ -262,148 +270,180 @@ fun NotesTwoPaneRoute(
             // Archived/trashed search hits stay hosted while their list rows exist.
             currentDetailId !in searchShelfIds
         ) {
-            val fallbackNote = visibleNotes.firstOrNull()
-            activeDetailId = fallbackNote?.note?.id
-            activeDetailKind = fallbackNote?.note?.kind ?: NoteKind.NOTE
-            if (fallbackNote != null) {
-                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, fallbackNote.note.id)
-            } else {
+            activeDetailId = null
+            activeDetailKind = NoteKind.NOTE
+            scope.launch {
                 navigator.navigateBack()
             }
         }
     }
 
-    val paneExpansionState =
-        rememberFlatScreenBalancedPaneExpansionState(
-            directive = navigator.scaffoldDirective,
+    if (activeDetailId == null) {
+        HomeRoute(
+            interactionPrefs = interactionPrefs,
+            closeRevealRequest = closeRevealRequest,
+            onOpenNote = { note, forceEdit -> showNoteInDetailPane(note, forceEdit) },
+            onCreateNote = { showNewDetailPane(NoteKind.NOTE) },
+            onCreateList = { showNewDetailPane(NoteKind.LIST) },
+            activeNoteId = null,
+            pendingNewNoteKind = null,
+            showSelectionActionBar = true,
+            onSelectableVisibleIdsChanged = { noteIds ->
+                selectableVisibleNoteIds = noteIds
+            },
         )
-    ListDetailPaneScaffold(
-        directive = navigator.scaffoldDirective,
-        scaffoldState = navigator.scaffoldState,
-        listPane = {
-            AnimatedPane {
-                Box(Modifier.fillMaxSize()) {
-                    HomeRoute(
-                        interactionPrefs = interactionPrefs,
-                        closeRevealRequest = closeRevealRequest,
-                        onOpenNote = { note, forceEdit -> showNoteInDetailPane(note, forceEdit) },
-                        onCreateNote = { showNewDetailPane(NoteKind.NOTE) },
-                        onCreateList = { showNewDetailPane(NoteKind.LIST) },
-                        activeNoteId = activeDetailId?.takeIf { it > 0L },
-                        pendingNewNoteKind = null,
-                        showSelectionActionBar = false,
-                        onSelectableVisibleIdsChanged = { noteIds ->
-                            selectableVisibleNoteIds = noteIds
-                        },
-                    )
-                    // Touch catcher under the FAB menu: tapping the list while the speed
-                    // dial is open collapses it instead of activating the tap target,
-                    // matching the phone scrim in MainTabScaffold.
-                    if (createFabExpanded) {
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .appClickable(onClick = { createFabExpanded = false }),
-                        )
-                    }
-                    NotesListPaneFabMenu(
-                        expanded = createFabExpanded,
-                        onExpandedChange = { expanded -> createFabExpanded = expanded },
-                        onImportGoogleTasks = onImportGoogleTasks,
-                        onCreateList = { showNewDetailPane(NoteKind.LIST) },
-                        onCreateNote = { showNewDetailPane(NoteKind.NOTE) },
-                        modifier =
-                            Modifier
-                                .align(Alignment.BottomEnd)
-                                // FloatingActionButtonMenu pads its button 16dp from the
-                                // wrapper's edges; 4dp lands the FAB element on the same
-                                // 20dp baseline as the History/Settings pane FABs.
-                                .padding(
-                                    end = 4.dp,
-                                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + (if (isLandscape) 0.dp else 4.dp),
-                                ),
-                    )
+    } else {
+        BackHandler {
+            if (activeDetailId == NEW_NOTE_DETAIL_ID || activeDetailId == NEW_LIST_DETAIL_ID) {
+                closePendingNewDetail()
+            } else {
+                activeDetailId = null
+                previousDetailIdBeforeNew = null
+                scope.launch {
+                    navigator.navigateBack()
                 }
             }
-        },
-        detailPane = {
-            AnimatedPane {
-                val selectedDetailId = activeDetailId
-                Box(Modifier.fillMaxSize()) {
-                    if (state.selectedIds.isNotEmpty()) {
-                        NotesSelectionActionPane(
-                            selectedCount = state.selectedIds.count { noteId -> noteId in selectableVisibleNoteIds },
-                            totalVisibleCount = selectableVisibleNoteIds.size,
-                            onSelectAll = {
-                                viewModel.selectNotes(selectableVisibleNoteIds)
+        }
+        val paneExpansionState =
+            rememberFlatScreenBalancedPaneExpansionState(
+                directive = navigator.scaffoldDirective,
+                firstPaneProportion = 0.4f,
+            )
+        ListDetailPaneScaffold(
+            directive = navigator.scaffoldDirective,
+            scaffoldState = navigator.scaffoldState,
+            listPane = {
+                AnimatedPane {
+                    Box(Modifier.fillMaxSize()) {
+                        HomeRoute(
+                            interactionPrefs = interactionPrefs,
+                            closeRevealRequest = closeRevealRequest,
+                            onOpenNote = { note, forceEdit -> showNoteInDetailPane(note, forceEdit) },
+                            onCreateNote = { showNewDetailPane(NoteKind.NOTE) },
+                            onCreateList = { showNewDetailPane(NoteKind.LIST) },
+                            activeNoteId = activeDetailId?.takeIf { it > 0L },
+                            pendingNewNoteKind = null,
+                            showSelectionActionBar = false,
+                            onSelectableVisibleIdsChanged = { noteIds ->
+                                selectableVisibleNoteIds = noteIds
                             },
-                            onClearSelection = viewModel::clearSelection,
-                            onPinSelected = viewModel::pinSelected,
-                            pinEnabled = state.canPinSelected,
-                            onMarkDoneSelected = viewModel::markSelectedDone,
-                            onArchiveSelected = viewModel::archiveSelected,
-                            onTrashSelected = viewModel::trashSelected,
                         )
-                    } else if (selectedDetailId == null ||
-                        // Never trust activeDetailId alone: the pane may only host notes
-                        // still reachable from the list pane (active rows, search shelf
-                        // hits), placeholders, or a just-saved note awaiting the Room
-                        // emission. Anything else (e.g. a note that was bulk-archived
-                        // while open) immediately falls back to the empty state instead
-                        // of lingering on screen.
-                        !(
-                            selectedDetailId < 0L ||
-                                selectedDetailId == pendingSavedNoteId ||
-                                selectedDetailId in searchShelfIds ||
-                                visibleNotes.any { note -> note.note.id == selectedDetailId }
+                        // Touch catcher under the FAB menu: tapping the list while the speed
+                        // dial is open collapses it instead of activating the tap target,
+                        // matching the phone scrim in MainTabScaffold.
+                        if (createFabExpanded) {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .appClickable(onClick = { createFabExpanded = false }),
+                            )
+                        }
+                        NotesListPaneFabMenu(
+                            expanded = createFabExpanded,
+                            onExpandedChange = { expanded -> createFabExpanded = expanded },
+                            onImportGoogleTasks = onImportGoogleTasks,
+                            onCreateList = { showNewDetailPane(NoteKind.LIST) },
+                            onCreateNote = { showNewDetailPane(NoteKind.NOTE) },
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomEnd)
+                                    // FloatingActionButtonMenu pads its button 16dp from the
+                                    // wrapper's edges; 4dp lands the FAB element on the same
+                                    // 20dp baseline as the History/Settings pane FABs.
+                                    .padding(
+                                        end = 4.dp,
+                                        bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + (if (isLandscape) 0.dp else 4.dp),
+                                    ),
                         )
-                    ) {
-                        NoteDetailEmptyPane(onCreateNote = { showNewDetailPane(NoteKind.NOTE) })
-                    } else {
-                        NoteDetailPaneHost(
-                            detailId = selectedDetailId,
-                            detailKind = activeDetailKind,
-                            forceEdit = activeDetailForceEdit,
-                            appScope = appScope,
-                            onPersistedNoteId = { noteId, kind ->
-                                if (activeDetailId == NEW_NOTE_DETAIL_ID ||
-                                    activeDetailId == NEW_LIST_DETAIL_ID ||
-                                    activeDetailId != noteId
-                                ) {
-                                    activeDetailId = noteId
-                                    activeDetailKind = kind
-                                    pendingSavedNoteId = noteId
-                                    previousDetailIdBeforeNew = null
-                                    scope.launch {
-                                        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, noteId)
+                    }
+                }
+            },
+            detailPane = {
+                AnimatedPane {
+                    val selectedDetailId = activeDetailId
+                    Box(Modifier.fillMaxSize()) {
+                        if (state.selectedIds.isNotEmpty()) {
+                            NotesSelectionActionPane(
+                                selectedCount = state.selectedIds.count { noteId -> noteId in selectableVisibleNoteIds },
+                                totalVisibleCount = selectableVisibleNoteIds.size,
+                                onSelectAll = {
+                                    viewModel.selectNotes(selectableVisibleNoteIds)
+                                },
+                                onClearSelection = viewModel::clearSelection,
+                                onPinSelected = viewModel::pinSelected,
+                                pinEnabled = state.canPinSelected,
+                                onMarkDoneSelected = viewModel::markSelectedDone,
+                                onArchiveSelected = viewModel::archiveSelected,
+                                onTrashSelected = viewModel::trashSelected,
+                            )
+                        } else if (selectedDetailId == null ||
+                            // Never trust activeDetailId alone: the pane may only host notes
+                            // still reachable from the list pane (active rows, search shelf
+                            // hits), placeholders, or a just-saved note awaiting the Room
+                            // emission. Anything else (e.g. a note that was bulk-archived
+                            // while open) immediately falls back to the empty state instead
+                            // of lingering on screen.
+                            !(
+                                selectedDetailId < 0L ||
+                                    selectedDetailId == pendingSavedNoteId ||
+                                    selectedDetailId in searchShelfIds ||
+                                    visibleNotes.any { note -> note.note.id == selectedDetailId }
+                            )
+                        ) {
+                            NoteDetailEmptyPane(onCreateNote = { showNewDetailPane(NoteKind.NOTE) })
+                        } else {
+                            NoteDetailPaneHost(
+                                sessionKey = editingSessionKey,
+                                detailId = selectedDetailId,
+                                detailKind = activeDetailKind,
+                                forceEdit = activeDetailForceEdit,
+                                appScope = appScope,
+                                onPersistedNoteId = { noteId, kind ->
+                                    if (activeDetailId == NEW_NOTE_DETAIL_ID ||
+                                        activeDetailId == NEW_LIST_DETAIL_ID ||
+                                        activeDetailId != noteId
+                                    ) {
+                                        activeDetailId = noteId
+                                        activeDetailKind = kind
+                                        pendingSavedNoteId = noteId
+                                        previousDetailIdBeforeNew = null
+                                        scope.launch {
+                                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, noteId)
+                                        }
                                     }
-                                }
-                            },
-                            onBack = {
-                                // Read activeDetailId live: a save-and-back reports the persisted
-                                // id (switching the selection) before this runs, and the pending
-                                // placeholder must only be closed when nothing was saved.
-                                if (activeDetailId == NEW_NOTE_DETAIL_ID || activeDetailId == NEW_LIST_DETAIL_ID) {
-                                    closePendingNewDetail()
-                                }
-                            },
-                        )
-                    }
-                    // Companion touch catcher: taps in the detail pane also collapse the
-                    // open speed dial instead of reaching the editor.
-                    if (createFabExpanded) {
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .appClickable(onClick = { createFabExpanded = false }),
-                        )
+                                },
+                                onBack = {
+                                    // Read activeDetailId live: a save-and-back reports the persisted
+                                    // id (switching the selection) before this runs, and the pending
+                                    // placeholder must only be closed when nothing was saved.
+                                    if (activeDetailId == NEW_NOTE_DETAIL_ID || activeDetailId == NEW_LIST_DETAIL_ID) {
+                                        closePendingNewDetail()
+                                    } else {
+                                        activeDetailId = null
+                                        previousDetailIdBeforeNew = null
+                                        scope.launch {
+                                            navigator.navigateBack()
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                        // Companion touch catcher: taps in the detail pane also collapse the
+                        // open speed dial instead of reaching the editor.
+                        if (createFabExpanded) {
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .appClickable(onClick = { createFabExpanded = false }),
+                            )
+                        }
                     }
                 }
-            }
-        },
-        modifier = Modifier.fillMaxSize(),
-        paneExpansionState = paneExpansionState,
-    )
+            },
+            modifier = Modifier.fillMaxSize(),
+            paneExpansionState = paneExpansionState,
+        )
+    }
 }
 
 @Suppress("UNUSED_PARAMETER")
@@ -477,6 +517,7 @@ fun SettingsTwoPaneRoute(
     val paneExpansionState =
         rememberFlatScreenBalancedPaneExpansionState(
             directive = navigator.scaffoldDirective,
+            firstPaneProportion = 0.35f,
         )
     ListDetailPaneScaffold(
         directive = navigator.scaffoldDirective,
@@ -635,6 +676,7 @@ fun HistoryTwoPaneRoute(
     val paneExpansionState =
         rememberFlatScreenBalancedPaneExpansionState(
             directive = navigator.scaffoldDirective,
+            firstPaneProportion = 0.4f,
         )
     ListDetailPaneScaffold(
         directive = navigator.scaffoldDirective,
@@ -706,6 +748,7 @@ fun HistoryTwoPaneRoute(
                     NoteDetailEmptyPane(onCreateNote = null)
                 } else {
                     NoteDetailPaneHost(
+                        sessionKey = selectedDetailId,
                         detailId = selectedDetailId,
                         detailKind = activeDetailKind,
                         forceEdit = activeDetailForceEdit,
@@ -804,6 +847,7 @@ fun HistoryTwoPaneRoute(
 
 @Composable
 private fun NoteDetailPaneHost(
+    sessionKey: Any,
     detailId: Long,
     detailKind: NoteKind,
     forceEdit: Boolean,
@@ -811,15 +855,18 @@ private fun NoteDetailPaneHost(
     onPersistedNoteId: (Long, NoteKind) -> Unit,
     onBack: () -> Unit,
 ) {
-    val noteId = detailId.takeIf { it > 0L }
-    val route =
-        Routes.editContent(
-            id = noteId,
-            type = detailKind,
-        )
-    // forceEdit joins the key so a swipe-Edit on the already-selected note reopens its
-    // host in edit mode; unsaved edits are flushed by the editors' dispose autosave.
-    key(route, forceEdit) {
+    // Key by the stable sessionKey and forceEdit so switching notes or reopening
+    // the current note in edit mode recreates the host, while persisting an in-flight
+    // new note (detailId transitioning from -1L to persisted id) does NOT tear down
+    // the active editing session, NavHost, or TextFields.
+    key(sessionKey, forceEdit) {
+        val initialDetailId = remember(sessionKey) { detailId }
+        val noteId = initialDetailId.takeIf { it > 0L }
+        val route =
+            Routes.editContent(
+                id = noteId,
+                type = detailKind,
+            )
         val detailNavController = rememberNavController()
         NavHost(
             navController = detailNavController,
@@ -866,9 +913,9 @@ private fun NoteDetailPaneHost(
                                 appScope = appScope,
                                 noteId = noteId,
                                 forceEdit = forceEdit,
-                                showNavigateBack = false,
+                                showNavigateBack = true,
                                 allowInitialTitleFocus = false,
-                                interceptBack = noteId == null,
+                                interceptBack = true,
                                 onPersistedNoteIdChanged = { persistedNoteId ->
                                     onPersistedNoteId(persistedNoteId, NoteKind.NOTE)
                                 },
@@ -880,9 +927,9 @@ private fun NoteDetailPaneHost(
                                 appScope = appScope,
                                 noteId = noteId,
                                 forceEdit = forceEdit,
-                                showNavigateBack = false,
+                                showNavigateBack = true,
                                 allowInitialTitleFocus = false,
-                                interceptBack = noteId == null,
+                                interceptBack = true,
                                 onPersistedNoteIdChanged = { persistedNoteId ->
                                     onPersistedNoteId(persistedNoteId, NoteKind.LIST)
                                 },
@@ -1105,12 +1152,12 @@ private fun SettingsSectionListPane(
         modifier = Modifier.fillMaxSize(),
         contentPadding =
             PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 24.dp,
+                start = 24.dp,
+                end = 8.dp,
+                top = 28.dp,
                 bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp,
             ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         items(
             items = settingsPaneSections,
@@ -1145,79 +1192,91 @@ private fun SettingsPaneSectionRow(
     onClick: () -> Unit,
     trailingIconName: String = "chevron_right",
 ) {
+    val isDark = LocalIsDark.current
     val colorSpec = reducedMotionAwareSpec(MaterialTheme.motionScheme.defaultEffectsSpec<Color>())
     val containerColor by animateColorAsState(
         targetValue =
             if (selected) {
-                MaterialTheme.colorScheme.secondaryContainer
+                if (isDark) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                }
             } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh
+                if (isDark) {
+                    Color(0xFF232328)
+                } else {
+                    Color(0xFFEEEEF3)
+                }
             },
         animationSpec = colorSpec,
         label = "settings_section_list_container",
     )
     val contentColor =
         if (selected) {
-            MaterialTheme.colorScheme.onSecondaryContainer
+            MaterialTheme.colorScheme.primary
         } else {
             MaterialTheme.colorScheme.onSurface
         }
+
+    val endPadding by animateDpAsState(
+        targetValue = if (selected) 0.dp else 28.dp,
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMediumLow,
+            ),
+        label = "settings_row_end_padding",
+    )
+
     Surface(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
+                .padding(end = endPadding.coerceAtLeast(0.dp))
+                .clip(RoundedCornerShape(percent = 50))
                 .appClickable(
                     onClick = onClick,
                     indication = null,
                 ),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(percent = 50),
         color = containerColor,
         contentColor = contentColor,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(36.dp)
-                        .clip(MaterialTheme.shapes.extraExtraLarge)
-                        .background(
-                            if (selected) {
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-                            } else {
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.48f)
-                            },
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                RememberMaterialRoundedSymbol(
-                    name = iconName,
-                    size = 21.dp,
-                    tint =
-                        if (selected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                    weight = FontWeight.Medium,
-                )
-            }
+            RememberMaterialRoundedSymbol(
+                name = iconName,
+                size = 22.dp,
+                tint =
+                    if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                weight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            )
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp),
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
             RememberMaterialRoundedSymbol(
                 name = trailingIconName,
-                size = 20.dp,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                size = 18.dp,
+                tint =
+                    if (selected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    },
                 weight = FontWeight.Medium,
             )
         }
@@ -1518,10 +1577,11 @@ private fun HistorySelectionActionPane(
 @Composable
 private fun rememberFlatScreenBalancedPaneExpansionState(
     directive: PaneScaffoldDirective,
+    firstPaneProportion: Float = 0.4f,
 ): PaneExpansionState {
     val targetFirstPaneProportion: Float? =
         if (directive.excludedBounds.isEmpty() && directive.maxHorizontalPartitions > 1) {
-            0.4f
+            firstPaneProportion
         } else {
             null
         }

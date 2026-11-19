@@ -7,6 +7,7 @@ import haddad.three.notas.crypto.MekManager
 import haddad.three.notas.data.RememberDatabase
 import haddad.three.notas.data.sync.change.PendingChangeDao
 import haddad.three.notas.data.sync.change.PendingChangeEntity
+import haddad.three.notas.data.sync.transport.SyncWatermarkDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -60,6 +61,7 @@ class SyncJournalWriter
         private val mekManager: MekManager,
         private val deviceIdProvider: suspend () -> String,
         private val clock: () -> Long = System::currentTimeMillis,
+        private val syncWatermarkDao: SyncWatermarkDao? = null,
     ) {
         private val writerMutex = Mutex()
         private val json =
@@ -265,6 +267,9 @@ class SyncJournalWriter
                     val sequence = maxCommitted + 1L
 
                     // 5. Construct Journal DTO
+                    val watermarkDao = syncWatermarkDao ?: database?.syncWatermarkDao()
+                    val dependencies = runCatching { watermarkDao?.getAllWatermarks()?.associate { it.deviceId to it.highestAppliedSeq } }.getOrNull() ?: emptyMap()
+
                     val journalDto =
                         SyncJournalDto(
                             formatVersion = SyncJournalDto.CURRENT_FORMAT_VERSION,
@@ -274,6 +279,7 @@ class SyncJournalWriter
                             createdAt = now,
                             operationCount = validOperations.size,
                             operations = validOperations,
+                            dependencies = dependencies,
                         )
 
                     // 6. Serialize deterministically

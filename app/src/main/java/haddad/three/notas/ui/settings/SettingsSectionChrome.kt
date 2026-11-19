@@ -46,7 +46,7 @@ import haddad.three.notas.ui.feedback.appClickable
 import haddad.three.notas.ui.theme.reducedMotionAwareSpec
 
 object SettingsDesignTokens {
-    val ScreenBg: Color @Composable get() = if (haddad.three.notas.ui.theme.LocalIsDark.current) Color.Transparent else MaterialTheme.colorScheme.background
+    val ScreenBg: Color @Composable get() = MaterialTheme.colorScheme.background
     val CardBg: Color @Composable get() =
         if (haddad.three.notas.ui.theme.LocalIsDark.current) {
             haddad.three.notas.ui.theme

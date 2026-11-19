@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import haddad.three.notas.MainActivity
@@ -28,6 +29,14 @@ import kotlinx.coroutines.sync.withLock
 import java.util.Calendar
 import java.util.concurrent.atomic.AtomicInteger
 
+fun AlarmManager.canScheduleExactAlarmsCompat(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        canScheduleExactAlarms()
+    } else {
+        true
+    }
+}
+
 class ReminderScheduler(
     private val context: Context,
     private val reminderPrefs: ReminderPrefs? = null,
@@ -45,7 +54,7 @@ class ReminderScheduler(
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pi = pendingIntent(noteId, reminderIndex)
         scheduleWithExactAlarmFallback(
-            canScheduleExactAlarms = am.canScheduleExactAlarms(),
+            canScheduleExactAlarms = am.canScheduleExactAlarmsCompat(),
             scheduleExact = {
                 if (importance.alertsAsAlarm) {
                     // Alarm clocks bypass Doze and expose the system's next-alarm indicator,
@@ -182,7 +191,7 @@ class ReminderScheduler(
     ) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         scheduleWithExactAlarmFallback(
-            canScheduleExactAlarms = am.canScheduleExactAlarms(),
+            canScheduleExactAlarms = am.canScheduleExactAlarmsCompat(),
             scheduleExact = {
                 am.setAlarmClock(AlarmManager.AlarmClockInfo(whenMillis, openAppPendingIntent()), pi)
             },

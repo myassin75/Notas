@@ -27,6 +27,7 @@ import haddad.three.notas.data.QuickCapturePrefs
 import haddad.three.notas.data.ReminderPrefs
 import haddad.three.notas.data.ThemePrefs
 import haddad.three.notas.data.UpdatePrefs
+import haddad.three.notas.reminders.canScheduleExactAlarmsCompat
 import haddad.three.notas.ui.common.MIN_MULTI_PANE_WIDTH_DP
 import haddad.three.notas.widget.NotesWidgetReceiver
 import haddad.three.notas.widget.QuickCaptureWidgetReceiver
@@ -191,7 +192,7 @@ object DiagnosticLog {
         appendLine(
             context.getString(
                 R.string.diagnostics_exact_alarms_allowed_format,
-                alarmManager.canScheduleExactAlarms().toString(),
+                alarmManager.canScheduleExactAlarmsCompat().toString(),
             ),
         )
         appendLine()

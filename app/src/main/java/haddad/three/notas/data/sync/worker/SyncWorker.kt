@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -19,7 +20,13 @@ class SyncWorker
         @Assisted workerParams: WorkerParameters,
         private val syncCoordinator: DriveSyncCoordinator,
     ) : CoroutineWorker(appContext, workerParams) {
-        override suspend fun doWork(): Result = mapResult(syncCoordinator.executeSync(runAttempt = runAttemptCount), applicationContext)
+        override suspend fun doWork(): Result {
+            setProgress(workDataOf("state" to "RUNNING", "attempt" to runAttemptCount))
+            val executionResult = syncCoordinator.executeSync(runAttempt = runAttemptCount)
+            val result = mapResult(executionResult, applicationContext)
+            setProgress(workDataOf("state" to "FINISHED", "result" to result.toString()))
+            return result
+        }
 
         companion object {
             fun mapResult(

@@ -52,15 +52,18 @@ class Converters {
 
     @TypeConverter fun fromKind(kind: NoteKind): String = kind.name
 
-    @TypeConverter fun toKind(value: String): NoteKind = NoteKind.valueOf(value)
+    @TypeConverter fun toKind(value: String): NoteKind =
+        runCatching { NoteKind.valueOf(value) }.getOrDefault(NoteKind.NOTE)
 
     @TypeConverter fun fromImportance(v: Importance): String = v.name
 
-    @TypeConverter fun toImportance(value: String): Importance = Importance.valueOf(value)
+    @TypeConverter fun toImportance(value: String): Importance =
+        runCatching { Importance.valueOf(value) }.getOrDefault(Importance.DEFAULT)
 
     @TypeConverter fun fromVisibility(v: Visibility): String = v.name
 
-    @TypeConverter fun toVisibility(value: String): Visibility = Visibility.valueOf(value)
+    @TypeConverter fun toVisibility(value: String): Visibility =
+        runCatching { Visibility.valueOf(value) }.getOrDefault(Visibility.DEFAULT)
 
     @TypeConverter
     fun fromActions(v: List<NoteAction>): String = json.encodeToString(v)
@@ -115,8 +118,9 @@ class Converters {
         SyncHlcStateEntity::class,
         SyncSnapshotEntity::class,
         SyncAttachmentPromotionEntity::class,
+        haddad.three.notas.data.sync.history.SyncHistoryRecordEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -153,6 +157,8 @@ abstract class RememberDatabase : RoomDatabase() {
 
     abstract fun syncAttachmentPromotionDao(): SyncAttachmentPromotionDao
 
+    abstract fun syncHistoryDao(): haddad.three.notas.data.sync.history.SyncHistoryRecordDao
+
     companion object {
         fun build(context: Context): RememberDatabase =
             Room
@@ -170,6 +176,7 @@ abstract class RememberDatabase : RoomDatabase() {
                     MIGRATION_10_11,
                     MIGRATION_11_12,
                     MIGRATION_12_13,
+                    MIGRATION_13_14,
                 ).fallbackToDestructiveMigration(false)
                 .build()
 
@@ -743,6 +750,31 @@ abstract class RememberDatabase : RoomDatabase() {
                         )
                         """.trimIndent(),
                     )
+                }
+            }
+
+        internal val MIGRATION_13_14 =
+            object : Migration(13, 14) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `sync_history_records` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            `timestampEpochMillis` INTEGER NOT NULL,
+                            `durationMillis` INTEGER NOT NULL,
+                            `status` TEXT NOT NULL,
+                            `uploadedBatches` INTEGER NOT NULL,
+                            `downloadedBatches` INTEGER NOT NULL,
+                            `appliedOperations` INTEGER NOT NULL,
+                            `conflictsDetected` INTEGER NOT NULL,
+                            `errorCategory` TEXT,
+                            `errorMessage` TEXT,
+                            `triggeredBy` TEXT NOT NULL
+                        )
+                        """.trimIndent(),
+                    )
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_history_records_timestampEpochMillis` ON `sync_history_records` (`timestampEpochMillis`)")
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_sync_history_records_status` ON `sync_history_records` (`status`)")
                 }
             }
 

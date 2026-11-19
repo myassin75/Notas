@@ -5,6 +5,7 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ScrollState
@@ -58,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -71,6 +73,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -112,6 +115,7 @@ import haddad.three.notas.ui.modifiers.rememberProgressiveBlurStyle
 import haddad.three.notas.ui.nav.LocalNavAnimatedVisibilityScope
 import haddad.three.notas.ui.nav.LocalSharedTransitionScope
 import haddad.three.notas.ui.settings.SettingsDesignTokens
+import haddad.three.notas.ui.theme.LocalIsDark
 import haddad.three.notas.ui.theme.LocalSnackbarHostState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
@@ -457,7 +461,7 @@ fun HomeScreen(
                         }
                     }
                 },
-        containerColor = SettingsDesignTokens.ScreenBg,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showSelectionActionBar) {
                 HomeSelectionActionBar(
@@ -661,24 +665,60 @@ fun HomeScreen(
                     )
                 }
             }
-            val isScrolled by remember {
+            val isScrolled by remember(useMosaicLayout, searchOpen) {
                 derivedStateOf {
-                    if (effectiveNoteLayoutMode == NoteLayoutMode.MOSAIC) {
-                        mosaicGridState.firstVisibleItemIndex > 0 || mosaicGridState.firstVisibleItemScrollOffset > 20
-                    } else {
-                        listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 20
-                    }
+                    searchOpen ||
+                        if (useMosaicLayout) {
+                            mosaicGridState.firstVisibleItemIndex > 0 || mosaicGridState.firstVisibleItemScrollOffset > 4
+                        } else {
+                            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 4
+                        }
                 }
             }
+            val isDark = LocalIsDark.current
+            val targetBgColor =
+                if (isScrolled) {
+                    MaterialTheme.colorScheme.background.copy(alpha = if (isDark) 0.88f else 0.90f)
+                } else {
+                    Color.Transparent
+                }
             val topBarBgColor by animateColorAsState(
-                targetValue = if (isScrolled) SettingsDesignTokens.ScreenBg else Color.Transparent,
+                targetValue = targetBgColor,
+                animationSpec = tween(durationMillis = 180),
                 label = "HomeTopBarBg",
+            )
+            val targetBorderColor =
+                if (isScrolled) {
+                    if (isDark) {
+                        Color(0xFF3A3A3A).copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                    }
+                } else {
+                    Color.Transparent
+                }
+            val topBarBorderColor by animateColorAsState(
+                targetValue = targetBorderColor,
+                animationSpec = tween(durationMillis = 180),
+                label = "HomeTopBarBorder",
             )
             Surface(
                 modifier =
                     Modifier
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
+                        .zIndex(10f)
+                        .drawBehind {
+                            if (topBarBorderColor != Color.Transparent) {
+                                val strokeWidth = 1.dp.toPx()
+                                drawLine(
+                                    color = topBarBorderColor,
+                                    start = Offset(0f, size.height - strokeWidth / 2),
+                                    end = Offset(size.width, size.height - strokeWidth / 2),
+                                    strokeWidth = strokeWidth,
+                                )
+                            }
+                        }
                         .then(topBarOverlayModifier),
                 color = topBarBgColor,
             ) {
@@ -913,6 +953,9 @@ private fun HomeNoteRowItem(
             }
         },
         onSwipeAction = actions.onSwipeAction,
+        onToggleDone = {
+            actions.onSwipeAction(item.note, NoteSwipeAction.MARK_DONE)
+        },
         modifier =
             modifier.onGloballyPositioned { coordinates ->
                 cardBounds = coordinates.boundsInRoot()

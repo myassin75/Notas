@@ -832,7 +832,7 @@ private val obtainXIsOnlyUpdateOption: Boolean
     get() = supportsObtainXTracking && !BuildConfig.CHECK_UPDATES
 
 /** Whether the Updates section is emitted. [singleList] is the phone layout, with no section selected. */
-internal fun showsUpdatesSection(singleList: Boolean): Boolean = BuildConfig.CHECK_UPDATES || (obtainXIsOnlyUpdateOption && !singleList)
+internal fun showsUpdatesSection(singleList: Boolean): Boolean = true
 
 /** Whether the ObtainX card stands on its own on the settings page. See [showsUpdatesSection]. */
 internal fun showsStandaloneObtainXCard(singleList: Boolean): Boolean = obtainXIsOnlyUpdateOption && singleList

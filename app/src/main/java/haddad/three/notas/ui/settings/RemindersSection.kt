@@ -121,9 +121,7 @@ internal fun RemindersSection(
                     val wantEnabled = !(canScheduleExactAlarms && isIgnoringBatteryOptimizations)
                     val intent =
                         if (wantEnabled && !canScheduleExactAlarms) {
-                            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                data = "package:${context.packageName}".toUri()
-                            }
+                            exactAlarmIntent(context)
                         } else if (wantEnabled && !isIgnoringBatteryOptimizations) {
                             batteryOptimizationIntent(context)
                         } else {
@@ -137,9 +135,7 @@ internal fun RemindersSection(
                         onCheckedChange = { wantEnabled ->
                             val intent =
                                 if (wantEnabled && !canScheduleExactAlarms) {
-                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                        data = "package:${context.packageName}".toUri()
-                                    }
+                                    exactAlarmIntent(context)
                                 } else if (wantEnabled && !isIgnoringBatteryOptimizations) {
                                     batteryOptimizationIntent(context)
                                 } else {
@@ -156,21 +152,13 @@ internal fun RemindersSection(
                 title = stringResource(R.string.settings_reliable_reminders),
                 subtitle = stringResource(R.string.settings_reliable_reminders_exact_desc),
                 onClick = {
-                    val intent =
-                        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                            data = "package:${context.packageName}".toUri()
-                        }
-                    context.startActivity(intent)
+                    context.startActivity(exactAlarmIntent(context))
                 },
                 trailingContent = {
                     SettingsCustomSwitch(
                         checked = canScheduleExactAlarms,
                         onCheckedChange = {
-                            val intent =
-                                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                    data = "package:${context.packageName}".toUri()
-                                }
-                            context.startActivity(intent)
+                            context.startActivity(exactAlarmIntent(context))
                         },
                     )
                 },
@@ -360,4 +348,15 @@ private fun notificationsAppSettingsIntent(context: Context): Intent =
 private fun batteryOptimizationIntent(context: Context): Intent =
     Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
         data = "package:${context.packageName}".toUri()
+    }
+
+private fun exactAlarmIntent(context: Context): Intent =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+            data = "package:${context.packageName}".toUri()
+        }
+    } else {
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = "package:${context.packageName}".toUri()
+        }
     }

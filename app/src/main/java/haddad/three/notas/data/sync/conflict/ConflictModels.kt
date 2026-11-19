@@ -7,6 +7,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * Durable ledger of applied remote operations to guarantee idempotency across restarts.
@@ -144,6 +146,12 @@ interface SyncTombstoneDao {
     @Query("SELECT * FROM sync_tombstones ORDER BY deletedAt DESC")
     suspend fun getAllTombstones(): List<SyncTombstoneEntity>
 
+    @Query("DELETE FROM sync_tombstones WHERE deletedAt < :cutoffTimestamp")
+    suspend fun deleteTombstonesOlderThan(cutoffTimestamp: Long): Int = 0
+
+    @Query("SELECT COUNT(*) FROM sync_tombstones")
+    suspend fun getTombstoneCount(): Int = 0
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(tombstones: List<SyncTombstoneEntity>) {}
 
@@ -196,11 +204,26 @@ interface SyncConflictRecordDao {
     @Query("SELECT * FROM sync_conflict_records WHERE resolved = 0 ORDER BY detectedAt DESC")
     suspend fun getUnresolvedConflicts(): List<SyncConflictRecordEntity>
 
+    @Query("SELECT * FROM sync_conflict_records WHERE resolved = 0 ORDER BY detectedAt DESC")
+    fun getUnresolvedConflictsFlow(): Flow<List<SyncConflictRecordEntity>> = emptyFlow()
+
+    @Query("SELECT COUNT(*) FROM sync_conflict_records WHERE resolved = 0")
+    suspend fun getUnresolvedConflictCount(): Int = 0
+
+    @Query("SELECT COUNT(*) FROM sync_conflict_records WHERE resolved = 0")
+    fun getUnresolvedConflictCountFlow(): Flow<Int> = emptyFlow()
+
     @Query("UPDATE sync_conflict_records SET resolved = 1 WHERE id = :id")
     suspend fun markResolved(id: Long): Int
 
+    @Query("UPDATE sync_conflict_records SET resolved = 1 WHERE conflictId = :conflictId")
+    suspend fun markResolvedByConflictId(conflictId: String): Int = 0
+
     @Query("SELECT * FROM sync_conflict_records")
     suspend fun getAllConflictRecords(): List<SyncConflictRecordEntity> = emptyList()
+
+    @Query("SELECT * FROM sync_conflict_records ORDER BY detectedAt DESC")
+    fun getAllConflictRecordsFlow(): Flow<List<SyncConflictRecordEntity>> = emptyFlow()
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(records: List<SyncConflictRecordEntity>) {}
@@ -208,6 +231,59 @@ interface SyncConflictRecordDao {
     @Query("DELETE FROM sync_conflict_records")
     suspend fun clearAll() {}
 }
+
+/**
+ * Domain-level conflict types.
+ */
+enum class ConflictType {
+    CONCURRENT_TITLE_EDIT,
+    CONCURRENT_BODY_EDIT,
+    DELETE_VS_UPDATE,
+    CHECKLIST_CONFLICT,
+    CATEGORY_CONFLICT,
+    GENERAL_FIELD_CONFLICT;
+
+    companion object {
+        fun fromFieldName(fieldName: String): ConflictType =
+            when (fieldName) {
+                "title" -> CONCURRENT_TITLE_EDIT
+                "body" -> CONCURRENT_BODY_EDIT
+                "DELETE_VS_UPDATE" -> DELETE_VS_UPDATE
+                "text", "checked", "sortOrder", "checklist" -> CHECKLIST_CONFLICT
+                "name", "colorHex", "category" -> CATEGORY_CONFLICT
+                else -> GENERAL_FIELD_CONFLICT
+            }
+    }
+}
+
+/**
+ * Presentation-layer conflict model suitable for ViewModels and UI rendering.
+ */
+data class ConflictUiModel(
+    val id: Long,
+    val conflictId: String,
+    val entityType: String,
+    val entityId: String,
+    val fieldName: String,
+    val conflictType: ConflictType,
+    val winningValue: String?,
+    val losingValue: String?,
+    val winningHlc: String,
+    val losingHlc: String,
+    val winningDeviceId: String,
+    val losingDeviceId: String,
+    val detectedAt: Long,
+    val resolved: Boolean,
+)
+
+/**
+ * Summary of distributed synchronization conflict state.
+ */
+data class ConflictSummary(
+    val unresolvedCount: Int,
+    val unresolvedConflicts: List<ConflictUiModel>,
+    val recentResolvedConflicts: List<ConflictUiModel> = emptyList(),
+)
 
 /**
  * Persistent HLC clock state in Room.

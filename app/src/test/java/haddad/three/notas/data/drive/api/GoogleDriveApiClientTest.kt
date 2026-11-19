@@ -210,6 +210,16 @@ class GoogleDriveApiClientTest {
             val unauthResult = unauthClient.listFiles("expired_token")
             assertTrue(unauthResult is DriveResult.Unauthorized)
 
+            // 403 Forbidden
+            val forbiddenClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url -> MockHttpConnection(URL(url), responseCodeToReturn = 403) },
+                )
+            val forbiddenResult = forbiddenClient.listFiles("forbidden_token")
+            assertTrue(forbiddenResult is DriveResult.Error)
+            assertEquals("FORBIDDEN", (forbiddenResult as DriveResult.Error).code)
+            assertEquals(403, forbiddenResult.statusCode)
+
             // 429 Rate Limited
             val rateLimitClient =
                 GoogleDriveApiClient(
@@ -217,5 +227,184 @@ class GoogleDriveApiClientTest {
                 )
             val rateLimitResult = rateLimitClient.listFiles("token")
             assertTrue(rateLimitResult is DriveResult.RateLimited)
+        }
+
+    @Test
+    fun testNetworkFailureThrowsOrReturnsError() =
+        kotlinx.coroutines.runBlocking {
+            val networkErrorClient =
+                GoogleDriveApiClient(
+                    httpFactory = { _ -> throw java.io.IOException("Network unreachable") },
+                )
+            val result = networkErrorClient.listFiles("token")
+            assertTrue(result is DriveResult.Error)
+            assertTrue((result as DriveResult.Error).message.contains("Network unreachable"))
+        }
+
+    @Test
+    fun testUpdateFileContent() =
+        kotlinx.coroutines.runBlocking {
+            val responseBody =
+                """
+                {
+                  "id": "file_patch_123",
+                  "name": "manifest.enc",
+                  "size": "256"
+                }
+                """.trimIndent()
+
+            lateinit var capturedConn: MockHttpConnection
+
+            val client =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        assertTrue(url.contains("uploadType=media"))
+                        assertTrue(url.contains("file_patch_123"))
+                        MockHttpConnection(URL(url), responseCodeToReturn = 200, responseBody = responseBody).also {
+                            capturedConn = it
+                        }
+                    },
+                )
+
+            val payload = "UPDATED_ENCRYPTED_MANIFEST".toByteArray(Charsets.UTF_8)
+            val result = client.updateFileContent("test_token", "file_patch_123", payload)
+
+            assertTrue(result is DriveResult.Success)
+            assertEquals("file_patch_123", (result as DriveResult.Success).data.id)
+            assertEquals(String(payload, Charsets.UTF_8), capturedConn.outputBytes.toString("UTF-8"))
+        }
+
+    @Test
+    fun testUpdateFileContentNotFoundAndConflict() =
+        kotlinx.coroutines.runBlocking {
+            val notFoundClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url -> MockHttpConnection(URL(url), responseCodeToReturn = 404) },
+                )
+            val notFoundResult = notFoundClient.updateFileContent("token", "missing_id", ByteArray(10))
+            assertTrue(notFoundResult is DriveResult.Error)
+            assertEquals("NOT_FOUND", (notFoundResult as DriveResult.Error).code)
+            assertEquals(404, notFoundResult.statusCode)
+
+            val conflictClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url -> MockHttpConnection(URL(url), responseCodeToReturn = 409) },
+                )
+            val conflictResult = conflictClient.updateFileContent("token", "conflicting_id", ByteArray(10))
+            assertTrue(conflictResult is DriveResult.Error)
+            assertEquals("CONFLICT", (conflictResult as DriveResult.Error).code)
+            assertEquals(409, conflictResult.statusCode)
+        }
+
+    @Test
+    fun testDownloadFileBytes() =
+        kotlinx.coroutines.runBlocking {
+            val payload = "BINARY_MANIFEST_OR_ATTACHMENT_PAYLOAD".toByteArray(Charsets.UTF_8)
+            val client =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        assertTrue(url.contains("alt=media"))
+                        MockHttpConnection(URL(url), responseCodeToReturn = 200, responseBody = String(payload, Charsets.UTF_8))
+                    },
+                )
+
+            val result = client.downloadFileBytes("token", "file_abc")
+            assertTrue(result is DriveResult.Success)
+            assertEquals(String(payload, Charsets.UTF_8), String((result as DriveResult.Success).data, Charsets.UTF_8))
+        }
+
+    @Test
+    fun testGetChangesStartPageToken() =
+        kotlinx.coroutines.runBlocking {
+            val jsonResponse = """{"startPageToken": "start_token_12345"}"""
+            val client =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        assertTrue(url.contains("/changes/startPageToken"))
+                        assertTrue(url.contains("spaces=appDataFolder"))
+                        MockHttpConnection(URL(url), responseCodeToReturn = 200, responseBody = jsonResponse)
+                    },
+                )
+
+            val result = client.getChangesStartPageToken("token")
+            assertTrue(result is DriveResult.Success)
+            assertEquals("start_token_12345", (result as DriveResult.Success).data.startPageToken)
+        }
+
+    @Test
+    fun testListChangesSuccess() =
+        kotlinx.coroutines.runBlocking {
+            val jsonResponse =
+                """
+                {
+                  "nextPageToken": "page_2",
+                  "newStartPageToken": "new_start_999",
+                  "changes": [
+                    {
+                      "fileId": "file_mod_1",
+                      "removed": false,
+                      "file": {
+                        "id": "file_mod_1",
+                        "name": "journal_dev1_1.bin",
+                        "appProperties": {
+                          "appId": "notas",
+                          "type": "sync_journal"
+                        }
+                      }
+                    },
+                    {
+                      "fileId": "file_del_2",
+                      "removed": true
+                    }
+                  ]
+                }
+                """.trimIndent()
+
+            val client =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        assertTrue(url.contains("/changes"))
+                        assertTrue(url.contains("pageToken=page_1"))
+                        assertTrue(url.contains("spaces=appDataFolder"))
+                        MockHttpConnection(URL(url), responseCodeToReturn = 200, responseBody = jsonResponse)
+                    },
+                )
+
+            val result = client.listChanges("token", pageToken = "page_1")
+            assertTrue(result is DriveResult.Success)
+            val data = (result as DriveResult.Success).data
+            assertEquals("page_2", data.nextPageToken)
+            assertEquals("new_start_999", data.newStartPageToken)
+            assertEquals(2, data.changes.size)
+            assertEquals("file_mod_1", data.changes[0].fileId)
+            assertEquals(false, data.changes[0].removed)
+            assertEquals("file_del_2", data.changes[1].fileId)
+            assertEquals(true, data.changes[1].removed)
+        }
+
+    @Test
+    fun testListChangesCursorExpired() =
+        kotlinx.coroutines.runBlocking {
+            // HTTP 410 Gone
+            val goneClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url -> MockHttpConnection(URL(url), responseCodeToReturn = 410) },
+                )
+            val goneResult = goneClient.listChanges("token", pageToken = "expired_token")
+            assertTrue(goneResult is DriveResult.CursorExpired)
+
+            // HTTP 400 with startPageTokenExpired error body
+            val expiredBodyClient =
+                GoogleDriveApiClient(
+                    httpFactory = { url ->
+                        MockHttpConnection(
+                            URL(url),
+                            responseCodeToReturn = 400,
+                            responseBody = """{"error": {"errors": [{"reason": "startPageTokenExpired"}]}}""",
+                        )
+                    },
+                )
+            val expiredBodyResult = expiredBodyClient.listChanges("token", pageToken = "expired_token_2")
+            assertTrue(expiredBodyResult is DriveResult.CursorExpired)
         }
 }

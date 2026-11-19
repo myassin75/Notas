@@ -812,14 +812,17 @@ class CalendarViewModel
                             val ampm = startTime.format(AmPmFormatter)
                             "$startStr $ampm – 12:00 AM (+1)"
                         } else if (isCrossMidnightEnd) {
-                            val endH = endMinute / 60
-                            val endM = endMinute % 60
+                            val endH = (endMinute / 60).coerceIn(0, 23)
+                            val endM = (endMinute % 60).coerceIn(0, 59)
                             val endTime = LocalTime.of(endH, endM)
                             val endStr = endTime.format(Time12HourMinuteAmPmFormatter)
                             "12:00 AM – $endStr"
+                        } else if (endMinute >= 1440) {
+                            val ampm = startTime.format(AmPmFormatter)
+                            "$startStr $ampm – 12:00 AM"
                         } else {
-                            val endH = endMinute / 60
-                            val endM = endMinute % 60
+                            val endH = (endMinute / 60).coerceIn(0, 23)
+                            val endM = (endMinute % 60).coerceIn(0, 59)
                             val endTime = LocalTime.of(endH, endM)
                             val endStr = endTime.format(Time12HourMinuteAmPmFormatter)
                             "$startStr–$endStr"

@@ -973,7 +973,7 @@ class SyncWorkerTest {
     }
 
     @Test
-    fun testOfflineFlavorDisablesSync() =
+    fun testDisabledDriveSyncSkipsExecution() =
         runBlocking {
             if (!haddad.three.notas.BuildConfig.GOOGLE_DRIVE_SYNC_ENABLED) {
                 assertFalse(SyncWorkScheduler.isGoogleDriveSyncSupported())
